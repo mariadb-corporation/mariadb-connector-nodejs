@@ -34,10 +34,10 @@ class NativePasswordAuth extends Command {
 
     let hash = Crypto.createHash("sha1");
     let stage1 = hash.update(password, "utf8").digest();
-    hash.reset();
+    hash = Crypto.createHash("sha1");
 
     let stage2 = hash.update(stage1).digest();
-    hash.reset();
+    hash = Crypto.createHash("sha1");
 
     hash.update(seed);
     hash.update(stage2);
