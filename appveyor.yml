@@ -1,0 +1,54 @@
+version: '{build}'
+
+environment:
+  LINT: 0
+  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
+  matrix:
+    - DB: '10.2.12'
+      nodejs_version: "6"
+      LINT: 1
+
+    - DB: '10.2.12'
+      nodejs_version: "8"
+
+    - DB: '10.2.12'
+      nodejs_version: "9"
+      MYSQL_USE_COMPRESSION: 1
+
+    - DB: '10.2.12'
+      nodejs_version: "8"
+
+    - DB: '10.3.4'
+      nodejs_version: "8"
+
+    - DB: '10.1.30'
+      nodejs_version: "8"
+
+    - DB: '10.0.33'
+      nodejs_version: "8"
+
+    - DB: '5.5.59'
+      nodejs_version: "8"
+
+cache:
+  - node_modules
+  - "%LOCALAPPDATA%/Yarn"
+clone_folder: c:\projects\mariadb-connector-nodejs
+
+install:
+  - cmd: set FILE=http://mariadb.mirrors.ovh.net/MariaDB/mariadb-%DB%/winx64-packages/mariadb-%DB%-winx64.msi
+  - ps: Start-FileDownload $Env:FILE -FileName server.msi
+  - cmd: msiexec /i server.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
+  - cmd: "\"c:\\projects\\server\\bin\\mysql.exe\" -e \"create database testn\" --user=root"
+  - ps: Install-Product node $env:nodejs_version
+  - yarn install
+
+build: off
+
+test_script:
+  - node --version
+  - yarn --version
+  - if "%LINT%"=="1" (yarn run lint)
+  - cd c:\projects\mariadb-connector-nodejs
+  - npm test

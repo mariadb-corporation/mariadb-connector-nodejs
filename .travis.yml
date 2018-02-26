@@ -1,0 +1,77 @@
+sudo: false
+language: node_js
+
+services:
+  - docker
+addons:
+  hosts:
+    - mariadb.example.com
+before_script:
+  # Disable services enabled by default
+  - sudo /etc/init.d/mysql stop
+
+install:
+    # generate SSL certificates
+    - mkdir tmp
+    - chmod +x .travis/gen-ssl.sh
+    - .travis/gen-ssl.sh mariadb.example.com tmp
+    - export PROJ_PATH=`pwd`
+    - export SSLCERT=$PROJ_PATH/tmp
+env:
+  global:
+  - TEST_PORT=3305
+  - TEST_HOST=mariadb.example.com
+
+matrix:
+  include:
+  - node_js: "4"
+    env: DB=mariadb:10.2
+  - node_js: "5"
+    env: DB=mariadb:10.2
+  - node_js: "6"
+    env: DB=mariadb:10.2
+  - node_js: "7"
+    env: DB=mariadb:10.2
+  - node_js: "8"
+    env: DB=mariadb:10.2
+  - node_js: "node"
+    env: DB=mariadb:10.2
+  - node_js: "node"
+    env: DB=mariadb:10.2 LINT=1
+  - node_js: "node"
+    env: DB=mariadb:10.2 BENCH=1
+  - node_js: "node"
+    env: DB=mariadb:5.5
+  - node_js: "node"
+    env: DB=mariadb:10.0
+  - node_js: "node"
+    env: DB=mariadb:10.1
+  - node_js: "node"
+    env: DB=mariadb:10.3
+  - node_js: "node"
+    env: DB=mysql:5.5
+  - node_js: "node"
+    env: DB=mysql:5.6
+  - node_js: "node"
+    env: DB=mysql:5.7
+
+cache:
+  yarn: true
+  directories:
+  - node_modules
+  - $HOME/.yarn-cache
+
+notifications:
+  email: false
+
+script:
+  - docker-compose -f .travis/docker-compose.yml up -d
+  - nvm ls-remote
+  - npm install
+  - #npm install process-nextick-args concat-stream
+  - node --version
+  - yarn --version
+  - node .travis/wait-for-docker-up.js
+  - if [ -n "$LINT" ] ; then yarn run test:lint; fi
+  - if [ -z "$BENCH$LINT" ] ; then yarn run test:base; fi
+  - if [ -n "$BENCH" ] ; then yarn run benchmark; fi

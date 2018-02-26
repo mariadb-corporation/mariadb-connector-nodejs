@@ -1,0 +1,4 @@
+*.log
+.idea/
+node_modules
+/nodejs_mariadb.iml
