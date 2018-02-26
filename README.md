@@ -52,15 +52,25 @@ option supportBigNumbers => return int if comprise in -(2^53 -1) et 2^53 -1), or
 
 ## Query
 
-API : connection.query(sql[, values][,callback])
+API : `connection.query(sql[, values][,callback])`
 
-* sql: string / object.
-  object can be used to supersede default option
-  object must then have sql property.  
-* values: object / array of placeholder values
-* callback function
+<dl>
+  <dt>sql</dt>
+  <dd>
+      string / object.
+      object can be used to supersede default option
+      object must then have sql property.
+   </dd>
+  <dt>values</dt>
+  <dd>object / array of placeholder values</dd>
+  <dt>callback</dt>
+  <dd>function parameters :
+                 * Error  
+                 * results
+                 * column metadata</dd>
+</dl>
 
-return : command object
+return command object
 
 Examples :
 ```javascript
@@ -76,19 +86,17 @@ connection.query({dateStrings:true, sql:'SELECT now()', (err, res, fields) => {
 ```
 
 ### callback
-parameters :
-* Error  
-* results
-* column metadata
-
-#### Error 
-An Error Object with the following additional properties : 
-* fatal : boolean indicating if connection is still valid
-* errno = error number. 
-* sqlState = sql state code
-see https://mariadb.com/kb/en/library/mariadb-error-codes/ for error number and sql state signification.
-
-#### results
+<dl>
+  <dt>Error</dt>
+  <dd>
+        An Error Object with the following additional properties : 
+        * fatal : boolean indicating if connection is still valid
+        * errno = error number. 
+        * sqlState = sql state code
+        see https://mariadb.com/kb/en/library/mariadb-error-codes/ for error number and sql state signification.
+  </dd>
+  <dt>results</dt>
+  <dd>
 for insert/delete/update commands, results is an object with the following properties: 
 
 * affectedRows: number of affected rows
@@ -99,21 +107,37 @@ Examples :
 connection.query('CREATE TABLE animals (' +
                        'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
                        'name VARCHAR(30) NOT NULL,' +
-                       'PRIMARY KEY (id)');
-
-//with options
+                       'PRIMARY KEY (id))');
 connection.query('INSERT INTO animals(name) value (?)', ['sea lions'], (err, res, fields) => {
-  //...
+  console.log(res); //log : ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
 });
 ```
 
 for query returning a result-set, returning data in array. 
+
+  </dd>    
+  <dt>column metadata</dt>
+  <dd>
+  TODO
+  </dd>
+<dl>
+
+
+#### Error 
+An Error Object with the following additional properties : 
+* fatal : boolean indicating if connection is still valid
+* errno = error number. 
+* sqlState = sql state code
+see https://mariadb.com/kb/en/library/mariadb-error-codes/ for error number and sql state signification.
+
+#### results
  
 
 
 ### event
 Event can be set on returning command object.
 List of events :
+
 | event name  | event arguments |
 | ----------- | ------------- |
 | "error"     | Error object  |
