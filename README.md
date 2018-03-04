@@ -1,33 +1,184 @@
+
 <p align="center">
   <a href="http://mariadb.org/">
     <img src="https://mariadb.com/themes/custom/mariadb/logo.svg">
   </a>
 </p>
 
-# Under Construction
-
-# MariaDB Node connector
-
-MariaDB node.js connector is a &ge; 4.0 node driver, used to connect MariaDB and MySQL databases. 
-MariaDB node.js connector is LGPL version 2.1 licensed.
-
-Tracker link TODO add tracker link
-
-## Status
 [![Linux Build](https://travis-ci.org/rusher/node-mariadb.svg?branch=master)](https://travis-ci.org/rusher/node-mariadb)
 [![Windows Build](https://ci.appveyor.com/api/projects/status/nkvfmixam8tciem4?svg=true)](https://ci.appveyor.com/project/rusher/node-mariadb)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
 
 
-TODO change CI link to mariadb repos
+#### table of contents
 
-__Table of contents__
+TODO have automatically generated table of contents
 
-TODO
-why new driver ? 
-2 good existing drivers, but not the same perf than C connector wrapper : we expect better, particularly when query has a result-set.
-Goal is to have an efficient driver, and provide additional feature : 
-- TODO list feature: streaming, ...
+
+## MariaDB node.js driver
+MariaDB node.js connector is a &ge; 4.0 node driver to connect MariaDB and MySQL databases. 
+MariaDB node.js connector is LGPL version 2.1 licensed.
+
+Why a new driver ?! There is already some good community driver (like [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) ), but core implementation has flaws : use string concatenation, doesn't permit streaming...
+
+TODO add tracker link
+ 
+## Query
+`connection.query(sql[, values][,callback])`
+
+
+* `sql` : string / object
+* `values`: object / array of placeholder values
+* `callback`: function that will be called after reception of error/results. see [description](#callback)
+* `return`: command object that emits event. see [query events](#query-events) list  
+
+sql parameter Object can be used to supersede default option.
+Object must then have sql property.
+example : {dateStrings:true, sql:'SELECT now()'}
+
+
+```javascript
+connection.query('SELECT 1', (err, res, fields) => {
+  //...
+});
+
+//with placeholder
+connection.query('INSERT INTO mytable VALUES (?,?)', ['data', 5], (err, res) => {
+  //...
+});
+
+//with options
+connection.query({dateStrings:true, sql:'SELECT now()'}, (err, res, fields) => {
+  //...
+});
+```
+
+## Query callback function
+* `Error`: an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object
+* `results`: a resultset. See [callback results](#callback-results).
+* `column metadatas`: an array describing the fields. see [Field metadata](#field-metadata)
+
+### Error
+The [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) may have the following additional properties :
+         
+* fatal : boolean indicating if connection is still valid
+* errno = error number. 
+* sqlState = sql state code
+
+see [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for error number and sql state signification.
+
+
+### Callback results
+There is 2 different kind of results : a "change" result and a result-set.
+
+for insert/delete/update commands, results is a "change" result object with the following properties: 
+
+* affectedRows: number of affected rows
+* insertId: last auto increment insert id
+* warningStatus: indicating if query ended with warning. 
+
+```javascript
+connection.query('CREATE TABLE animals (' +
+                       'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
+                       'name VARCHAR(30) NOT NULL,' +
+                       'PRIMARY KEY (id))');
+connection.query('INSERT INTO animals(name) value (?)', ['sea lions'], (err, res, fields) => {
+  console.log(res); 
+  //log : ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
+});
+```
+
+For result-set, an array representing the data of each rows. Data results format can differ according to options nestTables and rowsAsArray.
+
+default return an array containing a json object of data.
+Examples :
+```javascript
+connection.query('select * from animals', (err, res, fields) => {
+  console.log(res); 
+  //log : 
+  // [ 
+  //    { id: 1, name: 'sea lions' }, 
+  //    { id: 2, name: 'bird' } 
+  // ]
+});
+```
+
+using option nestTables, return an array of a json object is returned, separated by tables
+Examples :
+```javascript
+connection.query({nestTables:true, 
+                sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'}, 
+                (err, res, fields) => {
+  console.log(res); 
+  //log : 
+  //[ 
+  // { 
+  //   a: { name: 'sea lions', id: 1 }, 
+  //   b: { name: 'sea lions' } 
+  // },
+  // { 
+  //   a: { name: 'bird', id: 2 }, 
+  //   b: { name: 'sea lions' } 
+  // }
+  //]
+});
+```
+
+using option rowsAsArray is fastest (by 5-10% with local database), return an array of data array :
+(driver do not parse metadata to read names)
+Examples :
+```javascript
+connection.query({rowsAsArray:true, sql:'select * from animals'}, (err, res, fields) => {
+  console.log(res); 
+  //log : 
+  // [ 
+  //    [ 1, 'sea lions' ], 
+  //    [ 2, 'bird' ] 
+  // ]
+});
+```
+
+*the options have been set on query level for better understanding, but can be set on connection level*
+
+### Field metadata
+properties
+* `schema`: field schema
+* `table`: field table alias
+* `orgTable`: field table
+* `name`: field alias
+* `orgName`: field name
+
+methods
+* `isUnsigned()`: indicate if field type is unsigned
+* `canBeNull()`: indicate if field can be null
+* `isPrimaryKey()`: indicate if field is part of primary key
+* `isUniqueKey()`: indicate if field is part of unique key
+* `isBlob()`: indicate if field is blob
+* `isZeroFill()`: indicate if field is configured to fill with zero
+* `isBinary()`: indicate if field contain binary data
+* `isAutoIncrement()`: indicate if field is auto increment
+* `getPrecision()`: return decimal precision
+* `getDisplaySize()`: return max displayed size or -1 if size cannot be known
+
+## query events
+Event can be set on returning command object.
+List of events :
+
+| event name  | event arguments |
+| ----------- | ------------- |
+| "error"     | Error object  |
+| "fields"    | Column array  |
+| "result"    | row data  |
+| "end"       | -  |
+
+```javascript
+let query = connection.query('SELECT host, user FROM mysql.user');
+query.on('error', (err) => console.log(err));
+query.on('result', (res) => console.log(res.host + '/' + res.user));
+```
+
+
+ 
  
 TODO
 why good perf ? 
@@ -50,112 +201,5 @@ option bigNumberStrings => all BIGinteger are return as string
 option supportBigNumbers => return int if comprise in -(2^53 -1) et 2^53 -1), or a long object (from https://www.npmjs.com/package/long) to permit having exact value
  
 
-## Query
-
-API : `connection.query(sql[, values][,callback])`
-
-<dl>
-  <dt>sql</dt>
-  <dd>
-      string / object.
-      object can be used to supersede default option
-      object must then have sql property.
-   </dd>
-  <dt>values</dt>
-  <dd>object / array of placeholder values</dd>
-  <dt>callback</dt>
-  <dd>function parameters :
-                 * Error  
-                 * results
-                 * column metadata</dd>
-</dl>
-
-return command object
-
-Examples :
-```javascript
-//simple example
-connection.query('INSERT INTO mytable VALUES (?)', ['data'], (err, res) => {
-  //...
-});
-
-//with options
-connection.query({dateStrings:true, sql:'SELECT now()', (err, res, fields) => {
-  //...
-});
-```
-
-### callback
-<dl>
-  <dt>Error</dt>
-  <dd>
-        An Error Object with the following additional properties : 
-        * fatal : boolean indicating if connection is still valid
-        * errno = error number. 
-        * sqlState = sql state code
-        see https://mariadb.com/kb/en/library/mariadb-error-codes/ for error number and sql state signification.
-  </dd>
-  <dt>results</dt>
-  <dd>
-for insert/delete/update commands, results is an object with the following properties: 
-
-* affectedRows: number of affected rows
-* insertId: last auto increment insert id
-* warningStatus: indicating if query ended with warning. 
-Examples :
-```javascript
-connection.query('CREATE TABLE animals (' +
-                       'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
-                       'name VARCHAR(30) NOT NULL,' +
-                       'PRIMARY KEY (id))');
-connection.query('INSERT INTO animals(name) value (?)', ['sea lions'], (err, res, fields) => {
-  console.log(res); //log : ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
-});
-```
-
-for query returning a result-set, returning data in array. 
-
-  </dd>    
-  <dt>column metadata</dt>
-  <dd>
-  TODO
-  </dd>
-<dl>
-
-
-#### Error 
-An Error Object with the following additional properties : 
-* fatal : boolean indicating if connection is still valid
-* errno = error number. 
-* sqlState = sql state code
-see https://mariadb.com/kb/en/library/mariadb-error-codes/ for error number and sql state signification.
-
-#### results
- 
-
-
-### event
-Event can be set on returning command object.
-List of events :
-
-| event name  | event arguments |
-| ----------- | ------------- |
-| "error"     | Error object  |
-| "fields"    | Column array  |
-| "result"    | row data  |
-| "end"       | -  |
-
-Examples :
-```javascript
-//simple example
-let query = connection.query('SELECT host, user FROM mysql.user');
-query.on('error', (err) => console.log(err));
-query.on('result', (res) => console.log(res.host + '/' + res.user));
-```
-
 
  
-
- 
-
-
