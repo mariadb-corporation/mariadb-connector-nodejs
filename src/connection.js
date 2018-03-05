@@ -138,18 +138,6 @@ class Connection {
     //TODO
   }
 
-  escape(value) {
-    //TODO ?
-  }
-
-  escapeId(value) {
-    //TODO ?
-  }
-
-  format(sql, values) {
-    //TODO ?
-  }
-
   on(eventName, listener) {
     this.events.on(eventName, listener);
   }
