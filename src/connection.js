@@ -277,9 +277,9 @@ class Connection {
 
   _connectTimeoutReached() {
     this._clearConnectTimeout();
-    this.info = null;
     this._socket.destroy && this._socket.destroy();
     const err = Utils.createError("Connection timeout", true, this.info);
+    this.info = null;
     this._fatalError(err);
   }
 

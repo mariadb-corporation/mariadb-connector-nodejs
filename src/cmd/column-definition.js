@@ -95,7 +95,6 @@ class ColumnDefinition {
     }
     return this.columnLength;
   }
-
 }
 
 const addProperty = (name, index) => {
