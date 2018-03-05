@@ -55,7 +55,7 @@ class Query extends ResultSet {
       const value = this.values[i - 1];
 
       if (value === null) {
-        this.out.writeStringAscii("NULL");
+        out.writeStringAscii("NULL");
         out.writeString(this.queryParts[i]);
         continue;
       }

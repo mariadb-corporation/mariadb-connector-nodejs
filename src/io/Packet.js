@@ -178,8 +178,8 @@ class Packet {
     let res = [];
     let value = 0;
     let initPos = this.off;
-    this.off += end;
-    while (initPos > this.off) {
+    this.off += len;
+    while (initPos < this.off) {
       const char = this.buf[initPos++];
       if (char === 45) {
         //minus separator
@@ -202,7 +202,7 @@ class Packet {
     if (len === null) return null;
     this.off += len;
     const str = this.buf.toString("ascii", this.off - len, this.off);
-    if (str === "0000-00-00 00:00:00") return null;
+    if (str.startsWith("0000-00-00 00:00:00")) return null;
     return new Date(str);
   }
 

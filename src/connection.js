@@ -151,15 +151,15 @@ class Connection {
   //*****************************************************************
 
   serverVersion() {
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server information until connection is established";
-    return this._info.serverVersion;
+    return this.info.serverVersion;
   }
 
   isMariaDB() {
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server is MariaDB until connection is established";
-    return this._info.serverVersion.mariaDb;
+    return this.info.serverVersion.mariaDb;
   }
 
   hasMinVersion(major, minor, patch) {
@@ -167,10 +167,10 @@ class Connection {
     if (!minor) minor = 0;
     if (!patch) patch = 0;
 
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server version until connection is established";
 
-    let ver = this._info.serverVersion;
+    let ver = this.info.serverVersion;
     return (
       ver.major > major ||
       (ver.major === major && ver.minor > minor) ||
@@ -277,7 +277,7 @@ class Connection {
 
   _connectTimeoutReached() {
     this._clearConnectTimeout();
-    this._info = null;
+    this.info = null;
     this._socket.destroy && this._socket.destroy();
     const err = Utils.createError("Connection timeout", true, this.info);
     this._fatalError(err);
