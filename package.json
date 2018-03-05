@@ -15,17 +15,6 @@
     "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{src,test}/**/*.js\"",
     "benchmark": "node ./benchmarks/benchmarks.js"
   },
-  "eslintConfig": {
-    "extends": [
-      "prettier"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 6
-    },
-    "env": {
-      "node": true
-    }
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mariadb/mariadb-connector-nodejs.git"

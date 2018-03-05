@@ -11,7 +11,7 @@ const FieldType = require("../const/field-type");
 class ColumnDefinition {
   constructor(packet, clientEncoding) {
     this._packet = packet;
-    this._initial = packet.off;
+    this._initial = packet.off + 4; //skip 'def'
     packet.positionFromEnd(12); //fixed length field
     this.collation = Collations.fromIndex(packet.readUInt16());
     this.columnLength = packet.readUInt32();
@@ -25,7 +25,7 @@ class ColumnDefinition {
     return this._flags & FieldDetail.UNSIGNED;
   }
 
-  isNull() {
+  canBeNull() {
     return this._flags & FieldDetail.NOT_NULL;
   }
 
@@ -95,6 +95,7 @@ class ColumnDefinition {
     }
     return this.columnLength;
   }
+
 }
 
 const addProperty = (name, index) => {
@@ -107,11 +108,11 @@ const addProperty = (name, index) => {
   });
 };
 
-const props = ["catalog", "db", "table", "orgTable", "name", "orgName"];
+const props = ["db", "table", "orgTable", "name", "orgName"];
 for (let i = 0; i < props.length; i++) {
   addProperty(props[i], i);
 }
-//add alias for mysql2
+//add alias for mysql2 compatibility
 addProperty("schema", 1);
 
 module.exports = ColumnDefinition;

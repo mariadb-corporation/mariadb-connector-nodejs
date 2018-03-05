@@ -217,12 +217,16 @@ class ResultSet extends Command {
 
       if (!this.opts.rowsAsArray) {
         this.tableHeader = [columns.length];
-        for (let i = 0; i < columns.length; i++) {
-          if (typeof this.opts.nestTables === "string") {
+        if (typeof this.opts.nestTables === "string") {
+          for (let i = 0; i < columns.length; i++) {
             this.tableHeader[i] = columns[i].table + this.opts.nestTables + columns[i].name;
-          } else if (this.opts.nestTables === true) {
+          }
+        } else if (this.opts.nestTables === true) {
+          for (let i = 0; i < columns.length; i++) {
             this.tableHeader[i] = [columns[i].table, columns[i].name];
-          } else if (!this.opts.rowsAsArray) {
+          }
+        } else if (!this.opts.rowsAsArray) {
+          for (let i = 0; i < columns.length; i++) {
             this.tableHeader[i] = columns[i].name;
           }
         }
