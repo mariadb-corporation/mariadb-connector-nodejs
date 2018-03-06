@@ -4,7 +4,6 @@ const base = require("../../base.js");
 const assert = require("chai").assert;
 
 describe("integer with big value", function() {
-
   before(function(done) {
     shareConn.query(
       "CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)",

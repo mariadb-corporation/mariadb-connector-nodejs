@@ -54,12 +54,11 @@ class Connection {
    * @returns {*} command
    */
   beginTransaction(options, callback) {
-
     if (!options) {
       return this.query("START TRANSACTION", callback);
     }
 
-    if (!callback && typeof options === 'function') {
+    if (!callback && typeof options === "function") {
       return this.query("START TRANSACTION", options);
     }
 
@@ -75,11 +74,12 @@ class Connection {
    * @returns {*} command if commit was needed only
    */
   commit(options, callback) {
-    if (!(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
-      (this.info.status & ServerStatus.STATUS_IN_TRANS)) {
-
+    if (
+      !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      this.info.status & ServerStatus.STATUS_IN_TRANS
+    ) {
       if (!options) return this.query("COMMIT", callback);
-      if (!callback && typeof options === 'function') {
+      if (!callback && typeof options === "function") {
         return this.query("COMMIT", options);
       }
       options.sql = "COMMIT";
@@ -88,7 +88,7 @@ class Connection {
 
     if (callback) {
       callback();
-    } else if (!callback && typeof options === 'function') {
+    } else if (!callback && typeof options === "function") {
       options();
     }
     return null;
@@ -102,11 +102,12 @@ class Connection {
    * @returns {*} command if commit was needed only
    */
   rollback(options, callback) {
-    if (!(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
-      (this.info.status & ServerStatus.STATUS_IN_TRANS)) {
-
+    if (
+      !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      this.info.status & ServerStatus.STATUS_IN_TRANS
+    ) {
       if (!options) return this.query("ROLLBACK", callback);
-      if (!callback && typeof options === 'function') {
+      if (!callback && typeof options === "function") {
         return this.query("ROLLBACK", options);
       }
       options.sql = "ROLLBACK";
@@ -115,7 +116,7 @@ class Connection {
 
     if (callback) {
       callback();
-    } else if (!callback && typeof options === 'function') {
+    } else if (!callback && typeof options === "function") {
       options();
     }
     return null;
