@@ -46,6 +46,11 @@ class ResultSet extends Command {
       //*********************************************************************************************************
       case 0xff:
         const err = packet.readError(info, this.displaySql());
+
+        //force in transaction status, since query will have created a transaction if autocommit is off
+        //goal is to avoid unnecessary COMMIT/ROLLBACK.
+        info.status |= ServerStatus.STATUS_IN_TRANS;
+
         this.throwError(err);
         return null;
 

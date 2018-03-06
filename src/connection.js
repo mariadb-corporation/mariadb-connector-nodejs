@@ -5,6 +5,7 @@ const Queue = require("denque");
 const Net = require("net");
 const PacketInputStream = require("./io/packet_input_stream");
 const PacketOutputStream = require("./io/packet_output_stream");
+const ServerStatus = require("./const/server-status");
 const tls = require("tls");
 
 /*commands*/
@@ -45,16 +46,79 @@ class Connection {
     //TODO
   }
 
+  /**
+   * Start transaction
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command
+   */
   beginTransaction(options, callback) {
-    //TODO
+
+    if (!options) {
+      return this.query("START TRANSACTION", callback);
+    }
+
+    if (!callback && typeof options === 'function') {
+      return this.query("START TRANSACTION", options);
+    }
+
+    options.sql = "START TRANSACTION";
+    return this.query(options, callback);
   }
 
+  /**
+   * Commit a transaction.
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command if commit was needed only
+   */
   commit(options, callback) {
-    //TODO
+    if (!(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      (this.info.status & ServerStatus.STATUS_IN_TRANS)) {
+
+      if (!options) return this.query("COMMIT", callback);
+      if (!callback && typeof options === 'function') {
+        return this.query("COMMIT", options);
+      }
+      options.sql = "COMMIT";
+      return this.query(options, callback);
+    }
+
+    if (callback) {
+      callback();
+    } else if (!callback && typeof options === 'function') {
+      options();
+    }
+    return null;
   }
 
+  /**
+   * Roll back a transaction.
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command if commit was needed only
+   */
   rollback(options, callback) {
-    //TODO
+    if (!(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      (this.info.status & ServerStatus.STATUS_IN_TRANS)) {
+
+      if (!options) return this.query("ROLLBACK", callback);
+      if (!callback && typeof options === 'function') {
+        return this.query("ROLLBACK", options);
+      }
+      options.sql = "ROLLBACK";
+      return this.query(options, callback);
+    }
+
+    if (callback) {
+      callback();
+    } else if (!callback && typeof options === 'function') {
+      options();
+    }
+    return null;
   }
 
   query(sql, values, cb) {
@@ -74,7 +138,7 @@ class Connection {
       _cb = cb;
     }
 
-    const cmd = new Query(this.events, _options, _sql, _values, _cb, cb);
+    const cmd = new Query(this.events, _options, _sql, _values, _cb);
     return this.addCommand(cmd);
   }
 

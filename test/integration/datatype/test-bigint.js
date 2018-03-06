@@ -1,10 +1,10 @@
 "use strict";
 
-const base = require("../base.js");
+const base = require("../../base.js");
 const assert = require("chai").assert;
 
 describe("integer with big value", function() {
-  var conn = null;
+
   before(function(done) {
     shareConn.query(
       "CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)",
@@ -13,10 +13,6 @@ describe("integer with big value", function() {
         done();
       }
     );
-  });
-
-  after(function() {
-    if (conn) conn.end();
   });
 
   it("bigint format", function(done) {
