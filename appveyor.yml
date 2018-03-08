@@ -7,7 +7,6 @@ environment:
   matrix:
     - DB: '10.2.12'
       nodejs_version: "6"
-      LINT: 1
 
     - DB: '10.2.12'
       nodejs_version: "8"
@@ -49,6 +48,5 @@ build: off
 test_script:
   - node --version
   - yarn --version
-  - if "%LINT%"=="1" (yarn run lint)
   - cd c:\projects\mariadb-connector-nodejs
   - npm test
