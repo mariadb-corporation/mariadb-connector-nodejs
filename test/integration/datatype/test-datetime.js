@@ -9,17 +9,26 @@ describe("datetime", function() {
   const date3 = new Date("2001-12-31 23:59:59.123456");
 
   before(function(done) {
-    shareConn.query("DROP TABLE IF EXISTS table_date");
-    shareConn.query("CREATE TABLE table_date (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))");
-    shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [date, date2, date3]);
-    shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [null, null, null], () => {
-      if (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7)) done();
-      shareConn.query(
-        "INSERT INTO table_date VALUES (?, ?, ?)",
-        ["0000-00-00", "0000-00-00 00:00:00", "0000-00-00 00:00:00"],
-        () => done()
-      );
-    });
+    //MySQL 5.5 doesn't permit datetime(6)
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
+      done();
+    } else {
+      shareConn.query("DROP TABLE IF EXISTS table_date");
+      shareConn.query("CREATE TABLE table_date (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))");
+      shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [date, date2, date3]);
+      shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [null, null, null], () => {
+        if (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7)) {
+          done();
+        } else {
+          shareConn.query(
+            "INSERT INTO table_date VALUES (?, ?, ?)",
+            ["0000-00-00", "0000-00-00 00:00:00", "0000-00-00 00:00:00"],
+            () => done()
+          );
+        }
+      });
+    }
+
   });
 
   it("standard date", function(done) {
