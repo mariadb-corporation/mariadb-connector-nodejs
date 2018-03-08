@@ -34,7 +34,7 @@ describe("integer with big value", function() {
       assert.strictEqual(typeof rows[3].v, "number");
     });
 
-    shareConn.query({supportBigNumbers:true, sql:"SELECT * FROM testBigint"}, (err, rows) => {
+    shareConn.query({ supportBigNumbers: true, sql: "SELECT * FROM testBigint" }, (err, rows) => {
       assert.strictEqual(rows.length, 4);
       assert.strictEqual(rows[0].v, 127);
       assert.strictEqual(rows[1].v, 128);
@@ -43,7 +43,7 @@ describe("integer with big value", function() {
       assert.strictEqual(rows[3].v.toString(), "9007199254740992");
     });
 
-    shareConn.query({bigNumberStrings:true, sql:"SELECT * FROM testBigint"}, (err, rows) => {
+    shareConn.query({ bigNumberStrings: true, sql: "SELECT * FROM testBigint" }, (err, rows) => {
       assert.strictEqual(rows.length, 4);
       assert.strictEqual(rows[0].v, "127");
       assert.strictEqual(rows[1].v, "128");
@@ -53,6 +53,5 @@ describe("integer with big value", function() {
 
       done();
     });
-
   });
 });

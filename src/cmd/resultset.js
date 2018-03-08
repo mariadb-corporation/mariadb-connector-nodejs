@@ -39,7 +39,7 @@ class ResultSet extends Command {
       //* OK response
       //*********************************************************************************************************
       case 0x00:
-        return this.readOKPacket(packet, info);
+        return this.readOKPacket(packet, opts, info);
 
       //*********************************************************************************************************
       //* ERROR response
@@ -117,10 +117,11 @@ class ResultSet extends Command {
    * see https://mariadb.com/kb/en/library/ok_packet/
    *
    * @param packet    OK_Packet
+   * @param opts      connection options
    * @param info      connection information
    * @returns {*}     null or {Resultset.readResponsePacket} in case of multi-result-set
    */
-  readOKPacket(packet, info) {
+  readOKPacket(packet, opts, info) {
     packet.skip(1); //skip header
     let rs = new ChangeResult(packet.readLength(false), packet.readLength(true));
 
@@ -136,8 +137,8 @@ class ResultSet extends Command {
           switch (type) {
             case StateChange.SESSION_TRACK_SYSTEM_VARIABLES:
               const subSubPacket = subPacket.subPacketLengthEncoded();
-              const variable = subSubPacket.readStringLengthEncoded(info.collation.encoding);
-              const value = subSubPacket.readStringLengthEncoded(info.collation.encoding);
+              const variable = subSubPacket.readStringLengthEncoded(opts.collation.encoding);
+              const value = subSubPacket.readStringLengthEncoded(opts.collation.encoding);
 
               switch (variable) {
                 case "character_set_client":
