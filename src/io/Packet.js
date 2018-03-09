@@ -228,8 +228,9 @@ class Packet {
 
   readFloatLengthCoded() {
     const len = this.readLength(false);
-    if (len === 0) {
-      return 0;
+
+    if (len === 0 || !len) {
+      return len;
     }
 
     let result = 0;
@@ -264,7 +265,7 @@ class Packet {
         }
       } else {
         result *= 10;
-        result += this.buffer[this.offset++] - 48;
+        result += this.buf[this.off++] - 48;
       }
     }
 

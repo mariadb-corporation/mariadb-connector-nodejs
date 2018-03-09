@@ -28,7 +28,6 @@ describe("datetime", function() {
         }
       });
     }
-
   });
 
   it("standard date", function(done) {

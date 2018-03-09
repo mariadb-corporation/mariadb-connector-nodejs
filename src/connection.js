@@ -122,6 +122,28 @@ class Connection {
     return null;
   }
 
+  /**
+   * Execute query using binary protocol.
+   *
+   * @param sql     sql parameter Object can be used to supersede default option.
+   *                Object must then have sql property.
+   * @param values  object / array of placeholder values (not mandatory)
+   * @param cb      function that will be called after reception of error/results.
+   */
+  execute(sql, values, cb) {
+    //TODO implement
+    //temporary use query
+    return this.query(sql, values, cb);
+  }
+
+  /**
+   * Execute query using text protocol.
+   *
+   * @param sql     sql parameter Object can be used to supersede default option.
+   *                Object must then have sql property.
+   * @param values  object / array of placeholder values (not mandatory)
+   * @param cb      function that will be called after reception of error/results.
+   */
   query(sql, values, cb) {
     let _options, _sql, _values, _cb;
 
