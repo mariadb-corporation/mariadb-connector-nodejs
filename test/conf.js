@@ -6,6 +6,6 @@ if (process.env.TEST_USER) baseConfig["user"] = process.env.TEST_USER;
 if (process.env.TEST_PASSWORD) baseConfig["password"] = process.env.TEST_PASSWORD;
 if (process.env.TEST_DB) baseConfig["database"] = process.env.TEST_DB;
 if (process.env.TEST_PORT) baseConfig["port"] = process.env.TEST_PORT;
-global.longTest = process.env.TEST_LONG ? process.env.TEST_PORT : false;
+global.longTest = process.env.TEST_LONG ? process.env.TEST_LONG : false;
 
 module.exports.baseConfig = baseConfig;
