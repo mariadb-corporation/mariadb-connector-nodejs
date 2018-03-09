@@ -62,7 +62,7 @@ describe("json", function() {
           assert.equal(val2.id, 2);
           assert.equal(val2.val, "test");
         } else {
-          assert.equal(rows[0].val1.id, 2);
+          assert.equal(rows[0]["val1"].id, 2);
           assert.equal(rows[0].val1.val, "test");
           assert.equal(rows[1].val1.id, 2);
           assert.equal(rows[1].val1.val, "test");

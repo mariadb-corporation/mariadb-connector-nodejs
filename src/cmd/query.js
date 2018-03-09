@@ -317,9 +317,8 @@ class Query extends ResultSet {
         //TODO parse Geometry
         return null;
       case FieldType.JSON:
-        //for mysql only => parse it as object ?
-        //mariadb don't send this type, so parsing as json is to be done by client
-        return packet.readStringLengthEncoded("utf8");
+        //for mysql only => parse string as JSON object
+        return JSON.parse(packet.readStringLengthEncoded("utf8"));
 
       default:
         if (column.collation.index === 63) {

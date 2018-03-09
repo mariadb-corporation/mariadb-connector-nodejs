@@ -1,6 +1,6 @@
 "use strict";
 
-let baseConfig = { user: "root", database: "testn", host: "localhost", port: 3306 };
+let baseConfig = { user: "root", database: "testn", host: "localhost", port: 3310 };
 if (process.env.TEST_HOST) baseConfig["host"] = process.env.TEST_HOST;
 if (process.env.TEST_USER) baseConfig["user"] = process.env.TEST_USER;
 if (process.env.TEST_PASSWORD) baseConfig["password"] = process.env.TEST_PASSWORD;
