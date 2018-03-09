@@ -10,15 +10,21 @@ MariaDB node.js connector is a [mysql](https://www.npmjs.com/package/mysql) comp
 
 Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://jira.mariadb.org/projects/CONJS/issues/</a>
 
-## Benchmarks
-
-//TODO
-explain why good perf (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
-
 ## Status
 [![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
 [![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
+
+
+## Benchmarks
+
+//TODO make benchmark when stabilized 
+<img src="http://fakeimg.pl/350x200/ff0000/000">
+
+<img src="http://fakeimg.pl/350x200/ff0000/000">
+
+explain why good perfs (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
+
 
 ## Obtaining the driver
 
@@ -33,7 +39,7 @@ npm install <NPM NAME> --save
 
 For a Getting started guide, API docs, recipes,  etc. see the 
 * [Changelog](/documentation/changelog.md)
-* [Failover and high-availability](/documentation/readme.md)
+* [Documentation](/documentation/readme.md)
 
 
 ## Contributing
