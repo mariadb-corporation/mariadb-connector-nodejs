@@ -19,9 +19,11 @@ Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://j
 ## Benchmarks
 
 //TODO make benchmark when stabilized 
-<img src="http://fakeimg.pl/350x200/ff0000/000">
+<p align="center">
+    <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>
+    <img src="https://fakeimg.pl/350x200/?text=benchmark%202"/>  
+</p>
 
-<img src="http://fakeimg.pl/350x200/ff0000/000">
 
 explain why good perfs (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
 
