@@ -173,7 +173,7 @@ describe("mapping", () => {
     }
   });
 
-  it("query mapping field", done => {
+  it("query mapping field", function(done) {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();
@@ -191,7 +191,7 @@ describe("mapping", () => {
     });
   });
 
-  it("execute mapping field", done => {
+  it("execute mapping field", function(done) {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();

@@ -38,7 +38,7 @@ describe("datetime", () => {
     });
   });
 
-  it("date text", done => {
+  it("date text", function(done) {
     const date = new Date("1999-01-31 12:13:14");
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
     shareConn.query("select CAST(? as datetime) d", [date], (err, res) => {
@@ -52,7 +52,7 @@ describe("datetime", () => {
     });
   });
 
-  it("date text from row", done => {
+  it("date text from row", function(done) {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
     shareConn.query("select * from table_date", (err, rows) => {
       if (err) throw err;
@@ -74,7 +74,7 @@ describe("datetime", () => {
     });
   });
 
-  it("date text as string", done => {
+  it("date text as string", function(done) {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
 
     const conn1 = base.createConnection({

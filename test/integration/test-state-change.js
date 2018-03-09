@@ -5,7 +5,7 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations");
 
 describe("connection state change", () => {
-  it("session state change", done => {
+  it("session state change", function(done) {
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 2)) ||
       (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 4))
