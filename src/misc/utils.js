@@ -31,7 +31,6 @@ module.exports.log = function(buf, off, len, header) {
         out.push(hexArray[byteValue >>> 4], hexArray[byteValue & 0x0f], " ");
         asciiValue[posHexa++] =
           byteValue > 31 && byteValue < 127 ? String.fromCharCode(byteValue) : ".";
-        pos++;
       }
     }
 

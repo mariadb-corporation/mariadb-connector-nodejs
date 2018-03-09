@@ -5,8 +5,8 @@
   </a>
 </p>
 
-[![Linux Build](https://travis-ci.org/rusher/node-mariadb.svg?branch=master)](https://travis-ci.org/rusher/node-mariadb)
-[![Windows Build](https://ci.appveyor.com/api/projects/status/nkvfmixam8tciem4?svg=true)](https://ci.appveyor.com/project/rusher/node-mariadb)
+[![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
+[![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
 
 
@@ -22,6 +22,35 @@ MariaDB node.js connector is LGPL version 2.1 licensed.
 Why a new driver ?! There is already some good community driver (like [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) ), but core implementation has flaws : use string concatenation, doesn't permit streaming...
 
 TODO add tracker link
+
+## Connection
+
+common API to mysql/mysql2:
+
+* `connect(callback)`: Connect event with callback
+* `changeUser(options, callback)`: change current connection user
+* `beginTransaction(options, callback)`: begin transaction
+* `commit(options, callback)`: commit current transaction
+* `rollback(options, callback)`: rollback current transaction
+* `ping(options, callback)`: send an empty packet to server to ensure connection
+* `query(sql[, values][,callback])`: execute a [query](#query).
+* `pause()`: pause socket output.
+* `resume()`: resume socket output.
+* `on(eventName, listener)`: register to connection event
+* `once(eventName, listener)`: register to next connection event
+* `end(callback)`: gracefully end connection
+* `destroy()`: force connection ending. 
+
+
+Not implemented : 
+
+* `escape(value)`
+* `escapeId(value)`
+* `format(sql, value)`
+* `stats(options, callback)`
+
+escape function are not implemented, since it can lead to injection. 
+statistic method is public in mysql, but not documented. 
  
 ## Query
 `connection.query(sql[, values][,callback])`
@@ -175,6 +204,23 @@ List of events :
 let query = connection.query('SELECT host, user FROM mysql.user');
 query.on('error', (err) => console.log(err));
 query.on('result', (res) => console.log(res.host + '/' + res.user));
+```
+
+### Transaction
+* `connection.beginTransaction(options, callback)`: begin transaction
+* `connection.commit(options, callback)`: commit current transaction
+* `connection.rollback(options, callback)`: rollback current transaction
+
+Driver does know current transaction state, if no transaction is active, 
+commit/rollback commands won't send any command to server. 
+
+```javascript
+conn.beginTransaction();
+conn.query("INSERT INTO testTransaction values ('test')");
+conn.query("INSERT INTO testTransaction values ('test2')", (err) => {
+  if (err) return conn.rollback();
+  conn.commit();
+});
 ```
 
 

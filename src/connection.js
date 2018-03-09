@@ -5,6 +5,7 @@ const Queue = require("denque");
 const Net = require("net");
 const PacketInputStream = require("./io/packet_input_stream");
 const PacketOutputStream = require("./io/packet_output_stream");
+const ServerStatus = require("./const/server-status");
 const tls = require("tls");
 
 /*commands*/
@@ -45,18 +46,104 @@ class Connection {
     //TODO
   }
 
+  /**
+   * Start transaction
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command
+   */
   beginTransaction(options, callback) {
-    //TODO
+    if (!options) {
+      return this.query("START TRANSACTION", callback);
+    }
+
+    if (!callback && typeof options === "function") {
+      return this.query("START TRANSACTION", options);
+    }
+
+    options.sql = "START TRANSACTION";
+    return this.query(options, callback);
   }
 
+  /**
+   * Commit a transaction.
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command if commit was needed only
+   */
   commit(options, callback) {
-    //TODO
+    if (
+      !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      this.info.status & ServerStatus.STATUS_IN_TRANS
+    ) {
+      if (!options) return this.query("COMMIT", callback);
+      if (!callback && typeof options === "function") {
+        return this.query("COMMIT", options);
+      }
+      options.sql = "COMMIT";
+      return this.query(options, callback);
+    }
+
+    if (callback) {
+      callback();
+    } else if (!callback && typeof options === "function") {
+      options();
+    }
+    return null;
   }
 
+  /**
+   * Roll back a transaction.
+   *
+   * @param options   query option
+   * @param callback  callback function
+   * @returns {*} command if commit was needed only
+   */
   rollback(options, callback) {
-    //TODO
+    if (
+      !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
+      this.info.status & ServerStatus.STATUS_IN_TRANS
+    ) {
+      if (!options) return this.query("ROLLBACK", callback);
+      if (!callback && typeof options === "function") {
+        return this.query("ROLLBACK", options);
+      }
+      options.sql = "ROLLBACK";
+      return this.query(options, callback);
+    }
+
+    if (callback) {
+      callback();
+    } else if (!callback && typeof options === "function") {
+      options();
+    }
+    return null;
   }
 
+  /**
+   * Execute query using binary protocol.
+   *
+   * @param sql     sql parameter Object can be used to supersede default option.
+   *                Object must then have sql property.
+   * @param values  object / array of placeholder values (not mandatory)
+   * @param cb      function that will be called after reception of error/results.
+   */
+  execute(sql, values, cb) {
+    //TODO implement
+    //temporary use query
+    return this.query(sql, values, cb);
+  }
+
+  /**
+   * Execute query using text protocol.
+   *
+   * @param sql     sql parameter Object can be used to supersede default option.
+   *                Object must then have sql property.
+   * @param values  object / array of placeholder values (not mandatory)
+   * @param cb      function that will be called after reception of error/results.
+   */
   query(sql, values, cb) {
     let _options, _sql, _values, _cb;
 
@@ -74,7 +161,7 @@ class Connection {
       _cb = cb;
     }
 
-    const cmd = new Query(this.events, _options, _sql, _values, _cb, cb);
+    const cmd = new Query(this.events, _options, _sql, _values, _cb);
     return this.addCommand(cmd);
   }
 
@@ -138,18 +225,6 @@ class Connection {
     //TODO
   }
 
-  escape(value) {
-    //TODO ?
-  }
-
-  escapeId(value) {
-    //TODO ?
-  }
-
-  format(sql, values) {
-    //TODO ?
-  }
-
   on(eventName, listener) {
     this.events.on(eventName, listener);
   }
@@ -163,15 +238,15 @@ class Connection {
   //*****************************************************************
 
   serverVersion() {
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server information until connection is established";
-    return this._info.serverVersion;
+    return this.info.serverVersion;
   }
 
   isMariaDB() {
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server is MariaDB until connection is established";
-    return this._info.serverVersion.mariaDb;
+    return this.info.serverVersion.mariaDb;
   }
 
   hasMinVersion(major, minor, patch) {
@@ -179,10 +254,10 @@ class Connection {
     if (!minor) minor = 0;
     if (!patch) patch = 0;
 
-    if (!this._info.serverVersion)
+    if (!this.info.serverVersion)
       throw "cannot know if server version until connection is established";
 
-    let ver = this._info.serverVersion;
+    let ver = this.info.serverVersion;
     return (
       ver.major > major ||
       (ver.major === major && ver.minor > minor) ||
@@ -289,9 +364,9 @@ class Connection {
 
   _connectTimeoutReached() {
     this._clearConnectTimeout();
-    this._info = null;
     this._socket.destroy && this._socket.destroy();
     const err = Utils.createError("Connection timeout", true, this.info);
+    this.info = null;
     this._fatalError(err);
   }
 

@@ -178,8 +178,8 @@ class Packet {
     let res = [];
     let value = 0;
     let initPos = this.off;
-    this.off += end;
-    while (initPos > this.off) {
+    this.off += len;
+    while (initPos < this.off) {
       const char = this.buf[initPos++];
       if (char === 45) {
         //minus separator
@@ -202,7 +202,7 @@ class Packet {
     if (len === null) return null;
     this.off += len;
     const str = this.buf.toString("ascii", this.off - len, this.off);
-    if (str === "0000-00-00 00:00:00") return null;
+    if (str.startsWith("0000-00-00 00:00:00")) return null;
     return new Date(str);
   }
 
@@ -228,8 +228,9 @@ class Packet {
 
   readFloatLengthCoded() {
     const len = this.readLength(false);
-    if (len === 0) {
-      return 0;
+
+    if (len === 0 || !len) {
+      return len;
     }
 
     let result = 0;
@@ -264,7 +265,7 @@ class Packet {
         }
       } else {
         result *= 10;
-        result += this.buffer[this.offset++] - 48;
+        result += this.buf[this.off++] - 48;
       }
     }
 
