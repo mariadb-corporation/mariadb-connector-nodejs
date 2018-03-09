@@ -4,15 +4,15 @@ const base = require("../base.js");
 const ServerStatus = require("../../src/const/server-status");
 const assert = require("chai").assert;
 
-describe("transaction", function() {
-  before(function(done) {
+describe("transaction", () => {
+  before(done => {
     shareConn.query("CREATE TEMPORARY TABLE testTransaction (v varchar(10))", err => {
       if (err) return done(err);
       done();
     });
   });
 
-  it("transaction rollback", function(done) {
+  it("transaction rollback", done => {
     shareConn.rollback();
     shareConn.query("SET autocommit=0", () => {
       assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
@@ -38,7 +38,7 @@ describe("transaction", function() {
     });
   });
 
-  it("transaction commit", function(done) {
+  it("transaction commit", done => {
     shareConn.commit();
     shareConn.query("SET autocommit=0", () => {
       assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 0);

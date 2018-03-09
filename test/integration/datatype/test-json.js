@@ -3,8 +3,8 @@
 const base = require("../../base.js");
 const assert = require("chai").assert;
 
-describe("json", function() {
-  it("insert json format", function(done) {
+describe("json", () => {
+  it("insert json format", done => {
     //server permit JSON format
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||
@@ -26,7 +26,7 @@ describe("json", function() {
     validateJSON("test-json-insert-type", done);
   });
 
-  it("insert json format binary", function(done) {
+  it("insert json format binary", done => {
     //server permit JSON format
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||
@@ -72,7 +72,7 @@ describe("json", function() {
     });
   }
 
-  it("select json format", function(done) {
+  it("select json format", done => {
     //server permit JSON format
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||

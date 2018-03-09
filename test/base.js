@@ -9,7 +9,7 @@ const connOptions = new ConnOptions(Conf.baseConfig);
 //*****************************************************************
 // initialize share connection
 //*****************************************************************
-before("share initialization", function(done) {
+before("share initialization", done => {
   if (global.shareConn) {
     done();
   } else {

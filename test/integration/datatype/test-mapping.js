@@ -3,7 +3,7 @@
 const base = require("../../base.js");
 const assert = require("chai").assert;
 
-describe("mapping", function() {
+describe("mapping", () => {
   const dateNoMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));
   const dateMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));
   dateMillis.setUTCMilliseconds(556);
@@ -78,7 +78,7 @@ describe("mapping", function() {
     Buffer.from([0x01]) //VARBINARY(10)
   ];
 
-  before(function(done) {
+  before(done => {
     shareConn.query(
       "CREATE TEMPORARY TABLE nullMappingTable(" +
         "t1 BIT(1) NULL," +
@@ -173,7 +173,7 @@ describe("mapping", function() {
     }
   });
 
-  it("query mapping field", function(done) {
+  it("query mapping field", done => {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();
@@ -191,7 +191,7 @@ describe("mapping", function() {
     });
   });
 
-  it("execute mapping field", function(done) {
+  it("execute mapping field", done => {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();
@@ -214,7 +214,7 @@ describe("mapping", function() {
     });
   });
 
-  it("query null mapping field", function(done) {
+  it("query null mapping field", done => {
     shareConn.query("SELECT * FROM nullMappingTable", function(err, rows) {
       if (err) return done(err);
       for (let i = 0; i < 27; i++) {
@@ -224,7 +224,7 @@ describe("mapping", function() {
     });
   });
 
-  it("execute null mapping field", function(done) {
+  it("execute null mapping field", done => {
     shareConn.execute("SELECT * FROM nullMappingTable", function(err, rows) {
       if (err) return done(err);
       for (let i = 0; i < 27; i++) {
@@ -234,7 +234,7 @@ describe("mapping", function() {
     });
   });
 
-  it("dataType with null", function(done) {
+  it("dataType with null", done => {
     shareConn.query(
       "CREATE TEMPORARY TABLE dataTypeWithNull (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)"
     );

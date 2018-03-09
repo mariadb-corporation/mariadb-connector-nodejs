@@ -3,12 +3,12 @@
 const base = require("../../base");
 const assert = require("chai").assert;
 
-describe("datetime", function() {
+describe("datetime", () => {
   const date = new Date("2001-12-31 00:00:00");
   const date2 = new Date("2001-12-31 23:59:58.123");
   const date3 = new Date("2001-12-31 23:59:59.123456");
 
-  before(function(done) {
+  before(done => {
     //MySQL 5.5 doesn't permit datetime(6)
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       done();
@@ -30,7 +30,7 @@ describe("datetime", function() {
     }
   });
 
-  it("standard date", function(done) {
+  it("standard date", done => {
     shareConn.query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01 UTC")], (err, res) => {
       if (err) throw err;
       assert.deepEqual(res[0].tt, 946684800);
@@ -38,7 +38,7 @@ describe("datetime", function() {
     });
   });
 
-  it("date text", function(done) {
+  it("date text", done => {
     const date = new Date("1999-01-31 12:13:14");
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
     shareConn.query("select CAST(? as datetime) d", [date], (err, res) => {
@@ -52,7 +52,7 @@ describe("datetime", function() {
     });
   });
 
-  it("date text from row", function(done) {
+  it("date text from row", done => {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
     shareConn.query("select * from table_date", (err, rows) => {
       if (err) throw err;
@@ -74,7 +74,7 @@ describe("datetime", function() {
     });
   });
 
-  it("date text as string", function(done) {
+  it("date text as string", done => {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
 
     const conn1 = base.createConnection({

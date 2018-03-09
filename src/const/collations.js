@@ -1,6 +1,7 @@
 "use strict";
 
 let charsets = [];
+let defaultCharsets = [];
 
 class Collation {
   constructor(index, name, encoding, maxlen) {
@@ -8,6 +9,13 @@ class Collation {
     this.name = name;
     this.encoding = encoding;
     this.maxlen = maxlen;
+  }
+
+  static fromEncoding(encoding) {
+    if (encoding >= charsets.length) return undefined;
+    const val = defaultCharsets[encoding];
+    if (!val) throw new Error("unknown encoding : '" + encoding + "'");
+    return val;
   }
 
   static fromIndex(index) {
@@ -363,5 +371,53 @@ for (let i = 0; i < charsets.length; i++) {
     Collation.prototype[collation.name] = collation;
   }
 }
+
+
+/**
+ * set default encoding to charset index.
+ * created with query:
+ *  SELECT CONCAT(' defaultCharsets[\'',  co.character_set_name , '\'] = charsets[', CAST(co.ID as char), '];')
+ *  FROM information_schema.COLLATIONS co WHERE co.IS_DEFAULT = 'Yes' ORDER BY co.ID ASC;
+ */
+defaultCharsets["big5"] = charsets[1];
+defaultCharsets["dec8"] = charsets[3];
+defaultCharsets["cp850"] = charsets[4];
+defaultCharsets["hp8"] = charsets[6];
+defaultCharsets["koi8r"] = charsets[7];
+defaultCharsets["latin1"] = charsets[8];
+defaultCharsets["latin2"] = charsets[9];
+defaultCharsets["swe7"] = charsets[10];
+defaultCharsets["ascii"] = charsets[11];
+defaultCharsets["ujis"] = charsets[12];
+defaultCharsets["sjis"] = charsets[13];
+defaultCharsets["hebrew"] = charsets[16];
+defaultCharsets["tis620"] = charsets[18];
+defaultCharsets["euckr"] = charsets[19];
+defaultCharsets["koi8u"] = charsets[22];
+defaultCharsets["gb2312"] = charsets[24];
+defaultCharsets["greek"] = charsets[25];
+defaultCharsets["cp1250"] = charsets[26];
+defaultCharsets["gbk"] = charsets[28];
+defaultCharsets["latin5"] = charsets[30];
+defaultCharsets["armscii8"] = charsets[32];
+defaultCharsets["utf8"] = charsets[33];
+defaultCharsets["ucs2"] = charsets[35];
+defaultCharsets["cp866"] = charsets[36];
+defaultCharsets["keybcs2"] = charsets[37];
+defaultCharsets["macce"] = charsets[38];
+defaultCharsets["macroman"] = charsets[39];
+defaultCharsets["cp852"] = charsets[40];
+defaultCharsets["latin7"] = charsets[41];
+defaultCharsets["utf8mb4"] = charsets[45];
+defaultCharsets["cp1251"] = charsets[51];
+defaultCharsets["utf16"] = charsets[54];
+defaultCharsets["utf16le"] = charsets[56];
+defaultCharsets["cp1256"] = charsets[57];
+defaultCharsets["cp1257"] = charsets[59];
+defaultCharsets["utf32"] = charsets[60];
+defaultCharsets["binary"] = charsets[63];
+defaultCharsets["geostd8"] = charsets[92];
+defaultCharsets["cp932"] = charsets[95];
+defaultCharsets["eucjpms"] = charsets[97];
 
 module.exports = Collation;

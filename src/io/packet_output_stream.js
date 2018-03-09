@@ -197,7 +197,6 @@ PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
       return;
     }
   }
-
   arr.copy(this.buf, this.pos, off, len);
   this.pos += len;
 };
@@ -251,7 +250,7 @@ PacketOutputStream.prototype.writeString = function(str, encoding) {
     return;
   }
 
-  let buf = Iconv.decode(str, encoding);
+  let buf = Iconv.encode(str, encoding);
   this.writeBuffer(buf, 0, buf.length);
 };
 

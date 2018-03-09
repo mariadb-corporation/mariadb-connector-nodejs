@@ -4,8 +4,8 @@ const base = require("../../base.js");
 const assert = require("chai").assert;
 const Long = require("long");
 
-describe("integer with big value", function() {
-  before(function(done) {
+describe("integer with big value", () => {
+  before(done => {
     shareConn.query(
       "CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)",
       err => {
@@ -15,7 +15,7 @@ describe("integer with big value", function() {
     );
   });
 
-  it("bigint format", function(done) {
+  it("bigint format", done => {
     shareConn.query("INSERT INTO testBigint values (127), (128)", (err, rows) => {
       assert.strictEqual(rows.insertId, 128);
     });

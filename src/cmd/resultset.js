@@ -142,7 +142,7 @@ class ResultSet extends Command {
 
               switch (variable) {
                 case "character_set_client":
-                  info.collation = Collations.fromIndex(value);
+                  opts.collation = Collations.fromEncoding(value);
                   break;
 
                 default:
