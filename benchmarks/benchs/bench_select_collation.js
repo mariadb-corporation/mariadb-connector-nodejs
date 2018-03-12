@@ -1,4 +1,4 @@
-var assert = require('assert');
+const assert = require('assert');
 
 module.exports.title = 'select multiple collation';
 module.exports.displaySql = 'select * from information_schema.COLLATIONS';

@@ -8,7 +8,7 @@
 
 MariaDB node.js connector is a [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
 
-Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://jira.mariadb.org/projects/CONJS/issues/</a>
+Extended documentation of API : [Complete documentation](/documentation/readme.md)
 
 ## Status
 [![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
@@ -23,7 +23,6 @@ Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://j
     <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>
     <img src="https://fakeimg.pl/350x200/?text=benchmark%202"/>  
 </p>
-
 
 explain why good perfs (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
 
@@ -47,3 +46,6 @@ For a Getting started guide, API docs, recipes,  etc. see the
 ## Contributing
 To get started with a development installation and learn more about contributing, please follow the instructions at our 
 [Developers Guide.](/documentation/developers-guide.md)
+
+Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://jira.mariadb.org/projects/CONJS/issues/</a>
+

@@ -32,6 +32,31 @@ Not implemented :
 
 escape function are not implemented, since it can lead to injection. 
 statistic method is public in mysql, but not documented. 
+
+### Initiate a connection
+
+For faster connections to localhost, either the Unix socket file to use (default /tmp/mysql.sock), 
+or, on Windows where the server has been started with the --enable-named-pipe option, the name (case-insensitive) of the named pipe to use (default MySQL).
+
+
+This is done by setting the option 'socketPath' (host and port option are then ignored).
+This permit to avoid TCP-IP layer. 
+
+If not on localhost, then hostname must be set, port is optional with default 3306. 
+
+```javascript
+var mariadb      = require('mariadb-connector');
+
+//localhost on windows
+var conn1 = mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'});
+
+//localhost on unix
+var conn2 = mariadb.createConnection({socketPath: '/tmp/mysql.sock'});
+
+//not localhost
+var conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
+```
+
  
 ## Query
 `connection.query(sql[, values][,callback])`

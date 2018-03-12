@@ -1,4 +1,4 @@
-var assert = require('assert');
+const assert = require('assert');
 
 module.exports.title = 'simple insert';
 module.exports.displaySql = 'INSERT INTO testn.perfTest(test) VALUES (?) (into BLACKHOLE ENGINE) ';

@@ -9,10 +9,10 @@ var run = function() {
 bench = new Bench(run);
 
 var launchBenchs = function(path) {
-  var test = 'bench_select_one_user.js';
+  var test = 'bench_select_param.js';
   var m = require(path + '/' + test);
   bench.initFcts.push(m.initFct);
-  bench.add(m.title, m.displaySql, m.benchFct, m.onComplet);
+  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete);
 };
 
 fs.access('./benchs', function(err) {
