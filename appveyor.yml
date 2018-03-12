@@ -4,6 +4,7 @@ environment:
   LINT: 0
   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
+  MUST_USE_TCPIP: 1
   matrix:
     - DB: '10.2.12'
       nodejs_version: "6"
