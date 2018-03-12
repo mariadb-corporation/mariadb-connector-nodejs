@@ -178,6 +178,7 @@ class Connection {
   end(callback) {
     this._clearConnectTimeout();
     this.addCommand = this._addCommandDisabled;
+    this._closing = true;
     this._addCommandEnable(new Quit(this.events, callback));
   }
 
@@ -188,7 +189,7 @@ class Connection {
     this._clearConnectTimeout();
     this.addCommand = this._addCommandDisabled;
     this._closing = true;
-    this._commands.clear();
+    this.cmdQueue.clear();
 
     if (this.cmd) {
       //socket is closed, but server may still be processing a huge select
@@ -288,13 +289,18 @@ class Connection {
     }
 
     let packetInputStream = new PacketInputStream(this);
-    let conn = this;
-    socket.on("error", conn._fatalError.bind(conn));
+    socket.on("error", this._socketError.bind(this));
     socket.on("data", chunk => packetInputStream.onData(chunk));
 
     this.out.setWriter(buffer => this._socket.write(buffer));
 
     this._socket = socket;
+  }
+
+  _socketError(err) {
+    if (!this._closing) {
+      this._fatalError(err);
+    }
   }
 
   _dispatchPacket(packet, header) {
@@ -352,7 +358,7 @@ class Connection {
     let packetInputStream = new PacketInputStream(this);
 
     let events = this.events;
-    secureSocket.on("error", this._fatalError.bind(this));
+    secureSocket.on("error", this._socketError.bind(this));
     secureSocket.on("data", chunk => packetInputStream.onData(chunk));
     secureSocket.on("secureConnect", () => {
       events.emit("secureConnect");

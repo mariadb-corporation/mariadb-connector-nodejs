@@ -12,7 +12,7 @@ var launchBenchs = function(path) {
   var test = 'bench_select_param.js';
   var m = require(path + '/' + test);
   bench.initFcts.push(m.initFct);
-  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete);
+  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, bench.CONN.MARIADB);
 };
 
 fs.access('./benchs', function(err) {
