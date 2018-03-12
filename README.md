@@ -18,11 +18,13 @@ Extended documentation of API : [Complete documentation](/documentation/readme.m
 
 ## Benchmarks
 
-Goal is to best the actual most performant driver [mariasql] that is a C driver, and not maintained.
+Goal is to best the actual most performant driver [mariasql](https://www.npmjs.com/package/mariasql) that is a C driver, and not maintained.
 But a C driver with a javascript wrapper has some inherent issues : must be compiled and mostly, this wrapping of all data result in loss of performance for big resultset.    
  
-//TODO make benchmark when version is out
-// with mysql and mysql2 (because the most popular) and mariasql (because the actual more performant)  
+//TODO make benchmark when version is out, with 
+* mysql and mysql2 (because the most popular) 
+* mariasql (because the actual more performant)
+  
 <p align="center">
     <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>
     <img src="https://fakeimg.pl/350x200/?text=benchmark%202"/>  
