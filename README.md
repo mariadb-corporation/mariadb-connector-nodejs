@@ -6,7 +6,7 @@
 
 # MariaDB java connector
 
-MariaDB node.js connector is a [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
+MariaDB node.js connector is 100% javascript and [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
 
 Extended documentation of API : [Complete documentation](/documentation/readme.md)
 
@@ -18,13 +18,18 @@ Extended documentation of API : [Complete documentation](/documentation/readme.m
 
 ## Benchmarks
 
-//TODO make benchmark when stabilized 
+Goal is to best the actual most performant driver [mariasql] that is a C driver, and not maintained.
+But a C driver with a javascript wrapper has some inherent issues : must be compiled and mostly, this wrapping of all data result in loss of performance for big resultset.    
+ 
+//TODO make benchmark when version is out
+// with mysql and mysql2 (because the most popular) and mariasql (because the actual more performant)  
 <p align="center">
     <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>
     <img src="https://fakeimg.pl/350x200/?text=benchmark%202"/>  
 </p>
 
-explain why good perfs (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
+explain why good perfs compared to existing drivers (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
+
 
 
 ## Obtaining the driver
