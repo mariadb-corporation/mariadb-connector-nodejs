@@ -27,7 +27,7 @@ function Bench(callback) {
 
   const config = conf.baseConfig;
   config.charsetNumber=224;
-  if (process.platform !== 'win32') {
+  if (process.platform === 'win32') {
     config.socketPath= '\\\\.\\pipe\\MySQL';
   }
 
