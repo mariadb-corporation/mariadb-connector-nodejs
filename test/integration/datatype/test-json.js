@@ -4,7 +4,7 @@ const base = require("../../base.js");
 const assert = require("chai").assert;
 
 describe("json", () => {
-  it("insert json format",function(done) {
+  it("insert json format", function(done) {
     //server permit JSON format
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||

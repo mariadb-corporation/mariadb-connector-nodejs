@@ -35,11 +35,22 @@ class Connection {
   /**
    * Connect event with callback.
    *
-   * @param callback
+   * @param callback(error)
+   *
    */
   connect(callback) {
     if (!callback) return;
-    this.events.once("connect", () => callback(null, false));
+
+    if (this._closing) {
+      callback(Utils.createError("Connection closed", true, this.info));
+      return;
+    }
+
+    if (this._connected) {
+      callback(null);
+    } else {
+      this.events.once("connect", () => callback(null));
+    }
   }
 
   changeUser(options, callback) {
@@ -270,6 +281,10 @@ class Connection {
   // internal methods
   //*****************************************************************
 
+  _onConnect() {
+    this._clearConnectTimeout();
+    this._connected = true;
+  }
   _initSocket() {
     //TODO handle pipe
 
@@ -278,7 +293,7 @@ class Connection {
         this._connectTimeoutReached.bind(this),
         this.opts.connectTimeout
       );
-      this.events.once("connect", this._clearConnectTimeout.bind(this));
+      this.events.once("connect", this._onConnect.bind(this));
     }
 
     let socket;
@@ -418,6 +433,7 @@ class Connection {
     this.cmdQueue.clear();
     //disabled events
     this._socket.destroy();
+    this._closing = true;
     if (this.cmd && this.cmd.onResult) {
       this.cmd.onResult(err);
     }

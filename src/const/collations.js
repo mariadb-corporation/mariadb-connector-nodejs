@@ -372,7 +372,6 @@ for (let i = 0; i < charsets.length; i++) {
   }
 }
 
-
 /**
  * set default encoding to charset index.
  * created with query:
