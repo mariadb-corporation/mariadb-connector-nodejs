@@ -20,11 +20,12 @@ class Connection {
     this.opts = options;
     this.cmd = null;
     this.cmdQueue = new Queue();
-
-    this.addCommand = this._addCommandEnable;
     this.info = { threadId: -1 };
     this.out = new PacketOutputStream(this.opts, this.info);
+
+    this.addCommand = this._addCommandEnable;
     this.addCommand(new Handshake(this));
+
     this._initSocket();
   }
 
@@ -85,24 +86,7 @@ class Connection {
    * @returns {*} command if commit was needed only
    */
   commit(options, callback) {
-    if (
-      !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
-      this.info.status & ServerStatus.STATUS_IN_TRANS
-    ) {
-      if (!options) return this.query("COMMIT", callback);
-      if (!callback && typeof options === "function") {
-        return this.query("COMMIT", options);
-      }
-      options.sql = "COMMIT";
-      return this.query(options, callback);
-    }
-
-    if (callback) {
-      callback();
-    } else if (!callback && typeof options === "function") {
-      options();
-    }
-    return null;
+    return this._changeTransaction(options, callback, "COMMIT");
   }
 
   /**
@@ -113,24 +97,35 @@ class Connection {
    * @returns {*} command if commit was needed only
    */
   rollback(options, callback) {
+    return this._changeTransaction(options, callback, "ROLLBACK");
+  }
+
+  _changeTransaction(options, callback, cmd) {
+    let _options, _cb;
+
+    if (typeof options === "function") {
+      _cb = options;
+      _options = null;
+    } else {
+      _options = options;
+      _cb = callback;
+    }
+
+    //TODO ensure that due to node.js threading system, there can't be race condition on status value
+    //TODO i.e. if possible race condition, just emit command every time.
     if (
       !(this.info.status & ServerStatus.STATUS_AUTOCOMMIT) &&
       this.info.status & ServerStatus.STATUS_IN_TRANS
     ) {
-      if (!options) return this.query("ROLLBACK", callback);
-      if (!callback && typeof options === "function") {
-        return this.query("ROLLBACK", options);
-      }
-      options.sql = "ROLLBACK";
-      return this.query(options, callback);
+
+      const cmd = new Query(this.events, _options, cmd, null, _cb);
+      return this.addCommand(cmd);
+
     }
 
-    if (callback) {
-      callback();
-    } else if (!callback && typeof options === "function") {
-      options();
-    }
+    if (!_cb) _cb();
     return null;
+
   }
 
   /**
