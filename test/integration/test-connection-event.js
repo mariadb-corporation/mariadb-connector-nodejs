@@ -28,19 +28,18 @@ describe("connection event", () => {
     conn.on("connect", () => {
       eventNumber++;
     });
+
     conn.on("error", () => {
       eventNumber++;
     });
+
     conn.on("end", () => {
       eventNumber++;
+      assert.equal(eventNumber, 3);
+      done();
     });
 
-    conn.query("KILL CONNECTION_ID()", err => {
-      assert.equal(eventNumber, 2);
-      conn.end(err => {
-        assert.equal(eventNumber, 2);
-        done();
-      });
-    });
+    const query = conn.query("KILL CONNECTION_ID()");
+    query.on("error", () => {});
   });
 });

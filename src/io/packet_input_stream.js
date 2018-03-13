@@ -7,8 +7,8 @@ const Packet = require("./Packet");
  * see : https://mariadb.com/kb/en/library/0-packet/
  */
 class PacketInputStream {
-  constructor(conn) {
-    this.conn = conn;
+  constructor(dispatchPacket) {
+    this.dispatchPacket = dispatchPacket;
 
     //in case packet is not complete
     this.header = Buffer.allocUnsafe(4);
@@ -23,7 +23,7 @@ class PacketInputStream {
   }
 
   receivePacket(packet) {
-    this.conn._dispatchPacket(packet, this.header);
+    this.dispatchPacket(packet, this.header);
   }
 
   resetHeader() {

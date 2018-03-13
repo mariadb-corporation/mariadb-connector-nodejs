@@ -22,7 +22,7 @@ describe("test PacketInputStream data", () => {
       }
     };
     let buf = Buffer.from([5, 0, 0, 0, 1, 2, 3, 4, 5]);
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(buf);
   });
 
@@ -33,7 +33,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.from([5]));
     pis.onData(Buffer.from([0, 0, 0, 1, 2, 3, 4, 5]));
   });
@@ -45,7 +45,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.from([5, 0]));
     pis.onData(Buffer.from([0, 0, 1, 2, 3, 4, 5]));
   });
@@ -57,7 +57,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.from([5, 0]));
     pis.onData(Buffer.from([0]));
     pis.onData(Buffer.from([0, 1, 2, 3, 4, 5]));
@@ -70,7 +70,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.from([5, 0]));
     pis.onData(Buffer.from([0, 0]));
     pis.onData(Buffer.from([1, 2, 3, 4, 5]));
@@ -83,7 +83,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.from([5, 0, 0, 0, 1, 2]));
     pis.onData(Buffer.from([3, 4, 5]));
   });
@@ -103,7 +103,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
     pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
     assert.ok(beenDispatch);
@@ -124,7 +124,7 @@ describe("test PacketInputStream data", () => {
       }
     };
 
-    let pis = new PacketInputStream(conn);
+    let pis = new PacketInputStream(conn._dispatchPacket.bind(conn));
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
     pis.onData(buf.slice(1000000, 2000000));
     pis.onData(buf.slice(2000000, 16777215));

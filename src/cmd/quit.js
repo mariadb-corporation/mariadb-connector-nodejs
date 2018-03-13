@@ -16,9 +16,7 @@ class Quit extends Command {
     out.startPacket(this);
     out.writeInt8(0x01);
     out.flushBuffer(true);
-    if (this.callback) {
-      this.callback();
-    }
+    this.callback();
     this.emit("end");
     return null;
   }

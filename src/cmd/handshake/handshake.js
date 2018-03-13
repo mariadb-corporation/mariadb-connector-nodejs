@@ -14,7 +14,7 @@ const Capabilities = require("../../const/capabilities");
  */
 class Handshake extends Command {
   constructor(conn) {
-    super(conn.events);
+    super(conn._events);
     this.conn = conn;
   }
 
