@@ -117,6 +117,13 @@ class Packet {
     }
   }
 
+  readAsciiStringLengthEncoded() {
+    const len = this.readLength(false);
+    if (len === null) return null;
+    this.off += len;
+    return this.buf.toString("ascii", this.off - len, this.off);
+  }
+
   readStringLengthEncoded(encoding) {
     const len = this.readLength(false);
     if (len === null) return null;

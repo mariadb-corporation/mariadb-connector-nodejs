@@ -143,6 +143,7 @@ class ResultSet extends Command {
               switch (variable) {
                 case "character_set_client":
                   opts.collation = Collations.fromEncoding(value);
+                  this.connEvents.emit("collation_changed");
                   break;
 
                 default:
@@ -152,7 +153,7 @@ class ResultSet extends Command {
 
             case StateChange.SESSION_TRACK_SCHEMA:
               const subSubPacket2 = subPacket.subPacketLengthEncoded();
-              info.database = subSubPacket2.readStringLengthEncoded(info.collation.encoding);
+              info.database = subSubPacket2.readStringLengthEncoded(opts.collation.encoding);
               break;
           }
         }

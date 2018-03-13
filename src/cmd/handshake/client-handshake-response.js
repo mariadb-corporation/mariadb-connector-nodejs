@@ -43,10 +43,9 @@ module.exports.send = function send(cmd, out, opts, pluginName, info) {
   for (let i = 0; i < 23; i++) {
     out.writeInt8(0);
   }
-  const encoding = opts.collation.encoding;
 
   //null encoded user
-  out.writeString(opts.user || "", encoding);
+  out.writeString(opts.user || "");
   out.writeInt8(0);
 
   if (info.serverCapabilities & Capabilities.PLUGIN_AUTH_LENENC_CLIENT_DATA) {
@@ -61,13 +60,13 @@ module.exports.send = function send(cmd, out, opts, pluginName, info) {
   }
 
   if (info.clientCapabilities & Capabilities.CONNECT_WITH_DB) {
-    out.writeString(opts.database, encoding);
+    out.writeString(opts.database);
     out.writeInt8(0);
     info.database = opts.database;
   }
 
   if (info.clientCapabilities & Capabilities.PLUGIN_AUTH) {
-    out.writeString(pluginName, encoding);
+    out.writeString(pluginName);
     out.writeInt8(0);
   }
 
@@ -77,6 +76,8 @@ module.exports.send = function send(cmd, out, opts, pluginName, info) {
     out.writeInt8(0xfc);
     let initPos = out.pos; //save position, assuming connection attributes length will be less than 2 bytes length
     out.writeInt16(0);
+
+    const encoding = opts.collation.encoding;
 
     writeParam(out, "_client_name", encoding);
     writeParam(out, "MariaDB connector/Node", encoding);

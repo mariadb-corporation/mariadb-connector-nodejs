@@ -276,6 +276,13 @@ class Connection {
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
     this._events.on("server_error", this._fatalError.bind(this));
+    this._events.on(
+      "collation_changed",
+      function() {
+        this._out = new PacketOutputStream(this.opts, this.info);
+        this._out.setWriter(buffer => this._socket.write(buffer));
+      }.bind(this)
+    );
     this._out.setWriter(buffer => this._socket.write(buffer));
   }
 

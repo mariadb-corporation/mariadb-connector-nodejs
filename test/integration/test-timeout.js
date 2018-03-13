@@ -10,8 +10,8 @@ describe("connection timeout", () => {
     conn.on("error", err => {
       assert.strictEqual(err.message, "(conn=-1) Connection timeout");
       assert.isTrue(
-        Date.now() - initTime >= 1000,
-        "expected > 1000, but was " + (Date.now() - initTime)
+        Date.now() - initTime >= 999,
+        "expected > 999, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
         Date.now() - initTime < 1050,

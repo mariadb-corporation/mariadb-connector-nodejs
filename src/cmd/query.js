@@ -302,17 +302,17 @@ class Query extends ResultSet {
         return packet.readDecimalLengthEncoded(options.supportBigNumbers, options.bigNumberStrings);
       case FieldType.DATE:
         if (options.dateStrings) {
-          return packet.readStringLengthEncoded("ascii");
+          return packet.readAsciiStringLengthEncoded();
         }
         return packet.readDate();
       case FieldType.DATETIME:
       case FieldType.TIMESTAMP:
         if (options.dateStrings) {
-          return packet.readStringLengthEncoded("ascii");
+          return packet.readAsciiStringLengthEncoded();
         }
         return packet.readDateTime();
       case FieldType.TIME:
-        return packet.readStringLengthEncoded("ascii");
+        return packet.readAsciiStringLengthEncoded();
       case FieldType.GEOMETRY:
         //TODO parse Geometry
         return null;
@@ -324,7 +324,7 @@ class Query extends ResultSet {
         if (column.collation.index === 63) {
           return packet.readBufferLengthEncoded();
         } else {
-          return packet.readStringLengthEncoded(column.collation.encoding);
+          return packet.readStringLengthEncoded(options.collation.encoding);
         }
     }
   }

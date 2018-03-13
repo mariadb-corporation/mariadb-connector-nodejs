@@ -28,6 +28,7 @@ function PacketOutputStream(opts, info) {
   this.smallBuffer = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
   this.buf = this.smallBuffer;
   this.writeDate = opts.timezone === "local" ? this.writeLocalDate : this.writeTimezoneDate;
+  this.encoding = this.opts.collation.encoding;
 }
 
 PacketOutputStream.prototype.setWriter = function(writer) {
@@ -221,36 +222,34 @@ PacketOutputStream.prototype.writeStringAscii = function writeStringAscii(str) {
   }
 };
 
-PacketOutputStream.prototype.writeString = function(str, encoding) {
-  if (!encoding) encoding = this.opts.collation.encoding;
-
-  if (Buffer.isEncoding(encoding)) {
+PacketOutputStream.prototype.writeString = function(str) {
+  if (Buffer.isEncoding(this.encoding)) {
     //javascript use UCS-2 or UTF-16 string internal representation
     //that means that string to byte will be a maximum of * 3
     // (4 bytes utf-8 are represented on 2 UTF-16 characters)
     if (str.length * 3 < this.buf.length - this.pos) {
-      this.pos += this.buf.write(str, this.pos, encoding);
+      this.pos += this.buf.write(str, this.pos, this.encoding);
       return;
     }
 
     //checking real length
-    let byteLength = Buffer.byteLength(str, encoding);
+    let byteLength = Buffer.byteLength(str, this.encoding);
     if (byteLength > this.buf.length - this.pos) {
       if (this.buf.length < this.getMaxPacketLength()) {
         this.growBuffer(byteLength);
       }
       if (byteLength > this.buf.length - this.pos) {
         //not enough space in buffer, will stream :
-        let strBuf = Buffer.from(str, encoding);
+        let strBuf = Buffer.from(str, this.encoding);
         this.writeBuffer(strBuf, 0, strBuf.length);
         return;
       }
     }
-    this.pos += this.buf.write(str, this.pos, encoding);
+    this.pos += this.buf.write(str, this.pos, this.encoding);
     return;
   }
 
-  let buf = Iconv.encode(str, encoding);
+  let buf = Iconv.encode(str, this.encoding);
   this.writeBuffer(buf, 0, buf.length);
 };
 
