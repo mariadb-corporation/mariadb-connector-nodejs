@@ -230,6 +230,18 @@ class Connection {
     this._events.once(eventName, listener);
   }
 
+  escape(value) {
+    throw new Error("Connection.escape intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster");
+  }
+
+  escapeId(value) {
+    throw new Error("Connection.escapeId intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster");
+  }
+
+  format(sql, values) {
+    throw new Error("Connection.format intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster");
+  }
+
   //*****************************************************************
   // additional public methods
   //*****************************************************************
