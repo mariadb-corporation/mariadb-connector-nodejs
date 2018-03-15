@@ -25,7 +25,6 @@ class ConnectionOptions {
       this.collation = Collations.fromIndex(opts.charsetNumber) || Collations.fromIndex(224); //UTF8MB4_UNICODE_CI;
     }
     this.compress = opts.compress || false;
-    this.connectAttributes = opts.connectAttributes;
     this.connectTimeout = opts.connectTimeout === undefined ? 10000 : opts.connectTimeout;
     this.database = opts.database;
     this.dateStrings = opts.dateStrings || false;
@@ -33,8 +32,6 @@ class ConnectionOptions {
     this.bigNumberStrings = opts.bigNumberStrings || false;
     this.foundRows = opts.foundRows === undefined || opts.foundRows;
     this.host = opts.host || "localhost";
-    this.insecureAuth = opts.insecureAuth || false;
-    this.localAddress = opts.localAddress;
     this.maxPreparedStatements = opts.maxPreparedStatements || 128;
     this.multipleStatements = opts.multipleStatements || false;
     this.namedPlaceholders = opts.namedPlaceholders || false;
@@ -61,7 +58,6 @@ class ConnectionOptions {
       }
     }
 
-    this.trace = opts.trace !== false;
     this.user = opts.user;
     this.nestTables = opts.nestTables === undefined ? undefined : opts.nestTables;
     this.rowsAsArray = opts.rowsAsArray || false;

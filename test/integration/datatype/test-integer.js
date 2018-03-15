@@ -45,13 +45,32 @@ describe("integer with big value", () => {
 
     shareConn.query({ bigNumberStrings: true, sql: "SELECT * FROM testBigint" }, (err, rows) => {
       assert.strictEqual(rows.length, 4);
-      assert.strictEqual(rows[0].v, "127");
-      assert.strictEqual(rows[1].v, "128");
-      assert.strictEqual(rows[2].v, "9007199254740991");
+      assert.strictEqual(rows[0].v, 127);
+      assert.strictEqual(rows[1].v, 128);
+      assert.strictEqual(rows[2].v, 9007199254740991);
       assert.strictEqual(rows[3].v, "9007199254740992");
       assert.strictEqual(typeof rows[3].v, "string");
 
       done();
     });
   });
+
+  it("bigint format", done => {
+    shareConn.query("CREATE TEMPORARY TABLE testBigintNull (v BIGINT)");
+    shareConn.query("INSERT INTO testBigintNull values (127), (null)");
+
+    const checkResult = (err, rows) => {
+      assert.strictEqual(rows.length, 2);
+      assert.strictEqual(rows[0].v, 127);
+      assert.strictEqual(rows[1].v, null);
+    };
+
+    shareConn.query("SELECT * FROM testBigintNull", checkResult);
+    shareConn.query({ supportBigNumbers: true, sql: "SELECT * FROM testBigintNull" }, checkResult);
+    shareConn.query({ bigNumberStrings: true, sql: "SELECT * FROM testBigintNull" }, (err, rows) => {
+      checkResult(err, rows);
+      done();
+    });
+  });
+
 });

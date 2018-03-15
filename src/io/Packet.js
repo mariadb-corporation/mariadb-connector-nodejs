@@ -139,12 +139,6 @@ class Packet {
     const len = this.readLength(false);
     if (len === null) return null;
 
-    if (bigNumberStrings) {
-      //return as string
-      this.off += len;
-      return this.buf.toString("ascii", this.off - len, this.off);
-    }
-
     let result = 0;
     let negate = false;
     let begin = this.off;
@@ -161,12 +155,14 @@ class Packet {
     let val = negate ? -1 * result : result;
     this.off += len;
 
-    if (!Number.isSafeInteger(val) && supportBigNumbers) {
+    if (!Number.isSafeInteger(val)) {
       const str = this.buf.toString("ascii", this.off - len, this.off);
-      return Long.fromString(str, unsigned, 10);
-    } else {
-      return val;
+      if (bigNumberStrings) return str;
+      if (supportBigNumbers) {
+        return Long.fromString(str, unsigned, 10);
+      }
     }
+    return val;
   }
 
   readDecimalLengthEncoded(supportBigNumbers, bigNumberStrings) {
