@@ -33,7 +33,7 @@ function Bench(callback) {
   const config = conf.baseConfig;
   config.charsetNumber=224;
   if (process.platform === 'win32') {
-    config.socketPath= '\\\\.\\pipe\\MySQL';
+    config.socketPath = '\\\\.\\pipe\\MySQL';
   }
 
   this.CONN = {};
@@ -56,6 +56,7 @@ function Bench(callback) {
   if (mariasqlC) {
     const configC = Object.assign({}, config);
     configC.charset = undefined;
+    configC.db = config.database;
 
     this.CONN['MARIASQLC'] = {
       drv: new mariasqlC(configC),
