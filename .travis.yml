@@ -69,11 +69,11 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
   - npm install
-  #to permit benchmark with mariasql
-  - npm install mariasql
   - node --version
   - yarn --version
   - node .travis/wait-for-docker-up.js
   - if [ -n "$LINT" ] ; then yarn run test:lint; fi
   - if [ -z "$BENCH$LINT" ] ; then yarn run test:base; fi
+  # to permit benchmark with mariasql
+  - if [ -n "$BENCH" ] ; then npm install mariasql; fi
   - if [ -n "$BENCH" ] ; then yarn run benchmark; fi

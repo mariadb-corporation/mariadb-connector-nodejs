@@ -11,9 +11,9 @@ common API to mysql/mysql2:
 * `connect(callback)`: Connect event with callback
 * `changeUser(options, callback)`: change current connection user
 * `beginTransaction(options, callback)`: begin transaction
-* `commit(options, callback)`: commit current transaction
-* `rollback(options, callback)`: rollback current transaction
-* `ping(options, callback)`: send an empty packet to server to ensure connection
+* `commit(options, callback)`: commit current transaction if any
+* `rollback(options, callback)`: rollback current transaction if any
+* `ping(options, callback)`: send an empty packet to server to check that connection is active
 * `query(sql[, values][,callback])`: execute a [query](#query).
 * `pause()`: pause socket output.
 * `resume()`: resume socket output.
@@ -30,7 +30,7 @@ Not implemented :
 * `format(sql, value)`
 * `stats(options, callback)`
 
-escape function are not implemented, since it can lead to injection. 
+escape function are not intentionally implemented, since it can lead to injection. use Connection.query(sql, values), it will be more secure and faster
 statistic method is public in mysql, but not documented. 
 
 ### Initiate a connection
@@ -59,7 +59,7 @@ var conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
 ### Connection options
 
 
-#### important option 
+#### Important option 
 
 * `user`: string. user
 * `host`: string. IP or DNS of database server. default: 'localhost'
@@ -81,12 +81,13 @@ For those integer that are not in [safe](https://developer.mozilla.org/en-US/doc
 * `bigNumberStrings`: if integer is not in "safe" range, the value will be return as a string. 
 * `supportBigNumbers`: if integer is not in "safe" range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
 
-#### ssl
-    //TODO describe all solutions
+#### Ssl
+
+//TODO describe all solutions
     
 * `ssl`: string/object. 
     
-#### other option 
+#### Other options 
 
 * `charset`: string. define charset exchange with server. default: UTF8MB4_UNICODE_CI
 * `dateStrings`: boolean.  indicate if date must be retrived as string (not as date). default: false

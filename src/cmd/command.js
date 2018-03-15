@@ -29,7 +29,7 @@ class Command extends EventEmitter {
 
   throwError(err) {
     if (this.onResult) {
-      this.onResult(err);
+      process.nextTick(this.onResult, err);
     } else {
       this.emit("error", err);
     }

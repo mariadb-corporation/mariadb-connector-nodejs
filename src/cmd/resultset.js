@@ -188,11 +188,10 @@ class ResultSet extends Command {
         columns = this._columns;
       }
 
-      const self = this;
       if (columns) {
-        process.nextTick(() => self.onResult(null, rows, columns));
+        process.nextTick(this.onResult, null, rows, columns);
       } else {
-        process.nextTick(() => self.onResult(null, rows));
+        process.nextTick(this.onResult, null, rows);
       }
     }
 

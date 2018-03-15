@@ -12,6 +12,7 @@ const tls = require("tls");
 /*commands*/
 const Handshake = require("./cmd/handshake/handshake");
 const Quit = require("./cmd/quit");
+const Ping = require("./cmd/ping");
 const Utils = require("./misc/utils");
 const Query = require("./cmd/query");
 
@@ -153,7 +154,8 @@ class Connection {
   }
 
   ping(options, callback) {
-    //TODO
+    const _cb = typeof options === "function" ? options : callback;
+    return this._addCommand(new Ping(this._events, _cb));
   }
 
   /**
@@ -205,7 +207,7 @@ class Connection {
             self._cmd.emit("error", err);
           }
         }
-        process.nextTick(() => self._socket.destroy());
+        process.nextTick(self._socket.destroy);
         killCon.end();
       });
     } else {
@@ -416,7 +418,7 @@ class Connection {
 
   _addCommandEnable(cmd) {
     let conn = this;
-    cmd.once("end", () => process.nextTick(() => conn._nextCmd()));
+    cmd.once("end", () => process.nextTick(conn._nextCmd.bind(conn)));
     if (!this._cmd && this._cmdQueue.isEmpty()) {
       this._cmd = cmd;
       this._cmd.init(this._out, this.opts, this.info);

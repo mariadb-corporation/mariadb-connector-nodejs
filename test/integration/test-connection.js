@@ -3,7 +3,7 @@
 const base = require("../base.js");
 const assert = require("chai").assert;
 
-describe("connection event", () => {
+describe("connection", () => {
   it("multiple connect call", function(done) {
     const conn = base.createConnection();
     conn.connect(err => {
@@ -22,7 +22,7 @@ describe("connection event", () => {
     });
   });
 
-  it("event", function(done) {
+  it("connection event subscription", function(done) {
     let eventNumber = 0;
     const conn = base.createConnection();
     conn.on("connect", () => {
@@ -41,5 +41,13 @@ describe("connection event", () => {
 
     const query = conn.query("KILL CONNECTION_ID()");
     query.on("error", () => {});
+  });
+
+  it("connection ping", function(done) {
+    shareConn.ping();
+    shareConn.ping(err => {
+      if (err) done(err);
+      done();
+    });
   });
 });
