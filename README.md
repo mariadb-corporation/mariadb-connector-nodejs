@@ -40,7 +40,7 @@ Driver is compatible with node 4+.
 
 The driver can be install using npm : 
 ```script
-npm install <NPM NAME> --save
+npm install mariadb-connector --save
 ```
 
 ## Documentation

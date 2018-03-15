@@ -1,13 +1,12 @@
 const base = require("../base.js");
 const assert = require("chai").assert;
 
-describe('Big query', function() {
-
+describe("Big query", function() {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
   let maxAllowedSize, buf;
 
   before(function(done) {
-    shareConn.query('SELECT @@max_allowed_packet as t', function(err, results) {
+    shareConn.query("SELECT @@max_allowed_packet as t", function(err, results) {
       if (err) {
         done(err);
       } else {
@@ -23,15 +22,15 @@ describe('Big query', function() {
     });
   });
 
-  it('parameter bigger than packet size', function(done) {
+  it("parameter bigger than packet size", function(done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(10000); //can take some time
-    shareConn.query('CREATE TEMPORARY TABLE bigParameter (b longblob)');
-    shareConn.query('insert into bigParameter(b) values(?)', [buf], function(err) {
+    shareConn.query("CREATE TEMPORARY TABLE bigParameter (b longblob)");
+    shareConn.query("insert into bigParameter(b) values(?)", [buf], function(err) {
       if (err) {
         done(err);
       } else {
-        shareConn.query('SELECT * from bigParameter', function(err, rows) {
+        shareConn.query("SELECT * from bigParameter", function(err, rows) {
           if (err) {
             throw done(err);
           } else {
@@ -42,5 +41,4 @@ describe('Big query', function() {
       }
     });
   });
-
 });

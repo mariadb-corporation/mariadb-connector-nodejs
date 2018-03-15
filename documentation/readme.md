@@ -35,14 +35,13 @@ statistic method is public in mysql, but not documented.
 
 ### Initiate a connection
 
-For faster connections to localhost, either the Unix socket file to use (default /tmp/mysql.sock), 
+For faster connections when database is on localhost, either the Unix socket file to use (default /tmp/mysql.sock), 
 or, on Windows where the server has been started with the --enable-named-pipe option, the name (case-insensitive) of the named pipe to use (default MySQL).
-
 
 This is done by setting the option 'socketPath' (host and port option are then ignored).
 This permit to avoid TCP-IP layer. 
 
-If not on localhost, then hostname must be set, port is optional with default 3306. 
+If not on localhost, then hostname must be set, port is optional with default 3306, connector will then use TCP/IP socket. 
 
 ```javascript
 var mariadb      = require('mariadb-connector');
@@ -57,19 +56,19 @@ var conn2 = mariadb.createConnection({socketPath: '/tmp/mysql.sock'});
 var conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
 ```
 
-### connection options
+### Connection options
 
 
 #### important option 
 
-    * `user`: string. user
-    * `host`: string. IP or DNS of database server. default: 'localhost'
-    * `port`: integer. database server port number. default: 3306
-    * `database`: string. default database when establishing connection.
-    * `password`: string. user password 
-    * `socketPath`: string. Permits connecting to the database via Unix domain socket or named pipe, if the server allows it.
-    * `compress`: boolean. exchanges with database must be gzip. (=> when database is not localhost). default: false
-    * `connectTimeout`: integer. connection timeout in ms. default: 10 000.
+* `user`: string. user
+* `host`: string. IP or DNS of database server. default: 'localhost'
+* `port`: integer. database server port number. default: 3306
+* `database`: string. default database when establishing connection.
+* `password`: string. user password 
+* `socketPath`: string. Permits connecting to the database via Unix domain socket or named pipe, if the server allows it.
+* `compress`: boolean. exchanges with database must be gzip. (=> when database is not localhost). default: false
+* `connectTimeout`: integer. connection timeout in ms. default: 10 000.
 
 Support for big integer: 
 
@@ -79,30 +78,30 @@ MariaDB/MySQL server have data type that permit bigger integer.
 For those integer that are not in [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range default implementation will return an integer that may be not the exact representation. 
 2 options permit to have the exact value :          
 
-    * `bigNumberStrings`: if integer is not in "safe" range, the value will be return as a string. 
-    * `supportBigNumbers`: if integer is not in "safe" range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
+* `bigNumberStrings`: if integer is not in "safe" range, the value will be return as a string. 
+* `supportBigNumbers`: if integer is not in "safe" range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
 
 #### ssl
     //TODO describe all solutions
     
-    * `ssl`: string/object. 
+* `ssl`: string/object. 
     
 #### other option 
-    * `charset`: string. define charset exchange with server. default: UTF8MB4_UNICODE_CI
-    * `dateStrings`: boolean.  indicate if date must be retrived as string (not as date). default: false
-    * `debug`: boolean. when active, log all exchange wirh servers. default: false
-    * `foundRows`: boolean. active, update number correspond to update rows. disable indicate real rows changed.  default: true.
-    * `multipleStatements`: boolean. Permit multi-queries like "insert into ab (i) values (1); insert into ab (i) values (2)". this may be **security risk** in case of sql injection. default: false
-    * `namedPlaceholders`: boolean. Permit using named placeholder, default: false
-    * `permitLocalInfile`: boolean. permit using LOAD DATA INFILE command.  
-    this (ie: loading a file from the client) may be a security problem :
-  
-    A "man in the middle" proxy server can change the actual file requested from the server so the client will send a local file to this proxy.
-    if someone can execute a query from the client, he can have access to any file on the client (according to the rights of the user running the client process).
-    default: false
-    * `timezone`: string. force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format    
-    * `nestTables`: boolean/string. resultset are presented by table to avoid results with colliding fields. default: false 
-    * `rowsAsArray`: boolean. default rows are defined as a JSON object. when active row is an array. default false 
+
+* `charset`: string. define charset exchange with server. default: UTF8MB4_UNICODE_CI
+* `dateStrings`: boolean.  indicate if date must be retrived as string (not as date). default: false
+* `debug`: boolean. when active, log all exchange wirh servers. default: false
+* `foundRows`: boolean. active, update number correspond to update rows. disable indicate real rows changed.  default: true.
+* `multipleStatements`: boolean. Permit multi-queries like "insert into ab (i) values (1); insert into ab (i) values (2)". this may be **security risk** in case of sql injection. default: false
+* `namedPlaceholders`: boolean. Permit using named placeholder, default: false
+* `permitLocalInfile`: boolean. permit using LOAD DATA INFILE command.  
+this (ie: loading a file from the client) may be a security problem :
+A "man in the middle" proxy server can change the actual file requested from the server so the client will send a local file to this proxy.
+if someone can execute a query from the client, he can have access to any file on the client (according to the rights of the user running the client process).
+default: false
+* `timezone`: string. force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format    
+* `nestTables`: boolean/string. resultset are presented by table to avoid results with colliding fields. default: false 
+* `rowsAsArray`: boolean. default rows are defined as a JSON object. when active row is an array. default false 
 
  
 ## Query

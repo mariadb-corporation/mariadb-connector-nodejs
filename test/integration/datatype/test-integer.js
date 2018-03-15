@@ -67,10 +67,12 @@ describe("integer with big value", () => {
 
     shareConn.query("SELECT * FROM testBigintNull", checkResult);
     shareConn.query({ supportBigNumbers: true, sql: "SELECT * FROM testBigintNull" }, checkResult);
-    shareConn.query({ bigNumberStrings: true, sql: "SELECT * FROM testBigintNull" }, (err, rows) => {
-      checkResult(err, rows);
-      done();
-    });
+    shareConn.query(
+      { bigNumberStrings: true, sql: "SELECT * FROM testBigintNull" },
+      (err, rows) => {
+        checkResult(err, rows);
+        done();
+      }
+    );
   });
-
 });

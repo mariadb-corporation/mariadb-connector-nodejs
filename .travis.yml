@@ -69,7 +69,8 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
   - npm install
-  - #npm install process-nextick-args concat-stream
+  #to permit benchmark with mariasql
+  - npm install mariasql
   - node --version
   - yarn --version
   - node .travis/wait-for-docker-up.js
