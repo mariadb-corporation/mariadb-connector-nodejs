@@ -6,17 +6,24 @@ environment:
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
   MUST_USE_TCPIP: 1
   matrix:
-    - DB: '10.2.12'
+    - DB: '10.2.13'
       nodejs_version: "6"
 
-    - DB: '10.2.12'
+    - DB: '10.2.13'
       nodejs_version: "8"
 
-    - DB: '10.2.12'
+    - DB: '10.2.13'
       nodejs_version: "9"
       MYSQL_USE_COMPRESSION: 1
 
-    - DB: '10.2.12'
+    - DB: '10.2.13'
+      nodejs_version: "9"
+
+    - DB: '10.2.13'
+      nodejs_version: "9"
+      BENCH: "1"
+
+    - DB: '10.2.13'
       nodejs_version: "8"
 
     - DB: '10.3.4'
@@ -50,4 +57,5 @@ test_script:
   - node --version
   - yarn --version
   - cd c:\projects\mariadb-connector-nodejs
-  - npm test
+  - if "%BENCH%" == "1" ( npm install microtime mariasql ) else ( npm test )
+  - if "%BENCH%" == "1" ( yarn run benchmark )

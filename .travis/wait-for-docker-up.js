@@ -6,13 +6,13 @@ const Conf = require('../test/conf');
 
 const connOptions = new ConnOptions(Conf.baseConfig);
 let decrement = 20;
-var callback = () => console.log("connected to docker server");
+var callback = () => console.log("docker db server up");
 const checkConnection = function() {
   decrement-=1;
 
   let conn = new Connection(connOptions);
   conn.on('error', (err) => {
-    console.error("Error connecting docker server (connection:" + decrement + ")");
+    console.error("Error connecting docker server (connection try " + (20 - decrement) + " of 20)");
     if (decrement === 0) {
       throw err;
     } else {

@@ -75,5 +75,5 @@ script:
   - if [ -n "$LINT" ] ; then yarn run test:lint; fi
   - if [ -z "$BENCH$LINT" ] ; then yarn run test:base; fi
   # to permit benchmark with mariasql
-  - if [ -n "$BENCH" ] ; then npm install mariasql; fi
+  - if [ -n "$BENCH" ] ; then npm install microtime mariasql; fi
   - if [ -n "$BENCH" ] ; then yarn run benchmark; fi
