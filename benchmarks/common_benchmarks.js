@@ -5,9 +5,9 @@ const colors = require('colors');
 const mariadb = require('../index.js');
 const mysql = require('mysql');
 const mysql2 = require('mysql2');
-let mariasqlC;
+let mariasql;
 try {
-  mariasqlC = require('mariasql');
+  mariasql = require('mariasql');
 } catch (err) {
   //mariasql not mandatory in dev to avoid having python, compiling ...
 }
@@ -19,12 +19,12 @@ function Bench(callback) {
   const ready = function(name) {
     console.log('driver for ' + name + ' connected');
     bench.dbReady++;
-    if (bench.dbReady === (mariasqlC ? 4 : 3)) {
+    if (bench.dbReady === (mariasql ? 4 : 3)) {
       bench.dbReady = 0;
       bench.warmupConnection(bench.CONN.MYSQL, 0, bench, callback);
       bench.warmupConnection(bench.CONN.MYSQL2, 0, bench, callback);
       bench.warmupConnection(bench.CONN.MARIADB, 0, bench, callback);
-      if (mariasqlC) {
+      if (mariasql) {
         bench.warmupConnection(bench.CONN.MARIASQLC, 0, bench, callback);
       }
     }
@@ -53,16 +53,16 @@ function Bench(callback) {
   };
   this.CONN.MARIADB.drv.connect(() => ready('mariadb'));
 
-  if (mariasqlC) {
+  if (mariasql) {
     const configC = Object.assign({}, config);
     configC.charset = undefined;
     configC.db = config.database;
 
     this.CONN['MARIASQLC'] = {
-      drv: new mariasqlC(configC),
-      desc: 'mariasqlC'
+      drv: new mariasql(configC),
+      desc: 'mariasql'
     };
-    this.CONN.MARIASQLC.drv.connect(() => ready('mariasqlC'));
+    this.CONN.MARIASQLC.drv.connect(() => ready('mariasql'));
   }
 
 
@@ -120,7 +120,7 @@ Bench.prototype.warmupConnection = (conn, i, bench, cb) => {
     } else {
       bench.dbReady++;
       console.log('warmup done for ' + conn.desc);
-      if (bench.dbReady === (mariasqlC ? 4 : 3)) {
+      if (bench.dbReady === (mariasql ? 4 : 3)) {
         console.log("initial warmup finished");
         cb();
       }
@@ -134,7 +134,7 @@ Bench.prototype.end = function(bench) {
   this.endConnection(this.CONN.MYSQL);
   this.endConnection(this.CONN.MYSQL2);
 
-  if (mariasqlC) {
+  if (mariasql) {
     this.endConnection(this.CONN.MARIASQLC);
   }
   bench.displayReport();
@@ -176,7 +176,7 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === (mariasqlC ? 'mariasqlC' : 'mysql')) {
+      if (o.drvType === (mariasql ? 'mariasql' : 'mysql')) {
         base = o.iteration;
       }
       if (o.iteration > best) best = o.iteration;
@@ -315,7 +315,7 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
       displaySql: displaySql
     });
 
-    if (mariasqlC) {
+    if (mariasql) {
       this.suite.add({
         name: title + ' - ' + self.CONN.MARIASQLC.desc,
         fn: function(deferred) {
