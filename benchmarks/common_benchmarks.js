@@ -1,5 +1,6 @@
 "use strict";
 
+const Benchmark = require("benchmark");
 const conf = require("../test/conf");
 
 const colors = require("colors");
