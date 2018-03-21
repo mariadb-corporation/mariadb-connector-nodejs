@@ -48,7 +48,6 @@ install:
   - ps: Start-FileDownload $Env:FILE -FileName server.msi
   - cmd: msiexec /i server.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
   - cmd: "\"c:\\projects\\server\\bin\\mysql.exe\" -e \"create database testn\" --user=root"
-  - cmd: type c:\projects\server\data\my.ini
   - cmd: echo [mysqld] > c:\projects\server\data\my.ini
   - cmd: echo datadir=C:/projects/server/data >> c:\projects\server\data\my.ini
   - cmd: echo port=3306 >> c:\projects\server\data\my.ini
@@ -56,7 +55,6 @@ install:
   - cmd: echo innodb_buffer_pool_size=200M >> c:\projects\server\data\my.ini
   - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
-  - cmd: type c:\projects\server\data\my.ini
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
   - cmd: cd c:\projects\mariadb-connector-nodejs
