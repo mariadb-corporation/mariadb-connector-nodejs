@@ -1,3 +1,5 @@
+"use strict";
+
 var fs = require("fs");
 var Bench = require("./common_benchmarks");
 var bench;

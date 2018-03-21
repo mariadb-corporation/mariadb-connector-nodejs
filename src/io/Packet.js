@@ -32,25 +32,27 @@ class Packet {
   }
 
   readUInt16() {
-    return this.buf[this.off++] | (this.buf[this.off++] << 8);
+    return this.buf[this.off++] + (this.buf[this.off++] << 8);
   }
 
   readUInt24() {
-    return this.buf[this.off++] | (this.buf[this.off++] << 8) | (this.buf[this.off++] << 16);
+    return this.buf[this.off++] + (this.buf[this.off++] << 8) + (this.buf[this.off++] << 16);
   }
 
   readUInt32() {
     return (
-      (this.buf[this.off++] | (this.buf[this.off++] << 8) | (this.buf[this.off++] << 16)) +
+      this.buf[this.off++] +
+      (this.buf[this.off++] << 8) +
+      (this.buf[this.off++] << 16) +
       this.buf[this.off++] * 0x1000000
     );
   }
 
   readInt32() {
     return (
-      this.buf[this.off++] |
-      (this.buf[this.off++] << 8) |
-      (this.buf[this.off++] << 16) |
+      this.buf[this.off++] +
+      (this.buf[this.off++] << 8) +
+      (this.buf[this.off++] << 16) +
       (this.buf[this.off++] << 24)
     );
   }
@@ -117,7 +119,7 @@ class Packet {
   }
 
   readSignedLength() {
-    const type = this.readUInt8();
+    const type = this.buf[this.off++];
     switch (type) {
       case 0xfb:
         return null;
@@ -133,7 +135,7 @@ class Packet {
   }
 
   readUnsignedLength() {
-    const type = this.readUInt8();
+    const type = this.buf[this.off++];
     switch (type) {
       case 0xfb:
         return null;
