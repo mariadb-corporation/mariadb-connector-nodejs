@@ -77,7 +77,7 @@ class ResultSet extends Command {
    * @returns {ResultSet.readColumn} next packet handler
    */
   readResultSet(packet) {
-    this._columnCount = packet.readLength(false);
+    this._columnCount = packet.readUnsignedLength();
     this._receivedColumnsCount = 0;
     this._rows.push([]);
     this._columns.push([]);
@@ -123,7 +123,7 @@ class ResultSet extends Command {
    */
   readOKPacket(packet, opts, info) {
     packet.skip(1); //skip header
-    let rs = new ChangeResult(packet.readLength(false), packet.readLength(true));
+    let rs = new ChangeResult(packet.readUnsignedLength(), packet.readSignedLength());
 
     info.status = packet.readUInt16();
     rs.warningStatus = packet.readUInt16();
@@ -133,7 +133,7 @@ class ResultSet extends Command {
       while (packet.remaining()) {
         const subPacket = packet.subPacketLengthEncoded();
         while (subPacket.remaining()) {
-          const type = subPacket.readInt8();
+          const type = subPacket.readUInt8();
           switch (type) {
             case StateChange.SESSION_TRACK_SYSTEM_VARIABLES:
               const subSubPacket = subPacket.subPacketLengthEncoded();

@@ -51,7 +51,8 @@ class Query extends ResultSet {
     //********************************************
     // send params
     //********************************************
-    for (let i = 1; i < this.queryParts.length; i++) {
+    const len = this.queryParts.length;
+    for (let i = 1; i < len; i++) {
       const value = this.values[i - 1];
 
       if (value === null) {

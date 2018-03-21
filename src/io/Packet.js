@@ -27,41 +27,56 @@ class Packet {
     return this.end - this.off > 0;
   }
 
-  readInt8() {
+  readUInt8() {
     return this.buf[this.off++];
   }
 
-  readUInt8() {
-    return this.buf[this.off++] & 0xff;
-  }
-
   readUInt16() {
-    this.off += 2;
-    return this.buf.readUInt16LE(this.off - 2, true);
+    return this.buf[this.off++] | (this.buf[this.off++] << 8);
   }
 
   readUInt24() {
-    return (
-      (this.buf[this.off++] & 0xff) +
-      ((this.buf[this.off++] & 0xff) << 8) +
-      ((this.buf[this.off++] & 0xff) << 16)
-    );
+    return this.buf[this.off++] | (this.buf[this.off++] << 8) | (this.buf[this.off++] << 16);
   }
 
   readUInt32() {
-    this.off += 4;
-    return this.buf.readUInt32LE(this.off - 4, true);
+    return (
+      (this.buf[this.off++] | (this.buf[this.off++] << 8) | (this.buf[this.off++] << 16)) +
+      this.buf[this.off++] * 0x1000000
+    );
   }
 
-  readUInt64(signed) {
-    const first = this.readUInt32();
-    const second = this.readUInt32();
-    if (second >= 0x00200000) {
-      //more than than 2^53-1
-      return new Long(first, second, !signed);
-    }
-    //do not use Left shift!
-    return first + second * 0x100000000;
+  readInt32() {
+    return (
+      this.buf[this.off++] |
+      (this.buf[this.off++] << 8) |
+      (this.buf[this.off++] << 16) |
+      (this.buf[this.off++] << 24)
+    );
+  }
+
+  readInt64() {
+    const first = this.readInt32();
+    const second = this.readInt32();
+
+    const long = new Long(first, second, false);
+    if (long.isNegative()) {
+      if (long.lessThan(-9007199254740991)) return long;
+    } else if (long.greaterThan(9007199254740991)) return long;
+
+    return long.toNumber();
+  }
+
+  readUInt64() {
+    const first = this.readInt32();
+    const second = this.readInt32();
+
+    const long = new Long(first, second, true);
+    if (long.isNegative()) {
+      if (long.lessThan(-9007199254740991)) return long;
+    } else if (long.greaterThan(9007199254740991)) return long;
+
+    return long.toNumber();
   }
 
   readBuffer(len) {
@@ -85,7 +100,7 @@ class Packet {
   }
 
   readBufferLengthEncoded() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
     this.off += len;
     return this.buf.slice(this.off - len, this.off);
@@ -101,7 +116,7 @@ class Packet {
     return this.buf.toString("utf8", initialPosition, initialPosition + cnt);
   }
 
-  readLength(signed) {
+  readSignedLength() {
     const type = this.readUInt8();
     switch (type) {
       case 0xfb:
@@ -111,21 +126,37 @@ class Packet {
       case 0xfd:
         return this.readUInt24();
       case 0xfe:
-        return this.readUInt64(signed);
+        return this.readInt64();
+      default:
+        return type;
+    }
+  }
+
+  readUnsignedLength() {
+    const type = this.readUInt8();
+    switch (type) {
+      case 0xfb:
+        return null;
+      case 0xfc:
+        return this.readUInt16();
+      case 0xfd:
+        return this.readUInt24();
+      case 0xfe:
+        return this.readUInt64();
       default:
         return type;
     }
   }
 
   readAsciiStringLengthEncoded() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
     this.off += len;
     return this.buf.toString("ascii", this.off - len, this.off);
   }
 
   readStringLengthEncoded(encoding) {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
 
     this.off += len;
@@ -136,7 +167,7 @@ class Packet {
   }
 
   readLongLengthEncoded(supportBigNumbers, bigNumberStrings, unsigned) {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
 
     let result = 0;
@@ -166,7 +197,7 @@ class Packet {
   }
 
   readDecimalLengthEncoded(supportBigNumbers, bigNumberStrings) {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
 
     this.off += len;
@@ -175,7 +206,7 @@ class Packet {
   }
 
   readDate() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
 
     let res = [];
@@ -201,7 +232,7 @@ class Packet {
   }
 
   readDateTime() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
     this.off += len;
     const str = this.buf.toString("ascii", this.off - len, this.off);
@@ -210,7 +241,7 @@ class Packet {
   }
 
   readIntLengthEncoded() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     if (len === null) return null;
 
     let result = 0;
@@ -230,7 +261,7 @@ class Packet {
   }
 
   readFloatLengthCoded() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
 
     if (len === 0 || !len) {
       return len;
@@ -327,7 +358,7 @@ class Packet {
   }
 
   subPacketLengthEncoded() {
-    const len = this.readLength(false);
+    const len = this.readUnsignedLength();
     this.skip(len);
     return new Packet(this.buf, this.off - len, this.off);
   }

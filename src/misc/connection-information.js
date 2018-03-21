@@ -4,9 +4,10 @@ class ConnectionInformation {
   constructor() {
     this.threadId = -1;
     this.status = null;
+    this.serverVersion = null;
   }
 
-  serverVersion() {
+  getServerVersion() {
     if (!this.serverVersion)
       throw "cannot know if server information until connection is established";
     return this.serverVersion;

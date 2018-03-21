@@ -25,7 +25,7 @@ class InitialHandshake {
 
     let saltLength = 0;
     if (info.serverCapabilities & Capabilities.PLUGIN_AUTH) {
-      saltLength = Math.max(12, packet.readInt8() - 9);
+      saltLength = Math.max(12, packet.readUInt8() - 9);
     } else {
       packet.skip(1);
     }

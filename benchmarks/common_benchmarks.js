@@ -1,13 +1,13 @@
-const Benchmark = require('benchmark');
-const conf = require('../test/conf');
+const Benchmark = require("benchmark");
+const conf = require("../test/conf");
 
-const colors = require('colors');
-const mariadb = require('../index.js');
-const mysql = require('mysql');
-const mysql2 = require('mysql2');
+const colors = require("colors");
+const mariadb = require("../index.js");
+const mysql = require("mysql");
+const mysql2 = require("mysql2");
 let mariasql;
 try {
-  mariasql = require('mariasql');
+  mariasql = require("mariasql");
 } catch (err) {
   //mariasql not mandatory in dev to avoid having python, compiling ...
 }
@@ -17,7 +17,7 @@ function Bench(callback) {
   this.reportData = {};
 
   const ready = function(name) {
-    console.log('driver for ' + name + ' connected');
+    console.log("driver for " + name + " connected");
     bench.dbReady++;
     if (bench.dbReady === (mariasql ? 4 : 3)) {
       bench.dbReady = 0;
@@ -31,49 +31,52 @@ function Bench(callback) {
   };
 
   const config = conf.baseConfig;
-  config.charsetNumber=224;
-  if (process.platform === 'win32') {
-    config.socketPath = '\\\\.\\pipe\\MySQL';
-  }
+  config.charsetNumber = 224;
+  // if (process.platform === 'win32') {
+  //   config.socketPath = '\\\\.\\pipe\\MySQL';
+  // }
+
+  console.log(config);
 
   this.CONN = {};
   var bench = this;
-  this.CONN['MYSQL'] = { drv: mysql.createConnection(config), desc: 'mysql' };
-  this.CONN.MYSQL.drv.connect(() => ready('mysql'));
+  this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
+  this.CONN.MYSQL.drv.connect(() => ready("mysql"));
 
-  this.CONN['MYSQL2'] = {
+  this.CONN["MYSQL2"] = {
     drv: mysql2.createConnection(config),
-    desc: 'mysql2'
+    desc: "mysql2"
   };
-  this.CONN.MYSQL2.drv.connect(() => ready('mysql2'));
+  this.CONN.MYSQL2.drv.connect(() => ready("mysql2"));
 
-  this.CONN['MARIADB'] = {
+  this.CONN["MARIADB"] = {
     drv: mariadb.createConnection(config),
-    desc: 'mariadb'
+    desc: "mariadb"
   };
-  this.CONN.MARIADB.drv.connect(() => ready('mariadb'));
+  this.CONN.MARIADB.drv.connect(() => ready("mariadb"));
 
   if (mariasql) {
     const configC = Object.assign({}, config);
-    configC.charset = undefined;
+    configC.charset = "utf8mb4";
     configC.db = config.database;
+    configC.metadata = true;
+    if (config.socketPath != null) {
+      configC.unixSocket = config.socketPath;
+      configC.protocol = "socket";
+    }
 
-    this.CONN['MARIASQLC'] = {
+    this.CONN["MARIASQLC"] = {
       drv: new mariasql(configC),
-      desc: 'mariasql'
+      desc: "mariasql"
     };
-    this.CONN.MARIASQLC.drv.connect(() => ready('mariasql'));
+    this.CONN.MARIASQLC.drv.connect(() => ready("mariasql"));
   }
 
-
   this.initFcts = [];
-  this.queue = true;
-  this.async = true;
-
   //200 is a minimum to have benchmark average variation of 1%
   this.minSamples = 200;
 
-  this.suite = new Benchmark.Suite('foo', {
+  this.suite = new Benchmark.Suite("foo", {
     // called when the suite starts running
     onStart: function() {
       for (let i = 0; i < bench.initFcts.length; i++) {
@@ -91,14 +94,14 @@ function Bench(callback) {
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
-        event.target.options.benchTitle + ' ( sql: ' + event.target.options.displaySql + ' )';
+        event.target.options.benchTitle + " ( sql: " + event.target.options.displaySql + " )";
       const iteration = 1 / event.target.times.period;
       const variation = event.target.stats.rme;
 
       if (!bench.reportData[benchTitle]) {
         bench.reportData[benchTitle] = [];
       }
-      if (drvType !== 'warmup') {
+      if (drvType !== "warmup") {
         bench.reportData[benchTitle].push({
           drvType: drvType,
           iteration: iteration,
@@ -114,22 +117,21 @@ function Bench(callback) {
 }
 
 Bench.prototype.warmupConnection = (conn, i, bench, cb) => {
-  conn.drv.query('SELECT ' + i++, () => {
+  conn.drv.query("SELECT " + i++, () => {
     if (i < 15000) {
       bench.warmupConnection(conn, i, bench, cb);
     } else {
       bench.dbReady++;
-      console.log('warmup done for ' + conn.desc);
+      console.log("warmup done for " + conn.desc);
       if (bench.dbReady === (mariasql ? 4 : 3)) {
         console.log("initial warmup finished");
         cb();
       }
     }
   });
-}
+};
 
 Bench.prototype.end = function(bench) {
-
   this.endConnection(this.CONN.MARIADB);
   this.endConnection(this.CONN.MYSQL);
   this.endConnection(this.CONN.MYSQL2);
@@ -150,21 +152,20 @@ Bench.prototype.endConnection = function(conn) {
   }
 };
 
-
 Bench.prototype.displayReport = function() {
-  const simpleFormat = new Intl.NumberFormat('en-EN', {
+  const simpleFormat = new Intl.NumberFormat("en-EN", {
     maximumFractionDigits: 1
   });
-  const simpleFormatPerc = new Intl.NumberFormat('en-EN', {
-    style: 'percent',
+  const simpleFormatPerc = new Intl.NumberFormat("en-EN", {
+    style: "percent",
     maximumFractionDigits: 1
   });
 
-  console.log('');
-  console.log('');
-  console.log('--- BENCHMARK RESULTS ---'.yellow);
+  console.log("");
+  console.log("");
+  console.log("--- BENCHMARK RESULTS ---".yellow);
   console.log(
-    '/* travis bench are not to take in account, because VM might run some other testing script that can change results */'
+    "/* travis bench are not to take in account, because VM might run some other testing script that can change results */"
       .gray
   );
 
@@ -176,31 +177,31 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === (mariasql ? 'mariasql' : 'mysql')) {
+      if (o.drvType === (mariasql ? "mariasql" : "mysql")) {
         base = o.iteration;
       }
       if (o.iteration > best) best = o.iteration;
     }
 
     //display results
-    console.log('');
-    console.log('bench : ' + keys[i]);
+    console.log("");
+    console.log("bench : " + keys[i]);
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
       const val = 100 * (o.iteration - base) / base;
       const perc = simpleFormat.format(val);
       const tt =
-        '   ' +
+        "   " +
         this.fill(o.drvType, 10) +
-        ' : ' +
+        " : " +
         this.fill(simpleFormat.format(o.iteration), 8, false) +
-        ' ops/s  ' +
+        " ops/s  " +
         //'±' +this.fill(simpleFormat.format(o.variation), 6, false) + '%' +
         (o.iteration === base
-          ? ''
-          : ' ( ' + this.fill((val > 0 ? '+' : '') + perc, 6, false) + '% )');
-      if (o.drvType === 'mariadb') {
+          ? ""
+          : " ( " + this.fill((val > 0 ? "+" : "") + perc, 6, false) + "% )");
+      if (o.drvType === "mariadb") {
         if (o.iteration < best) {
           console.log(tt.red);
         } else {
@@ -216,11 +217,11 @@ Bench.prototype.displayReport = function() {
 Bench.prototype.fill = function(val, length, right) {
   if (right) {
     while (val.length < length) {
-      val += ' ';
+      val += " ";
     }
   } else {
     while (val.length < length) {
-      val = ' ' + val;
+      val = " " + val;
     }
   }
   return val;
@@ -231,15 +232,13 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
 
   if (conn) {
     this.suite.add({
-      name: title + ' - ' + conn.desc,
+      name: title + " - " + conn.desc,
       fn: function(deferred) {
         fct.call(self, conn.drv, deferred);
       },
-      onComplete: function() {
+      onComplete: () => {
         if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
       },
-      async: this.async,
-      queued: this.queue,
       minSamples: this.minSamples,
       defer: true,
       drvType: conn.desc,
@@ -248,32 +247,28 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
     });
   } else {
     this.suite.add({
-      name: title + ' - warmup',
+      name: title + " - warmup",
       fn: function(deferred) {
         fct.call(self, self.CONN.MYSQL.drv, deferred);
       },
       onComplete: () => {
         if (onComplete) onComplete.call(self, self.CONN.MYSQL.drv);
       },
-      async: this.async,
-      queued: this.queue,
       minSamples: this.minSamples,
       defer: true,
-      drvType: 'warmup',
+      drvType: "warmup",
       benchTitle: title,
       displaySql: displaySql
     });
 
     this.suite.add({
-      name: title + ' - ' + self.CONN.MYSQL.desc,
+      name: title + " - " + self.CONN.MYSQL.desc,
       fn: function(deferred) {
         fct.call(self, self.CONN.MYSQL.drv, deferred);
       },
       onComplete: () => {
         if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
       },
-      async: this.async,
-      queued: this.queue,
       minSamples: this.minSamples,
       defer: true,
       drvType: self.CONN.MYSQL.desc,
@@ -282,15 +277,13 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
     });
 
     this.suite.add({
-      name: title + ' - ' + self.CONN.MYSQL2.desc,
+      name: title + " - " + self.CONN.MYSQL2.desc,
       fn: function(deferred) {
         fct.call(self, self.CONN.MYSQL2.drv, deferred);
       },
       onComplete: () => {
         if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
       },
-      async: this.async,
-      queued: this.queue,
       minSamples: this.minSamples,
       defer: true,
       drvType: self.CONN.MYSQL2.desc,
@@ -299,15 +292,13 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
     });
 
     this.suite.add({
-      name: title + ' - ' + self.CONN.MARIADB.desc,
+      name: title + " - " + self.CONN.MARIADB.desc,
       fn: function(deferred) {
         fct.call(self, self.CONN.MARIADB.drv, deferred);
       },
       onComplete: () => {
         if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
       },
-      async: this.async,
-      queued: this.queue,
       minSamples: this.minSamples,
       defer: true,
       drvType: self.CONN.MARIADB.desc,
@@ -317,15 +308,13 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
 
     if (mariasql) {
       this.suite.add({
-        name: title + ' - ' + self.CONN.MARIASQLC.desc,
+        name: title + " - " + self.CONN.MARIASQLC.desc,
         fn: function(deferred) {
           fct.call(self, self.CONN.MARIASQLC.drv, deferred);
         },
         onComplete: () => {
           if (onComplete) onComplete.call(self, self.CONN.MARIASQLC.drv);
         },
-        async: this.async,
-        queued: this.queue,
         minSamples: this.minSamples,
         defer: true,
         drvType: self.CONN.MARIASQLC.desc,

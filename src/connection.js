@@ -30,7 +30,18 @@ class Connection {
     this._addCommand = this._addCommandEnable;
     this._addCommand(new Handshake(this));
 
+    this.timeoutRef = null;
+    this._closing = null;
+    this._connected = null;
+    this._socket = null;
+
     this._initSocket();
+
+    Object.defineProperty(this, "threadId", {
+      get() {
+        return this.info ? this.info.threadId : undefined;
+      }
+    });
   }
 
   //*****************************************************************
@@ -194,7 +205,7 @@ class Connection {
       //TODO reuse a pool connection to avoid connection creation
       const self = this;
       const killCon = new Connection(this.opts);
-      killCon.query("KILL " + this.threadId, () => {
+      killCon.query("KILL " + this.info.threadId, () => {
         if (self._cmd) {
           const err = Utils.createError(
             "Connection destroyed, command was killed",
@@ -255,7 +266,7 @@ class Connection {
   //*****************************************************************
 
   serverVersion() {
-    return this.info.serverVersion();
+    return this.info.getServerVersion();
   }
 
   isMariaDB() {

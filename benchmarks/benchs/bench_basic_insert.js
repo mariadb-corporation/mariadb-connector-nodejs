@@ -1,11 +1,11 @@
-const assert = require('assert');
+const assert = require("assert");
 
-module.exports.title = 'simple insert';
-module.exports.displaySql = 'INSERT INTO testn.perfTest(test) VALUES (?) (into BLACKHOLE ENGINE) ';
+module.exports.title = "simple insert";
+module.exports.displaySql = "INSERT INTO testn.perfTest(test) VALUES (?) (into BLACKHOLE ENGINE) ";
 
 module.exports.benchFct = function(conn, deferred) {
   conn.query(
-    'INSERT INTO testn.perfTest(test) VALUES (?)',
+    "INSERT INTO testn.perfTest(test) VALUES (?)",
     [Math.floor(Math.random() * 50000000)],
     function(err, rows) {
       assert.ifError(err);
@@ -18,10 +18,11 @@ module.exports.benchFct = function(conn, deferred) {
 module.exports.initFct = async function(conn) {
   try {
     await Promise.all([
-      conn.query('DROP TABLE IF EXISTS testn.perfTest'),
+      conn.query("DROP TABLE IF EXISTS testn.perfTest"),
       conn.query("INSTALL SONAME 'ha_blackhole'"),
       conn.query(
-        'CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test int, PRIMARY KEY (id) ) ENGINE = BLACKHOLE'
+        "CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test int, PRIMARY KEY (id) ) " +
+          "ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'"
       )
     ]);
   } catch (err) {
@@ -30,5 +31,5 @@ module.exports.initFct = async function(conn) {
 };
 
 module.exports.onComplete = function(conn) {
-  conn.query('TRUNCATE TABLE testn.perfTest');
+  conn.query("TRUNCATE TABLE testn.perfTest");
 };

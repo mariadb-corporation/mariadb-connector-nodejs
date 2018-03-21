@@ -50,4 +50,12 @@ describe("connection", () => {
       done();
     });
   });
+
+  it("compatibility", function(done) {
+    const threadId = shareConn.info.threadId;
+    assert.isDefined(threadId);
+    assert.isDefined(shareConn.threadId);
+    assert.equal(threadId, shareConn.threadId);
+    done();
+  });
 });

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const Bench = require('./common_benchmarks');
+const fs = require("fs");
+const Bench = require("./common_benchmarks");
 let bench;
 
 const run = function() {
@@ -17,7 +17,7 @@ const launchBenchs = function(path) {
 
     //launch all benchmarks
     for (let i = 0; i < list.length; i++) {
-      const m = require('./benchs/' + list[i]);
+      const m = require("./benchs/" + list[i]);
       bench.initFcts.push(m.initFct);
       bench.add(m.title, m.displaySql, m.benchFct, m.onComplete);
     }
@@ -26,12 +26,12 @@ const launchBenchs = function(path) {
   });
 };
 
-fs.access('./benchs', function(err) {
+fs.access("./benchs", function(err) {
   if (err) {
-    fs.access('./benchmarks/benchs', function(err) {
-      launchBenchs('./benchmarks/benchs');
+    fs.access("./benchmarks/benchs", function(err) {
+      launchBenchs("./benchmarks/benchs");
     });
   } else {
-    launchBenchs('./benchs');
+    launchBenchs("./benchs");
   }
 });

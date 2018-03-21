@@ -29,6 +29,16 @@ function PacketOutputStream(opts, info) {
   this.buf = this.smallBuffer;
   this.writeDate = opts.timezone === "local" ? this.writeLocalDate : this.writeTimezoneDate;
   this.encoding = this.opts.collation.encoding;
+  if (this.encoding === "utf8") {
+    this.writeString = this.writeDefaultBufferString;
+    this.writeStringEscape = this.writeUtf8StringEscape;
+  } else if (Buffer.isEncoding(this.encoding)) {
+    this.writeString = this.writeDefaultBufferString;
+    this.writeStringEscape = this.writeDefaultStringEscape;
+  } else {
+    this.writeString = this.writeDefaultIconvString;
+    this.writeStringEscape = this.writeDefaultStringEscape;
+  }
 }
 
 PacketOutputStream.prototype.setWriter = function(writer) {
@@ -222,33 +232,113 @@ PacketOutputStream.prototype.writeStringAscii = function writeStringAscii(str) {
   }
 };
 
-PacketOutputStream.prototype.writeString = function(str) {
-  if (Buffer.isEncoding(this.encoding)) {
-    //javascript use UCS-2 or UTF-16 string internal representation
-    //that means that string to byte will be a maximum of * 3
-    // (4 bytes utf-8 are represented on 2 UTF-16 characters)
-    if (str.length * 3 < this.buf.length - this.pos) {
-      this.pos += this.buf.write(str, this.pos, this.encoding);
-      return;
-    }
+PacketOutputStream.prototype.writeUtf8StringEscape = function(str) {
+  const charsLength = str.length;
 
-    //checking real length
-    let byteLength = Buffer.byteLength(str, this.encoding);
-    if (byteLength > this.buf.length - this.pos) {
-      if (this.buf.length < this.getMaxPacketLength()) {
-        this.growBuffer(byteLength);
-      }
-      if (byteLength > this.buf.length - this.pos) {
-        //not enough space in buffer, will stream :
-        let strBuf = Buffer.from(str, this.encoding);
-        this.writeBuffer(strBuf, 0, strBuf.length);
-        return;
-      }
+  //not enough space remaining
+  if (charsLength * 3 >= this.buf.length - this.pos) {
+    const arr = Buffer.from(str, "utf8");
+    this.writeBufferEscape(arr);
+    return;
+  }
+
+  //create UTF-8 byte array
+  //since java char are internally using UTF-16 using surrogate's pattern, 4 bytes unicode characters will
+  //represent 2 characters : example "\uD83C\uDFA4" = 🎤 unicode 8 "no microphones"
+  //so max size is 3 * charLength
+  //(escape characters are 1 byte encoded, so length might only be 2 when escape)
+  // + 2 for the quotes for text protocol
+  let charsOffset = 0;
+  let currChar;
+
+  //quick loop if only ASCII chars for faster escape
+  for (
+    ;
+    charsOffset < charsLength && (currChar = str.charCodeAt(charsOffset)) < 0x80;
+    charsOffset++
+  ) {
+    if (currChar == SLASH || currChar == QUOTE || currChar == ZERO_BYTE || currChar == DBL_QUOTE) {
+      this.buf[this.pos++] = SLASH;
     }
+    this.buf[this.pos++] = currChar;
+  }
+
+  //if quick loop not finished
+  while (charsOffset < charsLength) {
+    currChar = str.charCodeAt(charsOffset++);
+    if (currChar < 0x80) {
+      if (
+        currChar == SLASH ||
+        currChar == QUOTE ||
+        currChar == ZERO_BYTE ||
+        currChar == DBL_QUOTE
+      ) {
+        this.buf[this.pos++] = SLASH;
+      }
+      this.buf[this.pos++] = currChar;
+    } else if (currChar < 0x800) {
+      this.buf[this.pos++] = 0xc0 | (currChar >> 6);
+      this.buf[this.pos++] = 0x80 | (currChar & 0x3f);
+    } else if (currChar >= 0xd800 && currChar < 0xe000) {
+      //reserved for surrogate - see https://en.wikipedia.org/wiki/UTF-16
+      if (currChar < 0xdc00) {
+        //is high surrogate
+        if (charsOffset + 1 > charsLength) {
+          this.buf[this.pos++] = 0x63;
+        } else {
+          const nextChar = str.charCodeAt(charsOffset);
+          if (nextChar >= 0xdc00 && nextChar < 0xe000) {
+            //is low surrogate
+            const surrogatePairs =
+              (currChar << 10) + nextChar + (0x010000 - (0xd800 << 10) - 0xdc00);
+            this.buf[this.pos++] = 0xf0 | (surrogatePairs >> 18);
+            this.buf[this.pos++] = 0x80 | ((surrogatePairs >> 12) & 0x3f);
+            this.buf[this.pos++] = 0x80 | ((surrogatePairs >> 6) & 0x3f);
+            this.buf[this.pos++] = 0x80 | (surrogatePairs & 0x3f);
+            charsOffset++;
+          } else {
+            //must have low surrogate
+            this.buf[this.pos++] = 0x63;
+          }
+        }
+      } else {
+        //low surrogate without high surrogate before
+        this.buf[this.pos++] = 0x63;
+      }
+    } else {
+      this.buf[this.pos++] = 0xe0 | (currChar >> 12);
+      this.buf[this.pos++] = 0x80 | ((currChar >> 6) & 0x3f);
+      this.buf[this.pos++] = 0x80 | (currChar & 0x3f);
+    }
+  }
+};
+
+PacketOutputStream.prototype.writeDefaultBufferString = function(str) {
+  //javascript use UCS-2 or UTF-16 string internal representation
+  //that means that string to byte will be a maximum of * 3
+  // (4 bytes utf-8 are represented on 2 UTF-16 characters)
+  if (str.length * 3 < this.buf.length - this.pos) {
     this.pos += this.buf.write(str, this.pos, this.encoding);
     return;
   }
 
+  //checking real length
+  let byteLength = Buffer.byteLength(str, this.encoding);
+  if (byteLength > this.buf.length - this.pos) {
+    if (this.buf.length < this.getMaxPacketLength()) {
+      this.growBuffer(byteLength);
+    }
+    if (byteLength > this.buf.length - this.pos) {
+      //not enough space in buffer, will stream :
+      let strBuf = Buffer.from(str, this.encoding);
+      this.writeBuffer(strBuf, 0, strBuf.length);
+      return;
+    }
+  }
+  this.pos += this.buf.write(str, this.pos, this.encoding);
+};
+
+PacketOutputStream.prototype.writeDefaultIconvString = function(str) {
   let buf = Iconv.encode(str, this.encoding);
   this.writeBuffer(buf, 0, buf.length);
 };
@@ -267,7 +357,7 @@ const CHARS_GLOBAL_REGEXP = /[\0\"\'\\]/g; // eslint-disable-line no-control-reg
  *
  * @param str string to escape.
  */
-PacketOutputStream.prototype.writeStringEscape = function(str) {
+PacketOutputStream.prototype.writeDefaultStringEscape = function(str) {
   let match;
   let lastIndex = 0;
   while ((match = CHARS_GLOBAL_REGEXP.exec(str)) !== null) {

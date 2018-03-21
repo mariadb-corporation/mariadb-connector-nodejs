@@ -12,7 +12,7 @@
     "test": "npm run test:lint && npm run test:prettier && npm run test:base",
     "test:base": "mocha \"test/**/*.js\"",
     "test:lint": "eslint index.js 'src/**/*.js' 'test/**/*.js'",
-    "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{src,test}/**/*.js\"",
+    "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{src,test,benchmarks}/**/*.js\"",
     "benchmark": "node ./benchmarks/benchmarks.js"
   },
   "repository": {

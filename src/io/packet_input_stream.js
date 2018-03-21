@@ -35,16 +35,17 @@ class PacketInputStream {
   /**
    * Read 4 bytes header.
    *
-   * @param chunk
-   * @returns packet length if header is completly received
+   * @param chunk     chunk
+   * @param chunkLen  chunk length
+   * @returns packet length if header is completely received
    * @private
    */
-  readHeader(chunk) {
+  readHeader(chunk, chunkLen) {
     if (this.remainingLen) return this.remainingLen;
-    while (chunk.length - this.pos > 0) {
+    while (chunkLen - this.pos > 0) {
       this.header[this.headerLen++] = chunk[this.pos++];
       if (this.headerLen === 4) {
-        this.packetLen = this.header[0] + (this.header[1] << 8) + (this.header[2] << 16);
+        this.packetLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
         return this.packetLen;
       }
     }
@@ -53,10 +54,11 @@ class PacketInputStream {
 
   onData(chunk) {
     this.pos = 0;
-    while (this.pos < chunk.length) {
-      let length;
-      if ((length = this.readHeader(chunk))) {
-        if (chunk.length - this.pos >= length) {
+    let length;
+    const chunkLen = chunk.length;
+    do {
+      if ((length = this.readHeader(chunk, chunkLen))) {
+        if (chunkLen - this.pos >= length) {
           if (this.parts) {
             this.parts.push(chunk.slice(this.pos, this.pos + length));
             this.partsTotalLen += length;
@@ -110,14 +112,14 @@ class PacketInputStream {
             this.parts = [];
             this.partsTotalLen = 0;
           }
-          let read = chunk.length - this.pos;
-          this.parts.push(chunk.slice(this.pos, chunk.length));
+          let read = chunkLen - this.pos;
+          this.parts.push(chunk.slice(this.pos, chunkLen));
           this.partsTotalLen += read;
           this.remainingLen = length - read;
           this.pos += read;
         }
       }
-    }
+    } while (this.pos < chunkLen);
   }
 }
 
