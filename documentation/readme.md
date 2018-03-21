@@ -224,11 +224,14 @@ connection.query({rowsAsArray:true, sql:'select * from animals'}, (err, res, fie
 
 ### Field metadata
 properties
-* `schema`: field schema
+* `db`: database schema name (alias `schema` exists for compatibilit with mysql2)
 * `table`: field table alias
 * `orgTable`: field table
 * `name`: field alias
 * `orgName`: field name
+* `columnLength`: column length
+* `columnType`: column type (see FieldType)
+* `decimals`: decimal length (for DECIMAL field type)
 
 methods
 * `isUnsigned()`: indicate if field type is unsigned

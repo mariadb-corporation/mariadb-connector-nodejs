@@ -52,7 +52,8 @@ install:
   - cmd: echo [mysqld] > c:\projects\server\data\my.ini
   - cmd: echo datadir=C:/projects/server/data >> c:\projects\server\data\my.ini
   - cmd: echo port=3306 >> c:\projects\server\data\my.ini
-  - cmd: echo innodb_buffer_pool_size=195M >> c:\projects\server\data\my.ini
+  - cmd: echo innodb_log_file_size=50M >> c:\projects\server\data\my.ini
+  - cmd: echo innodb_buffer_pool_size=200M >> c:\projects\server\data\my.ini
   - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
   - cmd: type c:\projects\server\data\my.ini

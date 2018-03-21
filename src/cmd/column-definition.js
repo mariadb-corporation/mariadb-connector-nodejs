@@ -22,31 +22,31 @@ class ColumnDefinition {
   }
 
   isUnsigned() {
-    return this._flags & FieldDetail.UNSIGNED;
+    return (this._flags & FieldDetail.UNSIGNED) > 0;
   }
 
   canBeNull() {
-    return this._flags & FieldDetail.NOT_NULL;
+    return (this._flags & FieldDetail.NOT_NULL) === 0;
   }
 
   isPrimaryKey() {
-    return this._flags & FieldDetail.PRIMARY_KEY;
+    return (this._flags & FieldDetail.PRIMARY_KEY) > 0;
   }
 
   isUniqueKey() {
-    return this._flags & FieldDetail.UNIQUE_KEY;
+    return (this._flags & FieldDetail.UNIQUE_KEY) > 0;
   }
 
   isMultipleKey() {
-    return this._flags & FieldDetail.MULTIPLE_KEY;
+    return (this._flags & FieldDetail.MULTIPLE_KEY) > 0;
   }
 
   isBlob() {
-    return this._flags & FieldDetail.BLOB;
+    return (this._flags & FieldDetail.BLOB) > 0;
   }
 
   isZeroFill() {
-    return this._flags & FieldDetail.ZEROFILL_FLAG;
+    return (this._flags & FieldDetail.ZEROFILL_FLAG) > 0;
   }
 
   isBinary() {
@@ -55,7 +55,7 @@ class ColumnDefinition {
     return this.collation.index === 63;
   }
   isAutoIncrement() {
-    return this._flags & FieldDetail.AUTO_INCREMENT;
+    return (this._flags & FieldDetail.AUTO_INCREMENT) > 0;
   }
 
   /**
@@ -112,6 +112,6 @@ for (let i = 0; i < props.length; i++) {
   addProperty(props[i], i);
 }
 //add alias for mysql2 compatibility
-addProperty("schema", 1);
+addProperty("schema", 0);
 
 module.exports = ColumnDefinition;
