@@ -34,8 +34,8 @@ function Bench(callback) {
 
   const config = conf.baseConfig;
   config.charsetNumber = 224;
-  if (!mariasql && process.platform === 'win32') {
-    config.socketPath = '\\\\.\\pipe\\MySQL';
+  if (!mariasql && process.platform === "win32") {
+    config.socketPath = "\\\\.\\pipe\\MySQL";
   }
 
   console.log(config);

@@ -11,4 +11,23 @@ describe("buffer", () => {
       done();
     });
   });
+
+  const buf = Buffer.from("let's rocks 🤘");
+  const hex = buf.toString("hex").toUpperCase();
+
+  it("execute hex() function result", function(done) {
+    shareConn.execute("SELECT HEX(?) t", [buf], function(err, rows) {
+      if (err) done(err);
+      assert.deepEqual(rows, [{ t: hex }]);
+      done();
+    });
+  });
+
+  it("query hex() function result", function(done) {
+    shareConn.query("SELECT HEX(?) t", [buf], function(err, rows) {
+      if (err) done(err);
+      assert.deepEqual(rows, [{ t: hex }]);
+      done();
+    });
+  });
 });
