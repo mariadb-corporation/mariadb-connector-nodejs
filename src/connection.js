@@ -441,7 +441,9 @@ class Connection {
   _addCommandEnable(cmd) {
     let conn = this;
 
-    cmd.once((this.opts.pipelining) ? "send_end" : "end", () => process.nextTick(conn._nextSendCmd.bind(conn)));
+    cmd.once(this.opts.pipelining ? "send_end" : "end", () =>
+      process.nextTick(conn._nextSendCmd.bind(conn))
+    );
 
     if (!this._sendCmd && this._sendQueue.isEmpty()) {
       this._sendCmd = cmd;

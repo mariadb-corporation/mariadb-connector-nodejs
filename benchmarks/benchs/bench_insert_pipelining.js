@@ -13,13 +13,13 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable = "CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text"
-           + ", PRIMARY KEY (id)) ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'";
+let sqlTable =
+  "CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text" +
+  ", PRIMARY KEY (id)) ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'";
 sqlInsert = "INSERT INTO testn.perfTestText(t0) VALUES (?)";
 
 module.exports.title = "100 * insert 100 characters";
-module.exports.displaySql =
-  "INSERT INTO testn.perfTestText VALUES (?) (into BLACKHOLE ENGINE)";
+module.exports.displaySql = "INSERT INTO testn.perfTestText VALUES (?) (into BLACKHOLE ENGINE)";
 const iterations = 10;
 module.exports.benchFct = function(conn, deferred) {
   const params = [randomString(100)];

@@ -71,7 +71,7 @@ class Query extends ResultSet {
         // param is stream,
         // now all params will be written by event
         //********************************************
-        this.registerStreamEvent();
+        this.registerStreamEvent(out);
         this.currentParam = i;
         out.writeInt8(QUOTE); //'
 
