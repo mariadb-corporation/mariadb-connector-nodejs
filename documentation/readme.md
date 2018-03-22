@@ -103,7 +103,7 @@ default: false
 * `timezone`: string. force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format    
 * `nestTables`: boolean/string. resultset are presented by table to avoid results with colliding fields. default: false 
 * `rowsAsArray`: boolean. default rows are defined as a JSON object. when active row is an array. default false 
-
+* `pipelining`: boolean. will send query one by one, but without waiting the results of previous entry. default true
  
 ## Query
 `connection.query(sql[, values][,callback])`

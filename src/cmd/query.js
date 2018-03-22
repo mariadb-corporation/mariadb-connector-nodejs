@@ -36,6 +36,7 @@ class Query extends ResultSet {
       out.writeInt8(0x03);
       out.writeString(this.sql);
       out.flushBuffer(true);
+      this.emit("send_end");
       return this.readResponsePacket;
     }
 
@@ -97,6 +98,7 @@ class Query extends ResultSet {
       }
     }
     out.flushBuffer(true);
+    this.emit("send_end");
 
     return this.readResponsePacket;
   }
@@ -154,6 +156,7 @@ class Query extends ResultSet {
         // flush packet
         //********************************************
         out.flushBuffer(true);
+        self.emit("send_end");
       } else {
         const value = self.values[self.currentParam - 1];
 

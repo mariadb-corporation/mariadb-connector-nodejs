@@ -16,9 +16,14 @@ class Quit extends Command {
     out.startPacket(this);
     out.writeInt8(0x01);
     out.flushBuffer(true);
+    this.emit("send_end");
     this.callback();
     this.emit("end");
-    return null;
+    return this.skipResults;
+  }
+
+  skipResults(packet, out, opts, info) {
+    //deliberately empty, if server send answer
   }
 }
 

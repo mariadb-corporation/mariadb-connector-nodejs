@@ -8,6 +8,25 @@
 
 MariaDB node.js connector is 100% javascript and [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
 
+Driver implementation completely differ from mysql/mysql2 connectors to permit : 
+- streaming
+```script
+var postFile = function (req, res) => {
+    connection.query('insert into Streaming(b) values(?), [req], (err, res) => {
+        //id will be res.insertId
+    });
+};
+      
+```
+ 
+- pipelining : commands will be send without waiting for server results
+```script
+connection.query("INSERT INTO myTable VALUES (1)");
+connection.query("INSERT INTO myTable VALUES (2)");
+```
+queries are not send one by one, waiting for result before sending next one. 
+queries are send one after another, avoiding a lot of network latency (particulary when database isn't on same host). 
+
 Extended documentation of API : [Complete documentation](/documentation/readme.md)
 
 ## Status
@@ -23,7 +42,7 @@ But a C driver with a javascript wrapper has some inherent issues : must be comp
  
 //TODO make benchmark when version is out, with 
 * mysql and mysql2 (because the most popular) 
-* mariasql (because the actual more performant)
+* mariasql (because the best in term of performance, even if not maintained)
   
 <p align="center">
     <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>

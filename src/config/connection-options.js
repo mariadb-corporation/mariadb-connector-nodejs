@@ -40,6 +40,7 @@ class ConnectionOptions {
     this.port = opts.port || 3306;
     this.socketPath = opts.socketPath;
     this.ssl = opts.ssl;
+    this.pipelining = opts.pipelining === undefined || opts.pipelining;
     this.supportBigNumbers = opts.supportBigNumbers || false;
     this.timezone = opts.timezone || "local";
     if (this.timezone !== "local") {

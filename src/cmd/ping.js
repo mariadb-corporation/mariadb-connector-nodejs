@@ -17,6 +17,8 @@ class Ping extends Command {
     out.startPacket(this);
     out.writeInt8(0x0e);
     out.flushBuffer(true);
+    this.emit("send_end");
+
     return this.readPingResponsePacket;
   }
 

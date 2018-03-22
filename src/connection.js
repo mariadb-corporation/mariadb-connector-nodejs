@@ -24,8 +24,11 @@ class Connection {
 
     //internal
     this._events = new EventEmitter();
-    this._cmd = null;
-    this._cmdQueue = new Queue();
+    this._sendCmd = null;
+    this._sendQueue = new Queue();
+    this._receiveCmd = null;
+    this._receiveQueue = new Queue();
+
     this._out = new PacketOutputStream(this.opts, this.info);
     this._addCommand = this._addCommandEnable;
     this._addCommand(new Handshake(this));
@@ -177,9 +180,11 @@ class Connection {
    */
   end(callback) {
     this._clearConnectTimeout();
+    const currentAddCmd = this._addCommand;
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
-    this._addCommandEnable(
+    currentAddCmd.call(
+      this,
       new Quit(
         this._events,
         function() {
@@ -197,28 +202,30 @@ class Connection {
     this._clearConnectTimeout();
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
-    this._cmdQueue.clear();
+    this._sendQueue.clear();
 
-    if (this._cmd) {
+    if (this._sendCmd) {
       //socket is closed, but server may still be processing a huge select
       //only possibility is to kill process by another thread
       //TODO reuse a pool connection to avoid connection creation
       const self = this;
       const killCon = new Connection(this.opts);
       killCon.query("KILL " + this.info.threadId, () => {
-        if (self._cmd) {
+        if (self._sendCmd) {
           const err = Utils.createError(
             "Connection destroyed, command was killed",
             true,
             this.info
           );
-          if (self._cmd.onResult) {
-            self._cmd.onResult(err);
+          if (self._sendCmd.onResult) {
+            self._sendCmd.onResult(err);
           } else {
-            self._cmd.emit("error", err);
+            self._sendCmd.emit("error", err);
           }
         }
-        process.nextTick(self._socket.destroy);
+        process.nextTick(() => {
+          if (self._socket) self._socket.destroy;
+        });
         killCon.end();
       });
     } else {
@@ -351,21 +358,25 @@ class Connection {
   }
 
   _dispatchPacket(packet, header) {
-    if (this.opts.debug && packet && this._cmd) {
+    if (!this._receiveCmd || !this._receiveCmd.onPacketReceive) {
+      this._receiveCmd = this._receiveQueue.shift();
+    }
+
+    if (this.opts.debug && packet && this._receiveCmd) {
       console.log(
         "<== conn:%d %s (%d,%d)\n%s",
         this.info.threadId ? this.info.threadId : -1,
-        this._cmd.onPacketReceive
-          ? this._cmd.constructor.name + "." + this._cmd.onPacketReceive.name
-          : this._cmd.constructor.name,
+        this._receiveCmd.onPacketReceive
+          ? this._receiveCmd.constructor.name + "." + this._receiveCmd.onPacketReceive.name
+          : this._receiveCmd.constructor.name,
         packet.off,
         packet.end,
         Utils.log(packet.buf, packet.off, packet.end, header)
       );
     }
 
-    if (this._cmd) {
-      this._cmd.handle(packet, this._out, this.opts, this.info);
+    if (this._receiveCmd) {
+      this._receiveCmd.handle(packet, this._out, this.opts, this.info);
       return;
     }
 
@@ -429,12 +440,16 @@ class Connection {
 
   _addCommandEnable(cmd) {
     let conn = this;
-    cmd.once("end", () => process.nextTick(conn._nextCmd.bind(conn)));
-    if (!this._cmd && this._cmdQueue.isEmpty()) {
-      this._cmd = cmd;
-      this._cmd.init(this._out, this.opts, this.info);
+
+    cmd.once((this.opts.pipelining) ? "send_end" : "end", () => process.nextTick(conn._nextSendCmd.bind(conn)));
+
+    if (!this._sendCmd && this._sendQueue.isEmpty()) {
+      this._sendCmd = cmd;
+      this._receiveQueue.push(cmd);
+      this._sendCmd.init(this._out, this.opts, this.info);
     } else {
-      this._cmdQueue.push(cmd);
+      this._sendQueue.push(cmd);
+      this._receiveQueue.push(cmd);
     }
     return cmd;
   }
@@ -463,23 +478,23 @@ class Connection {
     //disabled events
     this._socket.destroy();
     this._closing = true;
-    if (this._cmd && this._cmd.onResult) {
-      this._cmd.onResult(err);
+    if (this._sendCmd && this._sendCmd.onResult) {
+      this._sendCmd.onResult(err);
     }
     this._events.emit("error", err);
     this._events.emit("end");
     this._clear();
   }
 
-  _nextCmd() {
-    if ((this._cmd = this._cmdQueue.shift())) {
-      this._cmd.init(this._out, this.opts, this.info);
+  _nextSendCmd() {
+    if ((this._sendCmd = this._sendQueue.shift())) {
+      this._sendCmd.init(this._out, this.opts, this.info);
     }
   }
 
   _clear() {
     this._clearConnectTimeout();
-    this._cmdQueue.clear();
+    this._sendQueue.clear();
     this._out = null;
     this._socket = null;
     this._events.removeAllListeners();
