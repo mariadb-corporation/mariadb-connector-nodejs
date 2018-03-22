@@ -55,6 +55,7 @@ install:
   - cmd: echo innodb_buffer_pool_size=200M >> c:\projects\server\data\my.ini
   - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
+  - cmd: echo enable-named-pipe=1 >> c:\projects\server\data\my.ini
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
   - cmd: cd c:\projects\mariadb-connector-nodejs
