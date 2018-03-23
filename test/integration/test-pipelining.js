@@ -5,7 +5,7 @@ const assert = require("chai").assert;
 
 describe("pipelining", () => {
   let conn1, conn2;
-  const iterations = 10000;
+  const iterations = 5000;
 
   before(function(done) {
     conn1 = base.createConnection({ pipelining: false });
@@ -24,20 +24,24 @@ describe("pipelining", () => {
     conn2.end();
   });
 
-  it("10000 insert test speed", function(done) {
+  it("5000 insert test speed", function(done) {
     this.timeout(60000);
     conn1.query("CREATE TEMPORARY TABLE pipeline1 (test int)");
     conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)", (err, res) => {
       insertBulk(conn1, "pipeline1", diff => {
         insertBulk(conn2, "pipeline2", pipelineDiff => {
-          assert.isTrue(
-            diff[0] > pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] > pipelineDiff[1]),
-            "error - time to insert 1000 : std=" +
+          if (shareConn.hasMinVersion(10, 2, 0)) {
+            //before 10.1, speed is sometime nearly equivalent using pipelining or not
+            //remove speed test then to avoid random error in CIs
+            assert.isTrue(
+              diff[0] > pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] > pipelineDiff[1]),
+              "error - time to insert 1000 : std=" +
               Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
               "ms pipelining=" +
               Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
               "ms"
-          );
+            );
+          }
           done();
         });
       });

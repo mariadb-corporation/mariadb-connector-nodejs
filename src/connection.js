@@ -31,7 +31,7 @@ class Connection {
 
     this._out = new PacketOutputStream(this.opts, this.info);
     this._addCommand = this._addCommandEnable;
-    this._addCommand(new Handshake(this));
+    this._addCommand(new Handshake(this), false);
 
     this.timeoutRef = null;
     this._closing = null;
@@ -148,10 +148,11 @@ class Connection {
    */
   query(sql, values, cb) {
     let _options, _sql, _values, _cb;
-
+    let _pipelining = this.opts.pipelining;
     if (typeof sql === "object") {
       _options = sql;
       _sql = _options.sql;
+      if (_options.pipelining !== undefined) _pipelining = _options.pipelining;
     } else {
       _sql = sql;
     }
@@ -164,12 +165,12 @@ class Connection {
     }
 
     const cmd = new Query(this._events, _options, _sql, _values, _cb);
-    return this._addCommand(cmd);
+    return this._addCommand(cmd, _pipelining);
   }
 
   ping(options, callback) {
     const _cb = typeof options === "function" ? options : callback;
-    return this._addCommand(new Ping(this._events, _cb));
+    return this._addCommand(new Ping(this._events, _cb), false);
   }
 
   /**
@@ -191,7 +192,8 @@ class Connection {
           this._clear();
           if (callback) setImmediate(callback);
         }.bind(this)
-      )
+      ),
+      false
     );
   }
 
@@ -417,7 +419,7 @@ class Connection {
       this.info.status & ServerStatus.STATUS_IN_TRANS
     ) {
       const cmd = new Query(this._events, _options, sql, null, _cb);
-      return this._addCommand(cmd);
+      return this._addCommand(cmd, false);
     }
 
     if (_cb) _cb();
@@ -438,12 +440,10 @@ class Connection {
     }
   }
 
-  _addCommandEnable(cmd) {
+  _addCommandEnable(cmd, pipelining) {
     let conn = this;
 
-    cmd.once(this.opts.pipelining ? "send_end" : "end", () =>
-      setImmediate(conn._nextSendCmd.bind(conn))
-    );
+    cmd.once(pipelining ? "send_end" : "end", () => setImmediate(conn._nextSendCmd.bind(conn)));
 
     if (!this._sendCmd && this._sendQueue.isEmpty()) {
       this._sendCmd = cmd;
@@ -456,7 +456,7 @@ class Connection {
     return cmd;
   }
 
-  _addCommandDisabled(cmd) {
+  _addCommandDisabled(cmd, pipelining) {
     const err = Utils.createError(
       "Cannot execute new commands: connection closed",
       true,

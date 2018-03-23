@@ -153,7 +153,6 @@ class Handshake extends Command {
 
     if (this.onResult) this.onResult(null);
     this.connEvents.emit("connect");
-    this.emit("send_end");
     this.emit("end");
   }
 
