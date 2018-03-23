@@ -25,6 +25,12 @@ describe("streaming", () => {
     });
   });
 
+  after(function() {
+    //create
+    fs.unlink(fileName, err => {});
+    fs.unlink(halfFileName, err => {});
+  });
+
   it("Streaming single parameter", function(done) {
     if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
@@ -123,27 +129,21 @@ describe("streaming", () => {
     }
 
     //create
-    fs.unlink(fileName, function(err) {
-      if (err) done(err);
-      fs.writeFile(fileName, buf, "utf8", function(err) {
-        if (err) {
-          done(err);
-        } else {
-          for (let i = 0; i < buf2.length; i++) {
-            buf2[i] = 97 + i % 10;
-          }
-          fs.unlink(halfFileName, function(err) {
-            if (err) done(err);
-            fs.writeFile(halfFileName, buf2, "utf8", function(err) {
-              if (err) {
-                done(err);
-              } else {
-                done();
-              }
-            });
-          });
+    fs.writeFile(fileName, buf, "utf8", function(err) {
+      if (err) {
+        done(err);
+      } else {
+        for (let i = 0; i < buf2.length; i++) {
+          buf2[i] = 97 + i % 10;
         }
-      });
+        fs.writeFile(halfFileName, buf2, "utf8", function(err) {
+          if (err) {
+            done(err);
+          } else {
+            done();
+          }
+        });
+      }
     });
   }
 });

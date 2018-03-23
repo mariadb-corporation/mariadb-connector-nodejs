@@ -4,26 +4,32 @@ const base = require("../base.js");
 const assert = require("chai").assert;
 
 describe("pipelining", () => {
-  let conn;
-  const iterations = 1000;
+  let conn1, conn2;
+  const iterations = 10000;
 
   before(function(done) {
-    conn = base.createConnection({ pipelining: false });
-    conn.connect(function(err) {
+    conn1 = base.createConnection({ pipelining: false });
+    conn2 = base.createConnection({ pipelining: true });
+    conn1.connect(function(err) {
       if (err) done(err);
-      done();
+      conn2.connect(function(err) {
+        if (err) done(err);
+        done();
+      });
     });
   });
 
   after(function() {
-    conn.end();
+    conn1.end();
+    conn2.end();
   });
 
-  it("1000 insert test speed", function(done) {
-    conn.query("CREATE TEMPORARY TABLE pipeline1 (test int)");
-    shareConn.query("CREATE TEMPORARY TABLE pipeline2 (test int)", (err, res) => {
-      insertBulk(conn, "pipeline1", diff => {
-        insertBulk(shareConn, "pipeline2", pipelineDiff => {
+  it("10000 insert test speed", function(done) {
+    this.timeout(60000);
+    conn1.query("CREATE TEMPORARY TABLE pipeline1 (test int)");
+    conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)", (err, res) => {
+      insertBulk(conn1, "pipeline1", diff => {
+        insertBulk(conn2, "pipeline2", pipelineDiff => {
           assert.isTrue(
             diff[0] > pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] > pipelineDiff[1]),
             "error - time to insert 1000 : std=" +

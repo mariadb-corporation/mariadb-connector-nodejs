@@ -31,7 +31,7 @@ module.exports.displaySql =
 module.exports.benchFct = function(conn, deferred) {
   const params = [];
   for (let i = 0; i < 10; i++) {
-    params.push(randomString(10));
+    params.push(randomString(100));
   }
 
   conn.query(sqlInsert, params, function(err, rows) {

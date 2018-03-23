@@ -189,7 +189,7 @@ class Connection {
         this._events,
         function() {
           this._clear();
-          if (callback) callback();
+          if (callback) setImmediate(callback);
         }.bind(this)
       )
     );
@@ -442,7 +442,7 @@ class Connection {
     let conn = this;
 
     cmd.once(this.opts.pipelining ? "send_end" : "end", () =>
-      process.nextTick(conn._nextSendCmd.bind(conn))
+      setImmediate(conn._nextSendCmd.bind(conn))
     );
 
     if (!this._sendCmd && this._sendQueue.isEmpty()) {

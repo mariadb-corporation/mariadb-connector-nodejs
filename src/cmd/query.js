@@ -99,7 +99,6 @@ class Query extends ResultSet {
     }
     out.flushBuffer(true);
     this.emit("send_end");
-
     return this.readResponsePacket;
   }
 
