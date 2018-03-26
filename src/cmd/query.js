@@ -43,7 +43,9 @@ class Query extends ResultSet {
     //TODO handle named placeholder (if option namedPlaceholders is set)
     this.queryParts = Query.splitQuery(this.sql);
 
-    if (!this.validateParameters(info)) return null;
+    if (!this.validateParameters(info)) {
+      return null;
+    }
 
     out.startPacket(this);
     out.writeInt8(0x03);
@@ -118,6 +120,7 @@ class Query extends ResultSet {
         1210,
         "HY000"
       );
+      this.emit("send_end");
       this.throwError(err);
       return false;
     }
@@ -132,6 +135,7 @@ class Query extends ResultSet {
           1210,
           "HY000"
         );
+        this.emit("send_end");
         this.throwError(err);
         return false;
       }

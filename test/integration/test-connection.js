@@ -44,18 +44,17 @@ describe("connection", () => {
     query.on("error", () => {});
   });
 
-  // it("end connection event", function(done) {
-  //   //if not streaming, memory will be saturated
-  //   const conn = base.createConnection();
-  //   conn.on("error", function(err) {
-  //     if (err) {
-  //       done();
-  //     } else {
-  //       done(new Error("Must have thrown an exception !"));
-  //     }
-  //   });
-  //   conn._socket.end();
-  // });
+  it("end connection event", function(done) {
+    const conn = base.createConnection();
+    conn.on("error", function(err) {
+      if (err) {
+        done();
+      } else {
+        done(new Error("Must have thrown an exception !"));
+      }
+    });
+    conn._socket.end();
+  });
 
   it("connection ping", function(done) {
     shareConn.ping();
@@ -154,5 +153,39 @@ describe("connection", () => {
       assert.equal(shareConn.opts.collation, Collations.fromName("CP850_GENERAL_CI"));
       done();
     });
+  });
+
+  it("fetching rows", function(done) {
+    //using sequence engine
+    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
+
+    this.timeout(20000);
+    const array1 = [];
+    array1[999] = "a";
+    const str = array1.fill("a").join("");
+    let numberFetched = 0;
+    let fieldEvent = false;
+    shareConn
+      .query("select repeat('a', 1000) as 't1' from seq_1_to_1000000")
+      .on("error", function(err) {
+        done(err);
+      })
+      .on("fields", function(fields) {
+        // the field packets for the rows to follow
+        assert.equal(fields.length, 1);
+        assert.equal(fields[0].name, "t1");
+        fieldEvent = true;
+      })
+      .on("result", function(row) {
+        //fields defined
+        assert.equal(row.t1, str);
+        numberFetched++;
+      })
+      .on("end", function() {
+        // all rows have been received
+        assert.equal(numberFetched, 1000000);
+        assert.ok(fieldEvent);
+        done();
+      });
   });
 });

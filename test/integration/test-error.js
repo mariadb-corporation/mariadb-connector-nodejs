@@ -93,4 +93,155 @@ describe("Error", () => {
       conn._socket.destroy(new Error("close forced"));
     });
   });
+
+  it("query parameters logged in error", function(done) {
+    const handleResult = function(err) {
+      assert.equal(1146, err.errno);
+      assert.equal("42S02", err.sqlState);
+      assert.isFalse(err.fatal);
+      assert.isTrue(
+        err.message.includes(
+          "sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]"
+        )
+      );
+    };
+
+    shareConn.query(
+      "INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?) ",
+      [1, Buffer.from([0x01, 0xff]), "hh", new Date(2001, 0, 1, 0, 0, 0), null],
+      handleResult
+    );
+    shareConn.execute(
+      "INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?) ",
+      [1, Buffer.from([0x01, 0xff]), "hh", new Date(2001, 0, 1, 0, 0, 0), null],
+      handleResult
+    );
+    shareConn.execute("SELECT 1", (err, rows) => {
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      done();
+    });
+  });
+
+  it("query undefined parameter", function(done) {
+    const handleResult = function(err) {
+      assert.equal(err.errno, 1210);
+      assert.equal(err.sqlState, "HY000");
+      assert.isFalse(err.fatal);
+      assert.ok(
+        err.message.includes(
+          "Parameter at position 2 is undefined\n" +
+            "sql: INSERT INTO undefinedParameter values (?, ?, ?) - parameters:[1,undefined,3]"
+        )
+      );
+    };
+
+    shareConn.query("CREATE TEMPORARY TABLE undefinedParameter (id int, id2 int, id3 int)");
+    shareConn.query(
+      "INSERT INTO undefinedParameter values (?, ?, ?)",
+      [1, undefined, 3],
+      handleResult
+    );
+    shareConn.execute(
+      "INSERT INTO undefinedParameter values (?, ?, ?)",
+      [1, undefined, 3],
+      handleResult
+    );
+    shareConn.query("SELECT 1", (err, rows) => {
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      done();
+    });
+  });
+
+  it("query missing parameter", function(done) {
+    const handleResult = function(err) {
+      assert.equal(err.errno, 1210);
+      assert.equal(err.sqlState, "HY000");
+      assert.isFalse(err.fatal);
+      assert.ok(
+        err.message.includes(
+          "Parameter at position 3 is not set\n" +
+            "sql: INSERT INTO execute_missing_parameter values (?, ?, ?) - parameters:[1,3]"
+        )
+      );
+    };
+    shareConn.query("CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)");
+    shareConn.query("INSERT INTO execute_missing_parameter values (?, ?, ?)", [1, 3], handleResult);
+    shareConn.execute(
+      "INSERT INTO execute_missing_parameter values (?, ?, ?)",
+      [1, 3],
+      handleResult
+    );
+    shareConn.query("SELECT 1", (err, rows) => {
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      done();
+    });
+  });
+
+  it("query no parameter", function(done) {
+    const handleResult = function(err) {
+      assert.equal(err.errno, 1210);
+      assert.equal(err.sqlState, "HY000");
+      assert.isFalse(err.fatal);
+      assert.ok(
+        err.message.includes(
+          "Parameter at position 1 is not set\n" +
+            "sql: INSERT INTO execute_no_parameter values (?, ?, ?) - parameters:[]"
+        )
+      );
+    };
+    shareConn.query("CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)");
+    shareConn.query("INSERT INTO execute_no_parameter values (?, ?, ?)", [], handleResult);
+    shareConn.execute("INSERT INTO execute_no_parameter values (?, ?, ?)", [], handleResult);
+    shareConn.query("SELECT 1", (err, rows) => {
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      done();
+    });
+  });
+
+  it("query to much parameter", function(done) {
+    shareConn.query("CREATE TEMPORARY TABLE to_much_parameters (id int, id2 int, id3 int)");
+    shareConn.query("INSERT INTO to_much_parameters values (?, ?, ?) ", [1, 2, 3, 4], function(
+      err
+    ) {
+      if (err) {
+        done(err);
+      } else {
+        shareConn.execute(
+          "INSERT INTO to_much_parameters values (?, ?, ?) ",
+          [1, 2, 3, 4],
+          function(err) {
+            if (err) {
+              done(err);
+            } else {
+              done();
+            }
+          }
+        );
+      }
+    });
+  });
+
+  it("fetching error", function(done) {
+    let hasThrownError = false;
+    shareConn
+      .query("SELECT * FROM unknownTable")
+      .on("error", function(err) {
+        assert.ok(
+          err.message.includes("Table") &&
+            err.message.includes("doesn't exist") &&
+            err.message.includes("sql: SELECT * FROM unknownTable")
+        );
+        hasThrownError = true;
+      })
+      .on("fields", function(fields) {
+        done(new Error("must have not return fields"));
+      })
+      .on("result", function(row) {
+        done(new Error("must have not return results"));
+      })
+      .on("end", function() {
+        assert.ok(hasThrownError);
+        done();
+      });
+  });
 });

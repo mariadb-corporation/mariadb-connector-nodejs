@@ -366,7 +366,7 @@ class Connection {
 
   _dispatchPacket(packet, header) {
     if (!this._receiveCmd || !this._receiveCmd.onPacketReceive) {
-      this._receiveCmd = this._receiveQueue.shift();
+      while ((this._receiveCmd = this._receiveQueue.shift()) && !this._receiveCmd.onPacketReceive);
     }
 
     if (this.opts.debug && packet && this._receiveCmd) {
@@ -450,7 +450,6 @@ class Connection {
 
     if (pipelining) {
       cmd.once("send_end", () => setImmediate(conn._nextSendCmd.bind(conn)));
-      cmd.once("end", () => conn._nextReceiveCmd());
     } else {
       cmd.once("end", () => {
         conn._nextReceiveCmd();
