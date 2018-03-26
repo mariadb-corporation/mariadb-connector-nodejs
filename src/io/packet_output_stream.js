@@ -440,18 +440,21 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
       Utils.log(this.buf, 0, this.pos)
     );
   }
+  try {
+    this.writer(this.buf.slice(0, this.pos));
 
-  this.writer(this.buf.slice(0, this.pos));
+    if (commandEnd) {
+      //if last com fill the max size, must send an empty com to indicate command end.
+      if (this.pos === this.getMaxPacketLength()) this.writeEmptyPacket();
 
-  if (commandEnd) {
-    //if last com fill the max size, must send an empty com to indicate command end.
-    if (this.pos === this.getMaxPacketLength()) this.writeEmptyPacket();
+      //reset buffer
+      this.buf = this.smallBuffer;
+    }
 
-    //reset buffer
-    this.buf = this.smallBuffer;
+    this.pos = 4;
+  } catch (err) {
+    //eat exception
   }
-
-  this.pos = 4;
 };
 
 PacketOutputStream.prototype.writeEmptyPacket = function() {

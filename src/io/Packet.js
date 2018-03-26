@@ -382,7 +382,7 @@ class Packet {
       sqlState = this.buf.toString("utf8", this.off - 5, this.off);
     }
 
-    let msg = this.buf.toString("utf8", this.off);
+    let msg = this.buf.toString("utf8", this.off, this.end);
     if (sql) msg += "\n" + sql;
     let fatal = sqlState.startsWith("08") || sqlState === "70100";
     return Utils.createError(msg, fatal, info, errorCode, sqlState);

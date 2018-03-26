@@ -205,24 +205,31 @@ class Connection {
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
     this._sendQueue.clear();
-
-    if (this._sendCmd) {
+    if (this._receiveCmd) {
       //socket is closed, but server may still be processing a huge select
       //only possibility is to kill process by another thread
       //TODO reuse a pool connection to avoid connection creation
       const self = this;
       const killCon = new Connection(this.opts);
-      killCon.query("KILL " + this.info.threadId, () => {
-        if (self._sendCmd) {
+      killCon.query("KILL " + this.info.threadId, err => {
+        if (self._receiveCmd) {
           const err = Utils.createError(
             "Connection destroyed, command was killed",
             true,
             this.info
           );
-          if (self._sendCmd.onResult) {
-            self._sendCmd.onResult(err);
+          if (self._receiveCmd.onResult) {
+            self._receiveCmd.onResult(err);
           } else {
-            self._sendCmd.emit("error", err);
+            self._receiveCmd.emit("error", err);
+          }
+          let receiveCmd;
+          while ((receiveCmd = self._receiveQueue.shift())) {
+            if (receiveCmd.onResult) {
+              receiveCmd.onResult(err);
+            } else {
+              receiveCmd.emit("error", err);
+            }
           }
         }
         process.nextTick(() => {
@@ -315,7 +322,9 @@ class Connection {
     let packetInputStream = new PacketInputStream(this._dispatchPacket.bind(this));
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
-    this._events.on("server_error", this._fatalError.bind(this));
+    this._events.on("server_error", err => {
+      this._fatalError.call(this, err);
+    });
     this._events.on(
       "collation_changed",
       function() {
@@ -443,7 +452,15 @@ class Connection {
   _addCommandEnable(cmd, pipelining) {
     let conn = this;
 
-    cmd.once(pipelining ? "send_end" : "end", () => setImmediate(conn._nextSendCmd.bind(conn)));
+    if (pipelining) {
+      cmd.once("send_end", () => setImmediate(conn._nextSendCmd.bind(conn)));
+      cmd.once("end", () => conn._nextReceiveCmd());
+    } else {
+      cmd.once("end", () => {
+        conn._nextReceiveCmd();
+        setImmediate(conn._nextSendCmd.bind(conn));
+      });
+    }
 
     if (!this._sendCmd && this._sendQueue.isEmpty()) {
       this._sendCmd = cmd;
@@ -458,7 +475,7 @@ class Connection {
 
   _addCommandDisabled(cmd, pipelining) {
     const err = Utils.createError(
-      "Cannot execute new commands: connection closed",
+      "Cannot execute new commands: connection closed\n" + cmd.displaySql(),
       true,
       this.info
     );
@@ -480,11 +497,21 @@ class Connection {
     //disabled events
     this._socket.destroy();
     this._closing = true;
-    if (this._sendCmd && this._sendCmd.onResult) {
-      this._sendCmd.onResult(err);
+
+    if (this._receiveCmd && this._receiveCmd.onResult) {
+      setImmediate(this._receiveCmd.onResult, err);
     }
+
+    let receiveCmd;
+    while ((receiveCmd = this._receiveQueue.shift())) {
+      if (receiveCmd.onResult) {
+        setImmediate(receiveCmd.onResult, err);
+      }
+    }
+
     this._events.emit("error", err);
     this._events.emit("end");
+
     this._clear();
   }
 
@@ -492,6 +519,10 @@ class Connection {
     if ((this._sendCmd = this._sendQueue.shift())) {
       this._sendCmd.init(this._out, this.opts, this.info);
     }
+  }
+
+  _nextReceiveCmd() {
+    this._receiveCmd = this._receiveQueue.shift();
   }
 
   _clear() {

@@ -56,6 +56,7 @@ describe("multi-results", () => {
   });
 
   it("multiple result from procedure", function(done) {
+    shareConn.query("DROP PROCEDURE IF EXISTS myProc");
     shareConn.query("CREATE PROCEDURE myProc () BEGIN  SELECT 1; SELECT 2; END");
     shareConn.query("call myProc()", (err, rows) => {
       if (err) done(err);
