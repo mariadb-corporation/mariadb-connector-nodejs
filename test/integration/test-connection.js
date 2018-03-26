@@ -105,7 +105,9 @@ describe("connection", () => {
           done();
         }
       );
-      setTimeout(conn.destroy.bind(conn), 100);
+      setTimeout(() => {
+        conn.destroy();
+      }, 10);
     });
   });
 

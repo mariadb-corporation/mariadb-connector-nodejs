@@ -76,28 +76,21 @@ describe("Error", () => {
     });
   });
 
-  // it("end connection query error", function(done) {
-  //   const conn = base.createConnection();
-  //   conn.connect(() => {
-  //
-  //     // setTimeout(() => {
-  //     //   try {
-  //     //     conn._socket.destroy(new Error("close forced"));
-  //     //   } catch (gg) {}
-  //     // }, 50);
-  //     //big select
-  //     conn.query(
-  //       "select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2",
-  //       err => {
-  //         if (err) {
-  //           assert.ok(err.message.includes("close forced"));
-  //           done();
-  //         } else {
-  //           done(new Error("Must have thrown an exception !"));
-  //         }
-  //       }
-  //     );
-  //     conn._socket.destroy(new Error("close forced"));
-  //   });
-  // });
+  it("end connection query error", function(done) {
+    const conn = base.createConnection();
+    conn.connect(() => {
+      conn.query(
+        "select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2",
+        err => {
+          if (err) {
+            assert.ok(err.message.includes("This socket is closed"));
+            done();
+          } else {
+            done(new Error("Must have thrown an exception !"));
+          }
+        }
+      );
+      conn._socket.destroy(new Error("close forced"));
+    });
+  });
 });

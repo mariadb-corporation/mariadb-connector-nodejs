@@ -72,7 +72,7 @@ class Connection {
         "connect",
         function() {
           this._connected = true;
-          callback(null);
+          setImmediate(callback, null);
         }.bind(this)
       );
     }
@@ -205,31 +205,27 @@ class Connection {
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
     this._sendQueue.clear();
-    if (this._receiveCmd) {
+    if (this._receiveCmd || this._receiveQueue.length > 0) {
       //socket is closed, but server may still be processing a huge select
       //only possibility is to kill process by another thread
       //TODO reuse a pool connection to avoid connection creation
       const self = this;
       const killCon = new Connection(this.opts);
-      killCon.query("KILL " + this.info.threadId, err => {
+      killCon.query("KILL " + this.info.threadId, () => {
+        const err = Utils.createError("Connection destroyed, command was killed", true, self.info);
         if (self._receiveCmd) {
-          const err = Utils.createError(
-            "Connection destroyed, command was killed",
-            true,
-            this.info
-          );
           if (self._receiveCmd.onResult) {
             self._receiveCmd.onResult(err);
           } else {
             self._receiveCmd.emit("error", err);
           }
-          let receiveCmd;
-          while ((receiveCmd = self._receiveQueue.shift())) {
-            if (receiveCmd.onResult) {
-              receiveCmd.onResult(err);
-            } else {
-              receiveCmd.emit("error", err);
-            }
+        }
+        let receiveCmd;
+        while ((receiveCmd = self._receiveQueue.shift())) {
+          if (receiveCmd.onResult) {
+            receiveCmd.onResult(err);
+          } else {
+            receiveCmd.emit("error", err);
           }
         }
         process.nextTick(() => {
