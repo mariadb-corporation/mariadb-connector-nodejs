@@ -160,7 +160,7 @@ class Connection {
     if (typeof values === "function") {
       _cb = values;
     } else if (values !== undefined) {
-      _values = !Array.isArray(values) ? [values] : values;
+      _values = values;
       _cb = cb;
     }
 

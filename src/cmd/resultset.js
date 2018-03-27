@@ -322,67 +322,99 @@ class ResultSet extends Command {
    * @returns {string}
    */
   displaySql() {
-    if (this.opts && this.values && this.values.length > 0) {
+    if (this.opts && this.initialValues) {
       if (this.sql.length > 1024) {
         return "sql: " + this.sql.substring(0, 1024) + "...";
       }
 
-      let sqlMsg = "sql: " + this.sql + " - parameters:[";
-      if (this.values) {
-        for (let i = 0; i < this.values.length; i++) {
-          if (i !== 0) sqlMsg += ",";
-          let param = this.values[i];
-          if (!param) {
-            sqlMsg += param === undefined ? "undefined" : "null";
-          } else if (param.constructor.name) {
-            switch (param.constructor.name) {
-              case "Buffer":
-                sqlMsg += "0x" + param.toString("hex", 0, Math.floor(1024, param.length)) + "";
-                break;
+      let sqlMsg = "sql: " + this.sql + " - parameters:";
 
-              case "String":
-                sqlMsg += "'" + param + "'";
-                break;
-
-              case "Date":
-                sqlMsg +=
-                  "'" +
-                  ("00" + (param.getMonth() + 1)).slice(-2) +
-                  "/" +
-                  ("00" + param.getDate()).slice(-2) +
-                  "/" +
-                  param.getFullYear() +
-                  " " +
-                  ("00" + param.getHours()).slice(-2) +
-                  ":" +
-                  ("00" + param.getMinutes()).slice(-2) +
-                  ":" +
-                  ("00" + param.getSeconds()).slice(-2) +
-                  "." +
-                  ("000" + param.getMilliseconds()).slice(-3) +
-                  "'";
-                break;
-
-              default:
-                sqlMsg += param.toString();
-            }
+      if (this.opts.namedPlaceholders) {
+        sqlMsg += "{";
+        let first = true;
+        for (let key in this.initialValues) {
+          if (first) {
+            first = false;
           } else {
-            sqlMsg += param.toString();
+            sqlMsg += ",";
           }
-
+          sqlMsg += "'" + key + "':";
+          let param = this.initialValues[key];
+          sqlMsg = logParam(sqlMsg, param);
           if (sqlMsg.length > 1024) {
             sqlMsg += "...";
             break;
           }
         }
+        sqlMsg += "}";
+      } else {
+        const values = Array.isArray(this.initialValues)
+          ? this.initialValues
+          : [this.initialValues];
+        sqlMsg += "[";
+        for (let i = 0; i < values.length; i++) {
+          if (i !== 0) sqlMsg += ",";
+          let param = values[i];
+          sqlMsg = logParam(sqlMsg, param);
+          if (sqlMsg.length > 1024) {
+            sqlMsg += "...";
+            break;
+          }
+        }
+        sqlMsg += "]";
       }
 
-      sqlMsg += "]";
       return sqlMsg;
     }
 
     return "sql: " + this.sql + " - parameters:[]";
   }
+}
+
+function logParam(sqlMsg, param) {
+  if (!param) {
+    sqlMsg += param === undefined ? "undefined" : "null";
+  } else if (param.constructor.name) {
+    switch (param.constructor.name) {
+      case "Buffer":
+        sqlMsg += "0x" + param.toString("hex", 0, Math.floor(1024, param.length)) + "";
+        break;
+
+      case "String":
+        sqlMsg += "'" + param + "'";
+        break;
+
+      case "Date":
+        sqlMsg += getStringDate(param);
+        break;
+
+      default:
+        sqlMsg += param.toString();
+    }
+  } else {
+    sqlMsg += param.toString();
+  }
+  return sqlMsg;
+}
+
+function getStringDate(param) {
+  return (
+    "'" +
+    ("00" + (param.getMonth() + 1)).slice(-2) +
+    "/" +
+    ("00" + param.getDate()).slice(-2) +
+    "/" +
+    param.getFullYear() +
+    " " +
+    ("00" + param.getHours()).slice(-2) +
+    ":" +
+    ("00" + param.getMinutes()).slice(-2) +
+    ":" +
+    ("00" + param.getSeconds()).slice(-2) +
+    "." +
+    ("000" + param.getMilliseconds()).slice(-3) +
+    "'"
+  );
 }
 
 /**

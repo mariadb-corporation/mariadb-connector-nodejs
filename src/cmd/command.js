@@ -10,6 +10,7 @@ class Command extends EventEmitter {
     super();
     this.sequenceNo = 0;
     this.connEvents = connEvents;
+    this.onPacketReceive = this.start;
   }
 
   init(out, opts, info) {

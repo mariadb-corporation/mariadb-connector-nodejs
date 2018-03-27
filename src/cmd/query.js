@@ -15,7 +15,7 @@ class Query extends ResultSet {
     super(connEvents);
     this.opts = options;
     this.sql = sql;
-    this.values = values;
+    this.initialValues = values;
     this.onResult = callback;
   }
 
@@ -30,7 +30,7 @@ class Query extends ResultSet {
   start(out, opts, info) {
     this.configAssign(opts, this.opts);
 
-    if (!this.values) {
+    if (!this.initialValues) {
       //shortcut if no parameters
       out.startPacket(this);
       out.writeInt8(0x03);
@@ -40,11 +40,25 @@ class Query extends ResultSet {
       return this.readResponsePacket;
     }
 
-    //TODO handle named placeholder (if option namedPlaceholders is set)
-    this.queryParts = Query.splitQuery(this.sql);
-
-    if (!this.validateParameters(info)) {
-      return null;
+    if (this.opts.namedPlaceholders) {
+      try {
+        const parsed = Query.splitQueryPlaceholder(
+          this.sql,
+          info,
+          this.initialValues,
+          this.displaySql.bind(this)
+        );
+        this.queryParts = parsed.parts;
+        this.values = parsed.values;
+      } catch (err) {
+        this.emit("send_end");
+        this.throwError(err);
+        return null;
+      }
+    } else {
+      this.queryParts = Query.splitQuery(this.sql);
+      this.values = Array.isArray(this.initialValues) ? this.initialValues : [this.initialValues];
+      if (!this.validateParameters(info)) return null;
     }
 
     out.startPacket(this);
@@ -442,6 +456,150 @@ class Query extends ResultSet {
     }
 
     return partList;
+  }
+
+  /**
+   * Split query according to parameters using placeholder.
+   *
+   * @param sql             sql with placeholders
+   * @param info            connection information
+   * @param initialValues   placeholder object
+   * @returns {{parts: Array, values: Array}}
+   */
+  static splitQueryPlaceholder(sql, info, initialValues, displaySql) {
+    let partList = [];
+
+    const State = {
+      Normal: 1 /* inside  query */,
+      String: 2 /* inside string */,
+      SlashStarComment: 3 /* inside slash-star comment */,
+      Escape: 4 /* found backslash */,
+      EOLComment: 5 /* # comment, or // comment, or -- comment */,
+      Backtick: 6 /* found backtick */,
+      Placeholder: 7 /* found placeholder */
+    };
+
+    let values = [];
+    let state = State.Normal;
+    let lastChar = "\0";
+
+    let singleQuotes = false;
+    let lastParameterPosition = 0;
+
+    let idx = 0;
+    let car = sql.charAt(idx++);
+    let placeholderName;
+
+    while (car !== "") {
+      if (state === State.Escape) state = State.String;
+
+      switch (car) {
+        case "*":
+          if (state === State.Normal && lastChar === "/") state = State.SlashStarComment;
+          break;
+
+        case "/":
+          if (state === State.SlashStarComment && lastChar === "*") {
+            state = State.Normal;
+          } else if (state === State.Normal && lastChar === "/") {
+            state = State.EOLComment;
+          }
+          break;
+
+        case "#":
+          if (state === State.Normal) state = State.EOLComment;
+          break;
+
+        case "-":
+          if (state === State.Normal && lastChar === "-") {
+            state = State.EOLComment;
+          }
+          break;
+
+        case "\n":
+          if (state === State.EOLComment) {
+            state = State.Normal;
+          }
+          break;
+
+        case '"':
+          if (state === State.Normal) {
+            state = State.String;
+            singleQuotes = false;
+          } else if (state === State.String && !singleQuotes) {
+            state = State.Normal;
+          }
+          break;
+
+        case "'":
+          if (state === State.Normal) {
+            state = State.String;
+            singleQuotes = true;
+          } else if (state === State.String && singleQuotes) {
+            state = State.Normal;
+          }
+          break;
+
+        case "\\":
+          if (state === State.String) state = State.Escape;
+          break;
+
+        case ":":
+          if (state === State.Normal) {
+            if (!initialValues) {
+              throw Utils.createError(
+                "Placeholder values are not defined\n" + displaySql.call(),
+                false,
+                info,
+                1210,
+                "HY000"
+              );
+            }
+            partList.push(sql.substring(lastParameterPosition, idx - 1));
+            placeholderName = "";
+            while (
+              ((car = sql.charAt(idx++)) !== "" && (car >= "0" && car <= "9")) ||
+              (car >= "A" && car <= "Z") ||
+              (car >= "a" && car <= "z") ||
+              car === "-" ||
+              car === "_"
+            ) {
+              placeholderName += car;
+            }
+            idx--;
+            const val = initialValues[placeholderName];
+            if (val === undefined) {
+              throw Utils.createError(
+                "Placeholder '" + placeholderName + "' is not defined\n" + displaySql.call(),
+                false,
+                info,
+                1210,
+                "HY000"
+              );
+            }
+            values.push(val);
+            lastParameterPosition = idx;
+          }
+          break;
+        case "`":
+          if (state === State.Backtick) {
+            state = State.Normal;
+          } else if (state === State.Normal) {
+            state = State.Backtick;
+          }
+          break;
+      }
+      lastChar = car;
+
+      car = sql.charAt(idx++);
+    }
+    if (lastParameterPosition === 0) {
+      partList.push(sql);
+    } else {
+      partList.push(sql.substring(lastParameterPosition));
+    }
+
+    return { parts: partList, values: values };
   }
 }
 
