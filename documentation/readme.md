@@ -149,6 +149,25 @@ The [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Gl
 
 see [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for error number and sql state signification.
 
+### Placeholder
+
+To avoid SQL Injection, queries permit using question mark place holder. Values will be escaped accordingly to their type.
+
+example :  
+```javascript
+connection.query('INSERT INTO someTable VALUES (?, ?, ?)', [1, Buffer.from("D6E742F72", "hex"), 'mariadb']);
+//will send INSERT INTO someTable VALUES (1, _BINARY '..B.', 'mariadb'); 
+```
+The option "namedPlaceholders" permit using named placeholder. 
+Values must then have the key corresponding to placeholder names. 
+
+(Question mark still is the recommended method, particularly using execute, avoiding query parsing.)
+ 
+example :  
+```javascript
+connection.query({namedPlaceholders:true, 'INSERT INTO someTable VALUES (:id, :img, :db)', { id: 1, img: Buffer.from("D6E742F72", "hex"), db: 'mariadb'});
+//will send INSERT INTO someTable VALUES (1, _BINARY '..B.', 'mariadb'); 
+``` 
 
 ### Callback results
 There is 2 different kind of results : a "change" result and a result-set.
