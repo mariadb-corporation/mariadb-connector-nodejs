@@ -322,19 +322,6 @@ class Query extends ResultSet {
   }
 
   /**
-   * Read row bytes
-   *
-   * @param index     current data index in row
-   * @param column    associate metadata
-   * @param opts   query options
-   * @param connOpts  connection options
-   * @param packet    row packet
-   * @returns {*}     data
-   */
-  readRowBuffer(index, column, opts, connOpts, packet) {
-    return packet.readBufferLengthEncoded();
-  }
-  /**
    * Read row data.
    *
    * @param index     current data index in row

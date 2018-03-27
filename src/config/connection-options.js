@@ -57,7 +57,10 @@ class ConnectionOptions {
         this.timezoneMillisOffset = hour * 3600000 + minutes * 60000;
       }
     }
-    this.typeCast = opts.typeCast === undefined ? true : opts.typeCast;
+    this.typeCast = opts.typeCast;
+    if (this.typeCast != undefined && typeof this.typeCast !== "function") {
+      this.typeCast = undefined;
+    }
     this.user = opts.user;
     this.nestTables = opts.nestTables === undefined ? undefined : opts.nestTables;
     this.rowsAsArray = opts.rowsAsArray || false;

@@ -104,6 +104,7 @@ default: false
 * `nestTables`: boolean/string. resultset are presented by table to avoid results with colliding fields. default: false 
 * `rowsAsArray`: boolean. default rows are defined as a JSON object. when active row is an array. default false 
 * `pipelining`: boolean. will send query one by one, but without waiting the results of previous entry ([detail information](/documentation/pipelining.md)). default true
+* `typeCast`: permit casting results type  
  
 ## Query
 `connection.query(sql[, values][,callback])`
@@ -238,6 +239,20 @@ connection.query({rowsAsArray:true, sql:'select * from animals'}, (err, res, fie
   // ]
 });
 ```
+
+If can cast type yourself if needed using option `typeCast`.
+example for casting all TINYINT(1) to boolean :
+```javascript
+const tinyToBoolean = (column, next) => {
+  if (column.type == "TINY" && column.length === 1) {
+    const val = column.int();
+    return val === null ? null : val === 1;
+  }
+  return next();
+};
+connection.query({typeCast: tinyToBoolean, sql:"..."});
+```
+
 
 *the options have been set on query level for better understanding, but can be set on connection level*
 

@@ -79,10 +79,7 @@ class ResultSet extends Command {
   readResultSet(packet) {
     this._columnCount = packet.readUnsignedLength();
     this._receivedColumnsCount = 0;
-    this._getValue =
-      typeof this.opts.typeCast === "function"
-        ? this.readCastValue
-        : this.opts.typeCast ? this.readRowData : this.readRowBuffer;
+    this._getValue = this.opts.typeCast ? this.readCastValue : this.readRowData;
     this._rows.push([]);
     this._columns.push([]);
     return this.readColumn;
@@ -101,10 +98,7 @@ class ResultSet extends Command {
       return;
     }
 
-    this.opts.typeCast =
-      typeof connOpts.typeCast === "function" && typeof opt.typeCast !== "function"
-        ? connOpts.typeCast
-        : opt.typeCast === undefined ? connOpts.typeCast : opt.typeCast;
+    this.opts.typeCast = opt.typeCast ? opt.typeCast : connOpts.typeCast;
     this.opts.rowsAsArray = opt.rowsAsArray ? opt.rowsAsArray : connOpts.rowsAsArray;
     this.opts.nestTables = opt.nestTables ? opt.nestTables : connOpts.nestTables;
     this.opts.stringifyObjects = opt.stringifyObjects
