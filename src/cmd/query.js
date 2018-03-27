@@ -261,44 +261,90 @@ class Query extends ResultSet {
    * @param packet      current row packet
    * @returns {*}       row data
    */
-  parseRow(columns, packet) {
+  parseRow(columns, packet, connOpts) {
     let row;
     if (this.opts.rowsAsArray) {
       row = [columns.length];
       for (let i = 0; i < columns.length; i++) {
-        row[i] = this.readRowData(i, columns[i], this.opts, packet);
+        row[i] = this._getValue(i, columns[i], this.opts, connOpts, packet);
       }
     } else if (this.opts.nestTables === true) {
       row = {};
       for (let i = 0; i < columns.length; i++) {
         if (!row[this.tableHeader[i][0]]) row[this.tableHeader[i][0]] = {};
-        row[this.tableHeader[i][0]][this.tableHeader[i][1]] = this.readRowData(
+        row[this.tableHeader[i][0]][this.tableHeader[i][1]] = this._getValue(
           i,
           columns[i],
           this.opts,
+          connOpts,
           packet
         );
       }
     } else {
       row = {};
       for (let i = 0; i < columns.length; i++) {
-        row[this.tableHeader[i]] = this.readRowData(i, columns[i], this.opts, packet);
+        row[this.tableHeader[i]] = this._getValue(i, columns[i], this.opts, connOpts, packet);
       }
     }
 
     return row;
   }
 
+  castTextWrapper(column, opts, connOpts, packet) {
+    column.string = () => packet.readStringLengthEncoded(connOpts.collation.encoding);
+    column.buffer = () => packet.readBufferLengthEncoded();
+    column.float = () => packet.readFloatLengthCoded();
+    column.int = () => packet.readIntLengthEncoded();
+    column.long = () =>
+      packet.readLongLengthEncoded(
+        opts.supportBigNumbers,
+        opts.bigNumberStrings,
+        column.isUnsigned()
+      );
+    column.decimal = () =>
+      packet.readDecimalLengthEncoded(opts.supportBigNumbers, opts.bigNumberStrings);
+    column.date = () =>
+      packet.readDecimalLengthEncoded(opts.supportBigNumbers, opts.bigNumberStrings);
+    column.geometry = () => {
+      //TODO parse geometry
+      return null;
+    };
+  }
+
+  readCastValue(index, column, opts, connOpts, packet) {
+    this.castTextWrapper(column, opts, connOpts, packet);
+    return opts.typeCast(
+      column,
+      function() {
+        return this.readRowData(index, column, opts, connOpts, packet);
+      }.bind(this)
+    );
+  }
+
+  /**
+   * Read row bytes
+   *
+   * @param index     current data index in row
+   * @param column    associate metadata
+   * @param opts   query options
+   * @param connOpts  connection options
+   * @param packet    row packet
+   * @returns {*}     data
+   */
+  readRowBuffer(index, column, opts, connOpts, packet) {
+    return packet.readBufferLengthEncoded();
+  }
   /**
    * Read row data.
    *
    * @param index     current data index in row
    * @param column    associate metadata
-   * @param options   query options
+   * @param opts   query options
+   * @param connOpts  connection options
    * @param packet    row packet
    * @returns {*}     data
    */
-  readRowData(index, column, options, packet) {
+  readRowData(index, column, opts, connOpts, packet) {
     switch (column.columnType) {
       case FieldType.ENUM:
         //TODO ?
@@ -314,21 +360,21 @@ class Query extends ResultSet {
         return packet.readFloatLengthCoded();
       case FieldType.LONGLONG:
         return packet.readLongLengthEncoded(
-          options.supportBigNumbers,
-          options.bigNumberStrings,
+          opts.supportBigNumbers,
+          opts.bigNumberStrings,
           column.isUnsigned()
         );
       case FieldType.DECIMAL:
       case FieldType.NEWDECIMAL:
-        return packet.readDecimalLengthEncoded(options.supportBigNumbers, options.bigNumberStrings);
+        return packet.readDecimalLengthEncoded(opts.supportBigNumbers, opts.bigNumberStrings);
       case FieldType.DATE:
-        if (options.dateStrings) {
+        if (opts.dateStrings) {
           return packet.readAsciiStringLengthEncoded();
         }
         return packet.readDate();
       case FieldType.DATETIME:
       case FieldType.TIMESTAMP:
-        if (options.dateStrings) {
+        if (opts.dateStrings) {
           return packet.readAsciiStringLengthEncoded();
         }
         return packet.readDateTime();
@@ -345,7 +391,7 @@ class Query extends ResultSet {
         if (column.collation.index === 63) {
           return packet.readBufferLengthEncoded();
         } else {
-          return packet.readStringLengthEncoded(options.collation.encoding);
+          return packet.readStringLengthEncoded(connOpts.collation.encoding);
         }
     }
   }

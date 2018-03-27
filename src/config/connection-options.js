@@ -6,7 +6,6 @@ const Collations = require("../const/collations.js");
  * Default option similar to mysql driver.
  * known differences
  * - no queryFormat option. Permitting client to parse is a security risk. Best is to give SQL + parameters
- * - no typeCast option
  * - no stringifyObjects option, since always on.
  *   Only possible Objects are :
  *   - Buffer
@@ -58,7 +57,7 @@ class ConnectionOptions {
         this.timezoneMillisOffset = hour * 3600000 + minutes * 60000;
       }
     }
-
+    this.typeCast = opts.typeCast === undefined ? true : opts.typeCast;
     this.user = opts.user;
     this.nestTables = opts.nestTables === undefined ? undefined : opts.nestTables;
     this.rowsAsArray = opts.rowsAsArray || false;

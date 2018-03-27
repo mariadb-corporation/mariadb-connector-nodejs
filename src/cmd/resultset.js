@@ -3,7 +3,7 @@
 const Command = require("./command");
 const ServerStatus = require("../const/server-status");
 const StateChange = require("../const/state-change");
-const Collations = require("../const/collations.js");
+const Collations = require("../const/collations");
 const ColumnDefinition = require("./column-definition");
 const Utils = require("../misc/utils");
 
@@ -79,6 +79,10 @@ class ResultSet extends Command {
   readResultSet(packet) {
     this._columnCount = packet.readUnsignedLength();
     this._receivedColumnsCount = 0;
+    this._getValue =
+      typeof this.opts.typeCast === "function"
+        ? this.readCastValue
+        : this.opts.typeCast ? this.readRowData : this.readRowBuffer;
     this._rows.push([]);
     this._columns.push([]);
     return this.readColumn;
@@ -96,6 +100,11 @@ class ResultSet extends Command {
       this.opts = connOpts;
       return;
     }
+
+    this.opts.typeCast =
+      typeof connOpts.typeCast === "function" && typeof opt.typeCast !== "function"
+        ? connOpts.typeCast
+        : opt.typeCast === undefined ? connOpts.typeCast : opt.typeCast;
     this.opts.rowsAsArray = opt.rowsAsArray ? opt.rowsAsArray : connOpts.rowsAsArray;
     this.opts.nestTables = opt.nestTables ? opt.nestTables : connOpts.nestTables;
     this.opts.stringifyObjects = opt.stringifyObjects
@@ -216,7 +225,7 @@ class ResultSet extends Command {
       this._columns[this._responseIndex].push(column);
     }
 
-    // last column received
+    // last column
     if (this._receivedColumnsCount === this._columnCount) {
       const columns = this._columns[this._responseIndex];
       this.emit("fields", columns);
@@ -305,7 +314,7 @@ class ResultSet extends Command {
       return null;
     }
 
-    const row = this.parseRow(this._columns[this._responseIndex], packet);
+    const row = this.parseRow(this._columns[this._responseIndex], packet, opts);
 
     if (this.onResult) {
       this._rows[this._responseIndex].push(row);

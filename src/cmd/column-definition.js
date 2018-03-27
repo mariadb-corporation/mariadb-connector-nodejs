@@ -114,4 +114,16 @@ for (let i = 0; i < props.length; i++) {
 //add alias for mysql2 compatibility
 addProperty("schema", 0);
 
+//add alias for option "typecast" wrapper
+Object.defineProperty(ColumnDefinition.prototype, "length", {
+  get() {
+    return this.columnLength;
+  }
+});
+Object.defineProperty(ColumnDefinition.prototype, "type", {
+  get() {
+    return FieldType.TYPES[this.columnType];
+  }
+});
+
 module.exports = ColumnDefinition;

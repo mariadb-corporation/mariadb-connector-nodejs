@@ -55,7 +55,7 @@ describe("integer with big value", () => {
     });
   });
 
-  it("bigint format", done => {
+  it("bigint format null ", done => {
     shareConn.query("CREATE TEMPORARY TABLE testBigintNull (v BIGINT)");
     shareConn.query("INSERT INTO testBigintNull values (127), (null)");
 
