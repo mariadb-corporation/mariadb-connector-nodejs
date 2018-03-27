@@ -213,7 +213,14 @@ class Connection {
       const killCon = new Connection(this.opts);
       killCon.query("KILL " + this.info.threadId, () => {
         const err = Utils.createError("Connection destroyed, command was killed", true, self.info);
-        if (self._receiveCmd) {
+        if (!this._receiveCmd || !this._receiveCmd.onPacketReceive) {
+          while (
+            (this._receiveCmd = this._receiveQueue.shift()) &&
+            !this._receiveCmd.onPacketReceive
+          );
+        }
+
+        if (self._receiveCmd && self._receiveCmd.onPacketReceive) {
           if (self._receiveCmd.onResult) {
             self._receiveCmd.onResult(err);
           } else {
@@ -222,10 +229,12 @@ class Connection {
         }
         let receiveCmd;
         while ((receiveCmd = self._receiveQueue.shift())) {
-          if (receiveCmd.onResult) {
-            receiveCmd.onResult(err);
-          } else {
-            receiveCmd.emit("error", err);
+          if (receiveCmd.onPacketReceive) {
+            if (receiveCmd.onResult) {
+              receiveCmd.onResult(err);
+            } else {
+              receiveCmd.emit("error", err);
+            }
           }
         }
         process.nextTick(() => {
@@ -493,13 +502,13 @@ class Connection {
     this._socket.destroy();
     this._closing = true;
 
-    if (this._receiveCmd && this._receiveCmd.onResult) {
+    if (this._receiveCmd && this._receiveCmd.onPacketReceive && this._receiveCmd.onResult) {
       setImmediate(this._receiveCmd.onResult, err);
     }
 
     let receiveCmd;
     while ((receiveCmd = this._receiveQueue.shift())) {
-      if (receiveCmd.onResult) {
+      if (receiveCmd.onPacketReceive && receiveCmd.onResult) {
         setImmediate(receiveCmd.onResult, err);
       }
     }
