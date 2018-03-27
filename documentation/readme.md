@@ -44,7 +44,7 @@ This permit to avoid TCP-IP layer.
 If not on localhost, then hostname must be set, port is optional with default 3306, connector will then use TCP/IP socket. 
 
 ```javascript
-var mariadb      = require('mariadb-connector');
+var mariadb      = require('mariadb');
 
 //localhost on windows
 var conn1 = mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'});

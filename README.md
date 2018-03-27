@@ -6,6 +6,10 @@
 
 # MariaDB java connector
 
+[![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
+[![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
+[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
+
 MariaDB node.js connector is 100% javascript and [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
 
 Driver implementation completely differ from mysql/mysql2 connectors to permit : 
@@ -28,12 +32,6 @@ queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
 Extended documentation of API : [Complete documentation](/documentation/readme.md)
-
-## Status
-[![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
-[![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
-[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
-
 
 ## Benchmarks
 
@@ -59,7 +57,7 @@ Driver is compatible with node 4+.
 
 The driver can be install using npm : 
 ```script
-npm install mariadb-connector --save
+npm install mariadb --save
 ```
 
 ## Documentation
