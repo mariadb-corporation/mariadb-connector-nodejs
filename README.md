@@ -10,9 +10,10 @@
 [![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
 
-MariaDB node.js connector is 100% javascript and [mysql](https://www.npmjs.com/package/mysql) compatible driver, used to connect applications developed in Java to MariaDB and MySQL databases. MariaDB Connector/J is LGPL licensed.
 
-Driver implementation completely differ from mysql/mysql2 connectors to permit : 
+**Non-blocking MariaDB and MySQL client for Node.js.**
+
+100% javascript, [mysql](https://www.npmjs.com/package/mysql) compatible driver with some additional features : 
 - streaming
 ```script
 var postFile = function (req, res) => {
