@@ -5,7 +5,7 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations.js");
 
 describe("connection", () => {
-  it("multiple connect call", function(done) {
+  it("multiple connection.connect() call", function(done) {
     const conn = base.createConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -44,7 +44,7 @@ describe("connection", () => {
     query.on("error", () => {});
   });
 
-  it("end connection event", function(done) {
+  it("connection.end() event", function(done) {
     const conn = base.createConnection();
     conn.on("error", function(err) {
       if (err) {
@@ -56,7 +56,7 @@ describe("connection", () => {
     conn._socket.end();
   });
 
-  it("connection ping", function(done) {
+  it("connection.ping()", function(done) {
     shareConn.ping();
     shareConn.ping(err => {
       if (err) done(err);
@@ -64,7 +64,7 @@ describe("connection", () => {
     });
   });
 
-  it("compatibility", function(done) {
+  it("threadId access compatibility", function(done) {
     const threadId = shareConn.info.threadId;
     assert.isDefined(threadId);
     assert.isDefined(shareConn.threadId);
@@ -72,7 +72,7 @@ describe("connection", () => {
     done();
   });
 
-  it("connection end with callback", function(done) {
+  it("connection.end() callback testing", function(done) {
     const conn = base.createConnection();
     conn.connect(function(err) {
       if (err) return done(err);
@@ -82,7 +82,7 @@ describe("connection", () => {
     });
   });
 
-  it("connection destroy", function(done) {
+  it("connection.destroy()", function(done) {
     const conn = base.createConnection();
     conn.connect(function(err) {
       if (err) return done(err);
@@ -91,7 +91,7 @@ describe("connection", () => {
     });
   });
 
-  it("connection destroy during big query", function(done) {
+  it("connection.destroy() during query execution", function(done) {
     const conn = base.createConnection();
     conn.connect(() => {
       //launch very long query
@@ -110,7 +110,7 @@ describe("connection", () => {
     });
   });
 
-  it("wrong url", done => {
+  it("connection timeout testing (wrong url)", done => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
     conn.on("error", err => {
@@ -127,7 +127,7 @@ describe("connection", () => {
     });
   });
 
-  it("session state change", function(done) {
+  it("changing session state", function(done) {
     if (
       (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 2)) ||
       (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 4))
@@ -155,7 +155,7 @@ describe("connection", () => {
     });
   });
 
-  it("fetching rows", function(done) {
+  it("connection row event", function(done) {
     //using sequence engine
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
 

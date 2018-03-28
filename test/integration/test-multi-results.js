@@ -55,6 +55,20 @@ describe("multi-results", () => {
     });
   });
 
+
+  it("multiple result type with multiple rows", function(done) {
+    //using sequence engine
+    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
+    conn.query("select * from seq_1_to_2; DO 1;select * from seq_2_to_3", (err, rows) => {
+      if (err) done(err);
+      assert.equal(rows.length, 3);
+      assert.deepEqual(rows[0], [{"seq": 1},{"seq": 2}]);
+      assert.deepEqual(rows[1], { affectedRows: 0, insertId: 0, warningStatus: 0 });
+      assert.deepEqual(rows[2], [{"seq": 2},{"seq": 3}]);
+      done();
+    });
+  });
+
   it("multiple result from procedure", function(done) {
     shareConn.query("DROP PROCEDURE IF EXISTS myProc");
     shareConn.query("CREATE PROCEDURE myProc () BEGIN  SELECT 1; SELECT 2; END");

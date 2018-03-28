@@ -3,7 +3,7 @@
 require("../base.js");
 const assert = require("chai").assert;
 
-describe("call", () => {
+describe("stored procedure", () => {
   it("simple call query", function(done) {
     shareConn.query("DROP PROCEDURE IF EXISTS stmtSimple");
     shareConn.query(

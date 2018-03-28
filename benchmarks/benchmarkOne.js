@@ -1,18 +1,18 @@
 "use strict";
 
-var fs = require("fs");
-var Bench = require("./common_benchmarks");
-var bench;
+const fs = require("fs");
+const Bench = require("./common_benchmarks");
+let bench;
 
-var run = function() {
+const run = function() {
   bench.suite.run();
 };
 
 bench = new Bench(run);
 
-var launchBenchs = function(path) {
-  var test = "bench_basic_insert.js";
-  var m = require(path + "/" + test);
+const launchBenchs = function(path) {
+  const test = "bench_select_one_user.js";
+  const m = require(path + "/" + test);
   bench.initFcts.push(m.initFct);
   bench.add(m.title, m.displaySql, m.benchFct, m.onComplete); //, bench.CONN.MYSQL);
 };
