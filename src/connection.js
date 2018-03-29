@@ -412,7 +412,9 @@ class Connection {
       }
     } else {
       let err = Utils.createError(
-        "receiving packet from server without active commands",
+        "receiving packet from server without active commands\n"
+        + "conn:"+ (this.info.threadId ? this.info.threadId : -1) + "(" + packet.off + "," + packet.end + ")\n"
+        + Utils.log(packet.buf, packet.off, packet.end, header),
         true,
         this.info
       );
