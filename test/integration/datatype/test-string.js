@@ -76,4 +76,27 @@ describe("string", () => {
       });
     }
   });
+
+  it("table encoding not affecting query", done => {
+    const str = "財團法人資訊工業策進會";
+    shareConn.query("CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8");
+    shareConn.query("CREATE TEMPORARY TABLE big5_encoding_table(t2 text) CHARSET big5");
+    shareConn.query("INSERT INTO utf8_encoding_table values (?)", [str]);
+    shareConn.query("INSERT INTO big5_encoding_table values (?)", [str]);
+    shareConn.query("SELECT * from utf8_encoding_table, big5_encoding_table", (err, res) => {
+      if (err) done(err);
+      assert.deepEqual(res, [{ t1: str, t2: str }]);
+      done();
+    });
+  });
+
+  it("string escape", done => {
+    shareConn.query("CREATE TEMPORARY TABLE escape_utf8_string(tt text) CHARSET utf8");
+    shareConn.query("INSERT INTO escape_utf8_string values (?)", ["a 'b\\\"c"]);
+    shareConn.query("SELECT * from escape_utf8_string", (err, res) => {
+      if (err) done(err);
+      assert.deepEqual(res, [{ tt: "a 'b\\\"c" }]);
+      done();
+    });
+  });
 });

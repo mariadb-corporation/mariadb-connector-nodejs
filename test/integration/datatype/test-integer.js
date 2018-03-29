@@ -75,4 +75,28 @@ describe("integer with big value", () => {
       }
     );
   });
+
+  it("numeric fields conversion to int", done => {
+    shareConn.query(
+      "CREATE TEMPORARY TABLE intAllField (" +
+        "t1 TINYINT(1), t2 SMALLINT(1), t3 MEDIUMINT(1), t4 INT(1), t5 BIGINT(1), t6 DECIMAL(1), t7 FLOAT, t8 DOUBLE)"
+    );
+    shareConn.query(
+      "INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)"
+    );
+    shareConn.query("INSERT INTO intAllField VALUES (0, 0, 0, 0, 0, 0, 0, 0)");
+    shareConn.query("INSERT INTO intAllField VALUES (1, 1, 1, 1, 1, 1, 1, 1)");
+    shareConn.query("INSERT INTO intAllField VALUES (2, 2, 2, 2, 2, 2, 2, 2)");
+
+    shareConn.query("SELECT * FROM intAllField", (err, res) => {
+      if (err) done(err);
+      assert.deepEqual(res, [
+        { t1: null, t2: null, t3: null, t4: null, t5: null, t6: null, t7: null, t8: null },
+        { t1: 0, t2: 0, t3: 0, t4: 0, t5: 0, t6: 0, t7: 0, t8: 0 },
+        { t1: 1, t2: 1, t3: 1, t4: 1, t5: 1, t6: 1, t7: 1, t8: 1 },
+        { t1: 2, t2: 2, t3: 2, t4: 2, t5: 2, t6: 2, t7: 2, t8: 2 }
+      ]);
+      done();
+    });
+  });
 });

@@ -24,20 +24,17 @@ class Connection {
 
     //internal
     this._events = new EventEmitter();
-    this._sendCmd = null;
     this._sendQueue = new Queue();
-    this._receiveCmd = null;
     this._receiveQueue = new Queue();
 
     this._out = new PacketOutputStream(this.opts, this.info);
-    this._addCommand = this._addCommandEnable;
-    this._addCommand(new Handshake(this), false);
-
     this.timeoutRef = null;
     this._closing = null;
     this._connected = null;
     this._socket = null;
-
+    this._addCommand = this._addCommandEnable;
+    this._registerEvents();
+    this._registerHandshakeCmd();
     this._initSocket();
 
     Object.defineProperty(this, "threadId", {
@@ -65,15 +62,12 @@ class Connection {
       return;
     }
 
-    if (this._connected) {
-      callback(null);
+    if (this._connected === null) {
+      this._events.once("connect", () => setImmediate(callback, null));
+      this._events.once("_connect_err", err => callback(err));
     } else {
-      this._events.once(
-        "connect",
-        function() {
-          this._connected = true;
-          setImmediate(callback, null);
-        }.bind(this)
+      callback(
+        this._connected ? null : new Error("Error during connection, error has already been thrown")
       );
     }
   }
@@ -205,7 +199,7 @@ class Connection {
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
     this._sendQueue.clear();
-    if (this._receiveCmd || this._receiveQueue.length > 0) {
+    if (this._receiveQueue.length > 0) {
       //socket is closed, but server may still be processing a huge select
       //only possibility is to kill process by another thread
       //TODO reuse a pool connection to avoid connection creation
@@ -213,20 +207,6 @@ class Connection {
       const killCon = new Connection(this.opts);
       killCon.query("KILL " + this.info.threadId, () => {
         const err = Utils.createError("Connection destroyed, command was killed", true, self.info);
-        if (!this._receiveCmd || !this._receiveCmd.onPacketReceive) {
-          while (
-            (this._receiveCmd = this._receiveQueue.shift()) &&
-            !this._receiveCmd.onPacketReceive
-          );
-        }
-
-        if (self._receiveCmd && self._receiveCmd.onPacketReceive) {
-          if (self._receiveCmd.onResult) {
-            self._receiveCmd.onResult(err);
-          } else {
-            self._receiveCmd.emit("error", err);
-          }
-        }
         let receiveCmd;
         while ((receiveCmd = self._receiveQueue.shift())) {
           if (receiveCmd.onPacketReceive) {
@@ -301,6 +281,37 @@ class Connection {
   //*****************************************************************
   // internal methods
   //*****************************************************************
+  _registerEvents() {
+    this._events.on(
+      "collation_changed",
+      function() {
+        this._out = new PacketOutputStream(this.opts, this.info);
+        this._out.setWriter(buffer => this._socket.write(buffer));
+      }.bind(this)
+    );
+  }
+
+  _registerHandshakeCmd() {
+    const handshake = new Handshake(
+      this,
+      function(err) {
+        this._clearConnectTimeout();
+        if (err) {
+          this._connected = false;
+          if (this._events.listenerCount("_connect_err") > 0) {
+            this._events.emit("_connect_err", err);
+          } else {
+            this._events.emit("error", err);
+          }
+        } else {
+          this._connected = true;
+          this._events.emit("connect");
+          this._events.on("_db_fatal_error", err => this._fatalError.call(this, err));
+        }
+      }.bind(this)
+    );
+    this._addCommand(handshake, false);
+  }
 
   _initSocket() {
     if (this.opts.connectTimeout) {
@@ -309,14 +320,6 @@ class Connection {
         this.opts.connectTimeout
       );
     }
-
-    this._events.once(
-      "connect",
-      function() {
-        this._connected = true;
-        this._clearConnectTimeout();
-      }.bind(this)
-    );
 
     if (this.opts.socketPath) {
       this._socket = Net.connect(this.opts.socketPath);
@@ -327,16 +330,6 @@ class Connection {
     let packetInputStream = new PacketInputStream(this._dispatchPacket.bind(this));
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
-    this._events.on("server_error", err => {
-      this._fatalError.call(this, err);
-    });
-    this._events.on(
-      "collation_changed",
-      function() {
-        this._out = new PacketOutputStream(this.opts, this.info);
-        this._out.setWriter(buffer => this._socket.write(buffer));
-      }.bind(this)
-    );
     this._out.setWriter(buffer => this._socket.write(buffer));
   }
 
@@ -368,31 +361,44 @@ class Connection {
   }
 
   _socketError(err) {
-    if (!this._closing) {
-      this._fatalError(err);
+    //socket fail between socket creation and before authentication
+    if (this._connected === null) {
+      this._clearConnectTimeout();
+      this._connected = false;
+      this._events.emit("_connect_err", err);
+      this._events.emit("error", err);
+      return;
     }
+
+    this._fatalError(err);
   }
 
   _dispatchPacket(packet, header) {
-    if (!this._receiveCmd || !this._receiveCmd.onPacketReceive) {
-      while ((this._receiveCmd = this._receiveQueue.shift()) && !this._receiveCmd.onPacketReceive);
+    let receiveCmd;
+    while ((receiveCmd = this._receiveQueue.peek())) {
+      if (receiveCmd.onPacketReceive) break;
+      this._receiveQueue.shift();
     }
 
-    if (this.opts.debug && packet && this._receiveCmd) {
+    if (this.opts.debug && packet) {
       console.log(
         "<== conn:%d %s (%d,%d)\n%s",
         this.info.threadId ? this.info.threadId : -1,
-        this._receiveCmd.onPacketReceive
-          ? this._receiveCmd.constructor.name + "." + this._receiveCmd.onPacketReceive.name
-          : this._receiveCmd.constructor.name,
+        receiveCmd
+          ? receiveCmd.onPacketReceive
+            ? receiveCmd.constructor.name + "." + receiveCmd.onPacketReceive.name
+            : receiveCmd.constructor.name
+          : "no command",
         packet.off,
         packet.end,
         Utils.log(packet.buf, packet.off, packet.end, header)
       );
     }
 
-    if (this._receiveCmd) {
-      this._receiveCmd.handle(packet, this._out, this.opts, this.info);
+    if (receiveCmd) {
+      if (!receiveCmd.handle(packet, this._out, this.opts, this.info)) {
+        this._receiveQueue.shift();
+      }
       return;
     }
 
@@ -402,7 +408,7 @@ class Connection {
       let err = packet.readError(this.info);
       if (err.fatal) {
         this._events.emit("error", err);
-        this.close();
+        this.end();
       }
     } else {
       let err = Utils.createError(
@@ -411,7 +417,7 @@ class Connection {
         this.info
       );
       this._events.emit("error", err);
-      this.close();
+      this.end();
     }
   }
 
@@ -443,6 +449,7 @@ class Connection {
   _connectTimeoutReached() {
     this._clearConnectTimeout();
     this._socket.destroy && this._socket.destroy();
+    this._receiveQueue.shift(); //remove handshake packet
     const err = Utils.createError("Connection timeout", true, this.info);
     this._fatalError(err);
   }
@@ -461,18 +468,14 @@ class Connection {
       cmd.once("send_end", () => setImmediate(conn._nextSendCmd.bind(conn)));
     } else {
       cmd.once("end", () => {
-        conn._nextReceiveCmd();
         setImmediate(conn._nextSendCmd.bind(conn));
       });
     }
 
-    if (!this._sendCmd && this._sendQueue.isEmpty()) {
-      this._sendCmd = cmd;
-      this._receiveQueue.push(cmd);
-      this._sendCmd.init(this._out, this.opts, this.info);
-    } else {
-      this._sendQueue.push(cmd);
-      this._receiveQueue.push(cmd);
+    this._sendQueue.push(cmd);
+    this._receiveQueue.push(cmd);
+    if (this._sendQueue.length === 1) {
+      process.nextTick(conn._nextSendCmd.bind(conn));
     }
     return cmd;
   }
@@ -495,16 +498,14 @@ class Connection {
    * @private
    */
   _fatalError(err) {
+    if (this._closing) return;
+
     err.fatal = true;
     //prevent any new action
     this._addCommand = this._addCommandDisabled;
     //disabled events
     this._socket.destroy();
     this._closing = true;
-
-    if (this._receiveCmd && this._receiveCmd.onPacketReceive && this._receiveCmd.onResult) {
-      setImmediate(this._receiveCmd.onResult, err);
-    }
 
     let receiveCmd;
     while ((receiveCmd = this._receiveQueue.shift())) {
@@ -520,13 +521,10 @@ class Connection {
   }
 
   _nextSendCmd() {
-    if ((this._sendCmd = this._sendQueue.shift())) {
-      this._sendCmd.init(this._out, this.opts, this.info);
+    let sendCmd;
+    if ((sendCmd = this._sendQueue.shift())) {
+      sendCmd.init(this._out, this.opts, this.info);
     }
-  }
-
-  _nextReceiveCmd() {
-    this._receiveCmd = this._receiveQueue.shift();
   }
 
   _clear() {

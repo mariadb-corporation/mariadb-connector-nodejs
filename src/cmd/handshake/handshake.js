@@ -13,9 +13,10 @@ const Capabilities = require("../../const/capabilities");
  * see https://mariadb.com/kb/en/library/1-connecting-connecting/
  */
 class Handshake extends Command {
-  constructor(conn) {
+  constructor(conn, callback) {
     super(conn._events);
     this.conn = conn;
+    this.onResult = callback;
   }
 
   start(out, opts, info) {
@@ -87,7 +88,10 @@ class Handshake extends Command {
       //* ERR_Packet
       //*********************************************************************************************************
       case 0xff:
-        return this.throwError(packet.readError(info, this.displaySql()));
+        const authErr = packet.readError(info, this.displaySql());
+        authErr.fatal = true;
+        this.throwError(authErr);
+        return null;
 
       //*********************************************************************************************************
       //* unexpected
@@ -98,7 +102,8 @@ class Handshake extends Command {
           true,
           info
         );
-        return this.throwError(err);
+        this.throwError(err);
+        return null;
     }
   }
 
@@ -152,7 +157,6 @@ class Handshake extends Command {
     }
 
     if (this.onResult) this.onResult(null);
-    this.connEvents.emit("connect");
     this.emit("cmd_end");
     this.emit("end");
   }

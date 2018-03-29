@@ -34,13 +34,14 @@ class Command extends EventEmitter {
     } else {
       this.emit("error", err);
     }
-    if (err.fatal) this.connEvents.emit("server_error", err);
-    this.emit("end");
     this.onPacketReceive = null;
+    if (err.fatal) this.connEvents.emit("_db_fatal_error", err);
+    this.emit("end");
   }
 
   handle(packet, out, opts, info) {
     this.onPacketReceive = this.onPacketReceive(packet, out, opts, info);
+    return this.onPacketReceive !== null;
   }
 }
 
