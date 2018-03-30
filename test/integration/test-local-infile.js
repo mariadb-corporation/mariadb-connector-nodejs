@@ -103,7 +103,7 @@ describe("local-infile", () => {
   });
 
   it("big local infile", function(done) {
-    this.timeout(60000);
+    this.timeout(120000);
     shareConn.query("SELECT @@max_allowed_packet as t", function(err, results, fields) {
       if (err) done(err);
       const maxAllowedSize = results[0].t;
