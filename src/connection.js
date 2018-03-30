@@ -410,7 +410,7 @@ class Connection {
         this._events.emit("error", err);
         this.end();
       }
-    } else {
+    } else if (!this._closing) {
       let err = Utils.createError(
         "receiving packet from server without active commands\n" +
           "conn:" +
@@ -507,13 +507,13 @@ class Connection {
    */
   _fatalError(err) {
     if (this._closing) return;
+    this._closing = true;
 
     err.fatal = true;
     //prevent any new action
     this._addCommand = this._addCommandDisabled;
     //disabled events
     this._socket.destroy();
-    this._closing = true;
 
     let receiveCmd;
     while ((receiveCmd = this._receiveQueue.shift())) {
@@ -521,11 +521,15 @@ class Connection {
         setImmediate(receiveCmd.onResult, err);
       }
     }
-
-    this._events.emit("error", err);
-    this._events.emit("end");
-
-    this._clear();
+    if (this._events.listenerCount("error") > 0) {
+      this._events.emit("error", err);
+      this._events.emit("end");
+      this._clear();
+    } else {
+      this._events.emit("end");
+      this._clear();
+      throw err;
+    }
   }
 
   _nextSendCmd() {

@@ -392,7 +392,7 @@ class ResultSet extends Command {
     }
 
     const fileName = packet.readStringRemaining();
-    fs.access(fileName, fs.constants.R_OK, err => {
+    fs.access(fileName, (fs.constants || fs).R_OK, err => {
       if (err) {
         out.writeEmptyPacket();
         const error = Utils.createError(
