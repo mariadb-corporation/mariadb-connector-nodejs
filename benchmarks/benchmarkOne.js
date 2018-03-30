@@ -11,7 +11,7 @@ const run = function() {
 bench = new Bench(run);
 
 const launchBenchs = function(path) {
-  const test = "bench_select_one_user.js";
+  const test = "bench_select_one_user_random.js";
   const m = require(path + "/" + test);
   bench.initFcts.push(m.initFct);
   bench.add(m.title, m.displaySql, m.benchFct, m.onComplete); //, bench.CONN.MYSQL);
