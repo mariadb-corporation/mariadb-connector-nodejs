@@ -8,12 +8,15 @@ describe("datetime", () => {
   const date2 = new Date("2001-12-31 23:59:58.123");
   const date3 = new Date("2001-12-31 23:59:59.123456");
 
+  after(function() {
+    shareConn.query("DROP TABLE IF EXISTS table_date", err => {});
+  });
+
   before(done => {
     //MySQL 5.5 doesn't permit datetime(6)
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
       done();
     } else {
-      shareConn.query("DROP TABLE IF EXISTS table_date");
       shareConn.query("CREATE TABLE table_date (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))");
       shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [date, date2, date3]);
       shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [null, null, null], () => {

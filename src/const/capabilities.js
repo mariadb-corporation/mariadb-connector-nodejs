@@ -11,13 +11,13 @@ module.exports.LONG_FLAG = 4;
 /* one can specify db on connect */
 module.exports.CONNECT_WITH_DB = 8;
 /* don't allow database.table.column */
-module.exports.NO_SCHEMA = 1 << 5;
+module.exports.NO_SCHEMA = 1 << 4;
 /* can use compression protocol */
-module.exports.COMPRESS = 1 << 6;
+module.exports.COMPRESS = 1 << 5;
 /* odbc client */
-module.exports.ODBC = 1 << 7;
+module.exports.ODBC = 1 << 6;
 /* can use LOAD DATA LOCAL */
-module.exports.LOCAL_FILES = 1 << 8;
+module.exports.LOCAL_FILES = 1 << 7;
 /* ignore spaces before '' */
 module.exports.IGNORE_SPACE = 1 << 8;
 /* new 4.1 protocol */

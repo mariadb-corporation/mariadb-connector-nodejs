@@ -9,51 +9,51 @@ const Long = require("long");
  *
  */
 class Packet {
-  constructor(buf, off, end) {
+  constructor(buf, pos, end) {
     this.buf = buf;
-    this.off = off;
+    this.pos = pos;
     this.end = end;
   }
 
   skip(n) {
-    this.off += n;
+    this.pos += n;
   }
 
   peek() {
-    return this.buf[this.off];
+    return this.buf[this.pos];
   }
 
   remaining() {
-    return this.end - this.off > 0;
+    return this.end - this.pos > 0;
   }
 
   readUInt8() {
-    return this.buf[this.off++];
+    return this.buf[this.pos++];
   }
 
   readUInt16() {
-    return this.buf[this.off++] + (this.buf[this.off++] << 8);
+    return this.buf[this.pos++] + (this.buf[this.pos++] << 8);
   }
 
   readUInt24() {
-    return this.buf[this.off++] + (this.buf[this.off++] << 8) + (this.buf[this.off++] << 16);
+    return this.buf[this.pos++] + (this.buf[this.pos++] << 8) + (this.buf[this.pos++] << 16);
   }
 
   readUInt32() {
     return (
-      this.buf[this.off++] +
-      (this.buf[this.off++] << 8) +
-      (this.buf[this.off++] << 16) +
-      this.buf[this.off++] * 0x1000000
+      this.buf[this.pos++] +
+      (this.buf[this.pos++] << 8) +
+      (this.buf[this.pos++] << 16) +
+      this.buf[this.pos++] * 0x1000000
     );
   }
 
   readInt32() {
     return (
-      this.buf[this.off++] +
-      (this.buf[this.off++] << 8) +
-      (this.buf[this.off++] << 16) +
-      (this.buf[this.off++] << 24)
+      this.buf[this.pos++] +
+      (this.buf[this.pos++] << 8) +
+      (this.buf[this.pos++] << 16) +
+      (this.buf[this.pos++] << 24)
     );
   }
 
@@ -81,61 +81,8 @@ class Packet {
     return long.toNumber();
   }
 
-  readBuffer(len) {
-    this.off += len;
-    return this.buf.slice(this.off - len, this.off);
-  }
-
-  readBufferRemaining() {
-    let b = this.buf.slice(this.off, this.end);
-    this.off = this.end;
-    return b;
-  }
-
-  readBufferNullEnded() {
-    let initialPosition = this.off;
-    let cnt = 0;
-    while (this.remaining() > 0 && this.buf[this.off++] != 0) {
-      cnt++;
-    }
-    return this.buf.slice(initialPosition, cnt);
-  }
-
-  readBufferLengthEncoded() {
-    const len = this.readUnsignedLength();
-    if (len === null) return null;
-    this.off += len;
-    return this.buf.slice(this.off - len, this.off);
-  }
-
-  readStringNullEnded() {
-    let initialPosition = this.off;
-    let cnt = 0;
-    while (this.remaining() > 0 && this.buf[this.off++] != 0) {
-      cnt++;
-    }
-
-    return this.buf.toString("utf8", initialPosition, initialPosition + cnt);
-  }
-
-  readSignedLength() {
-    const type = this.buf[this.off++];
-    switch (type) {
-      case 0xfb:
-        return null;
-      case 0xfc:
-        return this.readUInt16();
-      case 0xfd:
-        return this.readUInt24();
-      case 0xfe:
-        return this.readInt64();
-      default:
-        return type;
-    }
-  }
-
   readUnsignedLength() {
-    const type = this.buf[this.off++];
+    const type = this.buf[this.pos++];
     switch (type) {
       case 0xfb:
         return null;
@@ -150,22 +97,80 @@ class Packet {
     }
   }
 
+  readBuffer(len) {
+    this.pos += len;
+    return this.buf.slice(this.pos - len, this.pos);
+  }
+
+  readBufferRemaining() {
+    let b = this.buf.slice(this.pos, this.end);
+    this.pos = this.end;
+    return b;
+  }
+
+  readBufferNullEnded() {
+    let initialPosition = this.pos;
+    let cnt = 0;
+    while (this.remaining() > 0 && this.buf[this.pos++] != 0) {
+      cnt++;
+    }
+    return this.buf.slice(initialPosition, cnt);
+  }
+
+  readBufferLengthEncoded() {
+    const len = this.readUnsignedLength();
+    if (len === null) return null;
+    this.pos += len;
+    return this.buf.slice(this.pos - len, this.pos);
+  }
+
+  readStringNullEnded() {
+    let initialPosition = this.pos;
+    let cnt = 0;
+    while (this.remaining() > 0 && this.buf[this.pos++] != 0) {
+      cnt++;
+    }
+    return this.buf.toString("utf8", initialPosition, initialPosition + cnt);
+  }
+
+  readStringRemaining(encoding) {
+    const str = this.buf.toString(encoding, this.pos, this.end);
+    this.pos = this.end;
+    return str;
+  }
+
+  readSignedLength() {
+    const type = this.buf[this.pos++];
+    switch (type) {
+      case 0xfb:
+        return null;
+      case 0xfc:
+        return this.readUInt16();
+      case 0xfd:
+        return this.readUInt24();
+      case 0xfe:
+        return this.readInt64();
+      default:
+        return type;
+    }
+  }
+
   readAsciiStringLengthEncoded() {
     const len = this.readUnsignedLength();
     if (len === null) return null;
-    this.off += len;
-    return this.buf.toString("ascii", this.off - len, this.off);
+    this.pos += len;
+    return this.buf.toString("ascii", this.pos - len, this.pos);
   }
 
   readStringLengthEncoded(encoding) {
     const len = this.readUnsignedLength();
     if (len === null) return null;
 
-    this.off += len;
+    this.pos += len;
     if (Buffer.isEncoding(encoding)) {
-      return this.buf.toString(encoding, this.off - len, this.off);
+      return this.buf.toString(encoding, this.pos - len, this.pos);
     }
-    return Iconv.decode(this.buf.slice(this.off - len, this.off), encoding);
+    return Iconv.decode(this.buf.slice(this.pos - len, this.pos), encoding);
   }
 
   readLongLengthEncoded(supportBigNumbers, bigNumberStrings, unsigned) {
@@ -174,22 +179,22 @@ class Packet {
 
     let result = 0;
     let negate = false;
-    let begin = this.off;
+    let begin = this.pos;
 
     //minus sign
     if (len > 0 && this.buf[begin] === 45) {
       negate = true;
       begin++;
     }
-    for (; begin < this.off + len; begin++) {
+    for (; begin < this.pos + len; begin++) {
       result = result * 10 + (this.buf[begin] - 48);
     }
 
     let val = negate ? -1 * result : result;
-    this.off += len;
+    this.pos += len;
 
     if (!Number.isSafeInteger(val)) {
-      const str = this.buf.toString("ascii", this.off - len, this.off);
+      const str = this.buf.toString("ascii", this.pos - len, this.pos);
       if (bigNumberStrings) return str;
       if (supportBigNumbers) {
         return Long.fromString(str, unsigned, 10);
@@ -202,8 +207,8 @@ class Packet {
     const len = this.readUnsignedLength();
     if (len === null) return null;
 
-    this.off += len;
-    let str = this.buf.toString("ascii", this.off - len, this.off);
+    this.pos += len;
+    let str = this.buf.toString("ascii", this.pos - len, this.pos);
     return bigNumberStrings ? str : parseFloat(str);
   }
 
@@ -213,9 +218,9 @@ class Packet {
 
     let res = [];
     let value = 0;
-    let initPos = this.off;
-    this.off += len;
-    while (initPos < this.off) {
+    let initPos = this.pos;
+    this.pos += len;
+    while (initPos < this.pos) {
       const char = this.buf[initPos++];
       if (char === 45) {
         //minus separator
@@ -236,8 +241,8 @@ class Packet {
   readDateTime() {
     const len = this.readUnsignedLength();
     if (len === null) return null;
-    this.off += len;
-    const str = this.buf.toString("ascii", this.off - len, this.off);
+    this.pos += len;
+    const str = this.buf.toString("ascii", this.pos - len, this.pos);
     if (str.startsWith("0000-00-00 00:00:00")) return null;
     return new Date(str);
   }
@@ -248,17 +253,17 @@ class Packet {
 
     let result = 0;
     let negate = false;
-    let begin = this.off;
+    let begin = this.pos;
 
     if (len > 0 && this.buf[begin] === 45) {
       //minus sign
       negate = true;
       begin++;
     }
-    for (; begin < this.off + len; begin++) {
+    for (; begin < this.pos + len; begin++) {
       result = result * 10 + (this.buf[begin] - 48);
     }
-    this.off += len;
+    this.pos += len;
     return negate ? -1 * result : result;
   }
 
@@ -270,38 +275,38 @@ class Packet {
     }
 
     let result = 0;
-    let end = this.off + len;
+    let end = this.pos + len;
     let factor = 1;
     let dotfactor = 1;
     let resultDot = 0;
     let charCode = 0;
 
     //-
-    if (this.buf[this.off] === 45) {
-      this.off++;
+    if (this.buf[this.pos] === 45) {
+      this.pos++;
       factor = -1;
     }
 
     //+
-    if (this.buf[this.off] === 43) {
-      this.off++; // just ignore
+    if (this.buf[this.pos] === 43) {
+      this.pos++; // just ignore
     }
 
-    while (this.off < end) {
-      charCode = this.buf[this.off];
+    while (this.pos < end) {
+      charCode = this.buf[this.pos];
       if (charCode === 46) {
         //dot
-        this.off++;
+        this.pos++;
 
         dotfactor = 1;
-        while (this.off < end) {
+        while (this.pos < end) {
           dotfactor *= 10;
           resultDot *= 10;
-          resultDot += this.buf[this.off++] - 48;
+          resultDot += this.buf[this.pos++] - 48;
         }
       } else {
         result *= 10;
-        result += this.buf[this.off++] - 48;
+        result += this.buf[this.pos++] - 48;
       }
     }
 
@@ -309,60 +314,60 @@ class Packet {
   }
 
   skipLengthCodedNumber() {
-    var type = this.buf[this.off++] & 0xff;
+    var type = this.buf[this.pos++] & 0xff;
     switch (type) {
       case 251:
         return;
       case 252:
-        this.off +=
-          2 + (0xffff & ((this.buf[this.off] & 0xff) + ((this.buf[this.off + 1] & 0xff) << 8)));
+        this.pos +=
+          2 + (0xffff & ((this.buf[this.pos] & 0xff) + ((this.buf[this.pos + 1] & 0xff) << 8)));
       case 253:
-        this.off +=
+        this.pos +=
           3 +
           (0xffffff &
-            ((this.buf[this.off] & 0xff) +
-              ((this.buf[this.off + 1] & 0xff) << 8) +
-              ((this.buf[this.off + 2] & 0xff) << 16)));
+            ((this.buf[this.pos] & 0xff) +
+              ((this.buf[this.pos + 1] & 0xff) << 8) +
+              ((this.buf[this.pos + 2] & 0xff) << 16)));
       case 254:
-        this.off +=
+        this.pos +=
           8 +
-          ((this.buf[this.off] & 0xff) +
-            ((this.buf[this.off + 1] & 0xff) << 8) +
-            ((this.buf[this.off + 2] & 0xff) << 16) +
-            ((this.buf[this.off + 3] & 0xff) << 24) +
-            ((this.buf[this.off + 4] & 0xff) << 32) +
-            ((this.buf[this.off + 5] & 0xff) << 40) +
-            ((this.buf[this.off + 6] & 0xff) << 48) +
-            ((this.buf[this.off + 7] & 0xff) << 56));
+          ((this.buf[this.pos] & 0xff) +
+            ((this.buf[this.pos + 1] & 0xff) << 8) +
+            ((this.buf[this.pos + 2] & 0xff) << 16) +
+            ((this.buf[this.pos + 3] & 0xff) << 24) +
+            ((this.buf[this.pos + 4] & 0xff) << 32) +
+            ((this.buf[this.pos + 5] & 0xff) << 40) +
+            ((this.buf[this.pos + 6] & 0xff) << 48) +
+            ((this.buf[this.pos + 7] & 0xff) << 56));
       default:
-        this.off += type & 0xff;
+        this.pos += type & 0xff;
         return;
     }
   }
 
   positionFromEnd(num) {
-    this.off = this.end - num;
+    this.pos = this.end - num;
   }
 
   /**
    * For testing purpose only
    */
   _toBuf() {
-    return this.buf.slice(this.off, this.end);
+    return this.buf.slice(this.pos, this.end);
   }
 
   forceOffset(off) {
-    this.off = off;
+    this.pos = off;
   }
 
   length() {
-    return this.end - this.off;
+    return this.end - this.pos;
   }
 
   subPacketLengthEncoded() {
     const len = this.readUnsignedLength();
     this.skip(len);
-    return new Packet(this.buf, this.off - len, this.off);
+    return new Packet(this.buf, this.pos - len, this.pos);
   }
 
   /**
@@ -379,10 +384,10 @@ class Packet {
 
     if (this.peek() === 0x23) {
       this.skip(6);
-      sqlState = this.buf.toString("utf8", this.off - 5, this.off);
+      sqlState = this.buf.toString("utf8", this.pos - 5, this.pos);
     }
 
-    let msg = this.buf.toString("utf8", this.off, this.end);
+    let msg = this.buf.toString("utf8", this.pos, this.end);
     if (sql) msg += "\n" + sql;
     let fatal = sqlState.startsWith("08") || sqlState === "70100";
     return Utils.createError(msg, fatal, info, errorCode, sqlState);

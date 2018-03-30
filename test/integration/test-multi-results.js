@@ -15,6 +15,7 @@ describe("multi-results", () => {
   });
 
   after(function() {
+    shareConn.query("DROP PROCEDURE myProc", err => {});
     conn.end();
   });
 
@@ -69,7 +70,6 @@ describe("multi-results", () => {
   });
 
   it("multiple result from procedure", function(done) {
-    shareConn.query("DROP PROCEDURE IF EXISTS myProc");
     shareConn.query("CREATE PROCEDURE myProc () BEGIN  SELECT 1; SELECT 2; END");
     shareConn.query("call myProc()", (err, rows) => {
       if (err) done(err);
@@ -77,9 +77,7 @@ describe("multi-results", () => {
       assert.deepEqual(rows[0], [{ "1": 1 }]);
       assert.deepEqual(rows[1], [{ "2": 2 }]);
       assert.deepEqual(rows[2], { affectedRows: 0, insertId: 0, warningStatus: 0 });
-      shareConn.query("DROP PROCEDURE myProc", () => {
-        done();
-      });
+      done();
     });
   });
 });

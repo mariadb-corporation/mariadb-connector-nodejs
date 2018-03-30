@@ -6,6 +6,7 @@ const StateChange = require("../const/state-change");
 const Collations = require("../const/collations");
 const ColumnDefinition = require("./column-definition");
 const Utils = require("../misc/utils");
+const fs = require("fs");
 
 /**
  * handle COM_QUERY / COM_STMT_EXECUTE results
@@ -58,8 +59,7 @@ class ResultSet extends Command {
       //* LOCAL INFILE response
       //*********************************************************************************************************
       case 0xfb:
-        //TODO read local infile
-        return null;
+        return this.readLocalInfile(packet, opts, info, out);
 
       //*********************************************************************************************************
       //* ResultSet
@@ -371,6 +371,52 @@ class ResultSet extends Command {
     }
 
     return "sql: " + this.sql + " - parameters:[]";
+  }
+
+  readLocalInfile(packet, opts, info, out) {
+    packet.skip(1); //skip header
+    this.incrementSequenceNo(1);
+    if (!opts.permitLocalInfile) {
+      out.writeEmptyPacket();
+      const err = Utils.createError(
+        "Usage of LOCAL INFILE is disabled. " +
+          'To use it enable it via the connection option "permitLocalInfile". ' +
+          '(The option "pipelining" must be disable)',
+        false,
+        info,
+        1148,
+        "42000"
+      );
+      this.throwError(err);
+      return null;
+    }
+
+    const fileName = packet.readStringRemaining();
+    fs.access(fileName, fs.constants.R_OK, err => {
+      if (err) {
+        out.writeEmptyPacket();
+        const error = Utils.createError(
+          "LOCAL INFILE command failed: " + err.message,
+          false,
+          info,
+          -1,
+          "22000"
+        );
+        this.throwError(error);
+        return null;
+      }
+      const stream = fs.createReadStream(fileName);
+      stream.on("data", chunk => {
+        out.writeBuffer(chunk, 0, chunk.length);
+      });
+      stream.on("end", chunk => {
+        if (!out.isEmpty()) {
+          out.flushBuffer(true);
+        }
+        out.writeEmptyPacket();
+      });
+    });
+    return this.readResponsePacket;
   }
 }
 

@@ -389,9 +389,9 @@ class Connection {
             ? receiveCmd.constructor.name + "." + receiveCmd.onPacketReceive.name
             : receiveCmd.constructor.name
           : "no command",
-        packet.off,
+        packet.pos,
         packet.end,
-        Utils.log(packet.buf, packet.off, packet.end, header)
+        Utils.log(packet.buf, packet.pos, packet.end, header)
       );
     }
 
@@ -412,9 +412,15 @@ class Connection {
       }
     } else {
       let err = Utils.createError(
-        "receiving packet from server without active commands\n"
-        + "conn:"+ (this.info.threadId ? this.info.threadId : -1) + "(" + packet.off + "," + packet.end + ")\n"
-        + Utils.log(packet.buf, packet.off, packet.end, header),
+        "receiving packet from server without active commands\n" +
+          "conn:" +
+          (this.info.threadId ? this.info.threadId : -1) +
+          "(" +
+          packet.pos +
+          "," +
+          packet.end +
+          ")\n" +
+          Utils.log(packet.buf, packet.pos, packet.end, header),
         true,
         this.info
       );

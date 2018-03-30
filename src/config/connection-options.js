@@ -16,6 +16,7 @@ const Collations = require("../const/collations.js");
  */
 class ConnectionOptions {
   constructor(opts) {
+    if (!opts) opts = {};
     if (opts.charset && typeof opts.charset === "string") {
       this.collation = Collations.fromName(opts.charset.toUpperCase());
       if (this.collation === undefined)
@@ -35,11 +36,17 @@ class ConnectionOptions {
     this.multipleStatements = opts.multipleStatements || false;
     this.namedPlaceholders = opts.namedPlaceholders || false;
     this.password = opts.password;
-    this.permitLocalInfile = opts.permitLocalInfile || false;
+    this.pipelining = opts.pipelining === undefined || opts.pipelining;
+    if (opts.pipelining === undefined) {
+      this.permitLocalInfile = opts.permitLocalInfile || false;
+      this.pipelining = !this.permitLocalInfile;
+    } else {
+      this.pipelining = opts.pipelining;
+      this.permitLocalInfile = this.pipelining ? false : opts.permitLocalInfile || false;
+    }
     this.port = opts.port || 3306;
     this.socketPath = opts.socketPath;
     this.ssl = opts.ssl;
-    this.pipelining = opts.pipelining === undefined || opts.pipelining;
     this.supportBigNumbers = opts.supportBigNumbers || false;
     this.timezone = opts.timezone || "local";
     if (this.timezone !== "local") {

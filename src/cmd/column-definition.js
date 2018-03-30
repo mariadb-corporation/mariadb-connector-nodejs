@@ -11,7 +11,7 @@ const FieldType = require("../const/field-type");
 class ColumnDefinition {
   constructor(packet, clientEncoding) {
     this._packet = packet;
-    this._initial = packet.off + 4; //skip 'def'
+    this._initial = packet.pos + 4; //skip 'def'
     packet.positionFromEnd(12); //fixed length field
     this.collation = Collations.fromIndex(packet.readUInt16());
     this.columnLength = packet.readUInt32();

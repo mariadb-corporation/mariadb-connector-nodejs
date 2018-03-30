@@ -14,7 +14,6 @@ module.exports.init = function(opts, info) {
     Capabilities.PROTOCOL_41 |
     Capabilities.TRANSACTIONS |
     Capabilities.SECURE_CONNECTION |
-    Capabilities.LOCAL_FILES |
     Capabilities.MULTI_RESULTS |
     Capabilities.PS_MULTI_RESULTS |
     Capabilities.SESSION_TRACK |
@@ -24,6 +23,10 @@ module.exports.init = function(opts, info) {
 
   if (opts.foundRows) {
     capabilities |= Capabilities.FOUND_ROWS;
+  }
+
+  if (opts.permitLocalInfile) {
+    capabilities |= Capabilities.LOCAL_FILES;
   }
 
   if (opts.multipleStatements) {

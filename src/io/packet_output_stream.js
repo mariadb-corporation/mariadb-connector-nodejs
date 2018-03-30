@@ -194,7 +194,7 @@ PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
       do {
         let lenToFillBuffer = Math.min(this.getMaxPacketLength() - this.pos, remainingLen);
 
-        arr.copy(this.buf, this.pos, off, lenToFillBuffer);
+        arr.copy(this.buf, this.pos, off, off + lenToFillBuffer);
 
         remainingLen -= lenToFillBuffer;
         off += lenToFillBuffer;
@@ -208,7 +208,7 @@ PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
       return;
     }
   }
-  arr.copy(this.buf, this.pos, off, len);
+  arr.copy(this.buf, this.pos, off, off + len);
   this.pos += len;
 };
 
@@ -418,6 +418,14 @@ PacketOutputStream.prototype.writeBufferEscape = function(val) {
 };
 
 /**
+ * Indicate if buffer contain any data.
+ * @returns {boolean}
+ */
+PacketOutputStream.prototype.isEmpty = function() {
+  return this.pos <= 4;
+};
+
+/**
  * Flush the internal buffer.
  */
 PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
@@ -440,6 +448,7 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
       Utils.log(this.buf, 0, this.pos)
     );
   }
+
   try {
     this.writer(this.buf.slice(0, this.pos));
 
@@ -453,7 +462,7 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
 
     this.pos = 4;
   } catch (err) {
-    //eat exception
+    //eat exception : thrown by socket.on('error');
   }
 };
 
@@ -464,8 +473,6 @@ PacketOutputStream.prototype.writeEmptyPacket = function() {
   this.buf[3] = this.cmd.sequenceNo;
   this.cmd.incrementSequenceNo(1);
 
-  this.writer(this.buf.from(0, 0, 4));
-
   if (this.opts.debug) {
     console.log(
       "==> conn:%d %s\n%s",
@@ -475,6 +482,12 @@ PacketOutputStream.prototype.writeEmptyPacket = function() {
         : this.cmd.constructor.name) + "(0,4)",
       Utils.log(this.buf, 0, 4)
     );
+  }
+
+  try {
+    this.writer(this.buf.slice(0, 4));
+  } catch (err) {
+    //eat exception : thrown by socket.on('error');
   }
 };
 

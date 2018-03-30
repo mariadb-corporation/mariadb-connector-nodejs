@@ -4,28 +4,32 @@ require("../base.js");
 const assert = require("chai").assert;
 
 describe("stored procedure", () => {
-  it("simple call query", function(done) {
-    shareConn.query("DROP PROCEDURE IF EXISTS stmtSimple");
+  before(function(done) {
     shareConn.query(
-      "CREATE PROCEDURE stmtSimple " + "(IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end"
+      "CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end",
+      err => done()
     );
+  });
+
+  after(function() {
+    shareConn.query("DROP PROCEDURE IF EXISTS stmtOutParam", err => {});
+    shareConn.query("DROP PROCEDURE IF EXISTS stmtSimple", err => {});
+    shareConn.query("DROP FUNCTION IF EXISTS stmtSimpleFunct", err => {});
+  });
+
+  it("simple call query", function(done) {
     shareConn.query("call stmtSimple(?,?)", [2, 2], function(err, res, fields) {
       testRes(err, res, done);
     });
   });
 
   it("simple call execute", function(done) {
-    shareConn.query("DROP PROCEDURE IF EXISTS stmtSimple");
-    shareConn.query(
-      "CREATE PROCEDURE stmtSimple " + "(IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end"
-    );
     shareConn.execute("call stmtSimple(?,?)", [2, 2], function(err, res, fields) {
       testRes(err, res, done);
     });
   });
 
   it("simple function", function(done) {
-    shareConn.query("DROP FUNCTION IF EXISTS stmtSimpleFunct");
     shareConn.query(
       "CREATE FUNCTION stmtSimpleFunct " +
         "(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end"
@@ -51,7 +55,6 @@ describe("stored procedure", () => {
   });
 
   it("call with out parameter query", function(done) {
-    shareConn.query("DROP PROCEDURE IF EXISTS stmtOutParam");
     shareConn.query("CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end");
     shareConn.query("call stmtOutParam(?,?)", [2, 3], function(err, res, fields) {
       if (err) {
