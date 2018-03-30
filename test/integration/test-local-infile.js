@@ -135,7 +135,7 @@ describe("local-infile", () => {
                     assert.equal(rows.length, size);
                     const expectedRow = { t1: "a01234567", t2: "b" };
                     for (let i = 0; i < size; i++) {
-                      assert.deepEqual(rows[i], expectedRow);
+                      assert.deepEqual(rows[i], expectedRow, "result differ (no:" + i + ")");
                     }
                     conn.end();
                     done();
