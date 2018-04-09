@@ -63,15 +63,18 @@ class PacketInputStream {
             this.parts.push(chunk.slice(this.pos, this.pos + length));
             this.partsTotalLen += length;
             let buf = Buffer.concat(this.parts, this.partsTotalLen);
-            let packet = new Packet(buf, 0, this.partsTotalLen);
+            this.parts = null;
 
             if (this.packetLen < 0xffffff) {
+              let packet;
               if (this.largeParts) {
                 this.largeParts.push(buf);
                 this.largePartsTotalLen += this.partsTotalLen;
                 buf = Buffer.concat(this.largeParts, this.largePartsTotalLen);
                 packet = new Packet(buf, 0, this.largePartsTotalLen);
                 this.largeParts = null;
+              } else {
+                packet = new Packet(buf, 0, this.partsTotalLen);
               }
               this.receivePacket(packet);
             } else {
@@ -80,9 +83,8 @@ class PacketInputStream {
                 this.largePartsTotalLen = 0;
               }
               this.largeParts.push(buf);
-              this.largePartsTotalLen += this.packetLen;
+              this.largePartsTotalLen += this.partsTotalLen;
             }
-            this.parts = null;
           } else {
             if (this.packetLen < 0xffffff) {
               let packet;
@@ -106,6 +108,7 @@ class PacketInputStream {
             }
           }
           this.resetHeader();
+          this.remainingLen = null;
           this.pos += length;
         } else {
           if (!this.parts) {

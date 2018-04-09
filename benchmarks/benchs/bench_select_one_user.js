@@ -55,7 +55,7 @@ module.exports.benchFct = function(conn, deferred) {
     function(err, rows, fields) {
       if (err) console.log(err);
       assert.ifError(err);
-      assert.equal(1, rows[0]["t"]);
+      assert.equal(50000000, rows[0]["t"]);
 
       deferred.resolve();
     }
