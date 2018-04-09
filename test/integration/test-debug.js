@@ -43,8 +43,8 @@ describe("debug", () => {
               const serverVersion = conn.serverVersion();
               conn.end();
               if (
-                (conn.isMariaDB && conn.hasMinVersion(10, 2, 2)) ||
-                (!conn.isMariaDB && conn.hasMinVersion(5, 7, 5))
+                (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
+                (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
               ) {
                 assert.isTrue(
                   data.length > 580 && data.length < 610,
