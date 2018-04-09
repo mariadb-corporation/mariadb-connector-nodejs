@@ -40,6 +40,7 @@ describe("debug", () => {
               const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
+              const serverVersion = conn.serverVersion();
               conn.end();
               if (
                 (conn.isMariaDB && conn.hasMinVersion(10, 2, 2)) ||
@@ -50,6 +51,8 @@ describe("debug", () => {
                   "wrong data length : " +
                     data.length +
                     " expected value between 580 and 610." +
+                    "\n server version : " +
+                    serverVersion +
                     "\n data :\n" +
                     data
                 );
@@ -60,6 +63,8 @@ describe("debug", () => {
                   "wrong data length : " +
                     data.length +
                     " expected value between 680 and 710" +
+                    "\n server version : " +
+                    serverVersion +
                     "\n data :\n" +
                     data
                 );

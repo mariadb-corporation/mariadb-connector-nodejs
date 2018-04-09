@@ -50,7 +50,7 @@ module.exports.benchFct = function(conn, deferred) {
       "u.password_expired,\n" +
       "u.is_role,\n" +
       "u.default_role,\n" +
-      "u.max_statement_time , 1 as t" +
+      "u.max_statement_time , 50000000 as t" +
       " from mysql.user u LIMIT 1",
     function(err, rows, fields) {
       if (err) console.log(err);

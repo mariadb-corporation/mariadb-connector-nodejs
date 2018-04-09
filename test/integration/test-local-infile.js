@@ -7,6 +7,14 @@ const os = require("os");
 const path = require("path");
 
 describe("local-infile", () => {
+  const smallFileName = path.join(os.tmpdir(), "smallLocalInfile.txt");
+  const bigFileName = path.join(os.tmpdir(), "bigLocalInfile.txt");
+
+  after(function() {
+    fs.unlink(smallFileName, err => {});
+    fs.unlink(bigFileName, err => {});
+  });
+
   it("local infile disable when permitLocalInfile option is set", function(done) {
     const conn = base.createConnection({ permitLocalInfile: false });
     conn.connect(() => {
@@ -72,9 +80,7 @@ describe("local-infile", () => {
   });
 
   it("small local infile", function(done) {
-    const fileName = path.join(os.tmpdir(), "smallLocalInfile.txt");
-    fs.unlink(fileName, err => {});
-    fs.writeFile(fileName, "1,hello\n2,world\n", "utf8", function(err) {
+    fs.writeFile(smallFileName, "1,hello\n2,world\n", "utf8", function(err) {
       if (err) {
         done(err);
       } else {
@@ -83,7 +89,7 @@ describe("local-infile", () => {
           conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
           conn.query(
             "LOAD DATA LOCAL INFILE '" +
-              fileName.replace(/\\/g, "/") +
+            smallFileName.replace(/\\/g, "/") +
               "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
             err => {
               if (err) {
@@ -107,14 +113,12 @@ describe("local-infile", () => {
     shareConn.query("SELECT @@max_allowed_packet as t", function(err, results, fields) {
       if (err) done(err);
       const maxAllowedSize = results[0].t;
-      const fileName = path.join(os.tmpdir(), "bigLocalInfile.txt");
-      fs.unlink(fileName, err => {});
       const size = Math.round((maxAllowedSize - 100) / 16);
       const buf = Buffer.allocUnsafe(size * 16);
       for (let i = 0; i < size; i++) {
         buf.write('"a01234567","b"\n', i * 16);
       }
-      fs.writeFile(fileName, buf, function(err) {
+      fs.writeFile(bigFileName, buf, function(err) {
         if (err) {
           done(err);
         } else {
@@ -123,7 +127,7 @@ describe("local-infile", () => {
             conn.query("CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))");
             conn.query(
               "LOAD DATA LOCAL INFILE '" +
-                fileName.replace(/\\/g, "/") +
+              bigFileName.replace(/\\/g, "/") +
                 "' INTO TABLE bigLocalInfile " +
                 "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
                 "LINES TERMINATED BY '\\n' (t1, t2)",

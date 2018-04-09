@@ -159,7 +159,7 @@ describe("connection", () => {
     //using sequence engine
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
 
-    this.timeout(30000);
+    this.timeout(45000);
     const array1 = [];
     array1[999] = "a";
     const str = array1.fill("a").join("");
