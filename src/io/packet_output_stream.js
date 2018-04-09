@@ -191,21 +191,18 @@ PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
       //not enough space in buffer, will stream :
       // fill buffer and flush until all data are snd
       let remainingLen = len;
-      do {
+
+      while (true) {
+        //filling buffer
         let lenToFillBuffer = Math.min(this.getMaxPacketLength() - this.pos, remainingLen);
-
         arr.copy(this.buf, this.pos, off, off + lenToFillBuffer);
-
         remainingLen -= lenToFillBuffer;
         off += lenToFillBuffer;
         this.pos += lenToFillBuffer;
-        if (remainingLen > 0) {
-          this.flushBuffer(false);
-        } else {
-          break;
-        }
-      } while (true);
-      return;
+
+        if (remainingLen === 0) return;
+        this.flushBuffer(false);
+      }
     }
   }
   arr.copy(this.buf, this.pos, off, off + len);

@@ -278,6 +278,14 @@ class Connection {
     return this.info.hasMinVersion(major, minor, patch);
   }
 
+  /**
+   * Change option "debug" during connection.
+   * @param val   debug value
+   */
+  debug(val) {
+    this.opts.debug = val;
+  }
+
   //*****************************************************************
   // internal methods
   //*****************************************************************

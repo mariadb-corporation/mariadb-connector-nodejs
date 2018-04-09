@@ -399,7 +399,7 @@ class ResultSet extends Command {
           "LOCAL INFILE command failed: " + err.message,
           false,
           info,
-          -1,
+          1017,
           "22000"
         );
         this.throwError(error);
@@ -409,7 +409,7 @@ class ResultSet extends Command {
       stream.on("data", chunk => {
         out.writeBuffer(chunk, 0, chunk.length);
       });
-      stream.on("end", chunk => {
+      stream.on("end", () => {
         if (!out.isEmpty()) {
           out.flushBuffer(true);
         }
