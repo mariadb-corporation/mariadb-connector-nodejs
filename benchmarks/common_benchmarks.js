@@ -22,13 +22,7 @@ function Bench(callback) {
     console.log("driver for " + name + " connected");
     bench.dbReady++;
     if (bench.dbReady === (mariasql ? 4 : 3)) {
-      bench.dbReady = 0;
-      bench.warmupConnection(bench.CONN.MYSQL, bench, callback);
-      bench.warmupConnection(bench.CONN.MYSQL2, bench, callback);
-      bench.warmupConnection(bench.CONN.MARIADB, bench, callback);
-      if (mariasql) {
-        bench.warmupConnection(bench.CONN.MARIASQLC, bench, callback);
-      }
+      callback();
     }
   };
 
@@ -94,6 +88,9 @@ function Bench(callback) {
 
     // called between running benchmarks
     onCycle: function(event) {
+      //to avoid mysql2 taking all the server memory
+      mysql2.clearParserCache();
+
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
@@ -118,23 +115,6 @@ function Bench(callback) {
     }
   });
 }
-
-Bench.prototype.warmupConnection = (conn, bench, cb) => {
-  const max = 15000;
-
-  for (let i = 1; i < max; i++) {
-    conn.drv.query("SELECT " + i++);
-  }
-
-  conn.drv.query("SELECT " + max, () => {
-    bench.dbReady++;
-    console.log("warmup done for " + conn.desc);
-    if (bench.dbReady === (mariasql ? 4 : 3)) {
-      console.log("initial warmup finished");
-      cb();
-    }
-  });
-};
 
 Bench.prototype.end = function(bench) {
   console.log("ending connectors");

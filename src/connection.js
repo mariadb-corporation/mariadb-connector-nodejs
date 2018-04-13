@@ -31,8 +31,9 @@ class Connection {
 
     this._out = new PacketOutputStream(this.opts, this.info);
     this._in = new PacketInputStream(
-      this._dispatchPacket.bind(this),
+      this._unexpectedPacket.bind(this),
       this._receiveQueue,
+      this._out,
       this.opts,
       this.info
     );
@@ -370,7 +371,7 @@ class Connection {
       this._out.setStreamer(new CompressionOutputStream(this._socket, this.info, this.opts));
       this._in = new CompressionInputStream(this._in, this._receiveQueue, this.info, this.opts);
       this._socket.removeAllListeners("data");
-      this._socket.on("data", chunk => this.conn._in.onData(chunk));
+      this._socket.on("data", chunk => this._in.onData(chunk));
 
       this.opts.debugCompress = this.opts.debug;
       this.opts.debug = false;
@@ -421,14 +422,7 @@ class Connection {
     this._fatalError(err);
   }
 
-  _dispatchPacket(packet, cmd) {
-    if (cmd) {
-      if (!cmd.handle(packet, this._out, this.opts, this.info)) {
-        this._receiveQueue.shift();
-      }
-      return;
-    }
-
+  _unexpectedPacket(packet) {
     if (packet && packet.peek() === 0xff) {
       //can receive unexpected error packet from server/proxy
       //to inform that connection is closed (usually by timeout)

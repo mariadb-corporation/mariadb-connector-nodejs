@@ -8,11 +8,12 @@ const Utils = require("../misc/utils");
  * see : https://mariadb.com/kb/en/library/0-packet/
  */
 class PacketInputStream {
-  constructor(dispatchPacket, receiveQueue, opts, info) {
-    this.dispatchPacket = dispatchPacket;
+  constructor(unexpectedPacket, receiveQueue, out, opts, info) {
+    this.unexpectedPacket = unexpectedPacket;
     this.opts = opts;
     this.receiveQueue = receiveQueue;
     this.info = info;
+    this.out = out;
 
     //in case packet is not complete
     this.header = Buffer.allocUnsafe(4);
@@ -61,8 +62,16 @@ class PacketInputStream {
         Utils.log(packet.buf, packet.pos, packet.end, this.header)
       );
     }
-    if (cmd) cmd.checkSequenceNo(this.header[3]);
-    this.dispatchPacket(packet, cmd);
+
+    if (!cmd) {
+      this.unexpectedPacket(packet);
+      return;
+    }
+
+    cmd.checkSequenceNo(this.header[3]);
+    if (!cmd.handle(packet, this.out, this.opts, this.info)) {
+      this.receiveQueue.shift();
+    }
   }
 
   resetHeader() {

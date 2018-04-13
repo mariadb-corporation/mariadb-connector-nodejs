@@ -28,7 +28,7 @@ class Command extends EventEmitter {
         "packets order received error. sequence is " +
           numPackets +
           ", expected " +
-        (this.sequenceNo % 256)
+          this.sequenceNo % 256
       );
       this.sequenceNo = numPackets + 1;
       return;
@@ -40,9 +40,9 @@ class Command extends EventEmitter {
     if (this.compressSequenceNo % 256 !== numPackets) {
       console.error(
         "compress packets order received error. sequence is " +
-        numPackets +
-        ", expected " +
-        (this.compressSequenceNo % 256)
+          numPackets +
+          ", expected " +
+          this.compressSequenceNo % 256
       );
     }
     this.compressSequenceNo += 1;
