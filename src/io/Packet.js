@@ -314,13 +314,14 @@ class Packet {
   }
 
   skipLengthCodedNumber() {
-    var type = this.buf[this.pos++] & 0xff;
+    const type = this.buf[this.pos++] & 0xff;
     switch (type) {
       case 251:
         return;
       case 252:
         this.pos +=
           2 + (0xffff & ((this.buf[this.pos] & 0xff) + ((this.buf[this.pos + 1] & 0xff) << 8)));
+        return;
       case 253:
         this.pos +=
           3 +
@@ -328,6 +329,7 @@ class Packet {
             ((this.buf[this.pos] & 0xff) +
               ((this.buf[this.pos + 1] & 0xff) << 8) +
               ((this.buf[this.pos + 2] & 0xff) << 16)));
+        return;
       case 254:
         this.pos +=
           8 +
@@ -339,6 +341,7 @@ class Packet {
             ((this.buf[this.pos + 5] & 0xff) << 40) +
             ((this.buf[this.pos + 6] & 0xff) << 48) +
             ((this.buf[this.pos + 7] & 0xff) << 56));
+        return;
       default:
         this.pos += type & 0xff;
         return;

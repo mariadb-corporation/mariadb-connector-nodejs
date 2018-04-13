@@ -1,6 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
+const Conf = require("../conf");
 const assert = require("chai").assert;
 const fs = require("fs");
 const os = require("os");
@@ -42,15 +43,21 @@ describe("debug", () => {
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
               conn.end();
+              const rangeWithEOF = Conf.baseConfig.compress ? [470, 490] : [680, 710];
+              const rangeWithoutEOF = Conf.baseConfig.compress ? [470, 490] : [580, 610];
               if (
                 (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                 (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
               ) {
                 assert.isTrue(
-                  data.length > 580 && data.length < 610,
+                  data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
                   "wrong data length : " +
                     data.length +
-                    " expected value between 580 and 610." +
+                    " expected value between " +
+                    rangeWithoutEOF[0] +
+                    " and " +
+                    rangeWithoutEOF[1] +
+                    "." +
                     "\n server version : " +
                     serverVersion +
                     "\n data :\n" +
@@ -59,10 +66,14 @@ describe("debug", () => {
               } else {
                 //EOF Packet make exchange bigger
                 assert.isTrue(
-                  data.length > 680 && data.length < 710,
+                  data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
                   "wrong data length : " +
                     data.length +
-                    " expected value between 680 and 710" +
+                    " expected value between " +
+                    rangeWithEOF[0] +
+                    " and " +
+                    rangeWithEOF[1] +
+                    "." +
                     "\n server version : " +
                     serverVersion +
                     "\n data :\n" +

@@ -13,14 +13,14 @@ const Capabilities = require("../../const/capabilities");
  * see https://mariadb.com/kb/en/library/1-connecting-connecting/
  */
 class Handshake extends Command {
-  constructor(conn, callback) {
-    super(conn._events);
-    this.conn = conn;
+  constructor(_events, _succeedAuthentication, _createSecureContext, callback) {
+    super(_events);
+    this._succeedAuthentication = _succeedAuthentication;
+    this._createSecureContext = _createSecureContext;
     this.onResult = callback;
   }
 
   start(out, opts, info) {
-    this.sequenceNo = 1;
     return this.parseHandshakeInit;
   }
 
@@ -32,7 +32,7 @@ class Handshake extends Command {
       if (info.serverCapabilities & Capabilities.SSL) {
         info.clientCapabilities |= Capabilities.SSL;
         SslRequest.send(this, out, this.clientCapabilities, opts.collation.index);
-        this.conn._createSecureContext(err => {
+        this._createSecureContext(err => {
           if (err) {
             err.fatal = true;
             this.emit("error", err);
@@ -152,11 +152,9 @@ class Handshake extends Command {
    * @param opts  connection options
    */
   authEnded(opts) {
-    if (opts.compress) {
-      //TODO handle compression
-    }
-
+    this._succeedAuthentication();
     if (this.onResult) this.onResult(null);
+    this.onPacketReceive = null;
     this.emit("cmd_end");
     this.emit("end");
   }

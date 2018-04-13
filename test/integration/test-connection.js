@@ -136,54 +136,57 @@ describe("connection", () => {
       this.skip();
     }
 
-    if (
-      (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 3, 1)) ||
-      (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 2))
-    ) {
-      //mariadb session tracking default value was empty before 10.3.1
-      shareConn.query(
-        "SET @@session_track_system_variables = " +
-          "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
-      );
-    }
+    const conn = base.createConnection();
+    conn.connect(() => {
+      if (
+        (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 3, 1)) ||
+        (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 2))
+      ) {
+        //mariadb session tracking default value was empty before 10.3.1
+        conn.query(
+          "SET @@session_track_system_variables = " +
+            "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
+        );
+      }
 
-    assert.equal(shareConn.opts.collation, Collations.fromName("UTF8MB4_UNICODE_CI"));
-    shareConn.query("SET time_zone = '+00:00', character_set_client = cp850", (err, rows) => {
-      assert.ifError(err);
-      assert.equal(shareConn.opts.collation, Collations.fromName("CP850_GENERAL_CI"));
-      done();
+      assert.equal(conn.opts.collation, Collations.fromName("UTF8MB4_UNICODE_CI"));
+      conn.query("SET time_zone = '+00:00', character_set_client = cp850", (err, rows) => {
+        if (err) done(err);
+        assert.equal(conn.opts.collation, Collations.fromName("CP850_GENERAL_CI"));
+        conn.end(() => done());
+      });
     });
   });
 
   it("connection row event", function(done) {
-    //using sequence engine
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
-
-    this.timeout(45000);
+    shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[999] = "a";
     const str = array1.fill("a").join("");
     let numberFetched = 0;
     let fieldEvent = false;
+    for (let i = 0; i < 1000; i++) {
+      shareConn.query("INSERT INTO row_event VALUE (?)", str);
+    }
     shareConn
-      .query("select repeat('a', 1000) as 't1' from seq_1_to_1000000")
+      .query("select * FROM row_event")
       .on("error", function(err) {
         done(err);
       })
       .on("fields", function(fields) {
         // the field packets for the rows to follow
         assert.equal(fields.length, 1);
-        assert.equal(fields[0].name, "t1");
+        assert.equal(fields[0].name, "val");
         fieldEvent = true;
       })
       .on("result", function(row) {
         //fields defined
-        assert.equal(row.t1, str);
+        assert.equal(row.val, str);
         numberFetched++;
       })
       .on("end", function() {
         // all rows have been received
-        assert.equal(numberFetched, 1000000);
+        assert.equal(numberFetched, 1000);
         assert.ok(fieldEvent);
         done();
       });

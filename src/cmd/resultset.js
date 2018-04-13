@@ -375,7 +375,6 @@ class ResultSet extends Command {
 
   readLocalInfile(packet, opts, info, out) {
     packet.skip(1); //skip header
-    this.incrementSequenceNo(1);
     if (!opts.permitLocalInfile) {
       out.writeEmptyPacket();
       const err = Utils.createError(
@@ -402,8 +401,13 @@ class ResultSet extends Command {
           1017,
           "22000"
         );
-        this.throwError(error);
-        return null;
+        if (this.onResult) {
+          process.nextTick(this.onResult, error);
+          this.onResult = null;
+        } else {
+          this.emit("error", error);
+        }
+        return this.readResponsePacket;
       }
       const stream = fs.createReadStream(fileName);
       stream.on("data", chunk => {
@@ -411,7 +415,8 @@ class ResultSet extends Command {
       });
       stream.on("end", () => {
         if (!out.isEmpty()) {
-          out.flushBuffer(true);
+          //not flushing (permit that empty packet is in same compressed packet)
+          out.flushBuffer(false);
         }
         out.writeEmptyPacket();
       });

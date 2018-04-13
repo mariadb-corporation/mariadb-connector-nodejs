@@ -3,8 +3,10 @@
 const EventEmitter = require("events");
 const Queue = require("denque");
 const Net = require("net");
-const PacketInputStream = require("./io/packet_input_stream");
-const PacketOutputStream = require("./io/packet_output_stream");
+const PacketInputStream = require("./io/packet-input-stream");
+const PacketOutputStream = require("./io/packet-output-stream");
+const CompressionInputStream = require("./io/compression-input-stream");
+const CompressionOutputStream = require("./io/compression-output-stream");
 const ServerStatus = require("./const/server-status");
 const ConnectionInformation = require("./misc/connection-information");
 const tls = require("tls");
@@ -19,7 +21,7 @@ const Query = require("./cmd/query");
 class Connection {
   constructor(options) {
     //public info
-    this.opts = options;
+    this.opts = Object.assign({}, options);
     this.info = new ConnectionInformation();
 
     //internal
@@ -28,6 +30,13 @@ class Connection {
     this._receiveQueue = new Queue();
 
     this._out = new PacketOutputStream(this.opts, this.info);
+    this._in = new PacketInputStream(
+      this._dispatchPacket.bind(this),
+      this._receiveQueue,
+      this.opts,
+      this.info
+    );
+
     this.timeoutRef = null;
     this._closing = null;
     this._connected = null;
@@ -175,20 +184,23 @@ class Connection {
    */
   end(callback) {
     this._clearConnectTimeout();
-    const currentAddCmd = this._addCommand;
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
-    currentAddCmd.call(
-      this,
-      new Quit(
-        this._events,
-        function() {
-          this._clear();
-          if (callback) setImmediate(callback);
-        }.bind(this)
-      ),
-      false
+
+    const cmd = new Quit(
+      this._events,
+      function() {
+        let sock = this._socket;
+        this._clear();
+        if (callback) setImmediate(callback);
+        sock.destroy;
+      }.bind(this)
     );
+    this._sendQueue.push(cmd);
+    this._receiveQueue.push(cmd);
+    if (this._sendQueue.length === 1) {
+      process.nextTick(this._nextSendCmd.bind(this));
+    }
   }
 
   /**
@@ -283,7 +295,13 @@ class Connection {
    * @param val   debug value
    */
   debug(val) {
-    this.opts.debug = val;
+    if (this.opts.compress) {
+      this.opts.debugCompress = val;
+      this.opts.debug = false;
+    } else {
+      this.opts.debugCompress = false;
+      this.opts.debug = val;
+    }
   }
 
   //*****************************************************************
@@ -293,15 +311,18 @@ class Connection {
     this._events.on(
       "collation_changed",
       function() {
+        const stream = this._out.stream;
         this._out = new PacketOutputStream(this.opts, this.info);
-        this._out.setWriter(buffer => this._socket.write(buffer));
+        this._out.setStreamer(stream);
       }.bind(this)
     );
   }
 
   _registerHandshakeCmd() {
     const handshake = new Handshake(
-      this,
+      this._events,
+      this._succeedAuthentication.bind(this),
+      this._createSecureContext.bind(this),
       function(err) {
         this._clearConnectTimeout();
         if (err) {
@@ -334,11 +355,26 @@ class Connection {
     } else {
       this._socket = Net.connect(this.opts.port, this.opts.host);
     }
-
-    let packetInputStream = new PacketInputStream(this._dispatchPacket.bind(this));
+    const packetInputStream = this._in;
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
-    this._out.setWriter(buffer => this._socket.write(buffer));
+    this._socket.writeBuf = (buf, cmd) => {
+      this._socket.write(buf);
+    };
+    this._socket.flush = (cmdEnd, cmd) => {};
+    this._out.setStreamer(this._socket);
+  }
+
+  _succeedAuthentication() {
+    if (this.opts.compress) {
+      this._out.setStreamer(new CompressionOutputStream(this._socket, this.info, this.opts));
+      this._in = new CompressionInputStream(this._in, this._receiveQueue, this.info, this.opts);
+      this._socket.removeAllListeners("data");
+      this._socket.on("data", chunk => this.conn._in.onData(chunk));
+
+      this.opts.debugCompress = this.opts.debug;
+      this.opts.debug = false;
+    }
   }
 
   _createSecureContext(callback) {
@@ -355,17 +391,21 @@ class Connection {
       secureContext: tls.createSecureContext(this.opts.ssl)
     });
 
-    let packetInputStream = new PacketInputStream(this);
-
+    let packetInputStream = this._in;
     let events = this._events;
-    secureSocket.on("error", this._socketError.bind(this));
     secureSocket.on("data", chunk => packetInputStream.onData(chunk));
     secureSocket.on("secureConnect", () => {
       events.emit("secureConnect");
       callback();
     });
+    this._socket.removeAllListeners("data");
+    this._socket = secureSocket;
 
-    this._out.setWriter(buffer => secureSocket.write(buffer));
+    this._socket.writeBuf = (buf, cmd) => {
+      this._socket.write(buf);
+    };
+    this._socket.flush = (cmdEnd, cmd) => {};
+    this._out.setStreamer(secureSocket);
   }
 
   _socketError(err) {
@@ -381,30 +421,9 @@ class Connection {
     this._fatalError(err);
   }
 
-  _dispatchPacket(packet, header) {
-    let receiveCmd;
-    while ((receiveCmd = this._receiveQueue.peek())) {
-      if (receiveCmd.onPacketReceive) break;
-      this._receiveQueue.shift();
-    }
-
-    if (this.opts.debug && packet) {
-      console.log(
-        "<== conn:%d %s (%d,%d)\n%s",
-        this.info.threadId ? this.info.threadId : -1,
-        receiveCmd
-          ? receiveCmd.onPacketReceive
-            ? receiveCmd.constructor.name + "." + receiveCmd.onPacketReceive.name
-            : receiveCmd.constructor.name
-          : "no command",
-        packet.pos,
-        packet.end,
-        Utils.log(packet.buf, packet.pos, packet.end, header)
-      );
-    }
-
-    if (receiveCmd) {
-      if (!receiveCmd.handle(packet, this._out, this.opts, this.info)) {
+  _dispatchPacket(packet, cmd) {
+    if (cmd) {
+      if (!cmd.handle(packet, this._out, this.opts, this.info)) {
         this._receiveQueue.shift();
       }
       return;
@@ -428,7 +447,7 @@ class Connection {
           "," +
           packet.end +
           ")\n" +
-          Utils.log(packet.buf, packet.pos, packet.end, header),
+          Utils.log(packet.buf, packet.pos, packet.end),
         true,
         this.info
       );

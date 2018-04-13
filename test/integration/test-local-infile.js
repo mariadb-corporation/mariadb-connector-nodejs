@@ -9,56 +9,61 @@ const path = require("path");
 describe("local-infile", () => {
   const smallFileName = path.join(os.tmpdir(), "smallLocalInfile.txt");
   const bigFileName = path.join(os.tmpdir(), "bigLocalInfile.txt");
+  let conn;
 
   after(function() {
     fs.unlink(smallFileName, err => {});
     fs.unlink(bigFileName, err => {});
   });
 
+  afterEach(() => {
+    if (conn) {
+      conn.end();
+      conn = null;
+    }
+  });
+
   it("local infile disable when permitLocalInfile option is set", function(done) {
-    const conn = base.createConnection({ permitLocalInfile: false });
+    conn = base.createConnection({ permitLocalInfile: false });
     conn.connect(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
         assert.equal(err.sqlState, "42000");
         assert.isFalse(err.fatal);
-        conn.end();
         done();
       });
     });
   });
 
   it("local infile disable when pipelining option is set", function(done) {
-    const conn = base.createConnection({ pipelining: true });
+    conn = base.createConnection({ pipelining: true });
     conn.connect(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
         assert.equal(err.sqlState, "42000");
         assert.isFalse(err.fatal);
-        conn.end();
         done();
       });
     });
   });
 
   it("local infile disable using default options", function(done) {
-    const conn = base.createConnection({ pipelining: undefined, permitLocalInfile: undefined });
+    conn = base.createConnection({ pipelining: undefined, permitLocalInfile: undefined });
     conn.connect(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
         assert.equal(err.sqlState, "42000");
         assert.isFalse(err.fatal);
-        conn.end();
         done();
       });
     });
   });
 
   it("file error missing", function(done) {
-    const conn = base.createConnection({ permitLocalInfile: true });
+    conn = base.createConnection({ permitLocalInfile: true });
     conn.connect(() => {
       conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
       conn.query(
@@ -72,7 +77,6 @@ describe("local-infile", () => {
           );
           assert.equal(err.sqlState, "22000");
           assert.isFalse(err.fatal);
-          conn.end();
           done();
         }
       );
@@ -84,12 +88,12 @@ describe("local-infile", () => {
       if (err) {
         done(err);
       } else {
-        const conn = base.createConnection({ permitLocalInfile: true });
+        conn = base.createConnection({ permitLocalInfile: true });
         conn.connect(() => {
           conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
           conn.query(
             "LOAD DATA LOCAL INFILE '" +
-            smallFileName.replace(/\\/g, "/") +
+              smallFileName.replace(/\\/g, "/") +
               "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
             err => {
               if (err) {
@@ -97,7 +101,6 @@ describe("local-infile", () => {
               } else {
                 conn.query("SELECT * FROM smallLocalInfile", (err, rows) => {
                   assert.deepEqual(rows, [{ id: 1, test: "hello" }, { id: 2, test: "world" }]);
-                  conn.end();
                   done();
                 });
               }
@@ -109,25 +112,26 @@ describe("local-infile", () => {
   });
 
   it("big local infile", function(done) {
-    this.timeout(120000);
+    this.timeout(180000);
     shareConn.query("SELECT @@max_allowed_packet as t", function(err, results, fields) {
       if (err) done(err);
       const maxAllowedSize = results[0].t;
       const size = Math.round((maxAllowedSize - 100) / 16);
       const buf = Buffer.allocUnsafe(size * 16);
       for (let i = 0; i < size; i++) {
-        buf.write('"a01234567","b"\n', i * 16);
+        buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16);
       }
       fs.writeFile(bigFileName, buf, function(err) {
         if (err) {
           done(err);
         } else {
-          const conn = base.createConnection({ permitLocalInfile: true });
+          conn = base.createConnection({ permitLocalInfile: true });
           conn.connect(() => {
             conn.query("CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))");
+            conn.opts.test = true;
             conn.query(
               "LOAD DATA LOCAL INFILE '" +
-              bigFileName.replace(/\\/g, "/") +
+                bigFileName.replace(/\\/g, "/") +
                 "' INTO TABLE bigLocalInfile " +
                 "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
                 "LINES TERMINATED BY '\\n' (t1, t2)",
@@ -137,11 +141,13 @@ describe("local-infile", () => {
                 } else {
                   conn.query("SELECT * FROM bigLocalInfile", (err, rows) => {
                     assert.equal(rows.length, size);
-                    const expectedRow = { t1: "a01234567", t2: "b" };
                     for (let i = 0; i < size; i++) {
-                      assert.deepEqual(rows[i], expectedRow, "result differ (no:" + i + ")");
+                      assert.deepEqual(
+                        rows[i],
+                        { t1: "a" + padStartZero(i, 8), t2: "b" },
+                        "result differ (no:" + i + ")"
+                      );
                     }
-                    conn.end();
                     done();
                   });
                 }
@@ -152,4 +158,12 @@ describe("local-infile", () => {
       });
     });
   });
+
+  function padStartZero(val, length) {
+    val = "" + val;
+    const stringLength = val.length;
+    let add = "";
+    while (add.length + stringLength < length) add += "0";
+    return add + val;
+  }
 });
