@@ -36,11 +36,12 @@ describe("multi-results", () => {
   });
 
   it("multiple selects", function(done) {
-    conn.query("SELECT 1 as t; SELECT 2 as t2", (err, rows) => {
+    conn.query("SELECT 1 as t; SELECT 2 as t2; SELECT 3 as t3", (err, rows) => {
       if (err) done(err);
-      assert.equal(rows.length, 2);
+      assert.equal(rows.length, 3);
       assert.deepEqual(rows[0], [{ t: 1 }]);
       assert.deepEqual(rows[1], [{ t2: 2 }]);
+      assert.deepEqual(rows[2], [{ t3: 3 }]);
       done();
     });
   });

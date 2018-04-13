@@ -23,8 +23,6 @@ class PacketInputStream {
 
     this.parts = null;
     this.partsTotalLen = 0;
-    this.largeParts = null;
-    this.largePartsTotalLen = 0;
   }
 
   logFullPacket(buf) {
@@ -117,65 +115,40 @@ class PacketInputStream {
       if ((length = this.readHeader(chunk, chunkLen))) {
         if (chunkLen - this.pos >= length) {
           if (this.parts) {
-            this.parts.push(chunk.slice(this.pos, this.pos + length));
+            const buf = chunk.slice(this.pos, this.pos + length);
+            this.parts.push(buf);
             this.partsTotalLen += length;
-            let buf = Buffer.concat(this.parts, this.partsTotalLen);
-            this.parts = null;
 
             if (this.packetLen < 0xffffff) {
-              let packet;
-              if (this.largeParts) {
-                this.largeParts.push(buf);
-                this.largePartsTotalLen += this.partsTotalLen;
-                buf = Buffer.concat(this.largeParts, this.largePartsTotalLen);
-                packet = new Packet(buf, 0, this.largePartsTotalLen);
-                this.largeParts = null;
-              } else {
-                packet = new Packet(buf, 0, this.partsTotalLen);
-              }
+              let buf = Buffer.concat(this.parts, this.partsTotalLen);
+              this.parts = null;
+              const packet = new Packet(buf, 0, this.partsTotalLen);
               this.receivePacket(packet);
             } else {
-              if (!this.largeParts) {
-                this.largeParts = [];
-                this.largePartsTotalLen = 0;
-              }
-              this.largeParts.push(buf);
-              this.largePartsTotalLen += this.partsTotalLen;
               this.logFullPacket(buf);
             }
           } else {
             if (this.packetLen < 0xffffff) {
-              let packet;
-              if (this.largeParts) {
-                this.largeParts.push(chunk.slice(this.pos, this.pos + length));
-                this.largePartsTotalLen += length;
-                let buf = Buffer.concat(this.largeParts, this.largePartsTotalLen);
-                packet = new Packet(buf, 0, this.largePartsTotalLen);
-                this.largeParts = null;
-              } else {
-                packet = new Packet(chunk, this.pos, this.pos + length);
-              }
+              const packet = new Packet(chunk, this.pos, this.pos + length);
               this.receivePacket(packet);
             } else {
-              if (!this.largeParts) {
-                this.largeParts = [];
-                this.largePartsTotalLen = 0;
-              }
               const buf = chunk.slice(this.pos, this.pos + length);
-              this.largeParts.push(buf);
-              this.largePartsTotalLen += length;
+              this.parts = [buf];
+              this.partsTotalLen = length;
               this.logFullPacket(buf);
             }
           }
           this.resetHeader();
           this.pos += length;
         } else {
+          const buf = chunk.slice(this.pos, chunkLen);
           if (!this.parts) {
-            this.parts = [];
-            this.partsTotalLen = 0;
+            this.parts = [buf];
+            this.partsTotalLen = chunkLen - this.pos;
+          } else {
+            this.parts.push(buf);
+            this.partsTotalLen += chunkLen - this.pos;
           }
-          this.parts.push(chunk.slice(this.pos, chunkLen));
-          this.partsTotalLen += chunkLen - this.pos;
           this.remainingLen = length - (chunkLen - this.pos);
           return;
         }

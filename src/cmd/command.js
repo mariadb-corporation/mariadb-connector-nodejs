@@ -22,6 +22,10 @@ class Command extends EventEmitter {
     return null;
   }
 
+  forceSequenceNo(sequenceNo) {
+    this.sequenceNo = sequenceNo;
+  }
+
   checkSequenceNo(numPackets) {
     if (this.sequenceNo % 256 !== numPackets) {
       console.error(

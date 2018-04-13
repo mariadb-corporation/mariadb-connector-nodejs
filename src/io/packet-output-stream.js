@@ -450,9 +450,12 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
     this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
     if (commandEnd) {
-      this.stream.flush(true, this.cmd);
       //if last com fill the max size, must send an empty com to indicate command end.
-      if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
+      if (this.pos === MAX_BUFFER_SIZE) {
+        this.writeEmptyPacket();
+      } else {
+        this.stream.flush(true, this.cmd);
+      }
 
       //reset buffer
       this.buf = this.smallBuffer;

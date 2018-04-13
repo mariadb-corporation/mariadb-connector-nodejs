@@ -20,15 +20,13 @@ class CompressionInputStream {
 
     this.parts = null;
     this.partsTotalLen = 0;
-    this.largeParts = null;
-    this.largePartsTotalLen = 0;
   }
 
   receivePacket(chunk) {
     let cmd = this.currentCmd();
     if (this.opts.debugCompress) {
       console.log(
-        "<== conn:%d %s\n%s",
+        "<== conn:%d %s (compress)\n%s",
         this.info.threadId ? this.info.threadId : -1,
         cmd
           ? cmd.onPacketReceive
@@ -94,45 +92,18 @@ class CompressionInputStream {
           if (this.parts) {
             this.parts.push(chunk.slice(this.pos, this.pos + length));
             this.partsTotalLen += length;
-            let buf = Buffer.concat(this.parts, this.partsTotalLen);
-            this.parts = null;
 
             if (this.packetLen < 0xffffff) {
-              if (this.largeParts) {
-                this.largeParts.push(buf);
-                this.largePartsTotalLen += this.partsTotalLen;
-                buf = Buffer.concat(this.largeParts, this.largePartsTotalLen);
-                this.largeParts = null;
-                this.receivePacket(buf.slice(0, this.largePartsTotalLen));
-              } else {
-                this.receivePacket(buf.slice(0, this.partsTotalLen));
-              }
-            } else {
-              if (!this.largeParts) {
-                this.largeParts = [];
-                this.largePartsTotalLen = 0;
-              }
-              this.largeParts.push(buf);
-              this.largePartsTotalLen += this.partsTotalLen;
+              let buf = Buffer.concat(this.parts, this.partsTotalLen);
+              this.parts = null;
+              this.receivePacket(buf);
             }
           } else {
             if (this.packetLen < 0xffffff) {
-              if (this.largeParts) {
-                this.largeParts.push(chunk.slice(this.pos, this.pos + length));
-                this.largePartsTotalLen += length;
-                let buf = Buffer.concat(this.largeParts, this.largePartsTotalLen);
-                this.largeParts = null;
-                this.receivePacket(buf.slice(0, this.largePartsTotalLen));
-              } else {
-                this.receivePacket(chunk.slice(this.pos, this.pos + length));
-              }
+              this.receivePacket(chunk.slice(this.pos, this.pos + length));
             } else {
-              if (!this.largeParts) {
-                this.largeParts = [];
-                this.largePartsTotalLen = 0;
-              }
-              this.largeParts.push(chunk.slice(this.pos, this.pos + length));
-              this.largePartsTotalLen += length;
+              this.parts = [chunk.slice(this.pos, this.pos + length)];
+              this.partsTotalLen = length;
             }
           }
           this.resetHeader();

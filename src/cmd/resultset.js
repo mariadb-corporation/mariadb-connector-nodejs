@@ -302,6 +302,7 @@ class ResultSet extends Command {
 
       if (info.status & ServerStatus.MORE_RESULTS_EXISTS || this.isOutParameter) {
         this._responseIndex++;
+        if (opts.compress) this.forceSequenceNo(1 + this._responseIndex);
         return this.readResponsePacket;
       }
       this.responseCallback();
@@ -415,10 +416,10 @@ class ResultSet extends Command {
       });
       stream.on("end", () => {
         if (!out.isEmpty()) {
-          //not flushing (permit that empty packet is in same compressed packet)
           out.flushBuffer(false);
         }
         out.writeEmptyPacket();
+        if (opts.compress) this.incrementSequenceNo(-1);
       });
     });
     return this.readResponsePacket;
