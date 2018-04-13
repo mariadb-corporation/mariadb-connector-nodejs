@@ -23,20 +23,20 @@ function Bench(callback) {
     bench.dbReady++;
     if (bench.dbReady === (mariasql ? 4 : 3)) {
       bench.dbReady = 0;
-      bench.warmupConnection(bench.CONN.MYSQL, 0, bench, callback);
-      bench.warmupConnection(bench.CONN.MYSQL2, 0, bench, callback);
-      bench.warmupConnection(bench.CONN.MARIADB, 0, bench, callback);
+      bench.warmupConnection(bench.CONN.MYSQL, bench, callback);
+      bench.warmupConnection(bench.CONN.MYSQL2, bench, callback);
+      bench.warmupConnection(bench.CONN.MARIADB, bench, callback);
       if (mariasql) {
-        bench.warmupConnection(bench.CONN.MARIASQLC, 0, bench, callback);
+        bench.warmupConnection(bench.CONN.MARIASQLC, bench, callback);
       }
     }
   };
 
   const config = conf.baseConfig;
   config.charsetNumber = 224;
-  if (!mariasql && process.platform === "win32") {
-    config.socketPath = "\\\\.\\pipe\\MySQL";
-  }
+  // if (!mariasql && process.platform === "win32") {
+  //   config.socketPath = "\\\\.\\pipe\\MySQL";
+  // }
 
   console.log(config);
 
@@ -44,18 +44,21 @@ function Bench(callback) {
   var bench = this;
   this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
   this.CONN.MYSQL.drv.connect(() => ready("mysql"));
+  this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
 
   this.CONN["MYSQL2"] = {
     drv: mysql2.createConnection(config),
     desc: "mysql2"
   };
   this.CONN.MYSQL2.drv.connect(() => ready("mysql2"));
+  this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
 
   this.CONN["MARIADB"] = {
     drv: mariadb.createConnection(config),
     desc: "mariadb"
   };
   this.CONN.MARIADB.drv.connect(() => ready("mariadb"));
+  this.CONN.MARIADB.drv.on("error", err => console.log("driver mariadb error :" + err));
 
   if (mariasql) {
     const configC = Object.assign({}, config);
@@ -72,6 +75,7 @@ function Bench(callback) {
       desc: "mariasql"
     };
     this.CONN.MARIASQLC.drv.connect(() => ready("mariasql"));
+    this.CONN.MARIASQLC.drv.on("error", err => console.log("driver mariasql error :" + err));
   }
 
   this.initFcts = [];
@@ -90,9 +94,6 @@ function Bench(callback) {
 
     // called between running benchmarks
     onCycle: function(event) {
-      //to avoid mysql2 taking all the server memory
-      mysql2.clearParserCache();
-
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
@@ -118,22 +119,25 @@ function Bench(callback) {
   });
 }
 
-Bench.prototype.warmupConnection = (conn, i, bench, cb) => {
-  conn.drv.query("SELECT " + i++, () => {
-    if (i < 15000) {
-      bench.warmupConnection(conn, i, bench, cb);
-    } else {
-      bench.dbReady++;
-      console.log("warmup done for " + conn.desc);
-      if (bench.dbReady === (mariasql ? 4 : 3)) {
-        console.log("initial warmup finished");
-        cb();
-      }
+Bench.prototype.warmupConnection = (conn, bench, cb) => {
+  const max = 15000;
+
+  for (let i = 1; i < max; i++) {
+    conn.drv.query("SELECT " + i++);
+  }
+
+  conn.drv.query("SELECT " + max, () => {
+    bench.dbReady++;
+    console.log("warmup done for " + conn.desc);
+    if (bench.dbReady === (mariasql ? 4 : 3)) {
+      console.log("initial warmup finished");
+      cb();
     }
   });
 };
 
 Bench.prototype.end = function(bench) {
+  console.log("ending connectors");
   this.endConnection(this.CONN.MARIADB);
   this.endConnection(this.CONN.MYSQL);
   this.endConnection(this.CONN.MYSQL2);

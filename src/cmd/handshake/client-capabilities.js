@@ -44,11 +44,11 @@ module.exports.init = function(opts, info) {
   }
 
   // use compression only if requested by client and supported by server
-  if (opts.useCompression) {
+  if (opts.compress) {
     if (info.serverCapabilities & Capabilities.COMPRESS) {
       capabilities |= Capabilities.COMPRESS;
     } else {
-      opts.useCompression = false;
+      opts.compress = false;
     }
   }
   info.clientCapabilities = capabilities;

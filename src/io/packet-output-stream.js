@@ -9,7 +9,7 @@ const ZERO_BYTE = 0x00;
 const SLASH = 0x5c;
 
 //increase by level to avoid buffer copy.
-const SMALL_BUFFER_SIZE = 2048;
+const SMALL_BUFFER_SIZE = 2042;
 const MEDIUM_BUFFER_SIZE = 131072; //128k
 const LARGE_BUFFER_SIZE = 1048576; //1M
 const MAX_BUFFER_SIZE = 16777219; //16M + 4
@@ -41,8 +41,8 @@ function PacketOutputStream(opts, info) {
   }
 }
 
-PacketOutputStream.prototype.setWriter = function(writer) {
-  this.writer = writer;
+PacketOutputStream.prototype.setStreamer = function(stream) {
+  this.stream = stream;
 };
 
 PacketOutputStream.prototype.growBuffer = function(len) {
@@ -51,7 +51,7 @@ PacketOutputStream.prototype.growBuffer = function(len) {
     newCapacity = MEDIUM_BUFFER_SIZE;
   } else if (len + this.pos < LARGE_BUFFER_SIZE) {
     newCapacity = LARGE_BUFFER_SIZE;
-  } else newCapacity = this.getMaxPacketLength();
+  } else newCapacity = MAX_BUFFER_SIZE;
 
   let newBuf = Buffer.allocUnsafe(newCapacity);
   this.buf.copy(newBuf, 0, 0, this.pos);
@@ -65,7 +65,7 @@ PacketOutputStream.prototype.startPacket = function(cmd) {
 
 PacketOutputStream.prototype.writeInt8 = function(value) {
   if (this.pos + 1 >= this.buf.length) {
-    if (this.pos >= this.getMaxPacketLength()) {
+    if (this.pos >= MAX_BUFFER_SIZE) {
       //buffer is more than a Packet, must flushBuffer()
       this.flushBuffer(false);
     } else this.growBuffer(1);
@@ -182,7 +182,7 @@ PacketOutputStream.prototype.writeLengthCodedBuffer = function(arr) {
 
 PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
   if (len > this.buf.length - this.pos) {
-    if (this.buf.length !== this.getMaxPacketLength()) {
+    if (this.buf.length !== MAX_BUFFER_SIZE) {
       this.growBuffer(len);
     }
 
@@ -194,7 +194,7 @@ PacketOutputStream.prototype.writeBuffer = function(arr, off, len) {
 
       while (true) {
         //filling buffer
-        let lenToFillBuffer = Math.min(this.getMaxPacketLength() - this.pos, remainingLen);
+        let lenToFillBuffer = Math.min(MAX_BUFFER_SIZE - this.pos, remainingLen);
         arr.copy(this.buf, this.pos, off, off + lenToFillBuffer);
         remainingLen -= lenToFillBuffer;
         off += lenToFillBuffer;
@@ -322,7 +322,7 @@ PacketOutputStream.prototype.writeDefaultBufferString = function(str) {
   //checking real length
   let byteLength = Buffer.byteLength(str, this.encoding);
   if (byteLength > this.buf.length - this.pos) {
-    if (this.buf.length < this.getMaxPacketLength()) {
+    if (this.buf.length < MAX_BUFFER_SIZE) {
       this.growBuffer(byteLength);
     }
     if (byteLength > this.buf.length - this.pos) {
@@ -379,7 +379,7 @@ PacketOutputStream.prototype.writeBufferEscape = function(val) {
   let valLen = val.length;
   if (valLen * 2 > this.buf.length - this.pos) {
     //makes buffer bigger (up to 16M)
-    if (this.buf.length !== this.getMaxPacketLength()) this.growBuffer(valLen * 2);
+    if (this.buf.length !== MAX_BUFFER_SIZE) this.growBuffer(valLen * 2);
 
     //data may still be bigger than buffer.
     //must flush buffer when full (and reset position to 4)
@@ -432,7 +432,7 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
   this.buf[3] = this.cmd.sequenceNo;
   this.cmd.incrementSequenceNo(1);
 
-  if (this.opts.debug) {
+  if (this.opts.debug && !this.opts.debugCompress) {
     console.log(
       "==> conn:%d %s\n%s",
       this.info.threadId ? this.info.threadId : -1,
@@ -447,11 +447,12 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
   }
 
   try {
-    this.writer(this.buf.slice(0, this.pos));
+    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
     if (commandEnd) {
+      this.stream.flush(true, this.cmd);
       //if last com fill the max size, must send an empty com to indicate command end.
-      if (this.pos === this.getMaxPacketLength()) this.writeEmptyPacket();
+      if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
 
       //reset buffer
       this.buf = this.smallBuffer;
@@ -464,32 +465,26 @@ PacketOutputStream.prototype.flushBuffer = function(commandEnd) {
 };
 
 PacketOutputStream.prototype.writeEmptyPacket = function() {
-  this.buf[0] = 0x00;
-  this.buf[1] = 0x00;
-  this.buf[2] = 0x00;
-  this.buf[3] = this.cmd.sequenceNo;
+  const emptyBuf = new Buffer([0x00, 0x00, 0x00, this.cmd.sequenceNo]);
   this.cmd.incrementSequenceNo(1);
 
-  if (this.opts.debug) {
+  if (this.opts.debug && !this.opts.debugCompress) {
     console.log(
       "==> conn:%d %s\n%s",
       this.info.threadId ? this.info.threadId : -1,
       (this.cmd.onPacketReceive
         ? this.cmd.constructor.name + "." + this.cmd.onPacketReceive.name
         : this.cmd.constructor.name) + "(0,4)",
-      Utils.log(this.buf, 0, 4)
+      Utils.log(emptyBuf, 0, 4)
     );
   }
 
   try {
-    this.writer(this.buf.slice(0, 4));
+    this.stream.writeBuf(emptyBuf, this.cmd);
+    this.stream.flush(true, this.cmd);
   } catch (err) {
     //eat exception : thrown by socket.on('error');
   }
-};
-
-PacketOutputStream.prototype.getMaxPacketLength = function() {
-  return MAX_BUFFER_SIZE;
 };
 
 module.exports = PacketOutputStream;

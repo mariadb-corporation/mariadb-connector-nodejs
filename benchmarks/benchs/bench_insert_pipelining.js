@@ -41,7 +41,6 @@ module.exports.initFct = async function(conn) {
   try {
     await Promise.all([
       conn.query("DROP TABLE IF EXISTS testn.perfTestText"),
-      //conn.query('SET max_heap_table_size = 1000000000'),
       conn.query("INSTALL SONAME 'ha_blackhole'"),
       conn.query(sqlTable)
     ]);

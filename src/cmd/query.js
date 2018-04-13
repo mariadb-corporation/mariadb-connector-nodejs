@@ -259,6 +259,7 @@ class Query extends ResultSet {
    *
    * @param columns     columns metadata
    * @param packet      current row packet
+   * @param connOpts    connection options
    * @returns {*}       row data
    */
   parseRow(columns, packet, connOpts) {

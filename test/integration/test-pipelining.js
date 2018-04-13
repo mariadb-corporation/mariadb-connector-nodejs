@@ -5,7 +5,7 @@ const assert = require("chai").assert;
 
 describe("pipelining", () => {
   let conn1, conn2;
-  const iterations = 5000;
+  const iterations = 500;
 
   before(function(done) {
     conn1 = base.createConnection({ pipelining: false });
@@ -24,7 +24,7 @@ describe("pipelining", () => {
     conn2.end();
   });
 
-  it("5000 insert test speed", function(done) {
+  it("500 insert test speed", function(done) {
     this.timeout(60000);
     conn1.query("CREATE TEMPORARY TABLE pipeline1 (test int)");
     conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)", (err, res) => {
