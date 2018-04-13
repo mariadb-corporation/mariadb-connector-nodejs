@@ -498,6 +498,7 @@ class Query extends ResultSet {
    * @param sql             sql with placeholders
    * @param info            connection information
    * @param initialValues   placeholder object
+   * @param displaySql      display sql function
    * @returns {{parts: Array, values: Array}}
    */
   static splitQueryPlaceholder(sql, info, initialValues, displaySql) {

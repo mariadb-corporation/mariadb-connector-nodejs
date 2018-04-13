@@ -35,7 +35,7 @@ function Bench(callback) {
   console.log(config);
 
   this.CONN = {};
-  var bench = this;
+  const bench = this;
   this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
   this.CONN.MYSQL.drv.connect(() => ready("mysql"));
   this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));

@@ -6,7 +6,7 @@ const Conf = require('../test/conf');
 
 const connOptions = new ConnOptions(Conf.baseConfig);
 let decrement = 20;
-var callback = () => console.log("docker db server up");
+const callback = () => console.log("docker db server up");
 const checkConnection = function() {
   decrement-=1;
 

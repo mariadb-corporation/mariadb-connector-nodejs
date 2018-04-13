@@ -194,7 +194,7 @@ class Connection {
         let sock = this._socket;
         this._clear();
         if (callback) setImmediate(callback);
-        sock.destroy;
+        sock.destroy();
       }.bind(this)
     );
     this._sendQueue.push(cmd);
@@ -231,7 +231,7 @@ class Connection {
           }
         }
         process.nextTick(() => {
-          if (self._socket) self._socket.destroy;
+          if (self._socket) self._socket.destroy();
         });
         killCon.end();
       });

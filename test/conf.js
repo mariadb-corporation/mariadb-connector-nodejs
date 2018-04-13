@@ -4,8 +4,7 @@ let baseConfig = {
   user: "root",
   database: "testn",
   host: "localhost",
-  port: 3306,
-  compress: true
+  port: 3306
 };
 
 if (process.env.TEST_HOST) baseConfig["host"] = process.env.TEST_HOST;

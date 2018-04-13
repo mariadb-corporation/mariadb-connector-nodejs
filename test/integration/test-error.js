@@ -64,7 +64,7 @@ describe("Error", () => {
 
   it("server close connection during query", function(done) {
     this.timeout(10000);
-    var conn = base.createConnection();
+    const conn = base.createConnection();
     conn.connect(function(err) {
       conn.query("set @@wait_timeout = 1");
       setTimeout(function() {

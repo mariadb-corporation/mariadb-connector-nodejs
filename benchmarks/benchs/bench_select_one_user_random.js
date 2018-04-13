@@ -5,7 +5,7 @@ module.exports.displaySql =
   "select <all mysql.user fields>, <random field> from mysql.user u LIMIT 1";
 
 module.exports.benchFct = function(conn, deferred) {
-  var rand = Math.floor(Math.random() * 50000000);
+  const rand = Math.floor(Math.random() * 50000000);
   conn.query(
     "select u.Host,\n" +
       "u.User,\n" +

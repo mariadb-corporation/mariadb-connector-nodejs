@@ -44,16 +44,16 @@ This permit to avoid TCP-IP layer.
 If not on localhost, then hostname must be set, port is optional with default 3306, connector will then use TCP/IP socket. 
 
 ```javascript
-var mariadb      = require('mariadb');
+const mariadb      = require('mariadb');
 
 //localhost on windows
-var conn1 = mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'});
+const conn1 = mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'});
 
 //localhost on unix
-var conn2 = mariadb.createConnection({socketPath: '/tmp/mysql.sock'});
+const conn2 = mariadb.createConnection({socketPath: '/tmp/mysql.sock'});
 
 //not localhost
-var conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
+const conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
 ```
 
 ### Connection options
@@ -67,7 +67,7 @@ var conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
 * `database`: string. default database when establishing connection.
 * `password`: string. user password 
 * `socketPath`: string. Permits connecting to the database via Unix domain socket or named pipe, if the server allows it.
-* `compress`: boolean. exchanges with database must be gzip. (=> when database is not localhost). default: false
+* `compress`: boolean. The exchanges with database will be gzipped. That permit better performance when database is distant (not in same location). default: false
 * `connectTimeout`: integer. connection timeout in ms. default: 10 000.
 
 Support for big integer: 
