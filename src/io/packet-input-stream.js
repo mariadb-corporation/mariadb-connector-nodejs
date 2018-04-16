@@ -1,6 +1,6 @@
 "use strict";
 
-const Packet = require("./Packet");
+const Packet = require("./packet");
 const Utils = require("../misc/utils");
 
 /**
@@ -128,11 +128,13 @@ class PacketInputStream {
               this.logFullPacket(buf);
             }
           } else {
+            const buf = Buffer.allocUnsafe(length);
+            chunk.copy(buf, 0, this.pos, this.pos + length);
+
             if (this.packetLen < 0xffffff) {
-              const packet = new Packet(chunk, this.pos, this.pos + length);
+              const packet = new Packet(buf, 0, length);
               this.receivePacket(packet);
             } else {
-              const buf = chunk.slice(this.pos, this.pos + length);
               this.parts = [buf];
               this.partsTotalLen = length;
               this.logFullPacket(buf);
