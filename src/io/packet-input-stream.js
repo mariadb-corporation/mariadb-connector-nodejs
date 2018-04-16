@@ -143,7 +143,8 @@ class PacketInputStream {
           this.resetHeader();
           this.pos += length;
         } else {
-          const buf = chunk.slice(this.pos, chunkLen);
+          const buf = Buffer.allocUnsafe(chunkLen - this.pos);
+          chunk.copy(buf, 0, this.pos, chunkLen);
           if (!this.parts) {
             this.parts = [buf];
             this.partsTotalLen = chunkLen - this.pos;
