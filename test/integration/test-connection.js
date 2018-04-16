@@ -110,7 +110,24 @@ describe("connection", () => {
     });
   });
 
-  it("connection timeout testing (wrong url)", done => {
+  it("connection timeout connect (wrong url)", done => {
+    const initTime = Date.now();
+    const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
+    conn.connect(err => {
+      assert.strictEqual(err.message, "(conn=-1) Connection timeout");
+      assert.isTrue(
+        Date.now() - initTime >= 999,
+        "expected > 999, but was " + (Date.now() - initTime)
+      );
+      assert.isTrue(
+        Date.now() - initTime < 1050,
+        "expected < 1050, but was " + (Date.now() - initTime)
+      );
+      done();
+    });
+  });
+
+  it("connection timeout error (wrong url)", done => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
     conn.on("error", err => {
@@ -159,6 +176,7 @@ describe("connection", () => {
   });
 
   it("connection row event", function(done) {
+    this.timeout(10000); //can take some time
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[999] = "a";
@@ -220,7 +238,16 @@ describe("connection", () => {
     });
   });
 
-  it("connection error event", function(done) {
+  it("connection error connect event", function(done) {
+    const conn = base.createConnection({ user: "fooUser" });
+    conn.connect(err => {
+      if (!err) {
+        done(new Error("must have thrown error"));
+      } else done();
+    });
+  });
+
+  it("connection on error event", function(done) {
     const conn = base.createConnection({ user: "fooUser" });
     conn.on("error", err => {
       if (!err) {

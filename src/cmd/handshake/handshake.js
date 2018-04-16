@@ -31,15 +31,18 @@ class Handshake extends Command {
     if (opts.ssl) {
       if (info.serverCapabilities & Capabilities.SSL) {
         info.clientCapabilities |= Capabilities.SSL;
-        SslRequest.send(this, out, this.clientCapabilities, opts.collation.index);
-        this._createSecureContext(err => {
-          if (err) {
-            err.fatal = true;
-            this.emit("error", err);
-            return;
-          }
-          ClientHandshakeResponse.send(this, out, opts, handshake.pluginName, info);
-        });
+        SslRequest.send(this, out, info, opts);
+        this._createSecureContext(
+          function(err) {
+            if (err) {
+              err.fatal = true;
+              this.onPacketReceive = null;
+            } else {
+              ClientHandshakeResponse.send(this, out, opts, handshake.pluginName, info);
+            }
+          }.bind(this)
+        );
+        return this.handshakeResult;
       } else {
         const err = Utils.createError(
           "Trying to connect with ssl, but ssl not enabled in the server",

@@ -28,7 +28,13 @@ class Connection {
     this._events = new EventEmitter();
     this._sendQueue = new Queue();
     this._receiveQueue = new Queue();
-
+    this._events.once(
+      "connect",
+      function(err) {
+        if (this._onConnect) this._onConnect(err);
+        this._onConnect = null;
+      }.bind(this)
+    );
     this._out = new PacketOutputStream(this.opts, this.info);
     this._in = new PacketInputStream(
       this._unexpectedPacket.bind(this),
@@ -73,8 +79,7 @@ class Connection {
     }
 
     if (this._connected === null) {
-      this._events.once("connect", () => setImmediate(callback, null));
-      this._events.once("_connect_err", err => callback(err));
+      this._onConnect = callback;
     } else {
       callback(
         this._connected ? null : new Error("Error during connection, error has already been thrown")
@@ -187,12 +192,12 @@ class Connection {
     this._clearConnectTimeout();
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
-
     const cmd = new Quit(
       this._events,
       function() {
         let sock = this._socket;
         this._clear();
+        this._connected = false;
         if (callback) setImmediate(callback);
         sock.destroy();
       }.bind(this)
@@ -308,6 +313,13 @@ class Connection {
   //*****************************************************************
   // internal methods
   //*****************************************************************
+
+  _onConnect(err) {
+    if (err && this._events.listenerCount("error") === 0) {
+      throw err;
+    }
+  }
+
   _registerEvents() {
     this._events.on(
       "collation_changed",
@@ -327,17 +339,15 @@ class Connection {
       function(err) {
         this._clearConnectTimeout();
         if (err) {
-          this._connected = false;
-          if (this._events.listenerCount("_connect_err") > 0) {
-            this._events.emit("_connect_err", err);
-          } else {
+          if (this._events.listenerCount("error") > 0) {
             this._events.emit("error", err);
           }
+          this._connected = false;
         } else {
           this._connected = true;
-          this._events.emit("connect");
-          this._events.on("_db_fatal_error", err => this._fatalError.call(this, err));
+          this._events.on("_db_fatal_error", err => this._fatalError.call(this, err, true));
         }
+        this._events.emit("connect", err);
       }.bind(this)
     );
     this._addCommand(handshake, false);
@@ -379,32 +389,32 @@ class Connection {
   }
 
   _createSecureContext(callback) {
-    if (!tls.TLSSocket) {
+    if (!tls.connect) {
       this._handleFatalError(
-        Utils.createError("TLS connection required Node.js 0.11.4+", true, this.info)
+        Utils.createError("TLS connection required Node.js 0.11.3+", true, this.info)
       );
     }
 
-    //TODO add pfx option to pass PKCS12 encoded key
-    //TODO add secureProtocol option to permit selecting protocol
-    let secureSocket = new tls.TLSSocket(this._socket, {
-      rejectUnauthorized: this.opts.ssl ? this.opts.ssl.rejectUnauthorized : false,
-      secureContext: tls.createSecureContext(this.opts.ssl)
-    });
-
-    let packetInputStream = this._in;
-    let events = this._events;
-    secureSocket.on("data", chunk => packetInputStream.onData(chunk));
-    secureSocket.on("secureConnect", () => {
-      events.emit("secureConnect");
+    const sslOption = Object.assign(
+      { servername: this.opts.host, socket: this._socket },
+      this.opts.ssl
+    );
+    const secureSocket = tls.connect(sslOption, () => {
+      this._events.emit("secureConnect");
       callback();
     });
+
+    secureSocket.on("data", chunk => this._in.onData(chunk));
+    secureSocket.on("error", err => {
+      this._closing = true;
+      this._events.emit("connect", err);
+      callback(err);
+    });
+
     this._socket.removeAllListeners("data");
     this._socket = secureSocket;
 
-    this._socket.writeBuf = (buf, cmd) => {
-      this._socket.write(buf);
-    };
+    this._socket.writeBuf = (buf, cmd) => this._socket.write(buf);
     this._socket.flush = (cmdEnd, cmd) => {};
     this._out.setStreamer(secureSocket);
   }
@@ -414,12 +424,11 @@ class Connection {
     if (this._connected === null) {
       this._clearConnectTimeout();
       this._connected = false;
-      this._events.emit("_connect_err", err);
       this._events.emit("error", err);
       return;
     }
 
-    this._fatalError(err);
+    this._fatalError(err, true);
   }
 
   _unexpectedPacket(packet) {
@@ -480,7 +489,8 @@ class Connection {
     this._socket.destroy && this._socket.destroy();
     this._receiveQueue.shift(); //remove handshake packet
     const err = Utils.createError("Connection timeout", true, this.info);
-    this._fatalError(err);
+    this._events.emit("connect", err);
+    this._fatalError(err, false);
   }
 
   _clearConnectTimeout() {
@@ -523,10 +533,11 @@ class Connection {
   /**
    * Fatal unexpected error : closing connection, and throw exception.
    *
-   * @param err error
+   * @param err         error
+   * @param forceError  if not listener on error is registered, must throw error
    * @private
    */
-  _fatalError(err) {
+  _fatalError(err, forceError) {
     if (this._closing) return;
     this._closing = true;
 
@@ -549,7 +560,7 @@ class Connection {
     } else {
       this._events.emit("end");
       this._clear();
-      throw err;
+      if (forceError) throw err;
     }
   }
 

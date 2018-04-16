@@ -1,4 +1,7 @@
 {
+  "globals": {
+    "expect": true
+  },
   "extends": [
     "prettier"
   ],

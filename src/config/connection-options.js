@@ -46,7 +46,6 @@ class ConnectionOptions {
     }
     this.port = opts.port || 3306;
     this.socketPath = opts.socketPath;
-    this.ssl = opts.ssl;
     this.supportBigNumbers = opts.supportBigNumbers || false;
     this.timezone = opts.timezone || "local";
     if (this.timezone !== "local") {
@@ -72,12 +71,16 @@ class ConnectionOptions {
     this.nestTables = opts.nestTables === undefined ? undefined : opts.nestTables;
     this.rowsAsArray = opts.rowsAsArray || false;
 
-    if (this.ssl) {
-      if (typeof this.ssl === "string") {
+    this.ssl = opts.ssl;
+    if (opts.ssl) {
+      if (typeof opts.ssl === "string") {
         let ca = this.readTrustedCa(opts.ssl);
-        if (ca) this.ssl = { ca: ca };
+        this.ssl = { ca: ca };
       }
-      this.ssl.rejectUnauthorized = this.ssl.rejectUnauthorized !== false;
+
+      if (typeof opts.ssl !== "boolean") {
+        this.ssl.rejectUnauthorized = opts.ssl.rejectUnauthorized !== false;
+      }
     }
   }
 

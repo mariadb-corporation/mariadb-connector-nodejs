@@ -14,13 +14,19 @@ before("share initialization", done => {
     done();
   } else {
     let conn = new Connection(connOptions);
-    conn.connect(() => done());
+    conn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        done();
+      }
+    });
     global.shareConn = conn;
   }
 });
 
 after("share destroy", () => {
-  if (shareConn) {
+  if (shareConn && shareConn._connected) {
     shareConn.end(() => (global.shareConn = undefined));
   }
 });
