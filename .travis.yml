@@ -22,6 +22,7 @@ env:
   global:
   - TEST_PORT=3305
   - TEST_HOST=mariadb.example.com
+  - TEST_USER=ci
   - MUST_USE_TCPIP=1
 
 matrix:
