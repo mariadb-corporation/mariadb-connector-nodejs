@@ -284,6 +284,23 @@ describe("ssl", function() {
     });
   });
 
+  it("TLSv1.1 with CA name verification error", function(done) {
+    if (!sslEnable) this.skip();
+    if (!ca) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (Conf.baseConfig.host !== "localhost") this.skip();
+
+    const conn = base.createConnection({host: "127.0.0.1", ssl: {ca: ca} });
+    conn.connect(err => {
+      if (err) {
+        assert.isTrue(err.message.includes("Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"));
+        done();
+      } else {
+        done(new Error("Must have thrown an exception !"));
+      }
+    });
+  });
+
   it("TLSv1.1 with CA provided with matching cn", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
