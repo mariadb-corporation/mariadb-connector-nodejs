@@ -33,13 +33,17 @@ describe("pipelining", () => {
           if (shareConn.hasMinVersion(10, 2, 0)) {
             //before 10.1, speed is sometime nearly equivalent using pipelining or not
             //remove speed test then to avoid random error in CIs
-            if (diff[0] < pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])) {
+            if (
+              diff[0] < pipelineDiff[0] ||
+              (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])
+            ) {
               console.log(
                 "time to insert 1000 : std=" +
-                Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
-                "ms pipelining=" +
-                Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
-                "ms");
+                  Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
+                  "ms pipelining=" +
+                  Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
+                  "ms"
+              );
             }
           }
           done();

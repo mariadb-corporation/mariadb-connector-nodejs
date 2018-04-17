@@ -118,7 +118,6 @@ class CompressionOutputStream {
       //reset buffer
       this.buf = this.smallBuffer;
       this.pos = 7;
-
     } else {
       //*******************************************************************************
       // compressing packet

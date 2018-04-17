@@ -27,16 +27,14 @@ describe("ssl", function() {
       } else {
         //ssl is not enable on database, skipping test.
         shareConn.query("SHOW VARIABLES LIKE 'ssl'", (err, rows) => {
-          console.log("ssl is not enable on database, skipping test :")
+          console.log("ssl is not enable on database, skipping test :");
           for (let i = 0; i < rows.length; i++) {
             console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
           }
           done();
-        })
-
+        });
       }
     });
-
   });
 
   after(function(done) {
@@ -47,7 +45,7 @@ describe("ssl", function() {
 
   it("signed certificate error ", function(done) {
     if (!sslEnable) this.skip();
-    const conn = base.createConnection({ user:"ssltestUser", password:null, ssl: true });
+    const conn = base.createConnection({ user: "ssltestUser", password: null, ssl: true });
     conn.connect(err => {
       if (err) {
         assert.isTrue(err.message.includes("self signed certificate"));
@@ -57,7 +55,6 @@ describe("ssl", function() {
       }
     });
   });
-
 
   it("signed certificate forcing", function(done) {
     if (!sslEnable) this.skip();
@@ -74,7 +71,11 @@ describe("ssl", function() {
 
   it("ensure connection use SSL ", function(done) {
     if (!sslEnable) this.skip();
-    const conn = base.createConnection({ user:"ssltestUser", password:null, ssl: { rejectUnauthorized: false } });
+    const conn = base.createConnection({
+      user: "ssltestUser",
+      password: null,
+      ssl: { rejectUnauthorized: false }
+    });
     conn.connect(err => {
       if (err) {
         done(err);
@@ -290,10 +291,14 @@ describe("ssl", function() {
     if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
-    const conn = base.createConnection({host: "127.0.0.1", ssl: {ca: ca} });
+    const conn = base.createConnection({ host: "127.0.0.1", ssl: { ca: ca } });
     conn.connect(err => {
       if (err) {
-        assert.isTrue(err.message.includes("Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"));
+        assert.isTrue(
+          err.message.includes(
+            "Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"
+          )
+        );
         done();
       } else {
         done(new Error("Must have thrown an exception !"));
@@ -312,14 +317,12 @@ describe("ssl", function() {
         done(err);
       } else {
         const isWin = process.platform === "win32";
-        checkProtocol(conn, (isWin || !shareConn.isMariaDB()) ? "TLSv1.1" : "TLSv1.2");
+        checkProtocol(conn, isWin || !shareConn.isMariaDB() ? "TLSv1.1" : "TLSv1.2");
         conn.end();
         done();
       }
     });
   });
-
-
 });
 
 function checkProtocol(conn, protocol) {
@@ -328,6 +331,3 @@ function checkProtocol(conn, protocol) {
     assert.equal(conn._socket.getProtocol(), protocol);
   }
 }
-
-
-

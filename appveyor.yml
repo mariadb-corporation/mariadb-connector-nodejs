@@ -59,9 +59,9 @@ install:
   - cmd: echo innodb_buffer_pool_size=200M >> c:\projects\server\data\my.ini
   - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-ca=c:/projects/mariadb-connector-nodejs/test/certificats/ca.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-cert=c:/projects/mariadb-connector-nodejs/test/certificats/server.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-key=c:/projects/mariadb-connector-nodejs/test/certificats/server.key >> c:\projects\server\data\my.ini
+  - cmd: echo ssl-ca=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\ca.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl-cert=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl-key=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.key >> c:\projects\server\data\my.ini
   - cmd: echo enable-named-pipe=1 >> c:\projects\server\data\my.ini
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
