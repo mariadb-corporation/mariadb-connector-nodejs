@@ -11,4 +11,5 @@ services:
       MYSQL_DATABASE: testn
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
       MYSQL_USER: ci
+      MYSQL_PASSWORD: pwd
 
