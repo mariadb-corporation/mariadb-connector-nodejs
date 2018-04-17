@@ -33,13 +33,8 @@ class Handshake extends Command {
         info.clientCapabilities |= Capabilities.SSL;
         SslRequest.send(this, out, info, opts);
         this._createSecureContext(
-          function(err) {
-            if (err) {
-              err.fatal = true;
-              this.onPacketReceive = null;
-            } else {
-              ClientHandshakeResponse.send(this, out, opts, handshake.pluginName, info);
-            }
+          function() {
+            ClientHandshakeResponse.send(this, out, opts, handshake.pluginName, info);
           }.bind(this)
         );
         return this.handshakeResult;

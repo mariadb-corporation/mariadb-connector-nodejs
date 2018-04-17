@@ -62,17 +62,72 @@ describe("Error", () => {
     });
   });
 
-  it("server close connection during query", function(done) {
-    this.timeout(10000);
+  it("server close connection without warning", function(done) {
+    this.timeout(20000);
+    const conn = base.createConnection();
+    conn.on("error", err => {
+      assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+    });
+    conn.connect(function(err) {
+      if (err) {
+        done(err);
+      } else {
+        conn.query("set @@wait_timeout = 1");
+        setTimeout(function() {
+          conn.query("SELECT 2", function(err, rows) {
+            assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            done();
+          });
+        }, 2000);
+      }
+    });
+  });
+
+  it("server close connection - no connection error event", function(done) {
+    this.timeout(20000);
+
+    // Remove Mocha's error listener
+    const originalException = process.listeners("uncaughtException").pop();
+    process.removeListener("uncaughtException", originalException);
+
+    // Add your own error listener to check for unhandled exceptions
+    process.once("uncaughtException", function(err) {
+      const recordedError = err;
+
+      process.nextTick(function() {
+        process.listeners("uncaughtException").push(originalException);
+        assert.isTrue(recordedError.message.includes("socket has unexpectedly been closed"));
+        done();
+      });
+    });
+
     const conn = base.createConnection();
     conn.connect(function(err) {
-      conn.query("set @@wait_timeout = 1");
+      if (err) {
+        done(err);
+      } else {
+        conn.query("set @@wait_timeout = 1");
+        setTimeout(function() {
+          conn.query("SELECT 2", function(err, rows) {
+            assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+          });
+        }, 2000);
+      }
+    });
+  });
+
+  it("server close connection during query", function(done) {
+    this.timeout(20000);
+    const conn = base.createConnection();
+    conn.on("error", err => {});
+    conn.connect(function() {
+      conn.query("SELECT SLEEP(5)", function(err) {
+        assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+        done();
+      });
       setTimeout(function() {
-        conn.query("SELECT SLEEP(2)", function(err, rows) {
-          assert.isTrue(err.message.includes("This socket has been ended by the other party"));
-          done();
-        });
-      }, 2000);
+        shareConn.query("KILL " + conn.threadId);
+      }, 20);
     });
   });
 

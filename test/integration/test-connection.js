@@ -44,18 +44,6 @@ describe("connection", () => {
     query.on("error", () => {});
   });
 
-  it("connection.end() event", function(done) {
-    const conn = base.createConnection();
-    conn.on("error", function(err) {
-      if (err) {
-        done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
-    conn._socket.end();
-  });
-
   it("connection.ping()", function(done) {
     shareConn.ping();
     shareConn.ping(err => {

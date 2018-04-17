@@ -28,13 +28,15 @@ class Connection {
     this._events = new EventEmitter();
     this._sendQueue = new Queue();
     this._receiveQueue = new Queue();
+
+    this._onConnect = this._defaultOnConnect.bind(this);
     this._events.once(
       "connect",
       function(err) {
-        if (this._onConnect) this._onConnect(err);
-        this._onConnect = null;
+        process.nextTick(this._onConnect, err);
       }.bind(this)
     );
+
     this._out = new PacketOutputStream(this.opts, this.info);
     this._in = new PacketInputStream(
       this._unexpectedPacket.bind(this),
@@ -191,21 +193,23 @@ class Connection {
   end(callback) {
     this._clearConnectTimeout();
     this._addCommand = this._addCommandDisabled;
-    this._closing = true;
-    const cmd = new Quit(
-      this._events,
-      function() {
-        let sock = this._socket;
-        this._clear();
-        this._connected = false;
-        if (callback) setImmediate(callback);
-        sock.destroy();
-      }.bind(this)
-    );
-    this._sendQueue.push(cmd);
-    this._receiveQueue.push(cmd);
-    if (this._sendQueue.length === 1) {
-      process.nextTick(this._nextSendCmd.bind(this));
+    if (!this._closing) {
+      this._closing = true;
+      const cmd = new Quit(
+        this._events,
+        function() {
+          let sock = this._socket;
+          this._clear();
+          this._connected = false;
+          if (callback) setImmediate(callback);
+          sock.destroy();
+        }.bind(this)
+      );
+      this._sendQueue.push(cmd);
+      this._receiveQueue.push(cmd);
+      if (this._sendQueue.length === 1) {
+        process.nextTick(this._nextSendCmd.bind(this));
+      }
     }
   }
 
@@ -314,7 +318,7 @@ class Connection {
   // internal methods
   //*****************************************************************
 
-  _onConnect(err) {
+  _defaultOnConnect(err) {
     if (err && this._events.listenerCount("error") === 0) {
       throw err;
     }
@@ -338,16 +342,9 @@ class Connection {
       this._createSecureContext.bind(this),
       function(err) {
         this._clearConnectTimeout();
-        if (err) {
-          if (this._events.listenerCount("error") > 0) {
-            this._events.emit("error", err);
-          }
-          this._connected = false;
-        } else {
-          this._connected = true;
-          this._events.on("_db_fatal_error", err => this._fatalError.call(this, err, true));
-        }
+        this._connected = !err;
         this._events.emit("connect", err);
+        if (err) this._fatalError(err, true);
       }.bind(this)
     );
     this._addCommand(handshake, false);
@@ -366,9 +363,11 @@ class Connection {
     } else {
       this._socket = Net.connect(this.opts.port, this.opts.host);
     }
+
     const packetInputStream = this._in;
-    this._socket.on("error", this._socketError.bind(this));
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
+    this._socket.on("error", this._socketError.bind(this));
+    this._socket.on("end", this._socketError.bind(this));
     this._socket.writeBuf = (buf, cmd) => {
       this._socket.write(buf);
     };
@@ -399,36 +398,45 @@ class Connection {
       { servername: this.opts.host, socket: this._socket },
       this.opts.ssl
     );
-    const secureSocket = tls.connect(sslOption, () => {
-      this._events.emit("secureConnect");
-      callback();
-    });
+    try {
+      const secureSocket = tls.connect(sslOption, err => {
+        this._events.emit("secureConnect");
+        callback();
+      });
 
-    secureSocket.on("data", chunk => this._in.onData(chunk));
-    secureSocket.on("error", err => {
-      this._closing = true;
-      this._events.emit("connect", err);
-      callback(err);
-    });
+      secureSocket.on("data", chunk => this._in.onData(chunk));
+      secureSocket.on("error", this._socketError.bind(this));
+      secureSocket.on("end", this._socketError.bind(this));
+      secureSocket.writeBuf = (buf, cmd) => secureSocket.write(buf);
+      secureSocket.flush = (cmdEnd, cmd) => {};
 
-    this._socket.removeAllListeners("data");
-    this._socket = secureSocket;
+      this._socket.removeAllListeners("data");
+      this._socket = secureSocket;
 
-    this._socket.writeBuf = (buf, cmd) => this._socket.write(buf);
-    this._socket.flush = (cmdEnd, cmd) => {};
-    this._out.setStreamer(secureSocket);
+      this._out.setStreamer(secureSocket);
+    } catch (err) {
+      this._socketError(err);
+    }
   }
 
   _socketError(err) {
+    //socket closed was expected
+    if (this._closing) return;
+
+    //avoid sending new data in closed socket
+    this._socket.writeBuf = () => {};
+    this._socket.flush = () => {};
+
+    //socket has been ended without error
+    if (!err) err = Utils.createError("socket has unexpectedly been closed", true, this.info);
+
     //socket fail between socket creation and before authentication
     if (this._connected === null) {
-      this._clearConnectTimeout();
       this._connected = false;
-      this._events.emit("error", err);
-      return;
+      this._events.emit("connect", err);
     }
 
-    this._fatalError(err, true);
+    this._fatalError(err, false);
   }
 
   _unexpectedPacket(packet) {
@@ -486,11 +494,12 @@ class Connection {
 
   _connectTimeoutReached() {
     this._clearConnectTimeout();
+    this._connected = false;
     this._socket.destroy && this._socket.destroy();
     this._receiveQueue.shift(); //remove handshake packet
     const err = Utils.createError("Connection timeout", true, this.info);
     this._events.emit("connect", err);
-    this._fatalError(err, false);
+    this._fatalError(err, true);
   }
 
   _clearConnectTimeout() {
@@ -533,26 +542,28 @@ class Connection {
   /**
    * Fatal unexpected error : closing connection, and throw exception.
    *
-   * @param err         error
-   * @param forceError  if not listener on error is registered, must throw error
+   * @param err               error
+   * @param avoidThrowError   if not listener on error is registered, must throw error
    * @private
    */
-  _fatalError(err, forceError) {
+  _fatalError(err, avoidThrowError) {
     if (this._closing) return;
     this._closing = true;
 
-    err.fatal = true;
-    //prevent any new action
+    //prevent executing new commands
     this._addCommand = this._addCommandDisabled;
-    //disabled events
-    this._socket.destroy();
+
+    if (this._socket) this._socket.destroy();
 
     let receiveCmd;
+    let errorThrownByCmd = false;
     while ((receiveCmd = this._receiveQueue.shift())) {
-      if (receiveCmd.onPacketReceive && receiveCmd.onResult) {
-        setImmediate(receiveCmd.onResult, err);
+      if (receiveCmd && receiveCmd.onPacketReceive) {
+        errorThrownByCmd = true;
+        process.nextTick(receiveCmd.throwError.bind(receiveCmd), err);
       }
     }
+
     if (this._events.listenerCount("error") > 0) {
       this._events.emit("error", err);
       this._events.emit("end");
@@ -560,7 +571,8 @@ class Connection {
     } else {
       this._events.emit("end");
       this._clear();
-      if (forceError) throw err;
+      //error will be thrown if no error listener and no command did throw the exception
+      if (!avoidThrowError && !errorThrownByCmd) throw err;
     }
   }
 
@@ -576,7 +588,6 @@ class Connection {
     this._sendQueue.clear();
     this._out = null;
     this._socket = null;
-    this._events.removeAllListeners();
   }
 }
 

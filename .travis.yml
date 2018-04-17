@@ -22,6 +22,7 @@ env:
   - TEST_PORT=3305
   - TEST_HOST=mariadb.example.com
   - MUST_USE_TCPIP=1
+  - TEST_SSL_CA_FILE=SSLCERT/server.crt
 
 matrix:
   include:

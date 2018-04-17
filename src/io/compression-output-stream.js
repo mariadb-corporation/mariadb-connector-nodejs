@@ -111,18 +111,14 @@ class CompressionOutputStream {
         );
       }
 
-      try {
-        this.writer(this.buf.slice(0, this.pos));
+      this.writer(this.buf.slice(0, this.pos));
 
-        if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
+      if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
 
-        //reset buffer
-        this.buf = this.smallBuffer;
+      //reset buffer
+      this.buf = this.smallBuffer;
+      this.pos = 7;
 
-        this.pos = 7;
-      } catch (err) {
-        //eat exception : thrown by socket.on('error');
-      }
     } else {
       //*******************************************************************************
       // compressing packet
@@ -156,19 +152,15 @@ class CompressionOutputStream {
         );
       }
 
-      try {
-        this.writer(this.header);
-        this.writer(compressChunk);
-        if (cmdEnd) {
-          if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket(cmd);
+      this.writer(this.header);
+      this.writer(compressChunk);
+      if (cmdEnd) {
+        if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket(cmd);
 
-          //reset buffer
-          this.buf = this.smallBuffer;
-        }
-        this.pos = 7;
-      } catch (err) {
-        //eat exception : thrown by socket.on('error');
+        //reset buffer
+        this.buf = this.smallBuffer;
       }
+      this.pos = 7;
     }
   }
 
@@ -192,11 +184,7 @@ class CompressionOutputStream {
       );
     }
 
-    try {
-      this.writer(emptyBuf);
-    } catch (err) {
-      //eat exception : thrown by socket.on('error');
-    }
+    this.writer(emptyBuf);
   }
 }
 

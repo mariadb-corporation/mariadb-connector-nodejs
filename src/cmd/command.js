@@ -76,7 +76,6 @@ class Command extends EventEmitter {
       this.emit("error", err);
     }
     this.onPacketReceive = null;
-    if (err.fatal) this.connEvents.emit("_db_fatal_error", err);
     this.emit("end");
   }
 

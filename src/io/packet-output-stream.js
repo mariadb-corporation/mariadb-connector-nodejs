@@ -468,25 +468,21 @@ class PacketOutputStream {
       );
     }
 
-    try {
-      this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
+    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
-      if (commandEnd) {
-        //if last com fill the max size, must send an empty com to indicate command end.
-        if (this.pos === MAX_BUFFER_SIZE) {
-          this.writeEmptyPacket();
-        } else {
-          this.stream.flush(true, this.cmd);
-        }
-
-        //reset buffer
-        this.buf = this.smallBuffer;
+    if (commandEnd) {
+      //if last com fill the max size, must send an empty com to indicate command end.
+      if (this.pos === MAX_BUFFER_SIZE) {
+        this.writeEmptyPacket();
+      } else {
+        this.stream.flush(true, this.cmd);
       }
 
-      this.pos = 4;
-    } catch (err) {
-      //eat exception : thrown by socket.on('error');
+      //reset buffer
+      this.buf = this.smallBuffer;
     }
+
+    this.pos = 4;
   }
 
   writeEmptyPacket() {
@@ -504,12 +500,8 @@ class PacketOutputStream {
       );
     }
 
-    try {
-      this.stream.writeBuf(emptyBuf, this.cmd);
-      this.stream.flush(true, this.cmd);
-    } catch (err) {
-      //eat exception : thrown by socket.on('error');
-    }
+    this.stream.writeBuf(emptyBuf, this.cmd);
+    this.stream.flush(true, this.cmd);
   }
 }
 
