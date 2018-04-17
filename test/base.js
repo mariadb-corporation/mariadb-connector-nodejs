@@ -13,6 +13,7 @@ before("share initialization", done => {
   if (global.shareConn) {
     done();
   } else {
+    console.log("connecting share connection : " + connOptions);
     let conn = new Connection(connOptions);
     conn.connect(err => {
       if (err) {
