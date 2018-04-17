@@ -126,7 +126,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1");
+        checkProtocol(conn, "TLSv1");
         conn.end();
         done();
       }
@@ -143,7 +143,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1.1");
+        checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
       }
@@ -165,7 +165,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1.1");
+        checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
       }
@@ -226,7 +226,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1.2");
+        checkProtocol(conn, "TLSv1.2");
         conn.end();
         done();
       }
@@ -252,8 +252,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1.2");
-        console.log(conn._socket.getCipher());
+        checkProtocol(conn, "TLSv1.2");
         conn.end();
         done();
       }
@@ -278,7 +277,7 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        assert.equal(conn._socket.getProtocol(), "TLSv1.1");
+        checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
       }
@@ -296,11 +295,22 @@ describe("ssl", function() {
         done(err);
       } else {
         const isWin = process.platform === "win32";
-        assert.equal(conn._socket.getProtocol(), (isWin || !shareConn.isMariaDB()) ? "TLSv1.1" : "TLSv1.2");
+        checkProtocol(conn, (isWin || !shareConn.isMariaDB()) ? "TLSv1.1" : "TLSv1.2");
         conn.end();
         done();
       }
     });
   });
 
+
 });
+
+function checkProtocol(conn, protocol) {
+  const ver = process.version.substring(1).split(".");
+  if (ver[0] > 5 || (ver[0] === 5 && ver[1] === 7)) {
+    assert.equal(conn._socket.getProtocol(), protocol);
+  }
+}
+
+
+
