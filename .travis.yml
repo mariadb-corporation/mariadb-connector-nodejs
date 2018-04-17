@@ -17,12 +17,12 @@ install:
     - .travis/gen-ssl.sh mariadb.example.com tmp
     - export PROJ_PATH=`pwd`
     - export SSLCERT=$PROJ_PATH/tmp
+    - export TEST_SSL_CA_FILE=$SSLCERT/server.crt
 env:
   global:
   - TEST_PORT=3305
   - TEST_HOST=mariadb.example.com
   - MUST_USE_TCPIP=1
-  - TEST_SSL_CA_FILE=$SSLCERT/server.crt
 
 matrix:
   include:
