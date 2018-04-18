@@ -536,7 +536,7 @@ class Connection {
     );
     if (cmd.onResult) {
       cmd.onResult(err);
-    } else throw err;
+    } else cmd.emit("error", err);
   }
 
   /**
