@@ -3,9 +3,11 @@ language: node_js
 
 services:
   - docker
+
 addons:
   hosts:
     - mariadb.example.com
+
 before_script:
   # Disable services enabled by default
   - sudo /etc/init.d/mysql stop

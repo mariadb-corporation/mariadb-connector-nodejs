@@ -30,14 +30,14 @@ main () {
   local caKeyFile="${sslDir}/ca.key"
   local certFile="${sslDir}/server.crt"
   local keyFile="${sslDir}/server.key"
-  local csrFile=$(mktemp)
+  local csrFile="${sslDir}/csrFile.key"
   local clientCertFile="${sslDir}/client.crt"
   local clientKeyFile="${sslDir}/client.key"
   local clientKeystoreFile="${sslDir}/client-keystore.jks"
   local fullClientKeystoreFile="${sslDir}/fullclient-keystore.jks"
-  local tmpKeystoreFile=$(mktemp)
+  local tmpKeystoreFile="${sslDir}/client-keystore.p12"
   local pcks12FullKeystoreFile="${sslDir}/fullclient-keystore.p12"
-  local clientReqFile=$(mktemp)
+  local clientReqFile="${sslDir}/clientReqFile.key"
 
   log "Generating CA key"
   openssl genrsa -out "${caKeyFile}" 2048
@@ -108,17 +108,6 @@ main () {
     -name "mysqlAlias" \
     -passout pass:kspass
 
-  # convert PKSC12 to JKS
-  keytool \
-    -importkeystore \
-    -deststorepass kspass \
-    -destkeypass kspass \
-    -destkeystore "${clientKeystoreFile}" \
-    -srckeystore ${tmpKeystoreFile} \
-    -srcstoretype PKCS12 \
-    -srcstorepass kspass \
-    -alias "mysqlAlias"
-
   # Now generate a full keystore with the client cert & key + trust certificates
   log "Generating full client keystore"
   openssl pkcs12 \
@@ -129,26 +118,9 @@ main () {
     -name "mysqlAlias" \
     -passout pass:kspass
 
-
-  # convert PKSC12 to JKS
-  keytool \
-    -importkeystore \
-    -deststorepass kspass \
-    -destkeypass kspasskey \
-    -deststoretype JKS \
-    -destkeystore "${fullClientKeystoreFile}" \
-    -srckeystore ${pcks12FullKeystoreFile} \
-    -srcstoretype PKCS12 \
-    -srcstorepass kspass \
-    -alias "mysqlAlias"
-
-  log "Generating trustStore"
-  keytool -import -file "${certFile}" -alias CA -keystore "${fullClientKeystoreFile}" -storepass kspass -keypass kspasskey -noprompt
-
   # Clean up CSR file:
   rm "$csrFile"
   rm "$clientReqFile"
-  rm "$tmpKeystoreFile"
 
   log "Generated key file and certificate in: ${sslDir}"
   ls -l "${sslDir}"

@@ -136,7 +136,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 working", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_1_method" }
     });
@@ -153,7 +153,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 with permit cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     const conn = base.createConnection({
       ssl: {
         rejectUnauthorized: false,
@@ -175,7 +175,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 no common cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     const conn = base.createConnection({
       ssl: {
         rejectUnauthorized: false,
@@ -195,7 +195,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 wrong cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     const conn = base.createConnection({
       ssl: {
         rejectUnauthorized: false,
@@ -263,7 +263,7 @@ describe("ssl", function() {
   it("TLSv1.1 with CA provided ignoring name verification", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
     const conn = base.createConnection({
@@ -288,7 +288,7 @@ describe("ssl", function() {
   it("TLSv1.1 with CA name verification error", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
     const conn = base.createConnection({ host: "127.0.0.1", ssl: { ca: ca } });
@@ -309,7 +309,7 @@ describe("ssl", function() {
   it("TLSv1.1 with CA provided with matching cn", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
 
     const conn = base.createConnection({ host: "mariadb.example.com", ssl: { ca: ca } });
     conn.connect(err => {

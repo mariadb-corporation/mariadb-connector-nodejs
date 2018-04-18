@@ -13,9 +13,9 @@ before("share initialization", done => {
   if (global.shareConn) {
     done();
   } else {
-    console.log("connecting share connection : ");
-    console.log(connOptions);
-    console.log(" ");
+    // console.log("connecting share connection : ");
+    // console.log(connOptions);
+    // console.log(" ");
     let conn = new Connection(connOptions);
     conn.connect(err => {
       if (err) {

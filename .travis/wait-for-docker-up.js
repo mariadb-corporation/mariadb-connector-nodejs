@@ -11,17 +11,18 @@ const checkConnection = function() {
   decrement-=1;
 
   let conn = new Connection(connOptions);
-  conn.on('error', (err) => {
-    console.error("Error connecting docker server (connection try " + (20 - decrement) + " of 20)");
-    if (decrement === 0) {
-      throw err;
+  conn.connect((err) => {
+    if (err) {
+      console.error("Error connecting docker server (connection try " + (20 - decrement) + " of 20)");
+      if (decrement === 0) {
+        throw err;
+      } else {
+        setTimeout(checkConnection, 1000);
+      }
     } else {
-      setTimeout(checkConnection, 1000);
+      conn.end();
+      callback();
     }
-  });
-  conn.on('connect', () => {
-    conn.end();
-    callback();
   });
 
 };
