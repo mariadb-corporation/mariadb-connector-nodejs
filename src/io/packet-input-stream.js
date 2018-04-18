@@ -25,22 +25,8 @@ class PacketInputStream {
     this.partsTotalLen = 0;
   }
 
-  logFullPacket(buf) {
+  checkSequenceNo() {
     let cmd = this.currentCmd();
-    if (this.opts.debug && !this.opts.debugCompress) {
-      console.log(
-        "<== conn:%d %s (%d,%d)\n%s",
-        this.info.threadId ? this.info.threadId : -1,
-        cmd
-          ? cmd.onPacketReceive
-            ? cmd.constructor.name + "." + cmd.onPacketReceive.name
-            : cmd.constructor.name
-          : "no command",
-        0,
-        buf.length,
-        Utils.log(buf, 0, buf.length, this.header)
-      );
-    }
     if (cmd) cmd.checkSequenceNo(this.header[3]);
   }
 
@@ -114,8 +100,9 @@ class PacketInputStream {
     do {
       if ((length = this.readHeader(chunk, chunkLen))) {
         if (chunkLen - this.pos >= length) {
+          const buf = chunk.slice(this.pos, this.pos + length);
+          this.pos += length;
           if (this.parts) {
-            const buf = chunk.slice(this.pos, this.pos + length);
             this.parts.push(buf);
             this.partsTotalLen += length;
 
@@ -125,26 +112,21 @@ class PacketInputStream {
               const packet = new Packet(buf, 0, this.partsTotalLen);
               this.receivePacket(packet);
             } else {
-              this.logFullPacket(buf);
+              this.checkSequenceNo();
             }
           } else {
-            const buf = Buffer.allocUnsafe(length);
-            chunk.copy(buf, 0, this.pos, this.pos + length);
-
             if (this.packetLen < 0xffffff) {
               const packet = new Packet(buf, 0, length);
               this.receivePacket(packet);
             } else {
               this.parts = [buf];
               this.partsTotalLen = length;
-              this.logFullPacket(buf);
+              this.checkSequenceNo();
             }
           }
           this.resetHeader();
-          this.pos += length;
         } else {
-          const buf = Buffer.allocUnsafe(chunkLen - this.pos);
-          chunk.copy(buf, 0, this.pos, chunkLen);
+          const buf = chunk.slice(this.pos, chunkLen);
           if (!this.parts) {
             this.parts = [buf];
             this.partsTotalLen = chunkLen - this.pos;
