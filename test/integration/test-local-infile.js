@@ -122,10 +122,14 @@ describe("local-infile", () => {
         buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16);
       }
       fs.writeFile(bigFileName, buf, function(err) {
-        let verif = fs.readFileSync(bigFileName, {encoding :'utf8'});
+        let verif = fs.readFileSync(bigFileName, { encoding: "utf8" });
         assert.equal(verif.length, size * 16);
         for (let i = 0; i < size; i++) {
-          assert.equal(verif.substring(i * 16, i * 16 + 16), '"a' + padStartZero(i, 8) + '","b"\n', i * 16);
+          assert.equal(
+            verif.substring(i * 16, i * 16 + 16),
+            '"a' + padStartZero(i, 8) + '","b"\n',
+            i * 16
+          );
         }
         verif = null;
 
@@ -151,7 +155,16 @@ describe("local-infile", () => {
                     assert.equal(rows.length, size);
                     for (let i = 0; i < size; i++) {
                       if (rows[i].t1 !== "a" + padStartZero(i, 8) && rows[i].t2 !== "b") {
-                        console.log("result differ (no:" + i + ") t1=" + rows[i].t1 + " != " + padStartZero(i, 8) + " t2=" + rows[i].t2 );
+                        console.log(
+                          "result differ (no:" +
+                            i +
+                            ") t1=" +
+                            rows[i].t1 +
+                            " != " +
+                            padStartZero(i, 8) +
+                            " t2=" +
+                            rows[i].t2
+                        );
                         if (!error) error = i;
                       }
                     }

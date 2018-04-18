@@ -5,15 +5,30 @@ const assert = require("chai").assert;
 const Conf = require("../conf");
 const ConnOptions = require("../../src/config/connection-options");
 const Queue = require("denque");
-
+const Command = require("../../src/cmd/command");
 const ConnectionInformation = require("../../src/misc/connection-information");
+const EventEmitter = require("events");
 
 describe("test PacketInputStream data", () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
-  let longTest = process.env.TEST_LONG ? process.env.TEST_LONG : false;
-  const queue = new Queue();
   const info = new ConnectionInformation();
+  const unexpectedPacket = packet => {
+    throw new Error("unexpected packet");
+  };
+
+  class EmptyCmd extends Command {
+    constructor(callback) {
+      super(new EventEmitter());
+      this.callback = callback;
+      this.onPacketReceive = this.skipResults;
+    }
+
+    skipResults(packet, out, opts, info) {
+      this.callback(packet);
+      return null;
+    }
+  }
 
   before(() => {
     buf = Buffer.alloc(bigSize);
@@ -23,14 +38,15 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small complete packet", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
     let buf = Buffer.from([5, 0, 0, 0, 1, 2, 3, 4, 5]);
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -39,14 +55,14 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small packet multi part header", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
-
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -56,14 +72,15 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small packet multi part header 2", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -73,14 +90,15 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small packet multi part header 3", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -91,14 +109,15 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small packet multi part header 4", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -109,14 +128,15 @@ describe("test PacketInputStream data", () => {
   });
 
   it("small packet multi part data", () => {
-    let conn = {
-      _dispatchPacket: packet => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet._toBuf());
-      }
-    };
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf);
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
@@ -125,49 +145,36 @@ describe("test PacketInputStream data", () => {
     pis.onData(Buffer.from([3, 4, 5]));
   });
 
-  it("big packet multi part data", () => {
-    let beenDispatch = false;
-    let conn = {
-      _dispatchPacket: packet => {
-        const received = packet._toBuf();
-        assert.lengthOf(received, bigSize);
-        if (longTest) {
-          for (let i = 0; i < received.length; i++) {
-            assert.equal(65 + i % 26, received[i], "difference at i=" + i);
-          }
-        }
-        beenDispatch = true;
-      }
-    };
+  it("big packet multi part data", done => {
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(buf, packet.buf);
+        done();
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info
     );
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
     pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
-    assert.ok(beenDispatch);
   }).timeout(300000);
 
-  it("big packet multi part data with part", () => {
-    let beenDispatch = false;
-    let conn = {
-      _dispatchPacket: packet => {
-        const received = packet._toBuf();
-        assert.lengthOf(received, bigSize);
-        if (longTest) {
-          for (let i = 0; i < received.length; i++) {
-            assert.equal(65 + i % 26, received[i], "difference at i=" + i);
-          }
-        }
-        beenDispatch = true;
-      }
-    };
+  it("big packet multi part data with part", done => {
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(buf, packet.buf);
+        done();
+      })
+    );
 
     let pis = new PacketInputStream(
-      conn._dispatchPacket.bind(conn),
+      unexpectedPacket,
       queue,
       new ConnOptions(Conf.baseConfig),
       info

@@ -377,8 +377,8 @@ class Connection {
 
   _succeedAuthentication() {
     if (this.opts.compress) {
-      this._out.setStreamer(new CompressionOutputStream(this._socket, this.info, this.opts));
-      this._in = new CompressionInputStream(this._in, this._receiveQueue, this.info, this.opts);
+      this._out.setStreamer(new CompressionOutputStream(this._socket, this.opts, this.info));
+      this._in = new CompressionInputStream(this._in, this._receiveQueue, this.opts, this.info);
       this._socket.removeAllListeners("data");
       this._socket.on("data", chunk => this._in.onData(chunk));
 

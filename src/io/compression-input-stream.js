@@ -8,13 +8,14 @@ const Utils = require("../misc/utils");
  * see : https://mariadb.com/kb/en/library/0-packet/
  */
 class CompressionInputStream {
-  constructor(reader, receiveQueue, info, opts) {
+  constructor(reader, receiveQueue, opts, info) {
     this.reader = reader;
     this.receiveQueue = receiveQueue;
     this.info = info;
     this.opts = opts;
     this.header = Buffer.allocUnsafe(7);
     this.headerLen = 0;
+    this.compressPacketLen = null;
     this.packetLen = null;
     this.remainingLen = null;
 
@@ -48,6 +49,11 @@ class CompressionInputStream {
     }
   }
 
+  checkSequenceNo() {
+    let cmd = this.currentCmd();
+    if (cmd) cmd.checkCompressSequenceNo(this.header[3]);
+  }
+
   currentCmd() {
     let cmd;
     while ((cmd = this.receiveQueue.peek())) {
@@ -75,8 +81,10 @@ class CompressionInputStream {
     while (chunkLen - this.pos > 0) {
       this.header[this.headerLen++] = chunk[this.pos++];
       if (this.headerLen === 7) {
-        this.packetLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
-        return this.packetLen;
+        this.compressPacketLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
+        this.packetLen = this.header[4] | (this.header[5] << 8) | (this.header[6] << 16);
+        if (this.packetLen === 0) this.packetLen = this.compressPacketLen;
+        return this.compressPacketLen;
       }
     }
     return null;
@@ -86,35 +94,42 @@ class CompressionInputStream {
     this.pos = 0;
     let length;
     const chunkLen = chunk.length;
+
     do {
       if ((length = this.readHeader(chunk, chunkLen))) {
         if (chunkLen - this.pos >= length) {
+          const buf = chunk.slice(this.pos, this.pos + length);
+          this.pos += length;
           if (this.parts) {
-            this.parts.push(chunk.slice(this.pos, this.pos + length));
+            this.parts.push(buf);
             this.partsTotalLen += length;
 
-            if (this.packetLen < 0xffffff) {
+            if (this.compressPacketLen < 0xffffff) {
               let buf = Buffer.concat(this.parts, this.partsTotalLen);
               this.parts = null;
               this.receivePacket(buf);
+            } else {
+              this.checkSequenceNo();
             }
           } else {
-            if (this.packetLen < 0xffffff) {
-              this.receivePacket(chunk.slice(this.pos, this.pos + length));
+            if (this.compressPacketLen < 0xffffff) {
+              this.receivePacket(buf);
             } else {
-              this.parts = [chunk.slice(this.pos, this.pos + length)];
+              this.parts = [buf];
               this.partsTotalLen = length;
+              this.checkSequenceNo();
             }
           }
           this.resetHeader();
-          this.pos += length;
         } else {
+          const buf = chunk.slice(this.pos, chunkLen);
           if (!this.parts) {
-            this.parts = [];
-            this.partsTotalLen = 0;
+            this.parts = [buf];
+            this.partsTotalLen = chunkLen - this.pos;
+          } else {
+            this.parts.push(buf);
+            this.partsTotalLen += chunkLen - this.pos;
           }
-          this.parts.push(chunk.slice(this.pos, chunkLen));
-          this.partsTotalLen += chunkLen - this.pos;
           this.remainingLen = length - (chunkLen - this.pos);
           return;
         }

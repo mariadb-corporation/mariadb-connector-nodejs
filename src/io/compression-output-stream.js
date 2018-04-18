@@ -19,11 +19,11 @@ class CompressionOutputStream {
    * Constructor
    *
    * @param socket    current socket
-   * @param info      current connection informations
    * @param opts      current connection options
+   * @param info      current connection information
    * @constructor
    */
-  constructor(socket, info, opts) {
+  constructor(socket, opts, info) {
     this.info = info;
     this.opts = opts;
     this.pos = 7;
