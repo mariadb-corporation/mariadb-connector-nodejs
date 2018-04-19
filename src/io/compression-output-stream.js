@@ -107,7 +107,7 @@ class CompressionOutputStream {
               this.pos +
               ")"
             : "unknown",
-          Utils.log(this.buf, 0, this.pos)
+          Utils.log(this.opts, this.buf, 0, this.pos)
         );
       }
 
@@ -147,7 +147,7 @@ class CompressionOutputStream {
               this.pos +
               ")"
             : "unknown",
-          Utils.log(this.header, 0, 7) + Utils.log(compressChunk, 0, compressChunkLen)
+          Utils.log(this.opts, this.header, 0, 7) + Utils.log(compressChunk, 0, compressChunkLen)
         );
       }
 
@@ -179,7 +179,7 @@ class CompressionOutputStream {
             this.pos +
             ")"
           : "unknown",
-        Utils.log(emptyBuf, 0, 7)
+        Utils.log(this.opts, emptyBuf, 0, 7)
       );
     }
 

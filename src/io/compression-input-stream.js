@@ -34,7 +34,7 @@ class CompressionInputStream {
             ? cmd.constructor.name + "." + cmd.onPacketReceive.name
             : cmd.constructor.name
           : "no command",
-        Utils.log(chunk, 0, chunk.length, this.header)
+        Utils.log(this.opts, chunk, 0, chunk.length, this.header)
       );
     }
     if (cmd) cmd.checkCompressSequenceNo(this.header[3]);

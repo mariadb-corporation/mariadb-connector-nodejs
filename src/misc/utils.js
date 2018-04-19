@@ -10,7 +10,7 @@ const hexArray = "0123456789ABCDEF".split("");
  * 73 74 32 20 28 73 74 72  6D 20 74 65 78 74 29 20     st2 (strm text)
  * 43 48 41 52 53 45 54 20  75 74 66 38                 CHARSET utf8
  */
-module.exports.log = function(buf, off, len, header) {
+module.exports.log = function(opts, buf, off, len, header) {
   let out = [];
 
   if (!buf || len !== 0) {
@@ -19,8 +19,8 @@ module.exports.log = function(buf, off, len, header) {
 
     let useHeader = header !== undefined;
     let offset = off || 0;
-    let maxLgh = Math.min(1024, len - offset);
-
+    const maxLgh = Math.min(useHeader ? (opts.debugLen - header.length) : opts.debugLen, len - offset);
+    const isLimited = len - offset > maxLgh;
     let byteValue;
     let posHexa = 0;
     let pos = 0;
@@ -60,7 +60,9 @@ module.exports.log = function(buf, off, len, header) {
 
       for (; remaining < 16; remaining++) out.push("   ");
 
-      out.push("    ", asciiValue.slice(0, posHexa).join(""), "\n");
+      out.push("    ", asciiValue.slice(0, posHexa).join("") + ((isLimited) ? " ..." : ""), "\n");
+    } else {
+      out[out.length - 2] = out[out.length - 2] + " ...";
     }
     return out.join("");
   }

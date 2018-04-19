@@ -170,13 +170,13 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
+    shareConn.debug(true);
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[999] = "a";
     const str = array1.fill("a").join("");
     let numberFetched = 0;
     let fieldEvent = false;
-    shareConn.debug(true);
     for (let i = 0; i < 1000; i++) {
       shareConn.query("INSERT INTO row_event VALUE (?)", str);
     }

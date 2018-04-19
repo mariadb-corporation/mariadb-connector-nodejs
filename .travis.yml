@@ -77,7 +77,7 @@ notifications:
 script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
-  - npm install
+  - yarn install
   - node --version
   - yarn --version
   - node .travis/wait-for-docker-up.js

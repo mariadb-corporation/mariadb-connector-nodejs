@@ -464,7 +464,7 @@ class PacketOutputStream {
           "(0," +
           this.pos +
           ")",
-        Utils.log(this.buf, 0, this.pos)
+        Utils.log(this.opts, this.opts, this.buf, 0, this.pos)
       );
     }
 

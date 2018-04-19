@@ -29,6 +29,7 @@ class ConnectionOptions {
     this.database = opts.database;
     this.dateStrings = opts.dateStrings || false;
     this.debug = opts.debug || false;
+    this.debugLen = opts.debugLen || 256;
     this.bigNumberStrings = opts.bigNumberStrings || false;
     this.foundRows = opts.foundRows === undefined || opts.foundRows;
     this.host = opts.host || "localhost";

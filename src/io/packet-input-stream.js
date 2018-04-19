@@ -43,7 +43,7 @@ class PacketInputStream {
           : "no command",
         packet.pos,
         packet.end,
-        Utils.log(packet.buf, packet.pos, packet.end, this.header)
+        Utils.log(this.opts, packet.buf, packet.pos, packet.end, this.header)
       );
     }
 

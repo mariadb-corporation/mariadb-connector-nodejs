@@ -458,7 +458,7 @@ class Connection {
           "," +
           packet.end +
           ")\n" +
-          Utils.log(packet.buf, packet.pos, packet.end),
+          Utils.log(this.opts, packet.buf, packet.pos, packet.end),
         true,
         this.info
       );
