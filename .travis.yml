@@ -66,10 +66,8 @@ matrix:
     env: DB=mysql:5.7
 
 cache:
-  yarn: true
   directories:
   - node_modules
-  - $HOME/.yarn-cache
 
 notifications:
   email: false
@@ -77,12 +75,11 @@ notifications:
 script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
-  - yarn install
+  - npm install
   - node --version
-  - yarn --version
   - node .travis/wait-for-docker-up.js
-  - if [ -n "$LINT" ] ; then yarn run test:lint; fi
-  - if [ -z "$BENCH$LINT" ] ; then yarn run test:base; fi
+  - if [ -n "$LINT" ] ; then npm run test:lint; fi
+  - if [ -z "$BENCH$LINT" ] ; then npm run test:base; fi
 #  - if [ -n "$BENCH" ] ; then npm install mariasql; fi
   - if [ -n "$BENCH" ] ; then npm install microtime; fi
-  - if [ -n "$BENCH" ] ; then yarn run benchmark; fi
+  - if [ -n "$BENCH" ] ; then npm run benchmark; fi

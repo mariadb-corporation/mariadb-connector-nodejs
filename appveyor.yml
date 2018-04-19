@@ -45,7 +45,7 @@ environment:
 
 cache:
   - node_modules
-  - "%LOCALAPPDATA%/Yarn"
+
 clone_folder: c:\projects\mariadb-connector-nodejs
 
 install:
@@ -67,13 +67,12 @@ install:
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
   - cmd: cd c:\projects\mariadb-connector-nodejs
-  - cmd: npm install yarn
-  - cmd: yarn install
+  - cmd: npm install
 
 build: off
 
 test_script:
   - node --version
-  - if "%BENCH%" == "1" ( yarn microtime ) else ( npm test )
-#  - if "%BENCH%" == "1" ( yarn mariasql )
+  - if "%BENCH%" == "1" ( npm install microtime ) else ( npm test )
+#  - if "%BENCH%" == "1" ( npm install mariasql )
   - if "%BENCH%" == "1" ( node c:\projects\mariadb-connector-nodejs\benchmarks\benchmarks.js )
