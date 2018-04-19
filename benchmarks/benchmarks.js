@@ -5,6 +5,7 @@ const Bench = require("./common_benchmarks");
 let bench;
 
 const run = function() {
+  console.log("All drivers are connected");
   bench.suite.run();
 };
 

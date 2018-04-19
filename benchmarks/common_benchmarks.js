@@ -19,8 +19,8 @@ function Bench(callback) {
   this.reportData = {};
 
   const ready = function(name) {
-    console.log("driver for " + name + " connected");
     bench.dbReady++;
+    console.log("driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3"));
     if (bench.dbReady === (mariasql ? 4 : 3)) {
       callback();
     }
@@ -80,10 +80,12 @@ function Bench(callback) {
     // called when the suite starts running
     onStart: function() {
       for (let i = 0; i < bench.initFcts.length; i++) {
+        console.log("initializing test data " + (i + 1) + "/" + bench.initFcts.length);
         if (bench.initFcts[i]) {
           bench.initFcts[i].call(this, bench.CONN.MYSQL.drv);
         }
       }
+      console.log("initializing test data done");
     },
 
     // called between running benchmarks

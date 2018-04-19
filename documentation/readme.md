@@ -89,30 +89,30 @@ See [dedicated documentation](ssl.md).
     
 #### Other options 
 
-* `charset`: string. define charset exchange with server. default: UTF8MB4_UNICODE_CI
-* `dateStrings`: boolean.  indicate if date must be retrived as string (not as date). default: false
-* `debug`: boolean. when active, log all exchange wirh servers. default: false
-* `foundRows`: boolean. active, update number correspond to update rows. disable indicate real rows changed.  default: true.
-* `multipleStatements`: boolean. Permit multi-queries like "insert into ab (i) values (1); insert into ab (i) values (2)". this may be **security risk** in case of sql injection. default: false
-* `namedPlaceholders`: boolean. Permit using named placeholder, default: false
-* `permitLocalInfile`: boolean. permit using LOAD DATA INFILE command.  
+* `charset`: *string* define charset exchange with server. default: UTF8MB4_UNICODE_CI
+* `dateStrings`: *boolean*  indicate if date must be retrived as string (not as date). default: false
+* `debug`: *boolean* when active, log all exchange wirh servers. default: false
+* `foundRows`: *boolean* active, update number correspond to update rows. disable indicate real rows changed.  default: true.
+* `multipleStatements`: *boolean* Permit multi-queries like "insert into ab (i) values (1); insert into ab (i) values (2)". this may be **security risk** in case of sql injection. default: false
+* `namedPlaceholders`: *boolean* Permit using named placeholder, default: false
+* `permitLocalInfile`: *boolean* permit using LOAD DATA INFILE command.  
 this (ie: loading a file from the client) may be a security problem :
 A "man in the middle" proxy server can change the actual file requested from the server so the client will send a local file to this proxy.
 if someone can execute a query from the client, he can have access to any file on the client (according to the rights of the user running the client process).
 default: false
-* `timezone`: string. force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format    
-* `nestTables`: boolean/string. resultset are presented by table to avoid results with colliding fields. default: false 
-* `rowsAsArray`: boolean. default rows are defined as a JSON object. when active row is an array. default false 
-* `pipelining`: boolean. will send query one by one, but without waiting the results of previous entry ([detail information](/documentation/pipelining.md)). default true
+* `timezone`: *string* force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format    
+* `nestTables`: *boolean/string* resultset are presented by table to avoid results with colliding fields. default: false 
+* `rowsAsArray`: *boolean* default rows are defined as a JSON object. when active row is an array. default false 
+* `pipelining`: *boolean* will send query one by one, but without waiting the results of previous entry ([detail information](/documentation/pipelining.md)). default true
 * `typeCast`: permit casting results type  
  
 ## Query
 `connection.query(sql[, values][,callback])`
 
 
-* `sql` : string / object
-* `values`: object / array of placeholder values
-* `callback`: function that will be called after reception of error/results. see [description](#callback)
+* `sql` : *string / object*
+* `values`: *object / array* of placeholder values
+* `callback`: *function* that will be called after reception of error/results. see [description](#callback)
 * `return`: command object that emits event. see [query events](#query-events) list  
 
 sql parameter Object can be used to supersede default option.
@@ -144,7 +144,7 @@ connection.query({dateStrings:true, sql:'SELECT now()'}, (err, res, fields) => {
 ### Error
 The [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) may have the following additional properties :
          
-* fatal : boolean indicating if connection is still valid
+* fatal : *boolean* indicating if connection is still valid
 * errno = error number. 
 * sqlState = sql state code
 
@@ -312,22 +312,7 @@ conn.query("INSERT INTO testTransaction values ('test2')", (err) => {
   conn.commit();
 });
 ```
-
-
- 
  
 TODO difference
 - error print command + parameters
 - changedRows resultset that depend on language not defined (available if disabling foundRows).
-
-
-
-//TODO explain Bigint options :
-for fields type DECIMAL and BIGINT: javascript does not support precise int value for value >=2^53 or < 2^53 (IEEE-754).
-no option : big integer (>=2^53) may return approximate value
-option bigNumberStrings => all BIGinteger are return as string
-option supportBigNumbers => return int if comprise in -(2^53 -1) et 2^53 -1), or a long object (from https://www.npmjs.com/package/long) to permit having exact value
- 
-
-
- 

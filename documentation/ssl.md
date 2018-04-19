@@ -1,4 +1,3 @@
-
 # Using SSL 
 
 This document explains how to configure the MariaDB driver to support TLS/SSL.
@@ -6,8 +5,37 @@ Data can be encrypted during transfer using the Transport Layer Security (TLS) p
  
 >The term SSL (Secure Sockets Layer) is often used interchangeably with TLS, although strictly-speaking the SSL protocol is the predecessor of TLS, and is not implemented as it is now considered insecure.
 
+## SSL authentication type
 
-### Configuration
+There is different kind of SSL authentication : 
+
+One-way SSL authentication is that the client will verifies the certificate of the server. 
+This will permit to encrypt all exhanges, and make sure that it is the expected server, i.e. no man in the middle attack.
+
+Two-way SSL authentication (= mutual authentication, = client authentication) is if the server also verifies the certificate of the client. 
+Client will also have a dedicated certificate.
+
+
+#### Server configuration
+To ensure that SSL is correctly configured on the server, the query `SELECT @@have_ssl;` must return YES. 
+If not, please refer to the [server documentation](https://mariadb.com/kb/en/library/secure-connections/).
+
+#### User configuration recommendation
+
+Enabling the option ssl, driver will use One-way SSL authentication, but an additional step is recommended :
+ 
+To ensure the type of authentication the user used for authentication must be set accordingly with "REQUIRE SSL" for One-way SSL authentication or "REQUIRE X509" for Two-way SSL authentication. 
+See [CREATE USER](https://mariadb.com/kb/en/library/create-user/) for more details.
+
+Example;
+```sql
+CREATE USER 'myUser'@'%' IDENTIFIED BY 'MyPwd';
+GRANT ALL ON db_name.* TO 'myUser'@'%' REQUIRE SSL;
+```
+Setting `REQUIRE SSL` will ensure that if option ssl isn't enable on connector, connection will be rejected. 
+
+
+## Configuration
 * `ssl`: boolean/JSON object. 
 
 JSON object: 
@@ -29,61 +57,58 @@ JSON object:
 
 Connector rely on Node.js TLS implementation. See [Node.js TLS API](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) for more detail
 
-### Server configuration
-To ensure that SSL is correctly configured on the server, the query `SELECT @@have_ssl;` must return YES. 
-If not, please refer to the [server documentation](https://mariadb.com/kb/en/library/secure-connections/).
 
-### SSL authentication type
+### Certificate validation
 
-There is different kind of SSL authentication : 
-
-One-way SSL authentication is that the client will verifies the certificate of the server. 
-This will permit to encrypt all exhanges, and make sure that it is the expected server, i.e. no man in the middle attack.
-
-Two-way SSL authentication (= mutual authentication, = client authentication) is if the server also verifies the certificate of the client. 
-Client will also have a dedicated certificate.
-
-### User configuration recommendation
-
-Enabling the option ssl, driver will use One-way SSL authentication, but an additional step is recommended :
- 
-To ensure the type of authentication the user used for authentication must be set accordingly with "REQUIRE SSL" for One-way SSL authentication or "REQUIRE X509" for Two-way SSL authentication. 
-See [CREATE USER](https://mariadb.com/kb/en/library/create-user/) for more details.
-
-Example;
-```sql
-CREATE USER 'myUser'@'%' IDENTIFIED BY 'MyPwd';
-GRANT ALL ON db_name.* TO 'myUser'@'%' REQUIRE SSL;
-```
-Setting `REQUIRE SSL` will ensure that if option ssl isn't enable on connector, connection will be rejected. 
-
-
-## One-way SSL authentication
-
-If the server certificate is signed using a certificate chain using a root CA known in java default truststore, no additional step is required.
-
-### Trusted CA
+#### Trusted CA
 Node.js trust by default well-known root CAs based on Mozilla including free Let's Encrypt certificate authority (see [list](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport) ).
 If the server certificate is signed using a certificate chain using a root CA known in node.js, only needed configuration is enabling option ssl.
 
-example : 
-```javascript
-const mariadb = require('mariadb');
-const conn = mariadb.createConnection({host: 'myHost', ssl: true, user: 'myUser', password:'MyPwd', database:'db_name'});
-```
-
-### Certificate chain validation
+#### Certificate chain validation
 Certificate chain is a list of certificates that are related to each other because they were issued within the same CA hierarchy. 
 In order for any certificate to be validated, all of the certificates in its chain have to be validated.
 
 If intermediate/root certificate are not trusted by connector, connection will issue an error. 
 
 Certificate can be provided to driver with  
- 
 
-### Hostname verification
-  hostname verification should be done against the certificate’s subjectAlternativeName’s dNS name field. 
- 
+#### Hostname verification (SNI)
+  hostname verification is done by default be done against the certificate’s subjectAlternativeName’s dNS name field. 
+
+### One-way SSL authentication
+
+If the server certificate is signed using a certificate chain using a root CA known in java default truststore, no additional step is required, but setting `ssl` option
+
+Example : 
+```javascript
+    const mariadb = require('mariadb');
+    const conn = mariadb.createConnection({host: 'myHost.com', ssl: true, user: 'myUser', password:'MyPwd', database:'db_name'});
+```
+
+If server use a selft signed certificate or use intermediate certificates, there is 2 differents possibiliy : 
+* indicate connector to trust certificate using option `rejectUnauthorized` *(NOT TO USE IN PRODUCTION)*
+    
+```javascript
+    const conn = mariadb.createConnection({host: 'myHost.com', ssl: {rejectUnauthorized: false}, user: 'myUser', password:'MyPwd', database:'db_name'});
+```
+* provide the certificate chain to driver
+```javascript
+    const fs = require("fs");
+    const mariadb = require('mariadb');
+
+   //reading certificates from file
+    const serverCert = [fs.readFileSync("server.pem", "utf8")];
+
+   //connecting
+    const conn = base.createConnection({ 
+      user:"myUser", 
+      host: "myHost.com",
+      ssl: {
+        ca: serverCert,
+      }
+    });
+```
+  
  
 ## Two-way SSL authentication
 
@@ -96,6 +121,35 @@ The client (driver) must then have its own certificate too (and related private 
 If the driver doesn't provide a certificate, and the user used to connect is defined with "REQUIRE X509", 
 the server will then return a basic "Access denied for user". 
 Check how the user is defined with "select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = '<myUser>'".
+
+Example:
+```sql
+    CREATE USER 'X509testUser'@'%';
+    GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509;
+```
+
+```javascript
+    const fs = require("fs");
+    const mariadb = require('mariadb');
+
+   //reading certificates from file
+    const serverCert = [fs.readFileSync("server.pem", "utf8")];
+    const clientKey = [fs.readFileSync("client.key", "utf8")];
+    const clientCert = [fs.readFileSync("client.pem", "utf8")];
+
+   //connecting
+    const conn = base.createConnection({ 
+      user:"X509testUser", 
+      host: "mariadb.example.com",
+      ssl: {
+        ca: serverCert,
+        cert: clientCert,
+        key: clientKey
+      }
+    });
+```
+
+
 
 Example of generating a keystore in PKCS12 format :
 ```
