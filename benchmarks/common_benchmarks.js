@@ -21,7 +21,7 @@ function Bench(callback) {
   const ready = function(name) {
     bench.dbReady++;
     console.log(
-      "driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3")
+      "driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3") + ")"
     );
     if (bench.dbReady === (mariasql ? 4 : 3)) {
       callback();
@@ -84,7 +84,7 @@ function Bench(callback) {
       for (let i = 0; i < bench.initFcts.length; i++) {
         console.log("initializing test data " + (i + 1) + "/" + bench.initFcts.length);
         if (bench.initFcts[i]) {
-          bench.initFcts[i].call(this, bench.CONN.MYSQL.drv);
+          bench.initFcts[i].call(this, bench.CONN.MARIADB.drv);
         }
       }
       console.log("initializing test data done");
@@ -94,7 +94,6 @@ function Bench(callback) {
     onCycle: function(event) {
       //to avoid mysql2 taking all the server memory
       mysql2.clearParserCache();
-
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
@@ -167,10 +166,13 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === (mariasql ? "mariasql" : "mysql")) {
+      // if (o.drvType === (mariasql ? "mariasql" : "mysql")) {
+      //   base = o.iteration;
+      // }
+      if (o.iteration > best) {
         base = o.iteration;
+        best = o.iteration;
       }
-      if (o.iteration > best) best = o.iteration;
     }
 
     //display results

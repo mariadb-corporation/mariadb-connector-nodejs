@@ -204,8 +204,8 @@ Generating an encrypted keystore in PKCS12 format  :
     const mariadb = require('mariadb');
 
    //reading certificates from file (keystore must be read as binary)
-    const serverCert = [fs.readFileSync("server.pem", "utf8")];
-    const clientKeystore = [fs.readFileSync("keystore.p12")];
+    const serverCert = fs.readFileSync("server.pem", "utf8");
+    const clientKeystore = fs.readFileSync("keystore.p12");
     
    //connecting
     const conn = base.createConnection({ 

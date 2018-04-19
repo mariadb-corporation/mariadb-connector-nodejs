@@ -18,12 +18,12 @@ module.exports.benchFct = function(conn, deferred) {
 module.exports.initFct = async function(conn) {
   try {
     await Promise.all([
-      conn.query("DROP TABLE IF EXISTS testn.perfTest", err => console.log(err)),
-      conn.query("INSTALL SONAME 'ha_blackhole'", err => console.log(err)),
+      conn.query("DROP TABLE IF EXISTS testn.perfTest", err => {if (err) console.log(err);}),
+      conn.query("INSTALL SONAME 'ha_blackhole'", err => {if (err) console.log(err);}),
       conn.query(
         "CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test int, PRIMARY KEY (id) ) " +
           "ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'",
-        err => console.log(err)
+        err => {if (err) console.log(err);}
       )
     ]);
   } catch (err) {
