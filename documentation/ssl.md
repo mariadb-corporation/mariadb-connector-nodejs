@@ -27,7 +27,7 @@ Enabling the option ssl, driver will use One-way SSL authentication, but an addi
 To ensure the type of authentication the user used for authentication must be set accordingly with "REQUIRE SSL" for One-way SSL authentication or "REQUIRE X509" for Two-way SSL authentication. 
 See [CREATE USER](https://mariadb.com/kb/en/library/create-user/) for more details.
 
-Example;
+Example:
 ```sql
 CREATE USER 'myUser'@'%' IDENTIFIED BY 'MyPwd';
 GRANT ALL ON db_name.* TO 'myUser'@'%' REQUIRE SSL;
@@ -61,7 +61,7 @@ Connector rely on Node.js TLS implementation. See [Node.js TLS API](https://node
 ### Certificate validation
 
 #### Trusted CA
-Node.js trust by default well-known root CAs based on Mozilla including free Let's Encrypt certificate authority (see [list](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport) ).
+Node.js trust by default well-known root CAs based on Mozilla: see [list](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport) (including free Let's Encrypt certificate authority).
 If the server certificate is signed using a certificate chain using a root CA known in node.js, only needed configuration is enabling option ssl.
 
 #### Certificate chain validation
