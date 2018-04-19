@@ -14,7 +14,7 @@ class ClearPasswordAuth extends Command {
 
   start(out, opts, info) {
     out.startPacket(this);
-    if (opts.password != null && opts.password.isEmpty()) {
+    if (opts.password && opts.password.isEmpty()) {
       out.writeString(opts.password);
     }
     out.flushBuffer(true);

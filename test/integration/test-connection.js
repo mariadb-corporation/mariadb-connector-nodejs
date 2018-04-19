@@ -5,6 +5,11 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations.js");
 
 describe("connection", () => {
+
+  afterEach(() => {
+    shareConn.debug(false);
+  });
+
   it("multiple connection.connect() call", function(done) {
     const conn = base.createConnection();
     conn.connect(err => {
@@ -171,6 +176,7 @@ describe("connection", () => {
     const str = array1.fill("a").join("");
     let numberFetched = 0;
     let fieldEvent = false;
+    shareConn.debug(true);
     for (let i = 0; i < 1000; i++) {
       shareConn.query("INSERT INTO row_event VALUE (?)", str);
     }

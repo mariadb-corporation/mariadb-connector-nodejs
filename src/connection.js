@@ -505,7 +505,7 @@ class Connection {
   _clearConnectTimeout() {
     if (this.timeoutRef) {
       clearTimeout(this.timeoutRef);
-      this.timeoutRef = null;
+      this.timeoutRef = undefined;
     }
   }
 
@@ -586,8 +586,8 @@ class Connection {
   _clear() {
     this._clearConnectTimeout();
     this._sendQueue.clear();
-    this._out = null;
-    this._socket = null;
+    this._out = undefined;
+    this._socket = undefined;
   }
 }
 

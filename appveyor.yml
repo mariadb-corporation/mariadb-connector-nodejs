@@ -10,33 +10,33 @@ environment:
   MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
   matrix:
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "6"
 
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "8"
 
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "9"
       MYSQL_USE_COMPRESSION: 1
 
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "9"
 
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "9"
       BENCH: "1"
 
-    - DB: '10.2.13'
+    - DB: '10.2.14'
       nodejs_version: "8"
 
-    - DB: '10.3.4'
+    - DB: '10.3.6'
       nodejs_version: "8"
 
-    - DB: '10.1.30'
+    - DB: '10.1.31'
       nodejs_version: "8"
 
-    - DB: '10.0.33'
+    - DB: '10.0.34'
       nodejs_version: "8"
 
     - DB: '5.5.59'
