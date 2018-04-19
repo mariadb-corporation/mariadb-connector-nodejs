@@ -40,9 +40,9 @@ module.exports.benchFct = function(conn, deferred) {
 module.exports.initFct = async function(conn) {
   try {
     await Promise.all([
-      conn.query("DROP TABLE IF EXISTS testn.perfTestText"),
-      conn.query("INSTALL SONAME 'ha_blackhole'"),
-      conn.query(sqlTable)
+      conn.query("DROP TABLE IF EXISTS testn.perfTestText", (err) => console.log(err)),
+      conn.query("INSTALL SONAME 'ha_blackhole'", (err) => console.log(err)),
+      conn.query(sqlTable, (err) => console.log(err))
     ]);
   } catch (err) {
     console.log(err);
