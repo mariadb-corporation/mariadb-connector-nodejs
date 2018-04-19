@@ -170,7 +170,7 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
-    shareConn.debug(true);
+    // shareConn.debug(true);
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[999] = "a";

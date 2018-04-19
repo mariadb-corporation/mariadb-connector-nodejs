@@ -83,9 +83,9 @@ For those integer that are not in [safe](https://developer.mozilla.org/en-US/doc
 
 #### Ssl
 
-//TODO describe all solutions
-    
-* `ssl`: string/object. 
+* `ssl`: boolean/JSON object. 
+
+see [ssl document](ssl.md) for dedicated documentation    
     
 #### Other options 
 
