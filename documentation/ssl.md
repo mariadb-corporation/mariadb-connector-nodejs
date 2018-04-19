@@ -30,7 +30,8 @@ JSON object:
 Connector rely on Node.js TLS implementation. See [Node.js TLS API](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) for more detail
 
 ### Server configuration
-To ensure that SSL is correctly configured on the server, the query "SELECT @@have_ssl;" must return YES. If not, please refer to the [server documentation](https://mariadb.com/kb/en/library/secure-connections/).
+To ensure that SSL is correctly configured on the server, the query `SELECT @@have_ssl;` must return YES. 
+If not, please refer to the [server documentation](https://mariadb.com/kb/en/library/secure-connections/).
 
 ### SSL authentication type
 
@@ -54,7 +55,7 @@ Example;
 CREATE USER 'myUser'@'%' IDENTIFIED BY 'MyPwd';
 GRANT ALL ON db_name.* TO 'myUser'@'%' REQUIRE SSL;
 ```
-Setting REQUIRE SSL will ensure that if option ssl isn't enable on connector, connection will be rejected. 
+Setting `REQUIRE SSL` will ensure that if option ssl isn't enable on connector, connection will be rejected. 
 
 
 ## One-way SSL authentication
@@ -81,15 +82,15 @@ Certificate can be provided to driver with
  
 
 ### Hostname verification
-  hostname verification should be done against the certificate’s subjectAlternativeName’s dNSName field. 
+  hostname verification should be done against the certificate’s subjectAlternativeName’s dNS name field. 
  
  
 ## Two-way SSL authentication
 
 Mutual SSL authentication or certificate based mutual authentication refers to two parties authenticating each other through verifying the provided digital certificate so that both parties are assured of the others' identity.
-To enable mutual authentication, the user must be created with "REQUIRE X509" so the server asks the driver for client certificates. 
+To enable mutual authentication, the user must be created with `REQUIRE X509` so the server asks the driver for client certificates. 
 
-**If the user is not set with REQUIRE X509, only one way authentication will be done**
+**If the user is not set with `REQUIRE X509`, only one way authentication will be done**
 
 The client (driver) must then have its own certificate too (and related private key). 
 If the driver doesn't provide a certificate, and the user used to connect is defined with "REQUIRE X509", 

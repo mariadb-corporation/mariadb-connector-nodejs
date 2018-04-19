@@ -19,7 +19,10 @@ module.exports.log = function(opts, buf, off, len, header) {
 
     let useHeader = header !== undefined;
     let offset = off || 0;
-    const maxLgh = Math.min(useHeader ? (opts.debugLen - header.length) : opts.debugLen, len - offset);
+    const maxLgh = Math.min(
+      useHeader ? opts.debugLen - header.length : opts.debugLen,
+      len - offset
+    );
     const isLimited = len - offset > maxLgh;
     let byteValue;
     let posHexa = 0;
@@ -60,7 +63,7 @@ module.exports.log = function(opts, buf, off, len, header) {
 
       for (; remaining < 16; remaining++) out.push("   ");
 
-      out.push("    ", asciiValue.slice(0, posHexa).join("") + ((isLimited) ? " ..." : ""), "\n");
+      out.push("    ", asciiValue.slice(0, posHexa).join("") + (isLimited ? " ..." : ""), "\n");
     } else {
       out[out.length - 2] = out[out.length - 2] + " ...";
     }

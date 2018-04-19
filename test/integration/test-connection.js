@@ -5,6 +5,14 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations.js");
 
 describe("connection", () => {
+  let debugLen;
+  before(() => {
+    debugLen = shareConn.opts.debugLen;
+  });
+
+  after(() => {
+    shareConn.opts.debugLen = debugLen;
+  });
 
   afterEach(() => {
     shareConn.debug(false);
@@ -170,7 +178,10 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
-    // shareConn.debug(true);
+    if (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) {
+      shareConn.debug(true);
+      shareConn.debugLen = 16;
+    }
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[999] = "a";

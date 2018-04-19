@@ -394,9 +394,10 @@ class Connection {
       );
     }
 
-    const sslOption = Object.assign(
-      {}, this.opts.ssl, { servername: this.opts.host, socket: this._socket }
-    );
+    const sslOption = Object.assign({}, this.opts.ssl, {
+      servername: this.opts.host,
+      socket: this._socket
+    });
     try {
       const secureSocket = tls.connect(sslOption, err => {
         this._events.emit("secureConnect");

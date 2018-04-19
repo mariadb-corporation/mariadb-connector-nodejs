@@ -34,7 +34,7 @@ class PamPasswordAuth extends Command {
       //ask user to answer
       const password = prompt(promptData, "");
 
-      if (!(password)) {
+      if (!password) {
         const err = Utils.createError(
           "Error during PAM authentication : dialog input cancelled",
           true,
