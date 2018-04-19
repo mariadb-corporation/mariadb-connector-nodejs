@@ -20,7 +20,9 @@ function Bench(callback) {
 
   const ready = function(name) {
     bench.dbReady++;
-    console.log("driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3"));
+    console.log(
+      "driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3")
+    );
     if (bench.dbReady === (mariasql ? 4 : 3)) {
       callback();
     }

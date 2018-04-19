@@ -327,15 +327,19 @@ describe("ssl", function() {
     });
   });
 
-
   it("Mutual authentication without providing client certificate", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
 
-    const conn = base.createConnection({ user:"X509testUser", password: null, host: "mariadb.example.com", ssl: { ca: ca } });
+    const conn = base.createConnection({
+      user: "X509testUser",
+      password: null,
+      host: "mariadb.example.com",
+      ssl: { ca: ca }
+    });
     conn.connect(err => {
       if (err) {
-        done(err);
+        done();
       } else {
         done(new Error("Must have thrown an exception !"));
       }
@@ -346,13 +350,15 @@ describe("ssl", function() {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
 
-    const clientKeyFileName = process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + "/../certificats/client.key";
-    const clientCertFileName = process.env.TEST_SSL_CLIENT_CERT_FILE || __dirname + "/../certificats/client.crt";
+    const clientKeyFileName =
+      process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + "/../certificats/client.key";
+    const clientCertFileName =
+      process.env.TEST_SSL_CLIENT_CERT_FILE || __dirname + "/../certificats/client.crt";
     const clientKey = [fs.readFileSync(clientKeyFileName, "utf8")];
     const clientCert = [fs.readFileSync(clientCertFileName, "utf8")];
 
     const conn = base.createConnection({
-      user:"X509testUser",
+      user: "X509testUser",
       password: null,
       host: "mariadb.example.com",
       ssl: {
@@ -364,16 +370,43 @@ describe("ssl", function() {
 
     conn.connect(err => {
       if (err) {
-        done();
+        done(err);
       } else {
-        const isWin = process.platform === "win32";
-        checkProtocol(conn, isWin || !shareConn.isMariaDB() ? "TLSv1.1" : "TLSv1.2");
         conn.end();
         done();
       }
     });
   });
 
+  it("Mutual authentication providing client keystore", function(done) {
+    if (!sslEnable) this.skip();
+    if (!ca) this.skip();
+
+    const clientKeystoreFileName =
+      process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
+      __dirname + "/../certificats/client-keystore.p12";
+    const clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
+
+    const conn = base.createConnection({
+      user: "X509testUser",
+      password: null,
+      host: "mariadb.example.com",
+      ssl: {
+        ca: ca,
+        pfx: clientKeystore,
+        passphrase: "kspass"
+      }
+    });
+
+    conn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        conn.end();
+        done();
+      }
+    });
+  });
 });
 
 function checkProtocol(conn, protocol) {

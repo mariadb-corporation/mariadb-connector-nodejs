@@ -41,8 +41,8 @@ Setting `REQUIRE SSL` will ensure that if option ssl isn't enable on connector, 
 JSON object: 
 * `checkServerIdentity(servername, cert)` *Function* replace SNI default function
 * `minDHSize` *number* Minimum size of the DH parameter in bits to accept a TLS connection. Defaults to 1024.
-* `pfx` *string* | *string[]* | *Buffer* | *Buffer[]* | *Object[]* Optional PFX or PKCS12 encoded private key and certificate chain. Encrypted PFX will be decrypted with passphrase if provided.
-* `key` *string* | *string[]* | *Buffer* | *Buffer[]* | *Object[]* Optional private keys in PEM format. Encrypted keys will be decrypted with passphrase if provided.
+* `pfx` *string* | *string[]* | *Buffer* | *Buffer[]* | *Object[]* Optional PFX or PKCS12 encoded private key and certificate chain. Encrypted PFX will be decrypted with `passphrase` if provided.
+* `key` *string* | *string[]* | *Buffer* | *Buffer[]* | *Object[]* Optional private keys in PEM format. Encrypted keys will be decrypted with `passphrase` if provided.
 * `passphrase` *string* Optional shared passphrase used for a single private key and/or a PFX.
 * `cert` *string* | *string[]* | *Buffer* | *Buffer[]* Optional cert chains in PEM format. One cert chain should be provided per private key. 
 * `ca` *string* | *string[]* | *Buffer* | *Buffer[]* Optionally override the trusted CA certificates. Default is to trust the well-known CAs curated by Mozilla. For self-signed certificates, the certificate is its own CA, and must be provided.
@@ -82,14 +82,27 @@ If the server certificate is signed using a certificate chain using a root CA kn
 Example : 
 ```javascript
     const mariadb = require('mariadb');
-    const conn = mariadb.createConnection({host: 'myHost.com', ssl: true, user: 'myUser', password:'MyPwd', database:'db_name'});
+    const conn = mariadb.createConnection({
+      host: 'myHost.com', 
+      ssl: true, 
+      user: 'myUser', 
+      password:'MyPwd', 
+      database:'db_name'
+    });
 ```
 
 If server use a selft signed certificate or use intermediate certificates, there is 2 differents possibiliy : 
 * indicate connector to trust certificate using option `rejectUnauthorized` *(NOT TO USE IN PRODUCTION)*
     
 ```javascript
-    const conn = mariadb.createConnection({host: 'myHost.com', ssl: {rejectUnauthorized: false}, user: 'myUser', password:'MyPwd', database:'db_name'});
+    const conn = mariadb.createConnection({
+      host: 'myHost.com', 
+      ssl: {
+        rejectUnauthorized: false
+      }, 
+      user: 'myUser', 
+      password:'MyPwd', 
+      database:'db_name'});
 ```
 * provide the certificate chain to driver
 ```javascript
@@ -149,9 +162,9 @@ Example:
     });
 ```
 
+#### Using keystore
 
-
-Example of generating a keystore in PKCS12 format :
+Generating an encrypted keystore in PKCS12 format  :
 ```
   # generate a keystore with the client cert & key
   openssl pkcs12 \
@@ -163,6 +176,25 @@ Example of generating a keystore in PKCS12 format :
     -passout pass:kspass
 ```    
 
+```javascript
+    const fs = require("fs");
+    const mariadb = require('mariadb');
+
+   //reading certificates from file (read must not use "utf8" encoding)
+    const serverCert = [fs.readFileSync("server.pem", "utf8")];
+    const clientKeystore = [fs.readFileSync("keystore.p12")];
+    
+   //connecting
+    const conn = base.createConnection({ 
+      user:"X509testUser", 
+      host: "mariadb.example.com",
+      ssl: {
+        ca: serverCert,
+        pfx: clientKeystore,
+        passphrase: "kspass"
+      }
+    });
+```
 
 
 
