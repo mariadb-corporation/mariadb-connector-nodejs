@@ -49,10 +49,8 @@
     "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-markdown": "^1.0.0-beta.7",
+    "eslint-plugin-markdown": "^1.0.0-beta.8",
     "mocha": "^5.1.1",
-    "mysql": "^2.15.0",
-    "mysql2": "^1.5.3",
     "prettier": "^1.12.1",
     "prettier-markdown": "^0.1.6"
   },

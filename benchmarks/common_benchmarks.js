@@ -5,9 +5,21 @@ const conf = require("../test/conf");
 
 const colors = require("colors");
 const mariadb = require("../index.js");
-const mysql = require("mysql");
-const mysql2 = require("mysql2");
-let mariasql;
+
+let mariasql, mysql, mysql2;
+
+try {
+  mysql = require("mysql");
+} catch (err) {
+  throw Error("must install mysql driver locally to benchmark\n\nnpm install mysql");
+}
+
+try {
+  mysql2 = require("mysql2");
+} catch (err) {
+  throw Error("must install mysql2 driver locally to benchmark\n\nnpm install mysql2");
+}
+
 try {
   mariasql = require("mariasql");
 } catch (err) {

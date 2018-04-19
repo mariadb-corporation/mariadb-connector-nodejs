@@ -84,6 +84,6 @@ script:
   - node .travis/wait-for-docker-up.js
   - if [ -n "$LINT" ] ; then npm run test:lint; fi
   - if [ -z "$BENCH$LINT" ] ; then npm run test:base; fi
-  - if [ -n "$BENCH" ] ; then npm install mariasql; fi
+  - if [ -n "$BENCH" ] ; then npm install mariasql mysql mysql2; fi
   - if [ -n "$BENCH" ] ; then npm install microtime; fi
   - if [ -n "$BENCH" ] ; then npm run benchmark; fi

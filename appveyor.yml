@@ -74,5 +74,5 @@ build: off
 test_script:
   - node --version
   - if "%BENCH%" == "1" ( npm install microtime ) else ( npm test )
-  - if "%BENCH%" == "1" ( npm install mariasql )
+  - if "%BENCH%" == "1" ( npm install mariasql mariasql mysql mysql2 )
   - if "%BENCH%" == "1" ( node c:\projects\mariadb-connector-nodejs\benchmarks\benchmarks.js )
