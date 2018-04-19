@@ -140,12 +140,12 @@ Example:
     });
 ```
 
-See [possible protocol] (https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
+See [possible protocol](https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
  
  
 ## Two-way SSL authentication
 
-Mutual SSL authentication or certificate based mutual authentication refers to two parties authenticating each other through verifying the provided digital certificate so that both parties are assured of the others' identity.
+Mutual SSL authentication or certificate based mutual authentication refers to two parties authenticating each other through verifying the provided digital certificate so that both parties are assured of the other's identity.
 To enable mutual authentication, the user must be created with `REQUIRE X509` so the server asks the driver for client certificates. 
 
 **If the user is not set with `REQUIRE X509`, only one way authentication will be done**
@@ -153,7 +153,8 @@ To enable mutual authentication, the user must be created with `REQUIRE X509` so
 The client (driver) must then have its own certificate too (and related private key). 
 If the driver doesn't provide a certificate, and the user used to connect is defined with `REQUIRE X509`, 
 the server will then return a basic "Access denied for user". 
-Check how the user is defined with `select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = 'myUser'`.
+
+It may be interesting to check how the user is defined with `select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = 'myUser'`because server might required some verification.
 
 Example:
 ```sql
@@ -218,6 +219,14 @@ Generating an encrypted keystore in PKCS12 format  :
     });
 ```
 
+## F.A.Q.
 
+#### error Hostname/IP doesn't match certificate's altnames
+Client will verify certificate SAN (subject alternatives names) and CN to ensure certificate correspond to the hostname. 
+If certificate's SAN /CN does not correspond to the `host` option, you will have an error like : 
+```
+Hostname/IP doesn't match certificate's altnames: "Host: other.example.com. is not cert's CN: mariadb.example.com"
+```
+solution : correct `host` value to correspond certificate
 
 

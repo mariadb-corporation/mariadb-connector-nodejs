@@ -351,9 +351,9 @@ describe("ssl", function() {
     if (!ca) this.skip();
 
     const clientKeyFileName =
-      process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + "/../certificats/client.key";
+      process.env.TEST_SSL_CLIENT_KEY_FILE || (__dirname + "/../certificats/client.key");
     const clientCertFileName =
-      process.env.TEST_SSL_CLIENT_CERT_FILE || __dirname + "/../certificats/client.crt";
+      process.env.TEST_SSL_CLIENT_CERT_FILE || (__dirname + "/../certificats/client.crt");
     const clientKey = [fs.readFileSync(clientKeyFileName, "utf8")];
     const clientCert = [fs.readFileSync(clientCertFileName, "utf8")];
 
@@ -384,7 +384,7 @@ describe("ssl", function() {
 
     const clientKeystoreFileName =
       process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
-      __dirname + "/../certificats/client-keystore.p12";
+      (__dirname + "/../certificats/client-keystore.p12");
     console.log(clientKeystoreFileName);
     const clientKeystore = fs.readFileSync(clientKeystoreFileName);
     console.log(clientKeystore);
