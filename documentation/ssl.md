@@ -92,7 +92,7 @@ Example :
 ```
 
 If server use a selft signed certificate or use intermediate certificates, there is 2 differents possibiliy : 
-* indicate connector to trust certificate using option `rejectUnauthorized` *(NOT TO USE IN PRODUCTION)*
+* indicate connector to trust all certificates using option `rejectUnauthorized` *(NOT TO USE IN PRODUCTION)*
     
 ```javascript
     const conn = mariadb.createConnection({
@@ -121,7 +121,27 @@ If server use a selft signed certificate or use intermediate certificates, there
       }
     });
 ```
-  
+#### Force use of specific TLS protocol / ciphers
+
+A specific TLS protocol can be forced using option `secureProtocol`, and cipher using `ciphers`.
+
+Example:
+```javascript
+   //connecting
+    const conn = base.createConnection({ 
+      user:"myUser", 
+      host: "myHost.com",
+      ssl: {
+        ca: serverCert,
+        secureProtocol: "TLSv1_2_method",
+        ciphers:
+          "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"        
+      }
+    });
+```
+
+See [possible protocol] (https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
+ 
  
 ## Two-way SSL authentication
 
@@ -131,9 +151,9 @@ To enable mutual authentication, the user must be created with `REQUIRE X509` so
 **If the user is not set with `REQUIRE X509`, only one way authentication will be done**
 
 The client (driver) must then have its own certificate too (and related private key). 
-If the driver doesn't provide a certificate, and the user used to connect is defined with "REQUIRE X509", 
+If the driver doesn't provide a certificate, and the user used to connect is defined with `REQUIRE X509`, 
 the server will then return a basic "Access denied for user". 
-Check how the user is defined with "select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = '<myUser>'".
+Check how the user is defined with `select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = 'myUser'`.
 
 Example:
 ```sql
@@ -164,6 +184,8 @@ Example:
 
 #### Using keystore
 
+Keystore permit storing private key and certificate chain encrypted with a password in a file. 
+
 Generating an encrypted keystore in PKCS12 format  :
 ```
   # generate a keystore with the client cert & key
@@ -171,7 +193,7 @@ Generating an encrypted keystore in PKCS12 format  :
     -export \
     -in "${clientCertFile}" \
     -inkey "${clientKeyFile}" \
-    -out "${tmpKeystoreFile}" \
+    -out "${keystoreFile}" \
     -name "mariadbAlias" \
     -passout pass:kspass
 ```    
@@ -180,7 +202,7 @@ Generating an encrypted keystore in PKCS12 format  :
     const fs = require("fs");
     const mariadb = require('mariadb');
 
-   //reading certificates from file (read must not use "utf8" encoding)
+   //reading certificates from file (keystore must be read as binary)
     const serverCert = [fs.readFileSync("server.pem", "utf8")];
     const clientKeystore = [fs.readFileSync("keystore.p12")];
     

@@ -385,8 +385,9 @@ describe("ssl", function() {
     const clientKeystoreFileName =
       process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
       __dirname + "/../certificats/client-keystore.p12";
-    const clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
-
+    console.log(clientKeystoreFileName);
+    const clientKeystore = fs.readFileSync(clientKeystoreFileName);
+    console.log(clientKeystore);
     const conn = base.createConnection({
       user: "X509testUser",
       password: null,

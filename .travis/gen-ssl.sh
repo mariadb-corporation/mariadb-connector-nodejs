@@ -33,9 +33,7 @@ main () {
   local csrFile="${sslDir}/csrFile.key"
   local clientCertFile="${sslDir}/client.crt"
   local clientKeyFile="${sslDir}/client.key"
-  local clientKeystoreFile="${sslDir}/client-keystore.jks"
-  local fullClientKeystoreFile="${sslDir}/fullclient-keystore.jks"
-  local tmpKeystoreFile="${sslDir}/client-keystore.p12"
+  local clientKeystoreFile="${sslDir}/client-keystore.p12"
   local pcks12FullKeystoreFile="${sslDir}/fullclient-keystore.p12"
   local clientReqFile="${sslDir}/clientReqFile.key"
 
@@ -104,7 +102,7 @@ main () {
     -export \
     -in "${clientCertFile}" \
     -inkey "${clientKeyFile}" \
-    -out "${tmpKeystoreFile}" \
+    -out "${clientKeystoreFile}" \
     -name "mysqlAlias" \
     -passout pass:kspass
 

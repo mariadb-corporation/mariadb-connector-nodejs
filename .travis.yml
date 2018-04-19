@@ -20,8 +20,8 @@ install:
     - export PROJ_PATH=`pwd`
     - export SSLCERT=$PROJ_PATH/tmp
     - export TEST_SSL_CA_FILE=$SSLCERT/server.crt
-    - export TEST_SSL_CLIENT_KEY_FILE=$SSLCERT/server.key
-    - export TEST_SSL_CLIENT_CERT_FILE=$SSLCERT/server.crt
+    - export TEST_SSL_CLIENT_KEY_FILE=$SSLCERT/client.key
+    - export TEST_SSL_CLIENT_CERT_FILE=$SSLCERT/client.crt
     - export TEST_SSL_CLIENT_KEYSTORE_FILE=$SSLCERT/client-keystore.p12
 
 env:
