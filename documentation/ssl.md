@@ -125,7 +125,7 @@ If server use a selft signed certificate or use intermediate certificates, there
 
 A specific TLS protocol can be forced using option `secureProtocol`, and cipher using `ciphers`.
 
-Example:
+Example to connect using TLSv1.2 :
 ```javascript
    //connecting
     const conn = base.createConnection({ 
