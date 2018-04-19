@@ -85,7 +85,7 @@ For those integer that are not in [safe](https://developer.mozilla.org/en-US/doc
 
 * `ssl`: boolean/JSON object. 
 
-see [ssl document](ssl.md) for dedicated documentation    
+See [dedicated documentation](ssl.md).    
     
 #### Other options 
 

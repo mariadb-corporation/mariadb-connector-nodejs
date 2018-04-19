@@ -10,7 +10,7 @@ class ConnectionInformation {
   getServerVersion() {
     if (!this.serverVersion)
       throw "cannot know if server information until connection is established";
-    return this.serverVersion;
+    return this.serverVersion.raw;
   }
 
   isMariaDB() {
