@@ -106,7 +106,7 @@ function Bench(callback) {
     // called between running benchmarks
     onCycle: function(event) {
       //to avoid mysql2 taking all the server memory
-      mysql2.clearParserCache();
+      if (mysql2) mysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =

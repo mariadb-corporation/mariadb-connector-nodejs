@@ -9,7 +9,7 @@ const ZERO_BYTE = 0x00;
 const SLASH = 0x5c;
 
 //increase by level to avoid buffer copy.
-const SMALL_BUFFER_SIZE = 2042;
+const SMALL_BUFFER_SIZE = 2048;
 const MEDIUM_BUFFER_SIZE = 131072; //128k
 const LARGE_BUFFER_SIZE = 1048576; //1M
 const MAX_BUFFER_SIZE = 16777219; //16M + 4
@@ -27,7 +27,7 @@ class PacketOutputStream {
     this.opts = opts;
     this.info = info;
     this.pos = 4;
-    this.buf = null;
+    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
     this.writeDate = opts.timezone === "local" ? this.writeLocalDate : this.writeTimezoneDate;
     this.encoding = this.opts.collation.encoding;
     if (this.encoding === "utf8") {
@@ -62,7 +62,6 @@ class PacketOutputStream {
   startPacket(cmd) {
     this.cmd = cmd;
     this.pos = 4;
-    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
   }
 
   writeInt8(value) {
@@ -454,7 +453,7 @@ class PacketOutputStream {
     this.buf[3] = this.cmd.sequenceNo;
     this.cmd.incrementSequenceNo(1);
 
-    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
+    const flushed = this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
     if (this.opts.debug && !this.opts.debugCompress) {
       console.log(
@@ -476,6 +475,8 @@ class PacketOutputStream {
         this.writeEmptyPacket();
       } else {
         this.stream.flush(true, this.cmd);
+        //if not flushed, ensure not reusing a buffer than is not send
+        if (!flushed) this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {
       this.buf = this.allocateBuffer(remainingLen);

@@ -28,9 +28,10 @@ class CompressionOutputStream {
     this.opts = opts;
     this.pos = 7;
     this.header = Buffer.allocUnsafe(7);
-    this.smallBuffer = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
-    this.buf = this.smallBuffer;
-    this.writer = buffer => socket.write(buffer);
+    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    this.writer = buffer => {
+      return socket.write(buffer);
+    };
   }
 
   growBuffer(len) {
@@ -48,7 +49,8 @@ class CompressionOutputStream {
 
   writeBuf(arr, cmd) {
     let off = 0,
-      len = arr.length;
+      len = arr.length,
+      flushed = true;
     if (len > this.buf.length - this.pos) {
       if (this.buf.length !== MAX_BUFFER_SIZE) {
         this.growBuffer(len);
@@ -69,18 +71,20 @@ class CompressionOutputStream {
           this.pos += lenToFillBuffer;
 
           if (remainingLen === 0) return;
-          this.flush(false, cmd);
+          flushed = this.flush(false, cmd, remainingLen);
         }
       }
     }
     arr.copy(this.buf, this.pos, off, off + len);
     this.pos += len;
+    return flushed;
   }
 
   /**
    * Flush the internal buffer.
    */
-  flush(cmdEnd, cmd) {
+  flush(cmdEnd, cmd, remainingLen) {
+    let flushed;
     if (this.pos < 1536) {
       //*******************************************************************************
       // small packet, no compression
@@ -111,12 +115,12 @@ class CompressionOutputStream {
         );
       }
 
-      this.writer(this.buf.slice(0, this.pos));
+      flushed = this.writer(this.buf.slice(0, this.pos));
 
-      if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
+      if (this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket();
 
       //reset buffer
-      this.buf = this.smallBuffer;
+      if (!flushed) this.buf = this.allocateBuffer(remainingLen);
       this.pos = 7;
     } else {
       //*******************************************************************************
@@ -152,15 +156,24 @@ class CompressionOutputStream {
       }
 
       this.writer(this.header);
-      this.writer(compressChunk);
-      if (cmdEnd) {
-        if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket(cmd);
-
-        //reset buffer
-        this.buf = this.smallBuffer;
-      }
+      flushed = this.writer(compressChunk);
+      if (cmdEnd && this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket(cmd);
+      //if not flushed, ensure not reusing a buffer than is not send
+      if (!flushed) this.header = Buffer.allocUnsafe(7);
       this.pos = 7;
     }
+    return flushed;
+  }
+
+  allocateBuffer(len) {
+    if (len + 4 < SMALL_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    } else if (len + 4 < MEDIUM_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(MEDIUM_BUFFER_SIZE);
+    } else if (len + 4 < LARGE_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(LARGE_BUFFER_SIZE);
+    }
+    return Buffer.allocUnsafe(MAX_BUFFER_SIZE);
   }
 
   writeEmptyPacket(cmd) {
@@ -183,7 +196,7 @@ class CompressionOutputStream {
       );
     }
 
-    this.writer(emptyBuf);
+    return this.writer(emptyBuf);
   }
 }
 

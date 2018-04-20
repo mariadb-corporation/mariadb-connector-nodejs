@@ -88,7 +88,7 @@ describe("local-infile", () => {
       if (err) {
         done(err);
       } else {
-        conn = base.createConnection({ permitLocalInfile: true});
+        conn = base.createConnection({ permitLocalInfile: true });
         conn.connect(() => {
           conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
           conn.query(
