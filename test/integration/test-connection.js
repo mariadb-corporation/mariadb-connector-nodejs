@@ -5,19 +5,6 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations.js");
 
 describe("connection", () => {
-  let debugLen;
-  before(() => {
-    debugLen = shareConn.opts.debugLen;
-  });
-
-  after(() => {
-    shareConn.opts.debugLen = debugLen;
-  });
-
-  afterEach(() => {
-    shareConn.debug(false);
-  });
-
   it("multiple connection.connect() call", function(done) {
     const conn = base.createConnection();
     conn.connect(err => {
@@ -178,10 +165,6 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
-    if (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) {
-      shareConn.debug(true);
-      shareConn.debugLen = 16;
-    }
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
     array1[996] = "a";
@@ -191,8 +174,7 @@ describe("connection", () => {
     for (let i = 0; i < 999; i++) {
       shareConn.query("INSERT INTO row_event VALUE (?)", padStartZero(i, 3) + str);
     }
-    shareConn.query("INSERT INTO row_event VALUE (?)", "999" + str, (err) => {
-
+    shareConn.query("INSERT INTO row_event VALUE (?)", "999" + str, err => {
       shareConn
         .query("select * FROM row_event")
         .on("error", function(err) {
@@ -215,9 +197,7 @@ describe("connection", () => {
           assert.ok(fieldEvent);
           done();
         });
-
     });
-
   });
 
   function padStartZero(val, length) {
@@ -227,7 +207,6 @@ describe("connection", () => {
     while (add.length + stringLength < length) add += "0";
     return add + val;
   }
-
 
   it("connection.connect() error code validation", function(done) {
     const conn = base.createConnection({ user: "fooUser" });

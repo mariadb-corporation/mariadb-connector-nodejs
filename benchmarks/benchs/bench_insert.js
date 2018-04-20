@@ -46,10 +46,16 @@ module.exports.benchFct = function(conn, deferred) {
 module.exports.initFct = async function(conn) {
   try {
     await Promise.all([
-      conn.query("DROP TABLE IF EXISTS testn.perfTestText", err => {if (err) console.log(err);}),
+      conn.query("DROP TABLE IF EXISTS testn.perfTestText", err => {
+        if (err) console.log(err);
+      }),
       //conn.query('SET max_heap_table_size = 1000000000'),
-      conn.query("INSTALL SONAME 'ha_blackhole'", err => {if (err) console.log(err);}),
-      conn.query(sqlTable, err => {if (err) console.log(err);})
+      conn.query("INSTALL SONAME 'ha_blackhole'", err => {
+        if (err) console.log(err);
+      }),
+      conn.query(sqlTable, err => {
+        if (err) console.log(err);
+      })
     ]);
   } catch (err) {
     console.log(err);

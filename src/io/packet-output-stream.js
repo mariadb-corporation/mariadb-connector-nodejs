@@ -462,9 +462,9 @@ class PacketOutputStream {
         (this.cmd.onPacketReceive
           ? this.cmd.constructor.name + "." + this.cmd.onPacketReceive.name
           : this.cmd.constructor.name) +
-        "(0," +
-        this.pos +
-        ")",
+          "(0," +
+          this.pos +
+          ")",
         Utils.log(this.opts, this.buf, 0, this.pos)
       );
     }
