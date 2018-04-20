@@ -27,7 +27,7 @@ class PacketOutputStream {
     this.opts = opts;
     this.info = info;
     this.pos = 4;
-    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    this.buf = null;
     this.writeDate = opts.timezone === "local" ? this.writeLocalDate : this.writeTimezoneDate;
     this.encoding = this.opts.collation.encoding;
     if (this.encoding === "utf8") {
@@ -62,13 +62,14 @@ class PacketOutputStream {
   startPacket(cmd) {
     this.cmd = cmd;
     this.pos = 4;
+    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
   }
 
   writeInt8(value) {
     if (this.pos + 1 >= this.buf.length) {
       if (this.pos >= MAX_BUFFER_SIZE) {
         //buffer is more than a Packet, must flushBuffer()
-        this.flushBuffer(false);
+        this.flushBuffer(false, 1);
       } else this.growBuffer(1);
     }
     this.buf[this.pos++] = value;
@@ -219,7 +220,7 @@ class PacketOutputStream {
           this.pos += lenToFillBuffer;
 
           if (remainingLen === 0) return;
-          this.flushBuffer(false);
+          this.flushBuffer(false, remainingLen);
         }
       }
     }
@@ -412,10 +413,10 @@ class PacketOutputStream {
             case SLASH:
             case DBL_QUOTE:
             case ZERO_BYTE:
-              if (this.pos >= this.buf.length) this.flushBuffer(false);
+              if (this.pos >= this.buf.length) this.flushBuffer(false, (valLen - i) * 2);
               this.buf[this.pos++] = SLASH; //add escape slash
           }
-          if (this.pos >= this.buf.length) this.flushBuffer(false);
+          if (this.pos >= this.buf.length) this.flushBuffer(false, (valLen - i) * 2);
           this.buf[this.pos++] = val[i];
         }
         return;
@@ -446,7 +447,7 @@ class PacketOutputStream {
   /**
    * Flush the internal buffer.
    */
-  flushBuffer(commandEnd) {
+  flushBuffer(commandEnd, remainingLen) {
     this.buf[0] = this.pos - 4;
     this.buf[1] = (this.pos - 4) >>> 8;
     this.buf[2] = (this.pos - 4) >>> 16;
@@ -470,18 +471,40 @@ class PacketOutputStream {
     }
 
     if (commandEnd) {
-      //if last com fill the max size, must send an empty com to indicate command end.
+      //if last packet fill the max size, must send an empty com to indicate that command end.
       if (this.pos === MAX_BUFFER_SIZE) {
         this.writeEmptyPacket();
       } else {
         this.stream.flush(true, this.cmd);
       }
-
-      //reset buffer, taking buffer from buffer pool
-      this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    } else {
+      this.buf = this.allocateBuffer(remainingLen);
+      this.pos = 4;
     }
+  }
 
-    this.pos = 4;
+  allocateBuffer(len) {
+    if (len + 4 < SMALL_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    } else if (len + 4 < MEDIUM_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(MEDIUM_BUFFER_SIZE);
+    } else if (len + 4 < LARGE_BUFFER_SIZE) {
+      return Buffer.allocUnsafe(LARGE_BUFFER_SIZE);
+    }
+    return Buffer.allocUnsafe(MAX_BUFFER_SIZE);
+  }
+
+  growBuffer(len) {
+    let newCapacity;
+    if (len + this.pos < MEDIUM_BUFFER_SIZE) {
+      newCapacity = MEDIUM_BUFFER_SIZE;
+    } else if (len + this.pos < LARGE_BUFFER_SIZE) {
+      newCapacity = LARGE_BUFFER_SIZE;
+    } else newCapacity = MAX_BUFFER_SIZE;
+
+    let newBuf = Buffer.allocUnsafe(newCapacity);
+    this.buf.copy(newBuf, 0, 0, this.pos);
+    this.buf = newBuf;
   }
 
   writeEmptyPacket() {

@@ -10,32 +10,26 @@ let mariasql, mysql, mysql2;
 
 try {
   mysql = require("mysql");
-} catch (err) {
-  throw Error("must install mysql driver locally to benchmark\n\nnpm install mysql");
-}
+} catch (err) {}
 
 try {
   mysql2 = require("mysql2");
-} catch (err) {
-  throw Error("must install mysql2 driver locally to benchmark\n\nnpm install mysql2");
-}
+} catch (err) {}
 
 try {
   mariasql = require("mariasql");
-} catch (err) {
-  //mariasql not mandatory in dev to avoid having python, compiling ...
-}
+} catch (err) {}
 
 function Bench(callback) {
   this.dbReady = 0;
   this.reportData = {};
 
-  const ready = function(name) {
+  this.driverLen = 1;
+
+  const ready = function(name, driverLen) {
     bench.dbReady++;
-    console.log(
-      "driver for " + name + " connected (" + bench.dbReady + "/" + (mariasql ? "4" : "3") + ")"
-    );
-    if (bench.dbReady === (mariasql ? 4 : 3)) {
+    console.log("driver for " + name + " connected (" + bench.dbReady + "/" + driverLen + ")");
+    if (bench.dbReady === driverLen) {
       callback();
     }
   };
@@ -50,25 +44,32 @@ function Bench(callback) {
 
   this.CONN = {};
   const bench = this;
-  this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
-  this.CONN.MYSQL.drv.connect(() => ready("mysql"));
-  this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
+  if (mysql) {
+    this.driverLen++;
+    this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
+    this.CONN.MYSQL.drv.connect(() => ready("mysql", this.driverLen));
+    this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
+  }
 
-  this.CONN["MYSQL2"] = {
-    drv: mysql2.createConnection(config),
-    desc: "mysql2"
-  };
-  this.CONN.MYSQL2.drv.connect(() => ready("mysql2"));
-  this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
+  if (mysql2) {
+    this.driverLen++;
+    this.CONN["MYSQL2"] = {
+      drv: mysql2.createConnection(config),
+      desc: "mysql2"
+    };
+    this.CONN.MYSQL2.drv.connect(() => ready("mysql2", this.driverLen));
+    this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
+  }
 
   this.CONN["MARIADB"] = {
     drv: mariadb.createConnection(config),
     desc: "mariadb"
   };
-  this.CONN.MARIADB.drv.connect(() => ready("mariadb"));
+  this.CONN.MARIADB.drv.connect(() => ready("mariadb", this.driverLen));
   this.CONN.MARIADB.drv.on("error", err => console.log("driver mariadb error :" + err));
 
   if (mariasql) {
+    this.driverLen++;
     const configC = Object.assign({}, config);
     configC.charset = "utf8mb4";
     configC.db = config.database;
@@ -82,7 +83,7 @@ function Bench(callback) {
       drv: new mariasql(configC),
       desc: "mariasql"
     };
-    this.CONN.MARIASQLC.drv.connect(() => ready("mariasql"));
+    this.CONN.MARIASQLC.drv.connect(() => ready("mariasql", this.driverLen));
     this.CONN.MARIASQLC.drv.on("error", err => console.log("driver mariasql error :" + err));
   }
 
@@ -134,12 +135,9 @@ function Bench(callback) {
 Bench.prototype.end = function(bench) {
   console.log("ending connectors");
   this.endConnection(this.CONN.MARIADB);
-  this.endConnection(this.CONN.MYSQL);
-  this.endConnection(this.CONN.MYSQL2);
-
-  if (mariasql) {
-    this.endConnection(this.CONN.MARIASQLC);
-  }
+  if (mysql) this.endConnection(this.CONN.MYSQL);
+  if (mysql2) this.endConnection(this.CONN.MYSQL2);
+  if (mariasql) this.endConnection(this.CONN.MARIASQLC);
   bench.displayReport();
 };
 
@@ -253,10 +251,10 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
     this.suite.add({
       name: title + " - warmup",
       fn: function(deferred) {
-        fct.call(self, self.CONN.MYSQL.drv, deferred);
+        fct.call(self, self.CONN.MARIADB.drv, deferred);
       },
       onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MYSQL.drv);
+        if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
       },
       minSamples: this.minSamples,
       defer: true,
@@ -264,36 +262,38 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
       benchTitle: title,
       displaySql: displaySql
     });
-
-    this.suite.add({
-      name: title + " - " + self.CONN.MYSQL.desc,
-      fn: function(deferred) {
-        fct.call(self, self.CONN.MYSQL.drv, deferred);
-      },
-      onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
-      },
-      minSamples: this.minSamples,
-      defer: true,
-      drvType: self.CONN.MYSQL.desc,
-      benchTitle: title,
-      displaySql: displaySql
-    });
-
-    this.suite.add({
-      name: title + " - " + self.CONN.MYSQL2.desc,
-      fn: function(deferred) {
-        fct.call(self, self.CONN.MYSQL2.drv, deferred);
-      },
-      onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
-      },
-      minSamples: this.minSamples,
-      defer: true,
-      drvType: self.CONN.MYSQL2.desc,
-      benchTitle: title,
-      displaySql: displaySql
-    });
+    if (mysql) {
+      this.suite.add({
+        name: title + " - " + self.CONN.MYSQL.desc,
+        fn: function(deferred) {
+          fct.call(self, self.CONN.MYSQL.drv, deferred);
+        },
+        onComplete: () => {
+          if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
+        },
+        minSamples: this.minSamples,
+        defer: true,
+        drvType: self.CONN.MYSQL.desc,
+        benchTitle: title,
+        displaySql: displaySql
+      });
+    }
+    if (mysql2) {
+      this.suite.add({
+        name: title + " - " + self.CONN.MYSQL2.desc,
+        fn: function(deferred) {
+          fct.call(self, self.CONN.MYSQL2.drv, deferred);
+        },
+        onComplete: () => {
+          if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
+        },
+        minSamples: this.minSamples,
+        defer: true,
+        drvType: self.CONN.MYSQL2.desc,
+        benchTitle: title,
+        displaySql: displaySql
+      });
+    }
 
     this.suite.add({
       name: title + " - " + self.CONN.MARIADB.desc,

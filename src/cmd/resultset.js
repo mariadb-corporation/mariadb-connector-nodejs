@@ -376,6 +376,8 @@ class ResultSet extends Command {
 
   readLocalInfile(packet, opts, info, out) {
     packet.skip(1); //skip header
+    out.startPacket(this);
+
     if (!opts.permitLocalInfile) {
       out.writeEmptyPacket();
       const err = Utils.createError(

@@ -88,7 +88,7 @@ describe("local-infile", () => {
       if (err) {
         done(err);
       } else {
-        conn = base.createConnection({ permitLocalInfile: true });
+        conn = base.createConnection({ permitLocalInfile: true});
         conn.connect(() => {
           conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
           conn.query(
@@ -117,22 +117,14 @@ describe("local-infile", () => {
       if (err) done(err);
       const maxAllowedSize = results[0].t;
       const size = Math.round((maxAllowedSize - 100) / 16);
-      const buf = Buffer.allocUnsafe(size * 16);
+      const header = '"a","b"\n';
+      const headerLen = header.length;
+      const buf = Buffer.allocUnsafe(size * 16 + headerLen);
+      buf.write(header);
       for (let i = 0; i < size; i++) {
-        buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16);
+        buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16 + headerLen);
       }
       fs.writeFile(bigFileName, buf, function(err) {
-        let verif = fs.readFileSync(bigFileName, { encoding: "utf8" });
-        assert.equal(verif.length, size * 16);
-        for (let i = 0; i < size; i++) {
-          assert.equal(
-            verif.substring(i * 16, i * 16 + 16),
-            '"a' + padStartZero(i, 8) + '","b"\n',
-            i * 16
-          );
-        }
-        verif = null;
-
         if (err) {
           done(err);
         } else {
@@ -145,7 +137,8 @@ describe("local-infile", () => {
                 bigFileName.replace(/\\/g, "/") +
                 "' INTO TABLE bigLocalInfile " +
                 "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
-                "LINES TERMINATED BY '\\n' (t1, t2)",
+                "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
+                "(t1, t2)",
               err => {
                 if (err) {
                   done(err);

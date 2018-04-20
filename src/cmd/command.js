@@ -11,7 +11,6 @@ class Command extends EventEmitter {
     this.sequenceNo = 0;
     this.compressSequenceNo = 0;
     this.connEvents = connEvents;
-    this.onPacketReceive = this.start;
   }
 
   init(out, opts, info) {
