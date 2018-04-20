@@ -17,15 +17,14 @@ describe("ssl", function() {
       ca = [fs.readFileSync(__dirname + "/../certificats/server.crt", "utf8")];
     }
 
+    shareConn.query("CREATE USER 'ssltestUser'@'%'");
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'ssltestUser'@'%' REQUIRE SSL");
+    shareConn.query("CREATE USER 'X509testUser'@'%'");
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509");
     shareConn.query("SHOW VARIABLES LIKE 'have_ssl'", (err, rows) => {
       if (rows[0].Value === "YES") {
         sslEnable = true;
-        shareConn.query("CREATE USER 'ssltestUser'@'%'");
-        shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'ssltestUser'@'%' REQUIRE SSL");
-        shareConn.query("CREATE USER 'X509testUser'@'%'");
-        shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509", err => {
-          done();
-        });
+        done();
       } else {
         //ssl is not enable on database, skipping test.
         shareConn.query("SHOW VARIABLES LIKE 'ssl'", (err, rows) => {

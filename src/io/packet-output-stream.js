@@ -477,7 +477,7 @@ class PacketOutputStream {
         this.stream.flush(true, this.cmd);
       }
 
-      //reset buffer
+      //reset buffer, taking buffer from buffer pool
       this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
     }
 

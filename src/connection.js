@@ -368,6 +368,13 @@ class Connection {
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("end", this._socketError.bind(this));
+    this._socket.on(
+      "connect",
+      function() {
+        this._socketConnected = true;
+      }.bind(this)
+    );
+
     this._socket.writeBuf = (buf, cmd) => {
       this._socket.write(buf);
     };
@@ -428,7 +435,15 @@ class Connection {
     this._socket.flush = () => {};
 
     //socket has been ended without error
-    if (!err) err = Utils.createError("socket has unexpectedly been closed", true, this.info);
+    if (!err) {
+      err = Utils.createError(
+        this._socketConnected
+          ? "socket has unexpectedly been closed"
+          : "socket connection failed to established",
+        true,
+        this.info
+      );
+    }
 
     //socket fail between socket creation and before authentication
     if (this._connected === null) {
