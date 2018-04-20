@@ -29,7 +29,7 @@ connection.query("INSERT INTO myTable VALUES (2)");
 ```
 
 <p align="center">
-    <img src="./misc/pipe.png">
+    <img src="./documentation/misc/pipe.png">
 </p>
 
 queries are not send one by one, waiting for result before sending next one.
