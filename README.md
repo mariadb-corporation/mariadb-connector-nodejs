@@ -14,14 +14,12 @@
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
 100% javascript, [mysql](https://www.npmjs.com/package/mysql) compatible driver with some additional features : 
-- streaming
+- Streaming
 ```script
-var postFile = function (req, res) => {
-    connection.query('insert into Streaming(b) values(?), [req], (err, res) => {
-        //id will be res.insertId
-    });
-};
-      
+    const readable = fs.createReadStream(fileName);
+    connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
+        //id of new record is res.insertId
+    }};
 ```
  
 - pipelining : commands will be send without waiting for server results
@@ -29,8 +27,16 @@ var postFile = function (req, res) => {
 connection.query("INSERT INTO myTable VALUES (1)");
 connection.query("INSERT INTO myTable VALUES (2)");
 ```
-queries are not send one by one, waiting for result before sending next one. 
+
+<p align="center">
+    <img src="./misc/pipe.png">
+</p>
+
+queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
+
+
+
 
 Extended documentation of API : [Complete documentation](/documentation/readme.md)
 
