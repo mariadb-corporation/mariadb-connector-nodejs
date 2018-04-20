@@ -184,36 +184,50 @@ describe("connection", () => {
     }
     shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
     const array1 = [];
-    array1[999] = "a";
+    array1[996] = "a";
     const str = array1.fill("a").join("");
     let numberFetched = 0;
     let fieldEvent = false;
-    for (let i = 0; i < 1000; i++) {
-      shareConn.query("INSERT INTO row_event VALUE (?)", str);
+    for (let i = 0; i < 999; i++) {
+      shareConn.query("INSERT INTO row_event VALUE (?)", padStartZero(i, 3) + str);
     }
-    shareConn
-      .query("select * FROM row_event")
-      .on("error", function(err) {
-        done(err);
-      })
-      .on("fields", function(fields) {
-        // the field packets for the rows to follow
-        assert.equal(fields.length, 1);
-        assert.equal(fields[0].name, "val");
-        fieldEvent = true;
-      })
-      .on("result", function(row) {
-        //fields defined
-        assert.equal(row.val, str);
-        numberFetched++;
-      })
-      .on("end", function() {
-        // all rows have been received
-        assert.equal(numberFetched, 1000);
-        assert.ok(fieldEvent);
-        done();
-      });
+    shareConn.query("INSERT INTO row_event VALUE (?)", "999" + str, (err) => {
+
+      shareConn
+        .query("select * FROM row_event")
+        .on("error", function(err) {
+          done(err);
+        })
+        .on("fields", function(fields) {
+          // the field packets for the rows to follow
+          assert.equal(fields.length, 1);
+          assert.equal(fields[0].name, "val");
+          fieldEvent = true;
+        })
+        .on("result", function(row) {
+          //fields defined
+          assert.equal(row.val, padStartZero(numberFetched, 3) + str);
+          numberFetched++;
+        })
+        .on("end", function() {
+          // all rows have been received
+          assert.equal(numberFetched, 1000);
+          assert.ok(fieldEvent);
+          done();
+        });
+
+    });
+
   });
+
+  function padStartZero(val, length) {
+    val = "" + val;
+    const stringLength = val.length;
+    let add = "";
+    while (add.length + stringLength < length) add += "0";
+    return add + val;
+  }
+
 
   it("connection.connect() error code validation", function(done) {
     const conn = base.createConnection({ user: "fooUser" });

@@ -27,8 +27,7 @@ class PacketOutputStream {
     this.opts = opts;
     this.info = info;
     this.pos = 4;
-    this.smallBuffer = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
-    this.buf = this.smallBuffer;
+    this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
     this.writeDate = opts.timezone === "local" ? this.writeLocalDate : this.writeTimezoneDate;
     this.encoding = this.opts.collation.encoding;
     if (this.encoding === "utf8") {
@@ -454,6 +453,8 @@ class PacketOutputStream {
     this.buf[3] = this.cmd.sequenceNo;
     this.cmd.incrementSequenceNo(1);
 
+    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
+
     if (this.opts.debug && !this.opts.debugCompress) {
       console.log(
         "==> conn:%d %s\n%s",
@@ -461,14 +462,12 @@ class PacketOutputStream {
         (this.cmd.onPacketReceive
           ? this.cmd.constructor.name + "." + this.cmd.onPacketReceive.name
           : this.cmd.constructor.name) +
-          "(0," +
-          this.pos +
-          ")",
+        "(0," +
+        this.pos +
+        ")",
         Utils.log(this.opts, this.buf, 0, this.pos)
       );
     }
-
-    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
     if (commandEnd) {
       //if last com fill the max size, must send an empty com to indicate command end.
@@ -479,7 +478,7 @@ class PacketOutputStream {
       }
 
       //reset buffer
-      this.buf = this.smallBuffer;
+      this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
     }
 
     this.pos = 4;
