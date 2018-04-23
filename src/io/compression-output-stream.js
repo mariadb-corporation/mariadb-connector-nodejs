@@ -119,8 +119,9 @@ class CompressionOutputStream {
 
       if (this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket();
 
-      //reset buffer
-      if (!flushed) this.buf = this.allocateBuffer(remainingLen);
+      //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
+      // if (!flushed)
+      this.buf = this.allocateBuffer(remainingLen);
       this.pos = 7;
     } else {
       //*******************************************************************************
@@ -158,8 +159,9 @@ class CompressionOutputStream {
       this.writer(this.header);
       flushed = this.writer(compressChunk);
       if (cmdEnd && this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket(cmd);
-      //if not flushed, ensure not reusing a buffer than is not send
-      if (!flushed) this.header = Buffer.allocUnsafe(7);
+      //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
+      // if (!flushed)
+      this.header = Buffer.allocUnsafe(7);
       this.pos = 7;
     }
     return flushed;

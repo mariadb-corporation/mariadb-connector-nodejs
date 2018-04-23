@@ -476,7 +476,7 @@ class PacketOutputStream {
       } else {
         this.stream.flush(true, this.cmd);
         //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
-        //if (!flushed)
+        // if (!flushed)
         this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {
