@@ -12,6 +12,7 @@ describe("change user", () => {
   });
 
   it("basic change user", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
     const conn = base.createConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -38,6 +39,7 @@ describe("change user", () => {
   });
 
   it("change user with collation", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
     const conn = base.createConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -62,4 +64,12 @@ describe("change user", () => {
       );
     });
   });
-});
+
+  it("MySQL change user disabled", function(done) {
+    if (shareConn.isMariaDB()) this.skip();
+    shareConn.changeUser({ user: "changeUser"}, err => {
+      assert.isTrue(err.message.includes("method changeUser not available"));
+      done();
+    });
+  })
+  });
