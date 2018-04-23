@@ -179,23 +179,23 @@ describe("connection", () => {
       conn.query("INSERT INTO row_event VALUE (?)", "999" + str, err => {
         conn
           .query("select * FROM row_event")
-          .on("error", function (err) {
+          .on("error", function(err) {
             conn.end();
             done(err);
           })
-          .on("fields", function (fields) {
+          .on("fields", function(fields) {
             // the field packets for the rows to follow
             assert.equal(fields.length, 1);
             assert.equal(fields[0].name, "val");
             fieldEvent = true;
           })
-          .on("result", function (row) {
+          .on("result", function(row) {
             const expected = padStartZero(numberFetched, 3) + str;
             if (row.val !== expected) conn.end();
             assert.equal(row.val, expected);
             numberFetched++;
           })
-          .on("end", function () {
+          .on("end", function() {
             // all rows have been received
             assert.equal(numberFetched, 1000);
             assert.ok(fieldEvent);

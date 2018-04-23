@@ -5,10 +5,10 @@ const assert = require("chai").assert;
 const Collations = require("../../src/const/collations.js");
 
 describe("change user", () => {
-
-
   afterEach(() => {
-    shareConn.query("DROP USER 'changeUser'@'%'", err => {});
+    shareConn.query("DROP USER 'changeUser'@'%'", err => {
+      console.log(err);
+    });
   });
 
   it("basic change user", function(done) {
@@ -20,7 +20,7 @@ describe("change user", () => {
         const currUser = res[0]["CURRENT_USER"];
         conn.query("CREATE USER 'changeUser'@'%'");
         conn.query("GRANT ALL PRIVILEGES ON *.* TO 'changeUser'@'%' IDENTIFIED BY 'mypassword'");
-        conn.changeUser({user: 'changeUser', password: 'mypassword'}, (err) => {
+        conn.changeUser({ user: "changeUser", password: "mypassword" }, err => {
           if (err) {
             done(err);
           } else {
@@ -32,7 +32,7 @@ describe("change user", () => {
               done();
             });
           }
-        })
+        });
       });
     });
   });
@@ -44,21 +44,22 @@ describe("change user", () => {
 
       conn.query("CREATE USER 'changeUser'@'%'");
       conn.query("GRANT ALL PRIVILEGES ON *.* TO 'changeUser'@'%' IDENTIFIED BY 'mypassword2'");
-      conn.changeUser({user: 'changeUser', password: 'mypassword2', charset: 'UTF8_VIETNAMESE_CI'}, (err) => {
-        if (err) {
-          done(err);
-        } else {
-          conn.query("SELECT CURRENT_USER", (err, res) => {
-            const user = res[0]["CURRENT_USER"];
-            assert.equal(user, "changeUser@%");
-            assert.equal(conn.opts.collation.name, 'UTF8_VIETNAMESE_CI');
-            conn.end();
-            done();
-          });
+      conn.changeUser(
+        { user: "changeUser", password: "mypassword2", charset: "UTF8_PERSIAN_CI" },
+        err => {
+          if (err) {
+            done(err);
+          } else {
+            conn.query("SELECT CURRENT_USER", (err, res) => {
+              const user = res[0]["CURRENT_USER"];
+              assert.equal(user, "changeUser@%");
+              assert.equal(conn.opts.collation.name, "UTF8_PERSIAN_CI");
+              conn.end();
+              done();
+            });
+          }
         }
-      })
-    })
+      );
+    });
   });
-
-
 });

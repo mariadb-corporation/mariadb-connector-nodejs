@@ -320,6 +320,7 @@ TODO difference
 ### Change connection user
 
 This permit to resets the connection and re-authenticates with the given credentials. 
+This is equivalent of creating a new connection, reusing open socket. 
 
 ```javascript
 conn.changeUser({user: 'changeUser', password: 'mypassword'}, (err) => {

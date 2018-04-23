@@ -133,6 +133,7 @@ class Handshake extends Command {
 
     const authSwitchHandler = opts.authSwitchHandler || this.defaultAuthSwitchHandler();
     authSwitchHandler.call(
+      this,
       this.connEvents,
       pluginName,
       this.sequenceNo + 1,
@@ -189,9 +190,9 @@ class Handshake extends Command {
           connEvents.emit("error", err);
           return null;
       }
-      pluginAuth.apply(null, [packSeq, pluginData, callback]);
-      pluginAuth.init(out, opts, info);
-      return pluginAuth;
+      const plugin = new pluginAuth(packSeq, pluginData, callback);
+      plugin.init(out, opts, info);
+      return plugin;
     };
   }
 }

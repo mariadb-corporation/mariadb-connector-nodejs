@@ -7,7 +7,6 @@ const NativePasswordAuth = require("./handshake/auth/native_password_auth");
 const Collations = require("../const/collations");
 const Handshake = require("./handshake/handshake");
 
-
 /**
  * send a COM_CHANGE_USER: resets the connection and re-authenticates with the given credentials
  * see https://mariadb.com/kb/en/library/com_change_user/
@@ -40,7 +39,6 @@ class ChangeUser extends Handshake {
         authToken = Buffer.alloc(0);
         break;
     }
-
 
     out.startPacket(this);
     out.writeInt8(0x11);
@@ -102,7 +100,6 @@ class ChangeUser extends Handshake {
     return this.handshakeResult;
   }
 
-
   /**
    * Assign global configuration option used by result-set to current query option.
    * a little faster than Object.assign() since doest copy all information
@@ -115,25 +112,26 @@ class ChangeUser extends Handshake {
       this.opts = connOpts;
       return;
     }
-
     this.opts.password = opt.password ? opt.password : connOpts.password;
     this.opts.user = opt.user ? opt.user : connOpts.user;
     this.opts.database = opt.database ? opt.database : connOpts.database;
-    this.opts.connectAttributes = opt.connectAttributes ? opt.connectAttributes : connOpts.connectAttributes;
+    this.opts.connectAttributes = opt.connectAttributes
+      ? opt.connectAttributes
+      : connOpts.connectAttributes;
 
     if (this.opts.charset && typeof this.opts.charset === "string") {
       this.opts.collation = Collations.fromName(this.opts.charset.toUpperCase());
       if (this.opts.collation === undefined)
         throw new RangeError("Unknown charset '" + this.opts.charset + "'");
       const initialCallback = this.onResult;
-      this.onResult = (err) => {
+      this.onResult = err => {
         if (!err) connOpts.collation = this.opts.collation;
         initialCallback(err);
-      }
-
+      };
     } else {
       this.opts.collation = Collations.fromIndex(this.opts.charsetNumber) || connOpts.collation;
     }
+    connOpts.password = opt.password;
   }
 
   /**
@@ -175,7 +173,6 @@ class ChangeUser extends Handshake {
     }
   }
 }
-
 
 function writeParam(out, val, encoding) {
   let param = Buffer.isEncoding(encoding)
