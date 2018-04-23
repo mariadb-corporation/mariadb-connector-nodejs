@@ -16,7 +16,7 @@ const NativePasswordAuth = require("./auth/native_password_auth");
  */
 module.exports.send = function send(cmd, out, opts, pluginName, info) {
   out.startPacket(cmd);
-
+  info.defaultPluginName = pluginName;
   let authToken;
   switch (pluginName) {
     case "mysql_native_password":

@@ -165,7 +165,7 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
-    const conn = base.createConnection({debug:true, debugLen:40});
+    const conn = base.createConnection();
     conn.connect(() => {
       conn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
       const array1 = [];
@@ -190,8 +190,9 @@ describe("connection", () => {
             fieldEvent = true;
           })
           .on("result", function (row) {
-            //fields defined
-            assert.equal(row.val, padStartZero(numberFetched, 3) + str);
+            const expected = padStartZero(numberFetched, 3) + str;
+            if (row.val !== expected) conn.end();
+            assert.equal(row.val, expected);
             numberFetched++;
           })
           .on("end", function () {
