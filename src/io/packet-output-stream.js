@@ -479,17 +479,17 @@ class PacketOutputStream {
         if (!flushed) this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {
-      this.buf = this.allocateBuffer(remainingLen);
+      this.buf = this.allocateBuffer(remainingLen + 4);
       this.pos = 4;
     }
   }
 
   allocateBuffer(len) {
-    if (len + 4 < SMALL_BUFFER_SIZE) {
+    if (len < SMALL_BUFFER_SIZE) {
       return Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
-    } else if (len + 4 < MEDIUM_BUFFER_SIZE) {
+    } else if (len < MEDIUM_BUFFER_SIZE) {
       return Buffer.allocUnsafe(MEDIUM_BUFFER_SIZE);
-    } else if (len + 4 < LARGE_BUFFER_SIZE) {
+    } else if (len < LARGE_BUFFER_SIZE) {
       return Buffer.allocUnsafe(LARGE_BUFFER_SIZE);
     }
     return Buffer.allocUnsafe(MAX_BUFFER_SIZE);

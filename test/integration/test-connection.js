@@ -165,38 +165,43 @@ describe("connection", () => {
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
-    shareConn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
-    const array1 = [];
-    array1[996] = "a";
-    const str = array1.fill("a").join("");
-    let numberFetched = 0;
-    let fieldEvent = false;
-    for (let i = 0; i < 999; i++) {
-      shareConn.query("INSERT INTO row_event VALUE (?)", padStartZero(i, 3) + str);
-    }
-    shareConn.query("INSERT INTO row_event VALUE (?)", "999" + str, err => {
-      shareConn
-        .query("select * FROM row_event")
-        .on("error", function(err) {
-          done(err);
-        })
-        .on("fields", function(fields) {
-          // the field packets for the rows to follow
-          assert.equal(fields.length, 1);
-          assert.equal(fields[0].name, "val");
-          fieldEvent = true;
-        })
-        .on("result", function(row) {
-          //fields defined
-          assert.equal(row.val, padStartZero(numberFetched, 3) + str);
-          numberFetched++;
-        })
-        .on("end", function() {
-          // all rows have been received
-          assert.equal(numberFetched, 1000);
-          assert.ok(fieldEvent);
-          done();
-        });
+    const conn = base.createConnection({debug:true, debugLen:40});
+    conn.connect(() => {
+      conn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
+      const array1 = [];
+      array1[996] = "a";
+      const str = array1.fill("a").join("");
+      let numberFetched = 0;
+      let fieldEvent = false;
+      for (let i = 0; i < 999; i++) {
+        conn.query("INSERT INTO row_event VALUE (?)", padStartZero(i, 3) + str);
+      }
+      conn.query("INSERT INTO row_event VALUE (?)", "999" + str, err => {
+        conn
+          .query("select * FROM row_event")
+          .on("error", function (err) {
+            conn.end();
+            done(err);
+          })
+          .on("fields", function (fields) {
+            // the field packets for the rows to follow
+            assert.equal(fields.length, 1);
+            assert.equal(fields[0].name, "val");
+            fieldEvent = true;
+          })
+          .on("result", function (row) {
+            //fields defined
+            assert.equal(row.val, padStartZero(numberFetched, 3) + str);
+            numberFetched++;
+          })
+          .on("end", function () {
+            // all rows have been received
+            assert.equal(numberFetched, 1000);
+            assert.ok(fieldEvent);
+            conn.end();
+            done();
+          });
+      });
     });
   });
 

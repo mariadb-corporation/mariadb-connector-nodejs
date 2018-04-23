@@ -9,7 +9,6 @@ environment:
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
   MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
-#  TEST_DEBUG_LEN: 16
   matrix:
     - DB: '10.2.14'
       nodejs_version: "6"
@@ -19,17 +18,14 @@ environment:
 
     - DB: '10.2.14'
       nodejs_version: "9"
+
+    - DB: '10.2.14'
+      nodejs_version: "9"
       MYSQL_USE_COMPRESSION: 1
 
     - DB: '10.2.14'
       nodejs_version: "9"
-
-    - DB: '10.2.14'
-      nodejs_version: "9"
       BENCH: "1"
-
-    - DB: '10.2.14'
-      nodejs_version: "8"
 
     - DB: '10.3.6'
       nodejs_version: "8"
