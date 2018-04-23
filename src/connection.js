@@ -17,6 +17,7 @@ const Quit = require("./cmd/quit");
 const Ping = require("./cmd/ping");
 const Utils = require("./misc/utils");
 const Query = require("./cmd/query");
+const ChangeUser = require("./cmd/change-user");
 
 class Connection {
   constructor(options) {
@@ -90,7 +91,17 @@ class Connection {
   }
 
   changeUser(options, callback) {
-    //TODO
+    let _options, _cb;
+    if (typeof options === "function") {
+      _cb = options;
+      _options = undefined;
+    } else {
+      _options = options;
+      _cb = callback;
+    }
+
+    const cmd = new ChangeUser(this._events, _options, _cb);
+    return this._addCommand(cmd, false);
   }
 
   /**

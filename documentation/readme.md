@@ -316,3 +316,14 @@ conn.query("INSERT INTO testTransaction values ('test2')", (err) => {
 TODO difference
 - error print command + parameters
 - changedRows resultset that depend on language not defined (available if disabling foundRows).
+
+### Change connection user
+
+This permit to resets the connection and re-authenticates with the given credentials. 
+
+```javascript
+conn.changeUser({user: 'changeUser', password: 'mypassword'}, (err) => {
+  //connection user is now changed. 
+});
+```
+
