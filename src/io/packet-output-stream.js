@@ -475,9 +475,8 @@ class PacketOutputStream {
         this.writeEmptyPacket();
       } else {
         this.stream.flush(true, this.cmd);
-        //if not flushed, ensure not reusing a buffer than is not send
-        //forcing
-        // if (!flushed)
+        //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
+        //if (!flushed)
         this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {
