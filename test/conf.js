@@ -8,7 +8,7 @@ let baseConfig = {
 };
 
 if (process.env.TEST_HOST) baseConfig["host"] = process.env.TEST_HOST;
-if (process.env.ZIP) baseConfig["compress"] = true;
+if (process.env.TEST_ZIP) baseConfig["compress"] = true;
 if (process.env.TEST_USER) baseConfig["user"] = process.env.TEST_USER;
 if (process.env.TEST_PASSWORD) baseConfig["password"] = process.env.TEST_PASSWORD;
 if (process.env.TEST_DB) baseConfig["database"] = process.env.TEST_DB;

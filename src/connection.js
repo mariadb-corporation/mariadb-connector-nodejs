@@ -363,7 +363,6 @@ class Connection {
     } else {
       this._socket = Net.connect(this.opts.port, this.opts.host);
     }
-
     const packetInputStream = this._in;
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
     this._socket.on("error", this._socketError.bind(this));
@@ -372,6 +371,7 @@ class Connection {
       "connect",
       function() {
         this._socketConnected = true;
+        this._socket.setNoDelay(true);
       }.bind(this)
     );
 
