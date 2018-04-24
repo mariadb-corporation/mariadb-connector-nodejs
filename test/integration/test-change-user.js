@@ -2,12 +2,11 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
-const Collations = require("../../src/const/collations.js");
 
 describe("change user", () => {
   afterEach(() => {
-    shareConn.query("DROP USER 'changeUser'@'%'", err => {
-      console.log(err);
+    shareConn.query("DROP USER IF EXISTS 'changeUser'@'%'", err => {
+      if (err) console.log(err);
     });
   });
 
@@ -67,9 +66,9 @@ describe("change user", () => {
 
   it("MySQL change user disabled", function(done) {
     if (shareConn.isMariaDB()) this.skip();
-    shareConn.changeUser({ user: "changeUser"}, err => {
+    shareConn.changeUser({ user: "changeUser" }, err => {
       assert.isTrue(err.message.includes("method changeUser not available"));
       done();
     });
-  })
   });
+});

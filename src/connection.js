@@ -92,7 +92,11 @@ class Connection {
 
   changeUser(options, callback) {
     if (!this.isMariaDB()) {
-      const err = Utils.createError("method changeUser not available for MySQL server due to Bug #83472", false, this.info);
+      const err = Utils.createError(
+        "method changeUser not available for MySQL server due to Bug #83472",
+        false,
+        this.info
+      );
       if (callback) {
         callback(err);
         return;

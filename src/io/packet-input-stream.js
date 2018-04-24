@@ -53,7 +53,7 @@ class PacketInputStream {
     }
 
     cmd.checkSequenceNo(this.header[3]);
-    if (!cmd.handle(packet, this.out, this.opts, this.info)) {
+    if (!(cmd.onPacketReceive = cmd.onPacketReceive(packet, this.out, this.opts, this.info))) {
       this.receiveQueue.shift();
     }
   }

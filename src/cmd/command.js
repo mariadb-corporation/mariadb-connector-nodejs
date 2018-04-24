@@ -77,11 +77,6 @@ class Command extends EventEmitter {
     this.onPacketReceive = null;
     this.emit("end");
   }
-
-  handle(packet, out, opts, info) {
-    this.onPacketReceive = this.onPacketReceive(packet, out, opts, info);
-    return this.onPacketReceive !== null;
-  }
 }
 
 module.exports = Command;
