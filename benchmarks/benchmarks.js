@@ -4,12 +4,6 @@ const fs = require("fs");
 const Bench = require("./common_benchmarks");
 let bench;
 
-const run = function() {
-  console.log("All drivers are connected");
-  bench.suite.run();
-};
-
-bench = new Bench(run);
 
 const launchBenchs = function(path) {
   fs.readdir(path, function(err, list) {
@@ -18,14 +12,17 @@ const launchBenchs = function(path) {
       return;
     }
 
+    bench = new Bench();
+
     //launch all benchmarks
     for (let i = 0; i < list.length; i++) {
+      console.log("benchmark: ./benchs/" + list[i]);
       const m = require("./benchs/" + list[i]);
       bench.initFcts.push(m.initFct);
       bench.add(m.title, m.displaySql, m.benchFct, m.onComplete);
     }
 
-    // run();
+    bench.suiteReady();
   });
 };
 

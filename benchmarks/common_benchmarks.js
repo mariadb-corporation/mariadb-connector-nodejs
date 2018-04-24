@@ -20,17 +20,27 @@ try {
   mariasql = require("mariasql");
 } catch (err) {}
 
-function Bench(callback) {
+
+
+function Bench() {
   this.dbReady = 0;
   this.reportData = {};
 
   this.driverLen = 1;
 
-  const ready = function(name, driverLen) {
+  this.ready = 0;
+  this.suiteReady = function() {
+    this.ready++;
+    if (this.ready === 2) {
+      this.suite.run();
+    }
+  };
+
+  const dbReady = function(name, driverLen) {
     bench.dbReady++;
     console.log("driver for " + name + " connected (" + bench.dbReady + "/" + driverLen + ")");
     if (bench.dbReady === driverLen) {
-      callback();
+      bench.suiteReady();
     }
   };
 
@@ -47,7 +57,7 @@ function Bench(callback) {
   if (mysql) {
     this.driverLen++;
     this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
-    this.CONN.MYSQL.drv.connect(() => ready("mysql", this.driverLen));
+    this.CONN.MYSQL.drv.connect(() => dbReady("mysql", this.driverLen));
     this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
   }
 
@@ -57,7 +67,7 @@ function Bench(callback) {
       drv: mysql2.createConnection(config),
       desc: "mysql2"
     };
-    this.CONN.MYSQL2.drv.connect(() => ready("mysql2", this.driverLen));
+    this.CONN.MYSQL2.drv.connect(() => dbReady("mysql2", this.driverLen));
     this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
   }
 
@@ -65,7 +75,7 @@ function Bench(callback) {
     drv: mariadb.createConnection(config),
     desc: "mariadb"
   };
-  this.CONN.MARIADB.drv.connect(() => ready("mariadb", this.driverLen));
+  this.CONN.MARIADB.drv.connect(() => dbReady("mariadb", this.driverLen));
   this.CONN.MARIADB.drv.on("error", err => console.log("driver mariadb error :" + err));
 
   if (mariasql) {
@@ -83,7 +93,7 @@ function Bench(callback) {
       drv: new mariasql(configC),
       desc: "mariasql"
     };
-    this.CONN.MARIASQLC.drv.connect(() => ready("mariasql", this.driverLen));
+    this.CONN.MARIASQLC.drv.connect(() => dbReady("mariasql", this.driverLen));
     this.CONN.MARIASQLC.drv.on("error", err => console.log("driver mariasql error :" + err));
   }
 
@@ -94,6 +104,7 @@ function Bench(callback) {
   this.suite = new Benchmark.Suite("foo", {
     // called when the suite starts running
     onStart: function() {
+      console.log("start : init test : " + bench.initFcts.length);
       for (let i = 0; i < bench.initFcts.length; i++) {
         console.log("initializing test data " + (i + 1) + "/" + bench.initFcts.length);
         if (bench.initFcts[i]) {
