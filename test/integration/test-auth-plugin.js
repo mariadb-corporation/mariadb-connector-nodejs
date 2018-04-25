@@ -5,8 +5,13 @@ const assert = require("chai").assert;
 
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 2)) this.skip();
-    shareConn.query("INSTALL SONAME 'auth_ed25519'");
+    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
+    shareConn.query("INSTALL SONAME 'auth_ed25519'", err => {
+      if (err) {
+        console.log(err);
+        done(err);
+      }
+    });
     shareConn.query("drop user verificationEd25519AuthPlugin@'%'");
     shareConn.query(
       "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
@@ -18,13 +23,16 @@ describe("authentication plugin", () => {
       password: "secret"
     });
     conn.connect(function(err) {
-      assert.isNotNull(err);
-      assert.isTrue(
-        err.message.includes(
-          "Client does not support authentication protocol 'client_ed25519' requested by server."
-        )
-      );
-      done();
+      if (err) {
+        assert.isTrue(
+          err.message.includes(
+            "Client does not support authentication protocol 'client_ed25519' requested by server."
+          )
+        );
+        done();
+      } else {
+        done(new Error("must have throw an error"))
+      }
     });
   });
 

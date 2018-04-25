@@ -13,7 +13,8 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-100% javascript, [mysql](https://www.npmjs.com/package/mysql) compatible driver with some additional features : 
+100% javascript, compatible with [mysql client](https://www.npmjs.com/package/mysql) with some additional features : 
+
 - Streaming
 ```script
     const readable = fs.createReadStream(fileName);
@@ -36,7 +37,7 @@ queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
 
-
+## Documentation
 
 Extended documentation of API : [Complete documentation](/documentation/readme.md)
 
