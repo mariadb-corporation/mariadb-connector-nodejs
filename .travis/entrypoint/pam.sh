@@ -1,5 +1,5 @@
+#!/bin/bash
 
-mkdir /etc/pam.d/
 cat > /etc/pam.d/mariadb << EOF
 auth            required        pam_unix.so
 account         required        pam_unix.so
