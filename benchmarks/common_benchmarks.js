@@ -20,8 +20,6 @@ try {
   mariasql = require("mariasql");
 } catch (err) {}
 
-
-
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};

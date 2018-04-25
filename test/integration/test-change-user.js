@@ -4,16 +4,17 @@ const base = require("../base.js");
 const assert = require("chai").assert;
 
 describe("change user", () => {
-
-  before((done) => {
+  before(done => {
     shareConn.query("CREATE USER ChangeUser@'%'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' IDENTIFIED BY 'mypassword' with grant option");
+    shareConn.query(
+      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' IDENTIFIED BY 'mypassword' with grant option"
+    );
     shareConn.query("FLUSH PRIVILEGES", err => {
       done();
     });
   });
 
-  after((done) => {
+  after(done => {
     shareConn.query("DROP USER ChangeUser@'%'");
     shareConn.query("FLUSH PRIVILEGES", err => {
       done();
@@ -70,8 +71,6 @@ describe("change user", () => {
     });
   });
 
-
-
   it("MySQL change user disabled", function(done) {
     if (shareConn.isMariaDB()) this.skip();
     shareConn.changeUser({ user: "ChangeUser" }, err => {
@@ -79,6 +78,4 @@ describe("change user", () => {
       done();
     });
   });
-
-
 });

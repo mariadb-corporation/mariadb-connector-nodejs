@@ -4,7 +4,6 @@ const fs = require("fs");
 const Bench = require("./common_benchmarks");
 let bench;
 
-
 const launchBenchs = function(path) {
   fs.readdir(path, function(err, list) {
     if (err) {

@@ -122,8 +122,12 @@ describe("Error", () => {
     conn.on("error", err => {});
     conn.connect(function() {
       conn.query("SELECT SLEEP(5)", function(err) {
-        assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
-        done();
+        if (err) {
+          assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+          done();
+        } else {
+          done(new Error("must have thrown error"));
+        }
       });
       setTimeout(function() {
         shareConn.query("KILL " + conn.threadId);
