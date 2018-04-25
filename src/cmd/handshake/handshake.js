@@ -26,6 +26,14 @@ class Handshake extends Command {
   }
 
   parseHandshakeInit(packet, out, opts, info) {
+    if (packet.peek() == 0xff) {
+      //in case that some host is not permit to connect server
+      const authErr = packet.readError(info);
+      authErr.fatal = true;
+      this.throwError(authErr);
+      return null;
+    }
+
     let handshake = new InitialHandshake(packet, info);
     ClientCapabilities.init(opts, info);
 

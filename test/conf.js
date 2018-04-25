@@ -1,10 +1,11 @@
 "use strict";
 
 let baseConfig = {
-  user: "root",
+  user: "testPam",
   database: "testn",
-  host: "localhost",
-  port: 3306
+  host: "46.101.121.97",
+  port: 3306,
+  password: "myPwd"
 };
 
 if (process.env.TEST_HOST) baseConfig["host"] = process.env.TEST_HOST;

@@ -83,7 +83,7 @@ module.exports.log = function(opts, buf, off, len, header) {
  * @returns {Error} the error
  */
 module.exports.createError = function(msg, fatal, info, errNo, sqlState) {
-  let err = new Error("(conn=" + info.threadId + ") " + msg);
+  let err = new Error("(conn=" + (info.threadId ? info.threadId : -1) + ") " + msg);
   err.fatal = fatal;
   if (errNo) err.errno = errNo;
   if (sqlState) err.sqlState = sqlState;

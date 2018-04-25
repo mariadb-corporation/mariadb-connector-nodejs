@@ -34,6 +34,10 @@ describe("datetime", () => {
   });
 
   it("standard date", done => {
+    //using distant server, time might be different
+    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+      this.skip();
+
     shareConn.query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01 UTC")], (err, res) => {
       if (err) throw err;
       assert.deepEqual(res[0].tt, 946684800);

@@ -21,8 +21,6 @@ class PamPasswordAuth extends Command {
     //conversation is :
     // - first byte is information tell if question is a password (4) or clear text (2).
     // - other bytes are the question to user
-    const type = buffer[0];
-    let promptData = buffer.toString(opts.collation.encoding, 1);
 
     out.startPacket(this);
     if (opts.password) out.writeString(opts.password);
