@@ -61,7 +61,7 @@ explain why good perfs compared to existing drivers (avoiding string concatenati
 
 ## Obtaining the driver
 
-Driver is compatible with node 4+.
+Driver is compatible with node 6+.
 
 The driver can be install using npm : 
 ```script

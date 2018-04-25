@@ -33,10 +33,6 @@ env:
 
 matrix:
   include:
-  - node_js: "4"
-    env: DB=mariadb:10.2
-  - node_js: "5"
-    env: DB=mariadb:10.2
   - node_js: "6"
     env: DB=mariadb:10.2
   - node_js: "7"
