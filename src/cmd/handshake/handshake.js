@@ -13,10 +13,11 @@ const Capabilities = require("../../const/capabilities");
  * see https://mariadb.com/kb/en/library/1-connecting-connecting/
  */
 class Handshake extends Command {
-  constructor(_events, _succeedAuthentication, _createSecureContext, callback) {
+  constructor(_events, _succeedAuthentication, _createSecureContext, _addCommand, callback) {
     super(_events);
     this._succeedAuthentication = _succeedAuthentication;
     this._createSecureContext = _createSecureContext;
+    this._addCommand = _addCommand;
     this.onResult = callback;
   }
 
@@ -73,13 +74,17 @@ class Handshake extends Command {
       //*********************************************************************************************************
       case 0xfe:
         this.dispatchAuthSwitchRequest(packet, out, opts, info);
-        return this.handshakeResult;
+        this.emit("cmd_end");
+        this.emit("end");
+        return null;
 
       //*********************************************************************************************************
       //* OK_Packet - authentication succeeded
       //*********************************************************************************************************
       case 0x00:
-        this.authEnded(opts);
+        this.authEnded();
+        this.emit("cmd_end");
+        this.emit("end");
         return null;
 
       //*********************************************************************************************************
@@ -141,25 +146,24 @@ class Handshake extends Command {
       info,
       opts,
       out,
-      this.authEnded
+      this.authEnded.bind(this)
     );
   }
 
   /**
    * Authentication succeed
    *
-   * @param opts  connection options
    */
-  authEnded(opts) {
-    this._succeedAuthentication();
-    if (this.onResult) this.onResult(null);
+  authEnded(err) {
     this.onPacketReceive = null;
-    this.emit("cmd_end");
-    this.emit("end");
+    this.onResult(err);
+    if (!err) {
+      this._succeedAuthentication();
+    }
   }
 
   defaultAuthSwitchHandler() {
-    return (connEvents, pluginName, packSeq, pluginData, info, opts, out, callback) => {
+    return (connEvents, pluginName, packSeq, pluginData, info, opts, out, onResult) => {
       let pluginAuth;
       switch (pluginName) {
         case "mysql_native_password":
@@ -187,12 +191,11 @@ class Handshake extends Command {
             1251,
             "08004"
           );
-          connEvents.emit("error", err);
-          return null;
+          onResult(err);
+          return;
       }
-      const plugin = new pluginAuth(packSeq, pluginData, callback);
-      plugin.init(out, opts, info);
-      return plugin;
+      const plugin = new pluginAuth(packSeq, pluginData, onResult);
+      this._addCommand(plugin, false);
     };
   }
 }

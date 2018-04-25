@@ -7,11 +7,11 @@ const Crypto = require("crypto");
  * Standard authentication plugin
  */
 class NativePasswordAuth extends Command {
-  constructor(packSeq, pluginData, callback) {
+  constructor(packSeq, pluginData, onResult) {
     super();
     this.pluginData = pluginData;
-    this.sequenceNo = packSeq;
-    this.onResult = callback;
+    this.sequenceNo = packSeq - 1;
+    this.onResult = onResult;
   }
 
   start(out, opts, info) {
@@ -26,7 +26,7 @@ class NativePasswordAuth extends Command {
       let err = packet.readError(info);
       return this.throwError(err);
     }
-    this.callback(opts);
+    this.onResult(opts);
   }
 
   static encryptPassword(password, seed) {

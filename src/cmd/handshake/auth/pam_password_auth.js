@@ -5,62 +5,55 @@ const Utils = require("../../../misc/utils");
  * Use PAM authentication
  */
 class PamPasswordAuth extends Command {
-  constructor(packSeq, pluginData, callback) {
+  constructor(packSeq, pluginData, onResult) {
     super();
     this.pluginData = pluginData;
-    this.sequenceNo = packSeq;
-    this.onResult = callback;
+    this.sequenceNo = packSeq - 1;
+    this.onResult = onResult;
   }
 
   start(out, opts, info) {
-    let promptData = this.pluginData.toString(opts.collation.encoding, 1);
-    this.exchange(promptData, out, opts, info);
+    this.exchange(this.pluginData, out, opts, info);
     return this.response;
   }
 
-  exchange(promptData, out, opts, info) {
+  exchange(buffer, out, opts, info) {
     //conversation is :
-    // - first byte is information tell if question is a password or clear text.
+    // - first byte is information tell if question is a password (4) or clear text (2).
     // - other bytes are the question to user
+    const type = buffer[0];
+    let promptData = buffer.toString(opts.collation.encoding, 1);
 
-    if ("Password: ".equals(promptData) && this.password != null && !"".equals(this.password)) {
-      //ask for password
-      this.out.startPacket(this);
-      this.out.writeString(this.password);
-    } else {
-      // 2 means "read the input with the echo enabled"
-      // 4 means "password-like input, echo disabled" - not implemented
-
-      //ask user to answer
-      const password = prompt(promptData, "");
-
-      if (!password) {
-        const err = Utils.createError(
-          "Error during PAM authentication : dialog input cancelled",
-          true,
-          info
-        );
-        return this.throwError(err);
-      }
-      this.out.startPacket(this);
-      this.out.writeString(password);
-    }
-
-    this.out.writeInt8(0);
-    this.out.flushBuffer(true);
+    out.startPacket(this);
+    if (opts.password) out.writeString(opts.password);
+    out.writeInt8(0);
+    out.flushBuffer(true);
   }
 
   response(packet, out, opts, info) {
-    this.sequenceNo++;
+    const marker = packet.peek();
+    switch (marker) {
+      //*********************************************************************************************************
+      //* OK_Packet - authentication succeeded
+      //*********************************************************************************************************
+      case 0x00:
+        this.onResult();
+        return null;
 
-    if (packet.peek() === 0x00) {
-      this.callback(opts);
-      return;
+      //*********************************************************************************************************
+      //* ERR_Packet
+      //*********************************************************************************************************
+      case 0xff:
+        const err = packet.readError(info);
+        err.fatal = true;
+        this.onResult(err);
+        return null;
+
+      default:
+        let promptData = packet.readBuffer();
+        this.exchange(promptData, out, opts, info)();
+        return this.response;
     }
-
-    let promptData = packet.readBuffer();
-    this.exchange(promptData, out, opts, info)();
-    return this.response;
   }
 }
 

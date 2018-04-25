@@ -38,8 +38,7 @@
   "dependencies": {
     "denque": "^1.1.1",
     "iconv-lite": "^0.4.21",
-    "long": "^4.0.0",
-    "npm": "^5.8.0"
+    "long": "^4.0.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",

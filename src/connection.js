@@ -363,6 +363,7 @@ class Connection {
       this._events,
       this._succeedAuthentication.bind(this),
       this._createSecureContext.bind(this),
+      this._addCommand.bind(this),
       function(err) {
         this._clearConnectTimeout();
         this._connected = !err;
