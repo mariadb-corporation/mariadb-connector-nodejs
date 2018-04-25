@@ -80,6 +80,7 @@ notifications:
 script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
+  - npm install npm -g
   - npm install
   - node --version
   - node .travis/wait-for-docker-up.js
