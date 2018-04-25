@@ -68,7 +68,7 @@ class ConnectionOptions {
     if (this.typeCast != undefined && typeof this.typeCast !== "function") {
       this.typeCast = undefined;
     }
-    this.user = opts.user;
+    this.user = opts.user || process.env.USERNAME;
     this.nestTables = opts.nestTables === undefined ? undefined : opts.nestTables;
     this.rowsAsArray = opts.rowsAsArray || false;
 

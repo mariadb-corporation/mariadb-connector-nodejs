@@ -7,6 +7,7 @@ describe("test socket", () => {
   it("named pipe", function(done) {
     if (process.platform !== "win32") this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
+    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com") this.skip();
     const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\MySQL" });
     conn.connect(err => {
       if (err) {
@@ -31,7 +32,8 @@ describe("test socket", () => {
   it("unix socket", function(done) {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (process.platform === "win32") this.skip();
-    if (shareConn.opts.host !== "localhost") this.skip();
+    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com") this.skip();
+
 
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
       const conn = base.createConnection({ socketPath: res[0].soc });
