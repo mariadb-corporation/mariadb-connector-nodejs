@@ -8,7 +8,7 @@ describe("authentication plugin", () => {
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
     shareConn.query("INSTALL SONAME 'auth_ed25519'", err => {
       if (err) this.skip();
-      shareConn.query("drop user verificationEd25519AuthPlugin@'%'");
+      shareConn.query("drop user verificationEd25519AuthPlugin@'%'", (err) => {});
       shareConn.query(
         "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
         "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
