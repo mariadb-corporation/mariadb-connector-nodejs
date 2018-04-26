@@ -9,24 +9,26 @@ describe("test socket", () => {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
       this.skip();
-    const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\MySQL" });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
-        //ensure double connect execute callback immediately
-        conn.connect(err => {
-          conn.query("DO 1", (err, res) => {
-            if (err) done(err);
-            conn.end(() => {
-              conn.connect(err => {
-                assert.isTrue(err.message.includes("Connection closed"));
-                done();
+    shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
+      const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\" + res[0].soc });
+      conn.connect(err => {
+        if (err) {
+          done(err);
+        } else {
+          //ensure double connect execute callback immediately
+          conn.connect(err => {
+            conn.query("DO 1", (err, res) => {
+              if (err) done(err);
+              conn.end(() => {
+                conn.connect(err => {
+                  assert.isTrue(err.message.includes("Connection closed"));
+                  done();
+                });
               });
             });
           });
-        });
-      }
+        }
+      });
     });
   });
 

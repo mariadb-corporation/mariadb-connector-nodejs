@@ -77,10 +77,10 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
   - npm install npm -g
-  - npm install
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
   - docker-compose -f .travis/docker-compose.yml stop db
   - docker-compose -f .travis/docker-compose.yml up -d
+  - npm install
   - node --version
   - node .travis/wait-for-docker-up.js
   - if [ -n "$LINT" ] ; then npm run test:lint; fi

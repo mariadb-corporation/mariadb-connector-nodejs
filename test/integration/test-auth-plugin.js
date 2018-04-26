@@ -20,11 +20,11 @@ describe("authentication plugin", () => {
       });
       conn.connect(function(err) {
         if (err) {
-          assert.isTrue(
-            err.message.includes(
-              "Client does not support authentication protocol 'client_ed25519' requested by server."
-            )
+          const expectedMsg = err.message.includes(
+            "Client does not support authentication protocol 'client_ed25519' requested by server."
           );
+          if (!expectedMsg) console.log(err);
+          assert.isTrue(expectedMsg);
           done();
         } else {
           done(new Error("must have throw an error"));
@@ -45,11 +45,14 @@ describe("authentication plugin", () => {
     shareConn.query("DROP USER " + windowsUser);
     shareConn.query("CREATE USER " + windowsUser + " IDENTIFIED VIA named_pipe using 'test'");
     shareConn.query("GRANT ALL on *.* to " + windowsUser);
-    const conn = base.createConnection({ user: null, socketPath: "\\\\.\\pipe\\MySQL" });
-    conn.connect(function(err) {
-      if (err) return done(err);
-      conn.end();
-      done();
+
+    shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
+      const conn = base.createConnection({ user: null, socketPath: "\\\\.\\pipe\\" + res[0].soc });
+      conn.connect(function(err) {
+        if (err) return done(err);
+        conn.end();
+        done();
+      });
     });
   });
 

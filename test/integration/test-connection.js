@@ -219,26 +219,30 @@ describe("connection", () => {
     conn.connect(err => {
       if (!err) done(new Error("must have thrown error"));
       switch (err.errno) {
+        case 1251:
+          //authentication method unavailable
+          assert.equal(err.sqlState, "08004");
+          break;
+
         case 1524:
           //GSSAPI plugin not loaded
           assert.equal(err.sqlState, "HY000");
-          done();
           break;
 
         case 1045:
           assert.equal(err.sqlState, "28000");
-          done();
           break;
 
         case 1044:
           //mysql
           assert.equal(err.sqlState, "42000");
-          done();
           break;
 
         default:
           done(err);
+          return;
       }
+      done();
     });
   });
 
