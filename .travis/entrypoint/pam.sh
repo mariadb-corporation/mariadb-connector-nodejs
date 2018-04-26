@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cat > /etc/pam.d/mariadb << EOF
-auth            required        pam_unix.so
-account         required        pam_unix.so
+tee /etc/pam.d/mariadb << EOF
+auth required pam_unix.so audit
+account required pam_unix.so audit
 EOF
 
 useradd testPam
@@ -11,3 +11,5 @@ testPam:myPwd
 EOF
 
 usermod -a -G shadow mysql
+
+echo "pam configuration done"
