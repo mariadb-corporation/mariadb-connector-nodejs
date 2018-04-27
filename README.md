@@ -15,31 +15,33 @@
 
 100% javascript, compatible with [mysql client](https://www.npmjs.com/package/mysql) with some additional features : 
 
-- Streaming
-  ```script
-      const readable = fs.createReadStream(fileName);
-      connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
-          //id of new record is res.insertId
-      }};
-  ```
+#### Streaming
+```script
+    const readable = fs.createReadStream(fileName);
+    connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
+        //id of new record is res.insertId
+    }};
+```
  
-- pipelining : commands will be send without waiting for server results<br/>
-  Example: executing to queries, ""INSERT xxx" and "INSERT yyy"
-  ```javascript
-    connection.query("INSERT xxx");
-    connection.query("INSERT yyy");
-  ```
-  <pre>
-              │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
-              │ ――――――――――――――――――――― send second insert ――――――――――――> │ │  processing first insert
-              │                                                        │ │ 
-    Client    │ <―――――――――――――――――――― first insert result ―――――――――――― │ ▼  ┯
-              │                                                        │    │ processing second insert
-              │                                                        │    │
-              │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ </pre>
+#### Pipelining
+  
+Commands will be send without waiting for server results<br/>
+Example: executing to queries, ""INSERT xxx" and "INSERT yyy"
+```javascript
+connection.query("INSERT xxx");
+connection.query("INSERT yyy");
+```
+<pre>
+          │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
+          │ ――――――――――――――――――――― send second insert ――――――――――――> │ │  processing first insert
+          │                                                        │ │ 
+Client    │ <―――――――――――――――――――― first insert result ―――――――――――― │ ▼  ┯
+          │                                                        │    │ processing second insert
+          │                                                        │    │
+          │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ </pre>
 
-    queries are not send one by one, waiting for result before sending next one.
-    queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
+queries are not send one by one, waiting for result before sending next one.
+queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
 ## Documentation
 
@@ -47,7 +49,7 @@ Extended documentation of API : [Complete documentation](/documentation/readme.m
 
 ## Benchmarks
 
-Comparison to actual most popular mysql drivers :
+Comparison with popular connectors :
 * mysql - https://www.npmjs.com/package/mysql (version 2.15.0)
 * mysql2 - https://www.npmjs.com/package/mysql2 (version 1.5.3)
 
