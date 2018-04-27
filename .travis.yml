@@ -79,7 +79,9 @@ script:
   - npm install npm -g
   - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
+  - sleep 1
   - docker-compose -f .travis/docker-compose.yml stop db
+  - sleep 1
   - docker-compose -f .travis/docker-compose.yml up -d
   - npm install
   - node --version

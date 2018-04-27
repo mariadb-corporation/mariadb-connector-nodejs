@@ -36,6 +36,16 @@ connection.query("INSERT INTO myTable VALUES (2)");
 queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
+#### Roadmap 
+
+Some features are not implemented in first beta version, but will in next beta version : 
+
+* Missing features : 
+    * Pooling and "PoolCluster" are not implemented in first version
+* New features: 
+    * MariaDB new ed25519 plugin authentication
+    * Query timeout
+    * Bulk insert (fast batch)  
 
 ## Documentation
 
