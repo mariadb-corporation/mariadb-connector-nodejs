@@ -27,10 +27,7 @@
   
 Commands will be send without waiting for server results<br/>
 Example: executing to queries, ""INSERT xxx" and "INSERT yyy"
-```javascript
-connection.query("INSERT xxx");
-connection.query("INSERT yyy");
-```
+
 <pre>
           │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
           │ ――――――――――――――――――――― send second insert ――――――――――――> │ │  processing first insert
