@@ -16,36 +16,30 @@
 100% javascript, compatible with [mysql client](https://www.npmjs.com/package/mysql) with some additional features : 
 
 - Streaming
-```script
-    const readable = fs.createReadStream(fileName);
-    connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
-        //id of new record is res.insertId
-    }};
-```
+  ```script
+      const readable = fs.createReadStream(fileName);
+      connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
+          //id of new record is res.insertId
+      }};
+  ```
  
-- pipelining : commands will be send without waiting for server results
-```script
-connection.query("INSERT INTO myTable VALUES (1)");
-connection.query("INSERT INTO myTable VALUES (2)");
-```
+- pipelining : commands will be send without waiting for server results<br/>
+  Example: executing to queries, ""INSERT xxx" and "INSERT yyy"
+  ```javascript
+    connection.query("INSERT xxx");
+    connection.query("INSERT yyy");
+  ```
+  <pre>
+              │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
+              │ ――――――――――――――――――――― send second insert ――――――――――――> │ │  processing first insert
+              │                                                        │ │ 
+    Client    │ <―――――――――――――――――――― first insert result ―――――――――――― │ ▼  ┯
+              │                                                        │    │ processing second insert
+              │                                                        │    │
+              │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ </pre>
 
-<p align="center">
-    <img src="./documentation/misc/pipe.png">
-</p>
-
-queries are not send one by one, waiting for result before sending next one.
-queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
-
-#### Roadmap 
-
-Some features are not implemented in first beta version, but will in next beta version : 
-
-* Missing features : 
-    * Pooling and "PoolCluster" are not implemented in first version
-* New features: 
-    * MariaDB new ed25519 plugin authentication
-    * Query timeout
-    * Bulk insert (fast batch)  
+    queries are not send one by one, waiting for result before sending next one.
+    queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
 ## Documentation
 
@@ -53,21 +47,24 @@ Extended documentation of API : [Complete documentation](/documentation/readme.m
 
 ## Benchmarks
 
-Goal is to best the actual most performant driver [mariasql](https://www.npmjs.com/package/mariasql) that is a C driver, and not maintained.
-But a C driver with a javascript wrapper has some inherent issues : must be compiled and mostly, this wrapping of all data result in loss of performance for big resultset.    
- 
-//TODO make benchmark when version is out, with 
-* mysql and mysql2 (because the most popular) 
-* mariasql (because the best in term of performance, even if not maintained)
-  
-<p align="center">
-    <img src="https://fakeimg.pl/350x200/?text=benchmark%201"/>
-    <img src="https://fakeimg.pl/350x200/?text=benchmark%202"/>  
-</p>
+Comparison to actual most popular mysql drivers :
+* mysql - https://www.npmjs.com/package/mysql (version 2.15.0)
+* mysql2 - https://www.npmjs.com/package/mysql2 (version 1.5.3)
 
-explain why good perfs compared to existing drivers (avoiding string concatenation, buffer are send are binary, not hexa string, ...)
+<img src="./documentation/misc/bench.png" width="569" height="281"/>
 
+(Those results are done without any caching for mariadb connector)
 
+[Benchmarks in details](/documentation/benchmarks.md) //TODO 
+
+## Roadmap 
+
+Some features are not implemented in first beta version, but will in next beta version : 
+
+    * Pooling and "PoolCluster" are not implemented in first version
+    * MariaDB new ed25519 plugin authentication
+    * Query timeout
+    * Bulk insert (fast batch)  
 
 ## Obtaining the driver
 
