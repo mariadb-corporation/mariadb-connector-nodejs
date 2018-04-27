@@ -171,7 +171,7 @@ class CompressionOutputStream {
   }
 
   writeEmptyPacket(cmd) {
-    const emptyBuf = new Buffer([0x00, 0x00, 0x00, cmd.compressSequenceNo, 0x00, 0x00, 0x00]);
+    const emptyBuf = Buffer.from([0x00, 0x00, 0x00, cmd.compressSequenceNo, 0x00, 0x00, 0x00]);
     cmd.incrementCompressSequenceNo(1);
 
     if (this.opts.debugCompress) {

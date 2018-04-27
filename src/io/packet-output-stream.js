@@ -508,7 +508,7 @@ class PacketOutputStream {
   }
 
   writeEmptyPacket() {
-    const emptyBuf = new Buffer([0x00, 0x00, 0x00, this.cmd.sequenceNo]);
+    const emptyBuf = Buffer.from([0x00, 0x00, 0x00, this.cmd.sequenceNo]);
     this.cmd.incrementSequenceNo(1);
 
     if (this.opts.debug && !this.opts.debugCompress) {

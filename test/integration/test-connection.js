@@ -71,6 +71,7 @@ describe("connection", () => {
   });
 
   it("connection.destroy()", function(done) {
+    this.timeout(10000);
     const conn = base.createConnection();
     conn.connect(function(err) {
       if (err) return done(err);
