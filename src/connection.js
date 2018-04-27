@@ -10,12 +10,13 @@ const CompressionOutputStream = require("./io/compression-output-stream");
 const ServerStatus = require("./const/server-status");
 const ConnectionInformation = require("./misc/connection-information");
 const tls = require("tls");
+const Errors = require("./misc/errors");
+const Utils = require("./misc/utils");
 
 /*commands*/
 const Handshake = require("./cmd/handshake/handshake");
 const Quit = require("./cmd/quit");
 const Ping = require("./cmd/ping");
-const Utils = require("./misc/utils");
 const Query = require("./cmd/query");
 const ChangeUser = require("./cmd/change-user");
 
@@ -77,7 +78,15 @@ class Connection {
     if (!callback) return;
 
     if (this._closing) {
-      callback(Utils.createError("Connection closed", true, this.info));
+      callback(
+        Errors.createError(
+          "Connection closed",
+          true,
+          this.info,
+          "08S01",
+          Errors.ER_CONNECTION_ALREADY_CLOSED
+        )
+      );
       return;
     }
 
@@ -85,17 +94,27 @@ class Connection {
       this._onConnect = callback;
     } else {
       callback(
-        this._connected ? null : new Error("Error during connection, error has already been thrown")
+        this._connected
+          ? null
+          : Errors.createError(
+              "Connection has already failed to connect",
+              true,
+              this.info,
+              "08S01",
+              Errors.ER_CONNECT_AFTER_CONNECTION_ERR
+            )
       );
     }
   }
 
   changeUser(options, callback) {
     if (!this.isMariaDB()) {
-      const err = Utils.createError(
+      const err = Errors.createError(
         "method changeUser not available for MySQL server due to Bug #83472",
         false,
-        this.info
+        this.info,
+        "0A000",
+        Errors.ER_MYSQL_CHANGE_USER_BUG
       );
       if (callback) {
         callback(err);
@@ -251,7 +270,13 @@ class Connection {
       const self = this;
       const killCon = new Connection(this.opts);
       killCon.query("KILL " + this.info.threadId, () => {
-        const err = Utils.createError("Connection destroyed, command was killed", true, self.info);
+        const err = Errors.createError(
+          "Connection destroyed, command was killed",
+          true,
+          self.info,
+          "08S01",
+          Errors.ER_CMD_NOT_EXECUTED_DESTROYED
+        );
         let receiveCmd;
         while ((receiveCmd = self._receiveQueue.shift())) {
           if (receiveCmd.onPacketReceive) {
@@ -290,20 +315,32 @@ class Connection {
   }
 
   escape(value) {
-    throw new Error(
-      "Connection.escape intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster"
+    throw Errors.createError(
+      '"Connection.escape intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster',
+      false,
+      this.info,
+      "0A000",
+      Errors.ER_NOT_IMPLEMENTED_ESCAPE
     );
   }
 
   escapeId(value) {
-    throw new Error(
-      "Connection.escapeId intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster"
+    throw Errors.createError(
+      '"Connection.escapeId intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster',
+      false,
+      this.info,
+      "0A000",
+      Errors.ER_NOT_IMPLEMENTED_ESCAPEID
     );
   }
 
   format(sql, values) {
-    throw new Error(
-      "Connection.format intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster"
+    throw Errors.createError(
+      '"Connection.format intentionally not implemented. please use Connection.query(sql, values), it will be more secure and faster',
+      false,
+      this.info,
+      "0A000",
+      Errors.ER_NOT_IMPLEMENTED_FORMAT
     );
   }
 
@@ -420,8 +457,14 @@ class Connection {
 
   _createSecureContext(callback) {
     if (!tls.connect) {
-      this._handleFatalError(
-        Utils.createError("TLS connection required Node.js 0.11.3+", true, this.info)
+      this._fatalError(
+        Errors.createError(
+          "TLS connection required Node.js 0.11.3+",
+          true,
+          this.info,
+          "42000",
+          Errors.ER_NODE_NOT_SUPPORTED_TLS
+        )
       );
     }
 
@@ -464,13 +507,23 @@ class Connection {
 
     //socket has been ended without error
     if (!err) {
-      err = Utils.createError(
-        this._socketConnected
-          ? "socket has unexpectedly been closed"
-          : "socket connection failed to established",
-        true,
-        this.info
-      );
+      if (this._socketConnected) {
+        err = Errors.createError(
+          "socket has unexpectedly been closed",
+          true,
+          this.info,
+          "08S01",
+          Errors.ER_SOCKET_UNEXPECTED_CLOSE
+        );
+      } else {
+        err = Errors.createError(
+          "socket connection failed to established",
+          true,
+          this.info,
+          "08S01",
+          Errors.ER_SOCKET_CREATION_FAIL
+        );
+      }
     }
 
     //socket fail between socket creation and before authentication
@@ -492,7 +545,7 @@ class Connection {
         this.end();
       }
     } else if (!this._closing) {
-      let err = Utils.createError(
+      let err = Errors.createError(
         "receiving packet from server without active commands\n" +
           "conn:" +
           (this.info.threadId ? this.info.threadId : -1) +
@@ -503,7 +556,9 @@ class Connection {
           ")\n" +
           Utils.log(this.opts, packet.buf, packet.pos, packet.end),
         true,
-        this.info
+        this.info,
+        "08S01",
+        Errors.ER_UNEXPECTED_PACKET
       );
       this._events.emit("error", err);
       this.end();
@@ -540,7 +595,13 @@ class Connection {
     this._connected = false;
     this._socket.destroy && this._socket.destroy();
     this._receiveQueue.shift(); //remove handshake packet
-    const err = Utils.createError("Connection timeout", true, this.info);
+    const err = Errors.createError(
+      "Connection timeout",
+      true,
+      this.info,
+      "08S01",
+      Errors.ER_CONNECTION_TIMEOUT
+    );
     this._events.emit("connect", err);
     this._fatalError(err, true);
   }
@@ -572,10 +633,12 @@ class Connection {
   }
 
   _addCommandDisabled(cmd, pipelining) {
-    const err = Utils.createError(
+    const err = Errors.createError(
       "Cannot execute new commands: connection closed\n" + cmd.displaySql(),
       true,
-      this.info
+      this.info,
+      "08S01",
+      Errors.ER_CMD_CONNECTION_CLOSED
     );
     if (cmd.onResult) {
       cmd.onResult(err);

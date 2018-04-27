@@ -102,7 +102,7 @@ describe("connection", () => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
     conn.connect(err => {
-      assert.strictEqual(err.message, "(conn=-1) Connection timeout");
+      assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
         Date.now() - initTime >= 999,
         "expected > 999, but was " + (Date.now() - initTime)
@@ -119,7 +119,7 @@ describe("connection", () => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
     conn.on("error", err => {
-      assert.strictEqual(err.message, "(conn=-1) Connection timeout");
+      assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
         Date.now() - initTime >= 999,
         "expected > 999, but was " + (Date.now() - initTime)

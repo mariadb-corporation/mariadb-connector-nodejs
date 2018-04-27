@@ -1,7 +1,7 @@
 "use strict";
 
 const Command = require("./command");
-const Utils = require("../misc/utils");
+const Errors = require("../misc/errors");
 
 /**
  * send a COM_PING: permits sending a packet containing one byte to check that the connection is active.
@@ -55,7 +55,13 @@ class Ping extends Command {
         return null;
 
       default:
-        const errUnexpected = Utils.createError("unexpected packet", false, info);
+        const errUnexpected = Errors.createError(
+          "unexpected packet",
+          false,
+          info,
+          "42000",
+          Errors.ER_PING_BAD_PACKET
+        );
         this.throwError(errUnexpected);
         return null;
     }

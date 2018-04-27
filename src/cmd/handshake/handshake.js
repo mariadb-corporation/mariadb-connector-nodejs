@@ -5,7 +5,7 @@ const InitialHandshake = require("./initial-handshake");
 const ClientHandshakeResponse = require("./client-handshake-response");
 const SslRequest = require("./ssl-request");
 const ClientCapabilities = require("./client-capabilities");
-const Utils = require("../../misc/utils");
+const Errors = require("../../misc/errors");
 const Capabilities = require("../../const/capabilities");
 
 /**
@@ -48,10 +48,12 @@ class Handshake extends Command {
         );
         return this.handshakeResult;
       } else {
-        const err = Utils.createError(
+        const err = Errors.createError(
           "Trying to connect with ssl, but ssl not enabled in the server",
           true,
-          info
+          info,
+          "08S01",
+          Errors.ER_SERVER_SSL_DISABLED
         );
         this.emit("error", err);
         return false;
@@ -108,10 +110,12 @@ class Handshake extends Command {
       //* unexpected
       //*********************************************************************************************************
       default:
-        const err = Utils.createError(
+        const err = Errors.createError(
           "Unexpected type of packet during handshake phase : " + packet.log(),
           true,
-          info
+          info,
+          "42000",
+          Errors.ER_AUTHENTICATION_BAD_PACKET
         );
         this.throwError(err);
         return null;
@@ -190,14 +194,14 @@ class Handshake extends Command {
         //TODO "client_ed25519"
 
         default:
-          let err = Utils.createError(
+          let err = Errors.createError(
             "Client does not support authentication protocol '" +
               pluginName +
               "' requested by server. ",
             true,
             info,
-            1251,
-            "08004"
+            "08004",
+            Errors.ER_AUTHENTICATION_PLUGIN_NOT_SUPPORTED
           );
           onResult(err);
           return;

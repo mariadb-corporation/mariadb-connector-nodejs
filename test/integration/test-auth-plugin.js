@@ -6,7 +6,7 @@ const assert = require("chai").assert;
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
-    shareConn.query("INSTALL SONAME 'auth_ed25519'", err => {
+    shareConn.query("INSTALL PLUGIN client_ed25519 SONAME 'auth_ed25519'", err => {
       if (err) this.skip();
       shareConn.query("drop user verificationEd25519AuthPlugin@'%'", err => {});
       shareConn.query(
@@ -41,7 +41,7 @@ describe("authentication plugin", () => {
     const windowsUser = process.env.USERNAME;
     if (windowsUser === "root") this.skip();
 
-    shareConn.query("INSTALL SONAME 'auth_named_pipe'");
+    shareConn.query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'", err => {});
     shareConn.query("DROP USER " + windowsUser);
     shareConn.query("CREATE USER " + windowsUser + " IDENTIFIED VIA named_pipe using 'test'");
     shareConn.query("GRANT ALL on *.* to " + windowsUser);
@@ -84,7 +84,7 @@ describe("authentication plugin", () => {
     //pam is set using .travis/entrypoint/pam.sh
     if (!process.env.TRAVIS) this.skip();
     this.timeout(10000);
-    shareConn.query("INSTALL SONAME 'auth_pam'");
+    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
     shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
 

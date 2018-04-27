@@ -1,7 +1,7 @@
 "use strict";
 
 const ResultSet = require("./resultset");
-const Utils = require("../misc/utils");
+const Errors = require("../misc/errors");
 const FieldType = require("../const/field-type");
 
 const QUOTE = 0x27;
@@ -127,12 +127,12 @@ class Query extends ResultSet {
   validateParameters(info) {
     //validate parameter size.
     if (this.queryParts.length - 1 > this.values.length) {
-      const err = Utils.createError(
+      const err = Errors.createError(
         "Parameter at position " + (this.values.length + 1) + " is not set\n" + this.displaySql(),
         false,
         info,
-        1210,
-        "HY000"
+        "HY000",
+        Errors.ER_MISSING_PARAMETER
       );
       this.emit("send_end");
       this.throwError(err);
@@ -142,12 +142,12 @@ class Query extends ResultSet {
     //validate parameter is defined.
     for (let i = 0; i < this.queryParts.length - 1; i++) {
       if (this.values[i] === undefined) {
-        const err = Utils.createError(
+        const err = Errors.createError(
           "Parameter at position " + (i + 1) + " is undefined\n" + this.displaySql(),
           false,
           info,
-          1210,
-          "HY000"
+          "HY000",
+          Errors.ER_PARAMETER_UNDEFINED
         );
         this.emit("send_end");
         this.throwError(err);
@@ -582,12 +582,12 @@ class Query extends ResultSet {
         case ":":
           if (state === State.Normal) {
             if (!initialValues) {
-              throw Utils.createError(
+              throw Errors.createError(
                 "Placeholder values are not defined\n" + displaySql.call(),
                 false,
                 info,
-                1210,
-                "HY000"
+                "HY000",
+                Errors.ER_PLACEHOLDER_NO_VALUES
               );
             }
             partList.push(sql.substring(lastParameterPosition, idx - 1));
@@ -604,12 +604,12 @@ class Query extends ResultSet {
             idx--;
             const val = initialValues[placeholderName];
             if (val === undefined) {
-              throw Utils.createError(
+              throw Errors.createError(
                 "Placeholder '" + placeholderName + "' is not defined\n" + displaySql.call(),
                 false,
                 info,
-                1210,
-                "HY000"
+                "HY000",
+                Errors.ER_PLACEHOLDER_UNDEFINED
               );
             }
             values.push(val);

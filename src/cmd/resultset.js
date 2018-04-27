@@ -5,7 +5,7 @@ const ServerStatus = require("../const/server-status");
 const StateChange = require("../const/state-change");
 const Collations = require("../const/collations");
 const ColumnDefinition = require("./column-definition");
-const Utils = require("../misc/utils");
+const Errors = require("../misc/errors");
 const fs = require("fs");
 
 /**
@@ -260,7 +260,13 @@ class ResultSet extends Command {
   readIntermediateEOF(packet, out, opts, info) {
     if (packet.peek() != 0xfe) {
       return this.throwError(
-        Utils.createError("Error in protocol, expected EOF packet", true, info)
+        Errors.createError(
+          "Error in protocol, expected EOF packet",
+          true,
+          info,
+          "42000",
+          Errors.ER_EOF_EXPECTED
+        )
       );
     }
 
@@ -380,14 +386,14 @@ class ResultSet extends Command {
 
     if (!opts.permitLocalInfile) {
       out.writeEmptyPacket();
-      const err = Utils.createError(
+      const err = Errors.createError(
         "Usage of LOCAL INFILE is disabled. " +
           'To use it enable it via the connection option "permitLocalInfile". ' +
           '(The option "pipelining" must be disable)',
         false,
         info,
-        1148,
-        "42000"
+        "42000",
+        Errors.ER_LOCAL_INFILE_DISABLED
       );
       this.throwError(err);
       return null;
@@ -397,12 +403,12 @@ class ResultSet extends Command {
     fs.access(fileName, (fs.constants || fs).R_OK, err => {
       if (err) {
         out.writeEmptyPacket();
-        const error = Utils.createError(
+        const error = Errors.createError(
           "LOCAL INFILE command failed: " + err.message,
           false,
           info,
-          1017,
-          "22000"
+          "22000",
+          Errors.ER_LOCAL_INFILE_NOT_READABLE
         );
         if (this.onResult) {
           process.nextTick(this.onResult, error);

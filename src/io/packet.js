@@ -1,6 +1,6 @@
 "use strict";
 
-const Utils = require("../misc/utils");
+const Errors = require("../misc/errors");
 const Iconv = require("iconv-lite");
 const Long = require("long");
 
@@ -393,7 +393,7 @@ class Packet {
     let msg = this.buf.toString("utf8", this.pos, this.end);
     if (sql) msg += "\n" + sql;
     let fatal = sqlState.startsWith("08") || sqlState === "70100";
-    return Utils.createError(msg, fatal, info, errorCode, sqlState);
+    return Errors.createError(msg, fatal, info, sqlState, errorCode);
   }
 }
 

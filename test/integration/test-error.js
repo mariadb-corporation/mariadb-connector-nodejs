@@ -183,7 +183,7 @@ describe("Error", () => {
 
   it("query undefined parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45017);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
@@ -213,7 +213,7 @@ describe("Error", () => {
 
   it("query missing parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
@@ -238,7 +238,7 @@ describe("Error", () => {
 
   it("query no parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(

@@ -1,6 +1,6 @@
 "use strict";
 
-const Utils = require("../misc/utils");
+const Errors = require("../misc/errors");
 const Iconv = require("iconv-lite");
 const Capabilities = require("../const/capabilities");
 const NativePasswordAuth = require("./handshake/auth/native_password_auth");
@@ -167,7 +167,13 @@ class ChangeUser extends Handshake {
         return null;
 
       default:
-        const errUnexpected = Utils.createError("unexpected packet", false, info);
+        const errUnexpected = Errors.createError(
+          "unexpected packet",
+          false,
+          info,
+          "42000",
+          Errors.ER_CHANGE_USER_BAD_PACKET
+        );
         this.throwError(errUnexpected);
         return null;
     }

@@ -117,7 +117,7 @@ describe("Placeholder", () => {
 
   it("query undefined named parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
@@ -151,7 +151,7 @@ describe("Placeholder", () => {
 
   it("query missing placeholder parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
@@ -184,7 +184,7 @@ describe("Placeholder", () => {
 
   it("query no placeholder parameter", function(done) {
     const handleResult = function(err) {
-      assert.equal(err.errno, 1210);
+      assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
