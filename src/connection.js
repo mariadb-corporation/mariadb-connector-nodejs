@@ -436,10 +436,8 @@ class Connection {
       }.bind(this)
     );
 
-    this._socket.writeBuf = (buf, cmd) => {
-      return this._socket.write(buf);
-    };
-    this._socket.flush = (cmdEnd, cmd) => {};
+    this._socket.writeBuf = this._socket.write;
+    this._socket.flush = () => {};
     this._out.setStreamer(this._socket);
   }
 
@@ -448,7 +446,7 @@ class Connection {
       this._out.setStreamer(new CompressionOutputStream(this._socket, this.opts, this.info));
       this._in = new CompressionInputStream(this._in, this._receiveQueue, this.opts, this.info);
       this._socket.removeAllListeners("data");
-      this._socket.on("data", chunk => this._in.onData(chunk));
+      this._socket.on("data", this._in.onData);
 
       this.opts.debugCompress = this.opts.debug;
       this.opts.debug = false;
@@ -481,10 +479,8 @@ class Connection {
       secureSocket.on("data", chunk => this._in.onData(chunk));
       secureSocket.on("error", this._socketError.bind(this));
       secureSocket.on("end", this._socketError.bind(this));
-      secureSocket.writeBuf = (buf, cmd) => {
-        return secureSocket.write(buf);
-      };
-      secureSocket.flush = (cmdEnd, cmd) => {};
+      secureSocket.writeBuf = secureSocket.write;
+      secureSocket.flush = () => {};
 
       this._socket.removeAllListeners("data");
       this._socket = secureSocket;
@@ -500,9 +496,7 @@ class Connection {
     if (this._closing) return;
 
     //avoid sending new data in closed socket
-    this._socket.writeBuf = () => {
-      return true;
-    };
+    this._socket.writeBuf = () => {};
     this._socket.flush = () => {};
 
     //socket has been ended without error

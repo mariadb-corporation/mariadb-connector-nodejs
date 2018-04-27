@@ -453,7 +453,7 @@ class PacketOutputStream {
     this.buf[3] = this.cmd.sequenceNo;
     this.cmd.incrementSequenceNo(1);
 
-    const flushed = this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
+    this.stream.writeBuf(this.buf.slice(0, this.pos), this.cmd);
 
     if (this.opts.debug && !this.opts.debugCompress) {
       console.log(
@@ -475,8 +475,6 @@ class PacketOutputStream {
         this.writeEmptyPacket();
       } else {
         this.stream.flush(true, this.cmd);
-        //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
-        // if (!flushed)
         this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {

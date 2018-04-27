@@ -30,7 +30,7 @@ class CompressionOutputStream {
     this.header = Buffer.allocUnsafe(7);
     this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
     this.writer = buffer => {
-      return socket.write(buffer);
+      socket.write(buffer);
     };
   }
 
@@ -49,8 +49,7 @@ class CompressionOutputStream {
 
   writeBuf(arr, cmd) {
     let off = 0,
-      len = arr.length,
-      flushed = true;
+      len = arr.length;
     if (len > this.buf.length - this.pos) {
       if (this.buf.length !== MAX_BUFFER_SIZE) {
         this.growBuffer(len);
@@ -71,20 +70,18 @@ class CompressionOutputStream {
           this.pos += lenToFillBuffer;
 
           if (remainingLen === 0) return;
-          flushed = this.flush(false, cmd, remainingLen);
+          this.flush(false, cmd, remainingLen);
         }
       }
     }
     arr.copy(this.buf, this.pos, off, off + len);
     this.pos += len;
-    return flushed;
   }
 
   /**
    * Flush the internal buffer.
    */
   flush(cmdEnd, cmd, remainingLen) {
-    let flushed;
     if (this.pos < 1536) {
       //*******************************************************************************
       // small packet, no compression
@@ -115,12 +112,10 @@ class CompressionOutputStream {
         );
       }
 
-      flushed = this.writer(this.buf.slice(0, this.pos));
+      this.writer(this.buf.slice(0, this.pos));
 
-      if (this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket();
+      if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
 
-      //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
-      // if (!flushed)
       this.buf = this.allocateBuffer(remainingLen);
       this.pos = 7;
     } else {
@@ -157,14 +152,11 @@ class CompressionOutputStream {
       }
 
       this.writer(this.header);
-      flushed = this.writer(compressChunk);
-      if (cmdEnd && this.pos === MAX_BUFFER_SIZE) flushed = this.writeEmptyPacket(cmd);
-      //TODO must ensure that kernel copy buffer to reuse buffer since any change will be reflected if not send
-      // if (!flushed)
+      this.writer(compressChunk);
+      if (cmdEnd && this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket(cmd);
       this.header = Buffer.allocUnsafe(7);
       this.pos = 7;
     }
-    return flushed;
   }
 
   allocateBuffer(len) {
@@ -198,7 +190,7 @@ class CompressionOutputStream {
       );
     }
 
-    return this.writer(emptyBuf);
+    this.writer(emptyBuf);
   }
 }
 
