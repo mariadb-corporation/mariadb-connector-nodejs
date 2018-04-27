@@ -55,7 +55,7 @@ Comparison with popular connectors :
 
 <img src="./documentation/misc/bench.png" width="569" height="281"/>
 
-(Those results are done without any caching for mariadb connector)
+_Those results are done without any caching for mariadb connector, mysql2 use some caching_
 
 [Benchmarks in details](/documentation/benchmarks.md) //TODO 
 
