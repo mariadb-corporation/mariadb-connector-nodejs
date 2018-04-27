@@ -18,7 +18,7 @@ const baseUrl =
   "https://raw.githubusercontent.com/MariaDB/server/" + version + "/include/my_base.h";
 const fileName = path.join(os.tmpdir(), "mariadb_errmsg.txt");
 const fileNameBase = path.join(os.tmpdir(), "my_base.h");
-const destFileName = path.join(__dirname, "/../../src/const/error-code.js");
+const destFileName = path.join(__dirname, "/../src/const/error-code.js");
 
 const download = function(url, dest, cb) {
   const file = fs.createWriteStream(dest);
