@@ -1,4 +1,5 @@
 "use strict";
+const ErrorCodes = require("../const/error-code");
 
 class SQLError extends Error {
   constructor(msg, fatal, info, sqlState, errNo) {
@@ -15,8 +16,12 @@ class SQLError extends Error {
     this.fatal = fatal;
     this.errno = errNo;
     this.sqlState = sqlState;
-    //TODO implement code value for COMPATIBILITY
-    this.code = null;
+    if (errNo > 45000 && errNo < 46000) {
+      //driver error
+      this.code = errByNo[errNo] || "UNKNOWN";
+    } else {
+      this.code = ErrorCodes.codes[this.errno] || "UNKNOWN";
+    }
   }
 }
 
@@ -63,3 +68,12 @@ module.exports.ER_LOCAL_INFILE_NOT_READABLE = 45022;
 module.exports.ER_SERVER_SSL_DISABLED = 45023;
 module.exports.ER_AUTHENTICATION_BAD_PACKET = 45024;
 module.exports.ER_AUTHENTICATION_PLUGIN_NOT_SUPPORTED = 45025;
+
+const keys = Object.keys(module.exports);
+const errByNo = {};
+for (let i = 0; i < keys.length; i++) {
+  const keyName = keys[i];
+  if (keyName !== "createError") {
+    errByNo[module.exports[keyName]] = keyName;
+  }
+}

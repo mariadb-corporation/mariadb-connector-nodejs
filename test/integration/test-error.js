@@ -11,6 +11,7 @@ describe("Error", () => {
       assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
       assert.equal(err.errno, 1064);
       assert.equal(err.sqlState, 42000);
+      assert.equal(err.code, "ER_PARSE_ERROR");
       done();
     });
   });
@@ -22,6 +23,7 @@ describe("Error", () => {
       assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
       assert.equal(err.errno, 1064);
       assert.equal(err.sqlState, 42000);
+      assert.equal(err.code, "ER_PARSE_ERROR");
       done();
     });
   });
@@ -35,11 +37,15 @@ describe("Error", () => {
           assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
           assert.isTrue(err.message.includes("sql: DO 1 - parameters:[]"));
           assert.isTrue(err.fatal);
+          assert.equal(err.sqlState, "08S01");
+          assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
           conn.execute("DO 1", err => {
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
             assert.isTrue(err.message.includes("sql: DO 1 - parameters:[]"));
             assert.isTrue(err.fatal);
+            assert.equal(err.sqlState, "08S01");
+            assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
             done();
           });
         });
@@ -56,6 +62,8 @@ describe("Error", () => {
           assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
           assert.isTrue(err.message.includes("sql: START TRANSACTION - parameters:[]"));
           assert.isTrue(err.fatal);
+          assert.equal(err.sqlState, "08S01");
+          assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
           done();
         });
       });
@@ -67,6 +75,8 @@ describe("Error", () => {
     const conn = base.createConnection();
     conn.on("error", err => {
       assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+      assert.equal(err.sqlState, "08S01");
+      assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
     });
     conn.connect(function(err) {
       if (err) {
@@ -76,6 +86,8 @@ describe("Error", () => {
         setTimeout(function() {
           conn.query("SELECT 2", function(err, rows) {
             assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            assert.equal(err.sqlState, "08S01");
+            assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
             done();
           });
         }, 2000);
@@ -110,6 +122,8 @@ describe("Error", () => {
         setTimeout(function() {
           conn.query("SELECT 2", function(err, rows) {
             assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            assert.equal(err.sqlState, "08S01");
+            assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
           });
         }, 2000);
       }
@@ -124,6 +138,8 @@ describe("Error", () => {
       conn.query("SELECT SLEEP(5)", function(err) {
         if (err) {
           assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+          assert.equal(err.sqlState, "08S01");
+          assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
           done();
         } else {
           done(new Error("must have thrown error"));
@@ -155,8 +171,9 @@ describe("Error", () => {
 
   it("query parameters logged in error", function(done) {
     const handleResult = function(err) {
-      assert.equal(1146, err.errno);
-      assert.equal("42S02", err.sqlState);
+      assert.equal(err.errno, 1146);
+      assert.equal(err.sqlState, "42S02");
+      assert.equal(err.code, "ER_NO_SUCH_TABLE");
       assert.isFalse(err.fatal);
       assert.isTrue(
         err.message.includes(
@@ -185,6 +202,7 @@ describe("Error", () => {
     const handleResult = function(err) {
       assert.equal(err.errno, 45017);
       assert.equal(err.sqlState, "HY000");
+      assert.equal(err.code, "ER_PARAMETER_UNDEFINED");
       assert.isFalse(err.fatal);
       assert.ok(
         err.message.includes(
@@ -215,6 +233,7 @@ describe("Error", () => {
     const handleResult = function(err) {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
+      assert.equal(err.code, "ER_MISSING_PARAMETER");
       assert.isFalse(err.fatal);
       assert.ok(
         err.message.includes(
@@ -240,6 +259,7 @@ describe("Error", () => {
     const handleResult = function(err) {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
+      assert.equal(err.code, "ER_MISSING_PARAMETER");
       assert.isFalse(err.fatal);
       assert.ok(
         err.message.includes(

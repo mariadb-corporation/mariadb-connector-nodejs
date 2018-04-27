@@ -83,6 +83,7 @@ describe("authentication plugin", () => {
   it("dialog authentication plugin", function(done) {
     //pam is set using .travis/entrypoint/pam.sh
     if (!process.env.TRAVIS) this.skip();
+    if (!shareConn.isMariaDB()) this.skip();
     this.timeout(10000);
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");

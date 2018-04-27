@@ -118,6 +118,7 @@ describe("Placeholder", () => {
   it("query undefined named parameter", function(done) {
     const handleResult = function(err) {
       assert.equal(err.errno, 45018);
+      assert.equal(err.code, "ER_PLACEHOLDER_UNDEFINED");
       assert.equal(err.sqlState, "HY000");
       assert.isFalse(err.fatal);
       assert.ok(
@@ -153,6 +154,7 @@ describe("Placeholder", () => {
     const handleResult = function(err) {
       assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
+      assert.equal(err.code, "ER_PLACEHOLDER_UNDEFINED");
       assert.isFalse(err.fatal);
       assert.ok(
         err.message.includes(

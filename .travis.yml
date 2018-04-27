@@ -77,6 +77,7 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - nvm ls-remote
   - npm install npm -g
+  - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
   - docker-compose -f .travis/docker-compose.yml stop db
   - docker-compose -f .travis/docker-compose.yml up -d
