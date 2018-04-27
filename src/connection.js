@@ -446,7 +446,7 @@ class Connection {
       this._out.setStreamer(new CompressionOutputStream(this._socket, this.opts, this.info));
       this._in = new CompressionInputStream(this._in, this._receiveQueue, this.opts, this.info);
       this._socket.removeAllListeners("data");
-      this._socket.on("data", this._in.onData);
+      this._socket.on("data", this._in.onData.bind(this._in));
 
       this.opts.debugCompress = this.opts.debug;
       this.opts.debug = false;
@@ -476,7 +476,7 @@ class Connection {
         callback();
       });
 
-      secureSocket.on("data", chunk => this._in.onData(chunk));
+      secureSocket.on("data", this._in.onData.bind(this._in));
       secureSocket.on("error", this._socketError.bind(this));
       secureSocket.on("end", this._socketError.bind(this));
       secureSocket.writeBuf = secureSocket.write;
