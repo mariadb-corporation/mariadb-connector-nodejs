@@ -26,7 +26,7 @@
 #### Pipelining
   
 Commands will be send without waiting for server results<br/>
-Example: executing to queries, ""INSERT xxx" and "INSERT yyy"
+Example: executing two queries, ""INSERT xxx" and "INSERT yyy"
 
 <pre>
           │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
