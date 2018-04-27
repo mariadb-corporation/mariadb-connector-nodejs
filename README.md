@@ -40,19 +40,17 @@ Client    │ <―――――――――――――――――――― firs
 queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
-## Documentation
-
-Extended documentation of API : [Complete documentation](/documentation/readme.md)
-
 ## Benchmarks
 
 Comparison with popular connectors :
 * mysql - https://www.npmjs.com/package/mysql (version 2.15.0)
 * mysql2 - https://www.npmjs.com/package/mysql2 (version 1.5.3)
 
-      mysql   : 5,841 ops/sec ±0.70%
-      mysql2  : 6,971 ops/sec ±0.64%
-      mariadb : 8,526 ops/sec ±0.96%
+```
+mysql   : 5,841 ops/sec ±0.70%
+mysql2  : 6,971 ops/sec ±0.64%
+mariadb : 8,526 ops/sec ±0.96%
+```
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
 
@@ -82,7 +80,7 @@ npm install mariadb --save
 
 For a Getting started guide, API docs, recipes,  etc. see the 
 * [Changelog](/documentation/changelog.md)
-* [Documentation](/documentation/readme.md)
+* [Complete API documentation](/documentation/readme.md)
 
 
 ## Contributing
