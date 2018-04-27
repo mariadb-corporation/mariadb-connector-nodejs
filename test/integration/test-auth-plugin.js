@@ -42,7 +42,7 @@ describe("authentication plugin", () => {
     if (windowsUser === "root") this.skip();
 
     shareConn.query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'", err => {});
-    shareConn.query("DROP USER " + windowsUser);
+    shareConn.query("DROP USER " + windowsUser, () => {});
     shareConn.query("CREATE USER " + windowsUser + " IDENTIFIED VIA named_pipe using 'test'");
     shareConn.query("GRANT ALL on *.* to " + windowsUser);
 
