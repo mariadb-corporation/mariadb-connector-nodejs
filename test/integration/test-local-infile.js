@@ -76,7 +76,6 @@ describe("local-infile", () => {
             "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
           err => {
             assert.isTrue(err != null);
-            console.log(err.message);
             assert.isTrue(
               err.message.includes("LOCAL INFILE command failed: ENOENT: no such file or directory")
             );

@@ -26,6 +26,7 @@ class ConnectionOptions {
     }
     this.compress = opts.compress || false;
     this.connectTimeout = opts.connectTimeout === undefined ? 10000 : opts.connectTimeout;
+    this.socketTimeout = opts.socketTimeout === undefined ? 0 : opts.socketTimeout;
     this.database = opts.database;
     this.dateStrings = opts.dateStrings || false;
     this.debug = opts.debug || false;

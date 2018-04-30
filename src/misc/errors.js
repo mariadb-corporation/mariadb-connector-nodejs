@@ -68,6 +68,7 @@ module.exports.ER_LOCAL_INFILE_NOT_READABLE = 45022;
 module.exports.ER_SERVER_SSL_DISABLED = 45023;
 module.exports.ER_AUTHENTICATION_BAD_PACKET = 45024;
 module.exports.ER_AUTHENTICATION_PLUGIN_NOT_SUPPORTED = 45025;
+module.exports.ER_SOCKET_TIMEOUT = 45026;
 
 const keys = Object.keys(module.exports);
 const errByNo = {};

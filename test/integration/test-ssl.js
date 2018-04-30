@@ -25,11 +25,13 @@ describe("ssl", function() {
           ? " REQUIRE SSL"
           : "")
     );
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
-      ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
-      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
-        ? " REQUIRE SSL"
-        : ""));
+    shareConn.query(
+      "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+        ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
+        (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+          ? " REQUIRE SSL"
+          : "")
+    );
     shareConn.query("DROP USER 'X509testUser'@'%'", err => {});
     shareConn.query(
       "CREATE USER 'X509testUser'@'%'" +
@@ -38,11 +40,12 @@ describe("ssl", function() {
           ? " REQUIRE X509"
           : "")
     );
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
-      ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
-      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
-        ? " REQUIRE X509"
-        : "")
+    shareConn.query(
+      "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
+        ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
+        (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+          ? " REQUIRE X509"
+          : "")
     );
     shareConn.query("SHOW VARIABLES LIKE 'have_ssl'", (err, rows) => {
       if (rows[0].Value === "YES") {

@@ -48,7 +48,6 @@ class Connection {
       this.info
     );
 
-    this.timeoutRef = null;
     this._closing = null;
     this._connected = null;
     this._socket = null;
@@ -233,7 +232,6 @@ class Connection {
    * @returns {*} quit command
    */
   end(callback) {
-    this._clearConnectTimeout();
     this._addCommand = this._addCommandDisabled;
     if (!this._closing) {
       this._closing = true;
@@ -259,7 +257,6 @@ class Connection {
    * Force connection termination by closing the underlying socket and killing server process if any.
    */
   destroy() {
-    this._clearConnectTimeout();
     this._addCommand = this._addCommandDisabled;
     this._closing = true;
     this._sendQueue.clear();
@@ -402,7 +399,6 @@ class Connection {
       this._createSecureContext.bind(this),
       this._addCommand.bind(this),
       function(err) {
-        this._clearConnectTimeout();
         this._connected = !err;
         this._events.emit("connect", err);
         if (err) this._fatalError(err, true);
@@ -412,26 +408,26 @@ class Connection {
   }
 
   _initSocket() {
-    if (this.opts.connectTimeout) {
-      this.timeoutRef = setTimeout(
-        this._connectTimeoutReached.bind(this),
-        this.opts.connectTimeout
-      );
-    }
-
     if (this.opts.socketPath) {
       this._socket = Net.connect(this.opts.socketPath);
     } else {
       this._socket = Net.connect(this.opts.port, this.opts.host);
     }
+
+    if (this.opts.connectTimeout) {
+      this._socket.setTimeout(this.opts.connectTimeout, this._connectTimeoutReached.bind(this));
+    }
+
     const packetInputStream = this._in;
     this._socket.on("data", chunk => packetInputStream.onData(chunk));
     this._socket.on("error", this._socketError.bind(this));
     this._socket.on("end", this._socketError.bind(this));
+    this._socket.on("timeout", this._socketError.bind(this));
     this._socket.on(
       "connect",
       function() {
         this._socketConnected = true;
+        this._socket.setTimeout(this.opts.socketTimeout, this._socketTimeoutReached.bind(this));
         this._socket.setNoDelay(true);
       }.bind(this)
     );
@@ -479,6 +475,7 @@ class Connection {
       secureSocket.on("data", this._in.onData.bind(this._in));
       secureSocket.on("error", this._socketError.bind(this));
       secureSocket.on("end", this._socketError.bind(this));
+      secureSocket.on("timeout", this._socketError.bind(this));
       secureSocket.writeBuf = secureSocket.write;
       secureSocket.flush = () => {};
 
@@ -585,7 +582,6 @@ class Connection {
   }
 
   _connectTimeoutReached() {
-    this._clearConnectTimeout();
     this._connected = false;
     this._socket.destroy && this._socket.destroy();
     this._receiveQueue.shift(); //remove handshake packet
@@ -600,11 +596,19 @@ class Connection {
     this._fatalError(err, true);
   }
 
-  _clearConnectTimeout() {
-    if (this.timeoutRef) {
-      clearTimeout(this.timeoutRef);
-      this.timeoutRef = undefined;
-    }
+  _socketTimeoutReached() {
+    this._connected = false;
+    this._socket.destroy && this._socket.destroy();
+    this._receiveQueue.shift(); //remove handshake packet
+    const err = Errors.createError(
+      "socket timeout",
+      true,
+      this.info,
+      "08S01",
+      Errors.ER_SOCKET_TIMEOUT
+    );
+    this._events.emit("connect", err);
+    this._fatalError(err, true);
   }
 
   _addCommandEnable(cmd, pipelining) {
@@ -653,7 +657,14 @@ class Connection {
     //prevent executing new commands
     this._addCommand = this._addCommandDisabled;
 
-    if (this._socket) this._socket.destroy();
+    if (this._socket) {
+      this._socket.removeAllListeners("error");
+      this._socket.removeAllListeners("timeout");
+      this._socket.removeAllListeners("close");
+      this._socket.removeAllListeners("data");
+      this._socket.destroy();
+      this._socket = undefined;
+    }
 
     let receiveCmd;
     let errorThrownByCmd = false;
@@ -684,7 +695,6 @@ class Connection {
   }
 
   _clear() {
-    this._clearConnectTimeout();
     this._sendQueue.clear();
     this._out = undefined;
     this._socket = undefined;

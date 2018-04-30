@@ -69,6 +69,7 @@ const conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
 * `socketPath`: string. Permits connecting to the database via Unix domain socket or named pipe, if the server allows it.
 * `compress`: boolean. The exchanges with database will be gzipped. That permit better performance when database is distant (not in same location). default: false
 * `connectTimeout`: integer. connection timeout in ms. default: 10 000.
+* `socketTimeout`: integer. socket timeout in ms after connection succeed. default: 0 = no timeout.
 
 Support for big integer: 
 
