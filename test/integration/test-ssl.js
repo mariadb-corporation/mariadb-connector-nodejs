@@ -17,10 +17,33 @@ describe("ssl", function() {
       ca = [fs.readFileSync(__dirname + "/../certificats/server.crt", "utf8")];
     }
 
-    shareConn.query("CREATE USER IF NOT EXISTS 'ssltestUser'@'%' REQUIRE SSL");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'ssltestUser'@'%' ");
-    shareConn.query("CREATE USER IF NOT EXISTS 'X509testUser'@'%' REQUIRE X509");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'");
+    shareConn.query("DROP USER 'sslTestUser'@'%'", err => {});
+    shareConn.query(
+      "CREATE USER 'sslTestUser'@'%'" +
+        ((shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 0)) ||
+        (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7, 0))
+          ? " REQUIRE SSL"
+          : "")
+    );
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+      ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
+      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+        ? " REQUIRE SSL"
+        : ""));
+    shareConn.query("DROP USER 'X509testUser'@'%'", err => {});
+    shareConn.query(
+      "CREATE USER IF NOT EXISTS 'X509testUser'@'%'" +
+        ((shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 0)) ||
+        (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7, 0))
+          ? " REQUIRE X509"
+          : "")
+    );
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
+      ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
+      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+        ? " REQUIRE X509"
+        : "")
+    );
     shareConn.query("SHOW VARIABLES LIKE 'have_ssl'", (err, rows) => {
       if (rows[0].Value === "YES") {
         sslEnable = true;
@@ -39,7 +62,7 @@ describe("ssl", function() {
   });
 
   after(function(done) {
-    shareConn.query("DROP USER 'ssltestUser'@'%'");
+    shareConn.query("DROP USER 'sslTestUser'@'%'");
     shareConn.query("DROP USER 'X509testUser'@'%'", err => {
       done();
     });
@@ -47,7 +70,7 @@ describe("ssl", function() {
 
   it("signed certificate error ", function(done) {
     if (!sslEnable) this.skip();
-    const conn = base.createConnection({ user: "ssltestUser", password: null, ssl: true });
+    const conn = base.createConnection({ user: "sslTestUser", password: null, ssl: true });
     conn.connect(err => {
       if (err) {
         assert.isTrue(err.message.includes("self signed certificate"));
@@ -74,7 +97,7 @@ describe("ssl", function() {
   it("ensure connection use SSL ", function(done) {
     if (!sslEnable) this.skip();
     const conn = base.createConnection({
-      user: "ssltestUser",
+      user: "sslTestUser",
       password: null,
       ssl: { rejectUnauthorized: false }
     });
@@ -262,7 +285,7 @@ describe("ssl", function() {
     });
   });
 
-  it("TLSv1.1 with CA provided ignoring name verification", function(done) {
+  it("CA provided ignoring name verification", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
@@ -280,14 +303,13 @@ describe("ssl", function() {
       if (err) {
         done(err);
       } else {
-        checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
       }
     });
   });
 
-  it("TLSv1.1 with CA name verification error", function(done) {
+  it("CA name verification error", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
@@ -308,7 +330,7 @@ describe("ssl", function() {
     });
   });
 
-  it("TLSv1.1 with CA provided with matching cn", function(done) {
+  it("CA provided with matching cn", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
@@ -319,7 +341,13 @@ describe("ssl", function() {
         done(err);
       } else {
         const isWin = process.platform === "win32";
-        checkProtocol(conn, isWin || !shareConn.isMariaDB() ? "TLSv1.1" : "TLSv1.2");
+        let expectedProtocol = "TLSv1.2";
+        if (shareConn.isMariaDB()) {
+          if (isWin) expectedProtocol = "TLSv1.1";
+        } else if (!shareConn.hasMinVersion(8, 0, 0)) {
+          expectedProtocol = "TLSv1.1";
+        }
+        checkProtocol(conn, expectedProtocol);
         conn.end();
         done();
       }
