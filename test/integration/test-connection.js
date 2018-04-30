@@ -109,8 +109,8 @@ describe("connection", () => {
         "expected > 999, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
-        Date.now() - initTime < 1050,
-        "expected < 1050, but was " + (Date.now() - initTime)
+        Date.now() - initTime < 1100,
+        "expected < 1100, but was " + (Date.now() - initTime)
       );
       done();
     });
@@ -126,8 +126,8 @@ describe("connection", () => {
         "expected > 999, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
-        Date.now() - initTime < 1050,
-        "expected < 1050, but was " + (Date.now() - initTime)
+        Date.now() - initTime < 1100,
+        "expected < 1100, but was " + (Date.now() - initTime)
       );
       done();
     });
