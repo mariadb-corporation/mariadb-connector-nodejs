@@ -32,7 +32,7 @@ describe("ssl", function() {
         : ""));
     shareConn.query("DROP USER 'X509testUser'@'%'", err => {});
     shareConn.query(
-      "CREATE USER IF NOT EXISTS 'X509testUser'@'%'" +
+      "CREATE USER 'X509testUser'@'%'" +
         ((shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 0)) ||
         (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7, 0))
           ? " REQUIRE X509"
