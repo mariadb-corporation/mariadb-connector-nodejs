@@ -5,10 +5,8 @@ const assert = require("chai").assert;
 
 describe("change user", () => {
   before(done => {
-    shareConn.query("CREATE USER ChangeUser@'%'");
-    shareConn.query(
-      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' IDENTIFIED BY 'mypassword' with grant option"
-    );
+    shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
     shareConn.query("FLUSH PRIVILEGES", err => {
       done();
     });

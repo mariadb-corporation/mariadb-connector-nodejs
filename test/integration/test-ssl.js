@@ -17,10 +17,10 @@ describe("ssl", function() {
       ca = [fs.readFileSync(__dirname + "/../certificats/server.crt", "utf8")];
     }
 
-    shareConn.query("CREATE USER 'ssltestUser'@'%'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'ssltestUser'@'%' REQUIRE SSL");
-    shareConn.query("CREATE USER 'X509testUser'@'%'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509");
+    shareConn.query("CREATE USER IF NOT EXISTS 'ssltestUser'@'%' REQUIRE SSL");
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'ssltestUser'@'%' ");
+    shareConn.query("CREATE USER IF NOT EXISTS 'X509testUser'@'%' REQUIRE X509");
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'");
     shareConn.query("SHOW VARIABLES LIKE 'have_ssl'", (err, rows) => {
       if (rows[0].Value === "YES") {
         sslEnable = true;
