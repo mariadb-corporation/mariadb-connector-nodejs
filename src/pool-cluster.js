@@ -9,7 +9,7 @@ function PoolCluster(args) {
     //TODO
   };
 
-  this.end = (callback) => {
+  this.end = callback => {
     //TODO
   };
 
@@ -17,7 +17,7 @@ function PoolCluster(args) {
     //TODO
   };
 
-  this.remove = (pattern) => {
+  this.remove = pattern => {
     //TODO
   };
 

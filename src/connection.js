@@ -21,7 +21,6 @@ const Query = require("./cmd/query");
 const ChangeUser = require("./cmd/change-user");
 
 function Connection(options) {
-
   //*****************************************************************
   // public API methods from mysql/mysql2 drivers from compatibility
   //*****************************************************************
@@ -234,7 +233,6 @@ function Connection(options) {
       //socket is closed, but server may still be processing a huge select
       //only possibility is to kill process by another thread
       //TODO reuse a pool connection to avoid connection creation
-      const self = this;
       const killCon = new Connection(opts);
       killCon.query("KILL " + info.threadId, () => {
         const err = Errors.createError(
@@ -255,7 +253,7 @@ function Connection(options) {
           }
         }
         process.nextTick(() => {
-          if (self._socket) self._socket.destroy();
+          if (_socket) _socket.destroy();
         });
         killCon.end();
       });
@@ -365,13 +363,28 @@ function Connection(options) {
   // internal methods
   //*****************************************************************
 
+  /**
+   * Default method called when connection is established (socket + authentication)
+   *
+   * @param err error if any
+   * @private
+   */
   const _defaultOnConnect = err => {
     if (err && _events.listenerCount("error") === 0) {
       throw err;
     }
   };
 
+  /**
+   * Register connection events.
+   *
+   * @private
+   */
   const _registerEvents = () => {
+    _events.once("connect", err => {
+      process.nextTick(_onConnect, err);
+    });
+
     _events.on("collation_changed", () => {
       const stream = _out.stream;
       _out = new PacketOutputStream(opts, info);
@@ -379,6 +392,11 @@ function Connection(options) {
     });
   };
 
+  /**
+   * Add handshake command to queue.
+   *
+   * @private
+   */
   const _registerHandshakeCmd = () => {
     const handshake = new Handshake(
       _events,
@@ -394,6 +412,10 @@ function Connection(options) {
     _addCommand(handshake, false);
   };
 
+  /**
+   * Initialize socket and associate events.
+   * @private
+   */
   const _initSocket = () => {
     if (opts.socketPath) {
       _socket = Net.connect(opts.socketPath);
@@ -421,6 +443,11 @@ function Connection(options) {
     _out.setStreamer(_socket);
   };
 
+  /**
+   * Authentication succeed methods called by handshake to permit activating compression filter.
+   *
+   * @private
+   */
   const _succeedAuthentication = () => {
     if (opts.compress) {
       _out.setStreamer(new CompressionOutputStream(_socket, opts, info));
@@ -433,6 +460,12 @@ function Connection(options) {
     }
   };
 
+  /**
+   * Create TLS socket and associate events.
+   *
+   * @param callback  callback function when done
+   * @private
+   */
   const _createSecureContext = callback => {
     if (!tls.connect) {
       _fatalError(
@@ -472,6 +505,12 @@ function Connection(options) {
     }
   };
 
+  /**
+   * Handle socket error.
+   *
+   * @param err   error
+   * @private
+   */
   const _socketError = err => {
     //socket closed was expected
     if (_closing) return;
@@ -510,6 +549,13 @@ function Connection(options) {
     _fatalError(err, false);
   };
 
+  /**
+   * Handle packet when no packet is expected.
+   * (there can be an ERROR packet send by server/proxy to inform that connection is ending).
+   *
+   * @param packet  packet
+   * @private
+   */
   const _unexpectedPacket = packet => {
     if (packet && packet.peek() === 0xff) {
       //can receive unexpected error packet from server/proxy
@@ -540,6 +586,15 @@ function Connection(options) {
     }
   };
 
+  /**
+   * Change transaction state.
+   *
+   * @param options     connection options
+   * @param callback    callback function
+   * @param sql         command
+   * @returns {command} null or current command
+   * @private
+   */
   const _changeTransaction = (options, callback, sql) => {
     let _options, _cb;
 
@@ -565,6 +620,11 @@ function Connection(options) {
     return null;
   };
 
+  /**
+   * Handle connection timeout.
+   *
+   * @private
+   */
   const _connectTimeoutReached = () => {
     _connected = false;
     _socket.destroy && _socket.destroy();
@@ -580,6 +640,11 @@ function Connection(options) {
     _fatalError(err, true);
   };
 
+  /**
+   * Handle socket timeout.
+   *
+   * @private
+   */
   const _socketTimeoutReached = () => {
     _connected = false;
     _socket.destroy && _socket.destroy();
@@ -589,9 +654,15 @@ function Connection(options) {
     _fatalError(err, true);
   };
 
+  /**
+   * Add command to command sending and receiving queue.
+   *
+   * @param cmd         command
+   * @param pipelining  can use pipeline
+   * @returns {*}       current command
+   * @private
+   */
   const _addCommandEnable = (cmd, pipelining) => {
-    let conn = this;
-
     if (pipelining) {
       cmd.once("send_end", () => setImmediate(_nextSendCmd));
     } else {
@@ -608,6 +679,13 @@ function Connection(options) {
     return cmd;
   };
 
+  /**
+   * Replacing command when connection is closing or closed to send a proper error message.
+   *
+   * @param cmd         command
+   * @param pipelining  can use pipeline
+   * @private
+   */
   const _addCommandDisabled = (cmd, pipelining) => {
     const err = Errors.createError(
       "Cannot execute new commands: connection closed\n" + cmd.displaySql(),
@@ -665,6 +743,11 @@ function Connection(options) {
     }
   };
 
+  /**
+   * Will send next command in queue if any.
+   *
+   * @private
+   */
   const _nextSendCmd = () => {
     let sendCmd;
     if ((sendCmd = _sendQueue.shift())) {
@@ -672,38 +755,41 @@ function Connection(options) {
     }
   };
 
+  /**
+   * Clearing connection variables when ending.
+   *
+   * @private
+   */
   const _clear = () => {
     _sendQueue.clear();
     _out = undefined;
     _socket = undefined;
   };
 
-  //public info
+  //*****************************************************************
+  // internal variables
+  //*****************************************************************
+
   const opts = Object.assign({}, options);
   const info = new ConnectionInformation();
-
-  //internal
   const _events = new EventEmitter();
   const _sendQueue = new Queue();
   const _receiveQueue = new Queue();
 
   let _onConnect = _defaultOnConnect;
-  _events.once("connect", err => {
-    process.nextTick(_onConnect, err);
-  });
-
-  let _out = new PacketOutputStream(opts, info);
-  let _in = new PacketInputStream(_unexpectedPacket, _receiveQueue, _out, opts, info);
-
   let _closing = null;
   let _connected = null;
   let _socketConnected = false;
   let _socket = null;
   let _addCommand = _addCommandEnable;
+  let _out = new PacketOutputStream(opts, info);
+  let _in = new PacketInputStream(_unexpectedPacket, _receiveQueue, _out, opts, info);
+
   _registerEvents();
   _registerHandshakeCmd();
   _initSocket();
 
+  //add alias threadId for mysql/mysql2 compatibility
   Object.defineProperty(this, "threadId", {
     get() {
       return info ? info.threadId : undefined;

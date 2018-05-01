@@ -4,11 +4,10 @@ const base = require("../base.js");
 const assert = require("chai").assert;
 
 describe("server additional information API", () => {
-
   it("server version", function(done) {
     shareConn.query("SELECT VERSION() a", (err, res) => {
       if (err) return done(err);
-      assert.deepEqual(res, [{a:shareConn.serverVersion()}]);
+      assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
       done();
     });
   });
@@ -23,5 +22,4 @@ describe("server additional information API", () => {
       assert.isTrue(shareConn.isMariaDB());
     }
   });
-
 });
