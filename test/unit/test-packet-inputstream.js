@@ -191,7 +191,7 @@ describe("test PacketInputStream data", () => {
 
   it("packet size with byte > 128", () => {
     let buf = Buffer.alloc(140);
-    buf[0] = 88;
+    buf[0] = 0x88;
     buf[4] = 1;
     buf[5] = 2;
 
