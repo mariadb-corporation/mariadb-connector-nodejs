@@ -59,7 +59,7 @@ describe("change user", () => {
             conn.query("SELECT CURRENT_USER", (err, res) => {
               const user = res[0]["CURRENT_USER"];
               assert.equal(user, "ChangeUser@%");
-              assert.equal(conn.opts.collation.name, "UTF8_PERSIAN_CI");
+              assert.equal(conn._test_collation().name, "UTF8_PERSIAN_CI");
               conn.end();
               done();
             });

@@ -53,10 +53,8 @@ describe("connection", () => {
   });
 
   it("threadId access compatibility", function(done) {
-    const threadId = shareConn.info.threadId;
-    assert.isDefined(threadId);
     assert.isDefined(shareConn.threadId);
-    assert.equal(threadId, shareConn.threadId);
+    assert.isTrue(shareConn.threadId !== -1);
     done();
   });
 
@@ -155,10 +153,10 @@ describe("connection", () => {
         );
       }
 
-      assert.equal(conn.opts.collation, Collations.fromName("UTF8MB4_UNICODE_CI"));
+      assert.equal(conn._test_collation(), Collations.fromName("UTF8MB4_UNICODE_CI"));
       conn.query("SET time_zone = '+00:00', character_set_client = cp850", (err, rows) => {
         if (err) done(err);
-        assert.equal(conn.opts.collation, Collations.fromName("CP850_GENERAL_CI"));
+        assert.equal(conn._test_collation(), Collations.fromName("CP850_GENERAL_CI"));
         conn.end(() => done());
       });
     });

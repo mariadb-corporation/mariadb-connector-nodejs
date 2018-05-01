@@ -2,12 +2,13 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
+const Conf = require("../conf");
 
 describe("test socket", () => {
   it("named pipe", function(done) {
     if (process.platform !== "win32") this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
-    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
       const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\" + res[0].soc });
@@ -35,7 +36,7 @@ describe("test socket", () => {
   it("unix socket", function(done) {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (process.platform === "win32") this.skip();
-    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
 
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {

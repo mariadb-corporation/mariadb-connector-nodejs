@@ -1,34 +1,29 @@
 "use strict";
 
-const EventEmitter = require("events");
 const PoolClusterOptions = require("./config/pool-cluster-options.js");
 
-class PoolCluster extends EventEmitter {
-  constructor(args) {
-    super();
-    this.opts = new PoolClusterOptions(args);
-    //TODO
-  }
+function PoolCluster(args) {
+  const opts = new PoolClusterOptions(args);
 
-  add(id, config) {
+  this.add = (id, config) => {
     //TODO
-  }
+  };
 
-  end(callback) {
+  this.end = (callback) => {
     //TODO
-  }
+  };
 
-  of(pattern, selector) {
+  this.of = (pattern, selector) => {
     //TODO
-  }
+  };
 
-  remove(pattern) {
+  this.remove = (pattern) => {
     //TODO
-  }
+  };
 
-  getConnection(pattern, selector, cb) {
+  this.getConnection = (pattern, selector, cb) => {
     //TODO
-  }
+  };
 }
 
 module.exports = PoolCluster;

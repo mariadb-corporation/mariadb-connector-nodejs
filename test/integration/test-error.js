@@ -165,7 +165,10 @@ describe("Error", () => {
           }
         }
       );
-      setTimeout(conn._socket.destroy.bind(conn._socket, new Error("close forced")), 5);
+      setTimeout(
+        conn._test_socket().destroy.bind(conn._test_socket(), new Error("close forced")),
+        5
+      );
     });
   });
 

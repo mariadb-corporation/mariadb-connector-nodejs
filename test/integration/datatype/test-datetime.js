@@ -2,6 +2,7 @@
 
 const base = require("../../base");
 const assert = require("chai").assert;
+const Conf = require("../../conf");
 
 describe("datetime", () => {
   const date = new Date("2001-12-31 00:00:00");
@@ -35,7 +36,7 @@ describe("datetime", () => {
 
   it("standard date", done => {
     //using distant server, time might be different
-    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
 
     shareConn.query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01 UTC")], (err, res) => {

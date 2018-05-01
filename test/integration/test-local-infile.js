@@ -143,7 +143,6 @@ describe("local-infile", () => {
             conn = base.createConnection({ permitLocalInfile: true });
             conn.connect(() => {
               conn.query("CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))");
-              conn.opts.test = true;
               conn.query(
                 "LOAD DATA LOCAL INFILE '" +
                   bigFileName.replace(/\\/g, "/") +

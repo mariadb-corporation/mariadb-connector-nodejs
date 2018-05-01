@@ -29,7 +29,7 @@ before("share initialization", done => {
 });
 
 after("share destroy", () => {
-  if (shareConn && shareConn._connected) {
+  if (shareConn) {
     shareConn.end(() => (global.shareConn = undefined));
   }
 });

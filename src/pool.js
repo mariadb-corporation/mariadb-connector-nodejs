@@ -3,32 +3,28 @@
 const EventEmitter = require("events");
 const PoolOptions = require("./config/pool-options.js");
 
-class Pool extends EventEmitter {
-  constructor(args) {
-    super();
-    this.opts = new PoolOptions(args);
-    //TODO
-  }
+function Pool(args) {
+  const opts = new PoolOptions(args);
 
-  getConnection(cb) {
+  this.getConnection = function(cb) {
     //TODO
-  }
+  };
 
-  acquireConnection(connection, cb) {
+  this.acquireConnection = function(connection, cb) {
     //TODO
-  }
+  };
 
-  releaseConnection(connection) {
+  this.releaseConnection = function(connection) {
     //TODO
-  }
+  };
 
-  end(cb) {
+  this.end = function(cb) {
     //TODO
-  }
+  };
 
-  query(sql, values, cb) {
+  this.query = function(sql, values, cb) {
     //TODO
-  }
+  };
 }
 
 module.exports = Pool;
