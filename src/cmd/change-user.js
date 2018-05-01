@@ -89,9 +89,9 @@ class ChangeUser extends Handshake {
         writeParam(out, attrNames[k], encoding);
         writeParam(out, connectAttributes[attrNames[k]], encoding);
       }
+
       //write end size
-      out.buf[initPos] = out.pos - initPos - 2;
-      out.buf[initPos + 1] = (out.pos - initPos - 2) >> 8;
+      out.writeInt16AtPos(initPos);
     }
 
     out.flushBuffer(true);

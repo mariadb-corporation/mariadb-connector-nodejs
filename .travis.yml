@@ -68,10 +68,6 @@ matrix:
   - node_js: "node"
     env: DB=mysql:8.0
 
-cache:
-  directories:
-  - node_modules
-
 notifications:
   email: false
 

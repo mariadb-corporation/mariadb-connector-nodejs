@@ -347,17 +347,20 @@ function Connection(options) {
   //*****************************************************************
   // internal public testing methods
   //*****************************************************************
-  this._test_collation = () => {
+  function TestMethods(){}
+  TestMethods.prototype.getCollation = () => {
     return opts.collation;
   };
 
-  this._test_socket = () => {
+  TestMethods.prototype.getSocket = () => {
     return _socket;
   };
 
-  this._test_info = () => {
+  TestMethods.prototype.getInfo = () => {
     return info;
   };
+
+  this.__tests = new TestMethods();
 
   //*****************************************************************
   // internal methods
@@ -386,9 +389,9 @@ function Connection(options) {
     });
 
     _events.on("collation_changed", () => {
-      const stream = _out.stream;
+      const stream = _out.getStream();
       _out = new PacketOutputStream(opts, info);
-      _out.setStreamer(stream);
+      _out.setStream(stream);
     });
   };
 
@@ -427,8 +430,7 @@ function Connection(options) {
       _socket.setTimeout(opts.connectTimeout, _connectTimeoutReached.bind(this));
     }
 
-    const packetInputStream = _in;
-    _socket.on("data", chunk => packetInputStream.onData(chunk));
+    _socket.on("data", _in.onData.bind(_in));
     _socket.on("error", _socketError);
     _socket.on("end", _socketError);
     _socket.on("timeout", _socketError);
@@ -440,7 +442,7 @@ function Connection(options) {
 
     _socket.writeBuf = _socket.write;
     _socket.flush = () => {};
-    _out.setStreamer(_socket);
+    _out.setStream(_socket);
   };
 
   /**
@@ -450,7 +452,7 @@ function Connection(options) {
    */
   const _succeedAuthentication = () => {
     if (opts.compress) {
-      _out.setStreamer(new CompressionOutputStream(_socket, opts, info));
+      _out.setStream(new CompressionOutputStream(_socket, opts, info));
       _in = new CompressionInputStream(_in, _receiveQueue, opts, info);
       _socket.removeAllListeners("data");
       _socket.on("data", _in.onData.bind(_in));
@@ -499,7 +501,7 @@ function Connection(options) {
       _socket.removeAllListeners("data");
       _socket = secureSocket;
 
-      _out.setStreamer(secureSocket);
+      _out.setStream(secureSocket);
     } catch (err) {
       _socketError(err);
     }

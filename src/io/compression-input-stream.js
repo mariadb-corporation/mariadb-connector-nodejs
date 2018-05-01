@@ -68,38 +68,33 @@ class CompressionInputStream {
     this.headerLen = 0;
   }
 
-  /**
-   * Read 4 bytes header.
-   *
-   * @param chunk     chunk
-   * @param chunkLen  chunk length
-   * @returns packet length if header is completely received
-   * @private
-   */
-  readHeader(chunk, chunkLen) {
-    if (this.remainingLen) return this.remainingLen;
-    while (chunkLen - this.pos > 0) {
-      this.header[this.headerLen++] = chunk[this.pos++];
-      if (this.headerLen === 7) {
-        this.compressPacketLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
-        this.packetLen = this.header[4] | (this.header[5] << 8) | (this.header[6] << 16);
-        if (this.packetLen === 0) this.packetLen = this.compressPacketLen;
-        return this.compressPacketLen;
-      }
-    }
-    return null;
-  }
-
   onData(chunk) {
-    this.pos = 0;
+    let pos = 0;
     let length;
     const chunkLen = chunk.length;
 
     do {
-      if ((length = this.readHeader(chunk, chunkLen))) {
-        if (chunkLen - this.pos >= length) {
-          const buf = chunk.slice(this.pos, this.pos + length);
-          this.pos += length;
+
+      if (this.remainingLen) {
+        length = this.remainingLen;
+      } else {
+        length = null;
+        while (chunkLen - pos > 0) {
+          this.header[this.headerLen++] = chunk[pos++];
+          if (this.headerLen === 7) {
+            this.compressPacketLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
+            this.packetLen = this.header[4] | (this.header[5] << 8) | (this.header[6] << 16);
+            if (this.packetLen === 0) this.packetLen = this.compressPacketLen;
+            length = this.compressPacketLen;
+            break;
+          }
+        }
+      }
+
+      if (length) {
+        if (chunkLen - pos >= length) {
+          const buf = chunk.slice(pos, pos + length);
+          pos += length;
           if (this.parts) {
             this.parts.push(buf);
             this.partsTotalLen += length;
@@ -122,19 +117,19 @@ class CompressionInputStream {
           }
           this.resetHeader();
         } else {
-          const buf = chunk.slice(this.pos, chunkLen);
+          const buf = chunk.slice(pos, chunkLen);
           if (!this.parts) {
             this.parts = [buf];
-            this.partsTotalLen = chunkLen - this.pos;
+            this.partsTotalLen = chunkLen - pos;
           } else {
             this.parts.push(buf);
-            this.partsTotalLen += chunkLen - this.pos;
+            this.partsTotalLen += chunkLen - pos;
           }
-          this.remainingLen = length - (chunkLen - this.pos);
+          this.remainingLen = length - (chunkLen - pos);
           return;
         }
       }
-    } while (this.pos < chunkLen);
+    } while (pos < chunkLen);
   }
 }
 

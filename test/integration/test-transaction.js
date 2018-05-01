@@ -15,20 +15,20 @@ describe("transaction", () => {
   it("transaction rollback", done => {
     shareConn.rollback();
     shareConn.query("SET autocommit=0", () => {
-      assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 0);
-      assert.equal(shareConn._test_info().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+      assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+      assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
       shareConn.beginTransaction(err => {
         if (err) done(err);
-        assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+        assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
         shareConn.query("INSERT INTO testTransaction values ('test')", err => {
           if (err) done(err);
-          assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+          assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
           shareConn.rollback(err => {
             if (err) done(err);
-            assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
             shareConn.query("SELECT count(*) as nb FROM testTransaction", (err, rows) => {
               if (err) done(err);
-              assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+              assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
               assert.equal(rows[0].nb, 0);
               done();
             });
@@ -41,20 +41,20 @@ describe("transaction", () => {
   it("transaction commit", done => {
     shareConn.commit();
     shareConn.query("SET autocommit=0", () => {
-      assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 0);
-      assert.equal(shareConn._test_info().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+      assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+      assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
       shareConn.beginTransaction(err => {
         if (err) done(err);
-        assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+        assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
         shareConn.query("INSERT INTO testTransaction values ('test')", err => {
           if (err) done(err);
-          assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+          assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
           shareConn.commit(err => {
             if (err) done(err);
-            assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
             shareConn.query("SELECT count(*) as nb FROM testTransaction", (err, rows) => {
               if (err) done(err);
-              assert.equal(shareConn._test_info().status & ServerStatus.STATUS_IN_TRANS, 1);
+              assert.equal(shareConn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
               assert.equal(rows[0].nb, 1);
               done();
             });

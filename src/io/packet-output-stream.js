@@ -42,8 +42,12 @@ class PacketOutputStream {
     }
   }
 
-  setStreamer(stream) {
+  setStream(stream) {
     this.stream = stream;
+  }
+
+  getStream() {
+    return this.stream;
   }
 
   growBuffer(len) {
@@ -83,6 +87,11 @@ class PacketOutputStream {
     }
     this.buf.writeUInt16LE(value, this.pos);
     this.pos += 2;
+  }
+
+  writeInt16AtPos(initPos) {
+    this.buf[initPos] = this.pos - initPos - 2;
+    this.buf[initPos + 1] = (this.pos - initPos - 2) >> 8;
   }
 
   writeInt24(value) {
@@ -191,11 +200,6 @@ class PacketOutputStream {
     const sec = date.getUTCSeconds();
     const ms = date.getUTCMilliseconds();
     this._writeDatePart(year, mon, day, hour, min, sec, ms);
-  }
-
-  writeLengthCodedBuffer(arr) {
-    this.writeLengthCoded(arr.length);
-    this.writeBuffer(arr, 0, arr.length);
   }
 
   writeBuffer(arr, off, len) {
@@ -478,33 +482,9 @@ class PacketOutputStream {
         this.buf = Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
       }
     } else {
-      this.buf = this.allocateBuffer(remainingLen + 4);
+      this.buf = allocateBuffer(remainingLen + 4);
       this.pos = 4;
     }
-  }
-
-  allocateBuffer(len) {
-    if (len < SMALL_BUFFER_SIZE) {
-      return Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
-    } else if (len < MEDIUM_BUFFER_SIZE) {
-      return Buffer.allocUnsafe(MEDIUM_BUFFER_SIZE);
-    } else if (len < LARGE_BUFFER_SIZE) {
-      return Buffer.allocUnsafe(LARGE_BUFFER_SIZE);
-    }
-    return Buffer.allocUnsafe(MAX_BUFFER_SIZE);
-  }
-
-  growBuffer(len) {
-    let newCapacity;
-    if (len + this.pos < MEDIUM_BUFFER_SIZE) {
-      newCapacity = MEDIUM_BUFFER_SIZE;
-    } else if (len + this.pos < LARGE_BUFFER_SIZE) {
-      newCapacity = LARGE_BUFFER_SIZE;
-    } else newCapacity = MAX_BUFFER_SIZE;
-
-    let newBuf = Buffer.allocUnsafe(newCapacity);
-    this.buf.copy(newBuf, 0, 0, this.pos);
-    this.buf = newBuf;
   }
 
   writeEmptyPacket() {
@@ -525,6 +505,17 @@ class PacketOutputStream {
     this.stream.writeBuf(emptyBuf, this.cmd);
     this.stream.flush(true, this.cmd);
   }
+}
+
+function allocateBuffer(len) {
+  if (len < SMALL_BUFFER_SIZE) {
+    return Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+  } else if (len < MEDIUM_BUFFER_SIZE) {
+    return Buffer.allocUnsafe(MEDIUM_BUFFER_SIZE);
+  } else if (len < LARGE_BUFFER_SIZE) {
+    return Buffer.allocUnsafe(LARGE_BUFFER_SIZE);
+  }
+  return Buffer.allocUnsafe(MAX_BUFFER_SIZE);
 }
 
 module.exports = PacketOutputStream;

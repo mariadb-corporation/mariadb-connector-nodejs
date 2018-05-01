@@ -442,6 +442,6 @@ describe("ssl", function() {
 function checkProtocol(conn, protocol) {
   const ver = process.version.substring(1).split(".");
   if (ver[0] > 5 || (ver[0] === 5 && ver[1] === 7)) {
-    assert.equal(conn._test_socket().getProtocol(), protocol);
+    assert.equal(conn.__tests.getSocket().getProtocol(), protocol);
   }
 }
