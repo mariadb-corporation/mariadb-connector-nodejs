@@ -74,7 +74,6 @@ class CompressionInputStream {
     const chunkLen = chunk.length;
 
     do {
-
       if (this.remainingLen) {
         length = this.remainingLen;
       } else {
@@ -82,7 +81,8 @@ class CompressionInputStream {
         while (chunkLen - pos > 0) {
           this.header[this.headerLen++] = chunk[pos++];
           if (this.headerLen === 7) {
-            this.compressPacketLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
+            this.compressPacketLen =
+              this.header[0] + (this.header[1] << 8) + (this.header[2] << 16);
             this.packetLen = this.header[4] | (this.header[5] << 8) | (this.header[6] << 16);
             if (this.packetLen === 0) this.packetLen = this.compressPacketLen;
             length = this.compressPacketLen;

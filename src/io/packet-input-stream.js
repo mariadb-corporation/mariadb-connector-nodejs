@@ -86,7 +86,7 @@ class PacketInputStream {
         while (chunkLen - pos > 0) {
           this.header[this.headerLen++] = chunk[pos++];
           if (this.headerLen === 4) {
-            this.packetLen = this.header[0] | (this.header[1] << 8) | (this.header[2] << 16);
+            this.packetLen = this.header[0] + (this.header[1] << 8) + (this.header[2] << 16);
             length = this.packetLen;
             break;
           }

@@ -347,7 +347,7 @@ function Connection(options) {
   //*****************************************************************
   // internal public testing methods
   //*****************************************************************
-  function TestMethods(){}
+  function TestMethods() {}
   TestMethods.prototype.getCollation = () => {
     return opts.collation;
   };
