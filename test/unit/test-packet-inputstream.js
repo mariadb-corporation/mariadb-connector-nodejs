@@ -188,4 +188,29 @@ describe("test PacketInputStream data", () => {
     pis.onData(buf.slice(17777215));
     assert.ok(beenDispatch);
   }).timeout(300000);
+
+  it("packet size with byte > 128", () => {
+    let buf = Buffer.alloc(140);
+    buf[0] = 88;
+    buf[4] = 1;
+    buf[5] = 2;
+
+    let bufRes = Buffer.alloc(136);
+    buf[0] = 1;
+    buf[1] = 2;
+
+    const queue = new Queue();
+    queue.push(
+      new EmptyCmd(packet => {
+        assert.deepEqual(bufRes, packet.buf);
+      })
+    );
+    let pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      new ConnOptions(Conf.baseConfig),
+      info
+    );
+    pis.onData(buf);
+  });
 });
