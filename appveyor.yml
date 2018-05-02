@@ -45,7 +45,7 @@ cache:
 clone_folder: c:\projects\mariadb-connector-nodejs
 
 install:
-  - cmd: set FILE=http://mariadb.mirrors.ovh.net/MariaDB/mariadb-%DB%/winx64-packages/mariadb-%DB%-winx64.msi
+  - cmd: set FILE=http://sfo1.mirrors.digitalocean.com/mariadb//mariadb-%DB%/winx64-packages/mariadb-%DB%-winx64.msi
   - ps: Start-FileDownload $Env:FILE -FileName server.msi
   - cmd: msiexec /i server.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
   - cmd: "\"c:\\projects\\server\\bin\\mysql.exe\" -e \"create database testn\" --user=root"
