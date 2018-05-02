@@ -116,8 +116,6 @@ class CompressionOutputStream {
 
       if (this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket();
 
-      this.buf = this.allocateBuffer(remainingLen);
-      this.pos = 7;
     } else {
       //*******************************************************************************
       // compressing packet
@@ -155,8 +153,9 @@ class CompressionOutputStream {
       this.writer(compressChunk);
       if (cmdEnd && this.pos === MAX_BUFFER_SIZE) this.writeEmptyPacket(cmd);
       this.header = Buffer.allocUnsafe(7);
-      this.pos = 7;
     }
+    this.buf = remainingLen ? this.allocateBuffer(remainingLen) : Buffer.allocUnsafe(SMALL_BUFFER_SIZE);
+    this.pos = 7;
   }
 
   allocateBuffer(len) {

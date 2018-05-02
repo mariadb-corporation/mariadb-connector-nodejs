@@ -278,7 +278,7 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
           fct.call(self, self.CONN.MYSQL.drv, deferred);
         },
         onComplete: () => {
-          if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
+          if (onComplete) onComplete.call(self, self.CONN.MYSQL.drv);
         },
         minSamples: this.minSamples,
         defer: true,
@@ -294,7 +294,7 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
           fct.call(self, self.CONN.MYSQL2.drv, deferred);
         },
         onComplete: () => {
-          if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
+          if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
         },
         minSamples: this.minSamples,
         defer: true,
