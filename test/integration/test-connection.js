@@ -80,6 +80,7 @@ describe("connection", () => {
 
   it("connection.destroy() during query execution", function(done) {
     const conn = base.createConnection();
+    this.timeout(10000);
     conn.connect(() => {
       //launch very long query
       conn.query(
@@ -107,8 +108,8 @@ describe("connection", () => {
         "expected > 999, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
-        Date.now() - initTime < 1250,
-        "expected < 1250, but was " + (Date.now() - initTime)
+        Date.now() - initTime < 2000,
+        "expected < 2000, but was " + (Date.now() - initTime)
       );
       done();
     });
@@ -124,8 +125,8 @@ describe("connection", () => {
         "expected > 999, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
-        Date.now() - initTime < 1250,
-        "expected < 1250, but was " + (Date.now() - initTime)
+        Date.now() - initTime < 2000,
+        "expected < 2000, but was " + (Date.now() - initTime)
       );
       done();
     });

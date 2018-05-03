@@ -13,17 +13,20 @@ before_script:
   - sudo /etc/init.d/mysql stop
 
 install:
-    # generate SSL certificates
-    - mkdir tmp
-    - chmod +x .travis/gen-ssl.sh
-    - .travis/gen-ssl.sh mariadb.example.com tmp
-    - export PROJ_PATH=`pwd`
-    - export SSLCERT=$PROJ_PATH/tmp
-    - export TEST_SSL_CA_FILE=$SSLCERT/server.crt
-    - export TEST_SSL_CLIENT_KEY_FILE=$SSLCERT/client.key
-    - export TEST_SSL_CLIENT_CERT_FILE=$SSLCERT/client.crt
-    - export TEST_SSL_CLIENT_KEYSTORE_FILE=$SSLCERT/client-keystore.p12
-    - export ENTRYPOINT=$PROJ_PATH/.travis/entrypoint
+  # generate SSL certificates
+  - mkdir tmp
+  - chmod +x .travis/gen-ssl.sh
+  - chmod +x .travis/build/build.sh
+  - chmod +x .travis/build/docker-entrypoint.sh
+  - chmod 777 .travis/build/
+  - .travis/gen-ssl.sh mariadb.example.com tmp
+  - export PROJ_PATH=`pwd`
+  - export SSLCERT=$PROJ_PATH/tmp
+  - export TEST_SSL_CA_FILE=$SSLCERT/server.crt
+  - export TEST_SSL_CLIENT_KEY_FILE=$SSLCERT/client.key
+  - export TEST_SSL_CLIENT_CERT_FILE=$SSLCERT/client.crt
+  - export TEST_SSL_CLIENT_KEYSTORE_FILE=$SSLCERT/client-keystore.p12
+  - export ENTRYPOINT=$PROJ_PATH/.travis/entrypoint
 
 env:
   global:
@@ -32,41 +35,46 @@ env:
   - MUST_USE_TCPIP=1
 
 matrix:
+  allow_failures:
+    - node_js: "node"
+      env: DB=build
   include:
-  - node_js: "6"
-    env: DB=mariadb:10.2
-  - node_js: "7"
-    env: DB=mariadb:10.2
-  - node_js: "8"
-    env: DB=mariadb:10.2
-  - node_js: "node"
-    env: DB=mariadb:10.2
-  - node_js: "node"
-    env: DB=mariadb:10.2 TEST_LONG=1
-  - node_js: "node"
-    env: DB=mariadb:10.2 LINT=1
-  - node_js: "node"
-    env: DB=mariadb:10.2 BENCH=1
-  - node_js: "node"
-    env: DB=mariadb:10.2 BENCH=1 TEST_ZIP=1
-  - node_js: "node"
-    env: DB=mariadb:10.2 TEST_ZIP=1
-  - node_js: "node"
-    env: DB=mariadb:5.5
-  - node_js: "node"
-    env: DB=mariadb:10.0
-  - node_js: "node"
-    env: DB=mariadb:10.1
-  - node_js: "node"
-    env: DB=mariadb:10.3
-  - node_js: "node"
-    env: DB=mysql:5.5
-  - node_js: "node"
-    env: DB=mysql:5.6
-  - node_js: "node"
-    env: DB=mysql:5.7
-  - node_js: "node"
-    env: DB=mysql:8.0
+    - node_js: "node"
+      env: DB=build
+    - node_js: "6"
+      env: DB=mariadb:10.2
+    - node_js: "7"
+      env: DB=mariadb:10.2
+    - node_js: "8"
+      env: DB=mariadb:10.2
+    - node_js: "node"
+      env: DB=mariadb:10.2
+    - node_js: "node"
+      env: DB=mariadb:10.2 TEST_LONG=1
+    - node_js: "node"
+      env: DB=mariadb:10.2 LINT=1
+    - node_js: "node"
+      env: DB=mariadb:10.2 BENCH=1
+    - node_js: "node"
+      env: DB=mariadb:10.2 BENCH=1 TEST_ZIP=1
+    - node_js: "node"
+      env: DB=mariadb:10.2 TEST_ZIP=1
+    - node_js: "node"
+      env: DB=mariadb:5.5
+    - node_js: "node"
+      env: DB=mariadb:10.0
+    - node_js: "node"
+      env: DB=mariadb:10.1
+    - node_js: "node"
+      env: DB=mariadb:10.3
+    - node_js: "node"
+      env: DB=mysql:5.5
+    - node_js: "node"
+      env: DB=mysql:5.6
+    - node_js: "node"
+      env: DB=mysql:5.7
+    - node_js: "node"
+      env: DB=mysql:8.0
 
 cache:
   directories:
@@ -76,8 +84,9 @@ notifications:
   email: false
 
 script:
+  - if [ "$DB" = "build" ] ; then .travis/build/build.sh; fi
+  - if [ "$DB" = "build" ] ; then docker build -t build:latest --label build .travis/build/; fi
   - docker-compose -f .travis/docker-compose.yml up -d
-  - nvm ls-remote
   - npm install npm -g
   - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
@@ -85,6 +94,7 @@ script:
   - docker-compose -f .travis/docker-compose.yml stop db
   - sleep 1
   - docker-compose -f .travis/docker-compose.yml up -d
+  - docker-compose -f .travis/docker-compose.yml logs db
   - npm install
   - node --version
   - node .travis/wait-for-docker-up.js
