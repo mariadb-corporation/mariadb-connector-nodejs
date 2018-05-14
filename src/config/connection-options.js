@@ -65,6 +65,7 @@ class ConnectionOptions {
         this.timezoneMillisOffset = hour * 3600000 + minutes * 60000;
       }
     }
+    this.trace = opts.trace || false;
     this.typeCast = opts.typeCast;
     if (this.typeCast != undefined && typeof this.typeCast !== "function") {
       this.typeCast = undefined;

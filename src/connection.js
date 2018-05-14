@@ -183,6 +183,7 @@ function Connection(options) {
     }
 
     const cmd = new Query(_events, _options, _sql, _values, _cb);
+    if (opts.trace) Error.captureStackTrace(cmd);
     return _addCommand(cmd, _pipelining);
   };
 
@@ -620,6 +621,7 @@ function Connection(options) {
       info.status & ServerStatus.STATUS_IN_TRANS
     ) {
       const cmd = new Query(_events, _options, sql, null, _cb);
+      if (opts.trace) Error.captureStackTrace(cmd);
       return _addCommand(cmd, false);
     }
 

@@ -2,7 +2,7 @@
 const ErrorCodes = require("../const/error-code");
 
 class SQLError extends Error {
-  constructor(msg, fatal, info, sqlState, errNo) {
+  constructor(msg, fatal, info, sqlState, errNo, additionalStack) {
     super(
       "(conn=" +
         (info.threadId ? info.threadId : -1) +
@@ -22,21 +22,26 @@ class SQLError extends Error {
     } else {
       this.code = ErrorCodes.codes[this.errno] || "UNKNOWN";
     }
+    if (additionalStack) {
+      //adding caller stack, removing initial "Error:\n"
+      this.stack += "\n initial caller:\n" + additionalStack.substring(additionalStack.indexOf('\n') + 1);
+    }
   }
 }
 
 /**
  * Error factory, so error get connection information.
  *
- * @param msg       current error message
- * @param fatal     is error fatal
- * @param info      connection information
- * @param sqlState  sql state
- * @param errNo     error number
+ * @param msg               current error message
+ * @param fatal             is error fatal
+ * @param info              connection information
+ * @param sqlState          sql state
+ * @param errNo             error number
+ * @param additionalStack   additional stack trace to see
  * @returns {Error} the error
  */
-module.exports.createError = function(msg, fatal, info, sqlState, errNo) {
-  return new SQLError(msg, fatal, info, sqlState, errNo);
+module.exports.createError = function(msg, fatal, info, sqlState, errNo, additionalStack) {
+  return new SQLError(msg, fatal, info, sqlState, errNo, additionalStack);
 };
 
 /********************************************************************************

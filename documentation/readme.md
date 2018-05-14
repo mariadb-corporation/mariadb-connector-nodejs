@@ -105,6 +105,7 @@ default: false
 * `nestTables`: *boolean/string* resultset are presented by table to avoid results with colliding fields. default: false 
 * `rowsAsArray`: *boolean* default rows are defined as a JSON object. when active row is an array. default false 
 * `pipelining`: *boolean* will send query one by one, but without waiting the results of previous entry ([detail information](/documentation/pipelining.md)). default true
+* `trace`: *boolean* will add the stack trace at the time of query creation to error stacktrace 
 * `typeCast`: permit casting results type  
  
 ## Query

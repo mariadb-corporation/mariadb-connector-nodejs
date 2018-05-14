@@ -376,11 +376,12 @@ class Packet {
   /**
    * Parse ERR_Packet : https://mariadb.com/kb/en/library/err_packet/
    *
-   * @param info  current connection info
-   * @param sql   command sql
+   * @param info              current connection info
+   * @param sql               command sql
+   * @param stack             additional stack trace
    * @returns {Error}
    */
-  readError(info, sql) {
+  readError(info, sql, stack) {
     this.skip(1);
     let errorCode = this.readUInt16();
     let sqlState = "";
@@ -393,7 +394,7 @@ class Packet {
     let msg = this.buf.toString("utf8", this.pos, this.end);
     if (sql) msg += "\n" + sql;
     let fatal = sqlState.startsWith("08") || sqlState === "70100";
-    return Errors.createError(msg, fatal, info, sqlState, errorCode);
+    return Errors.createError(msg, fatal, info, sqlState, errorCode, stack);
   }
 }
 

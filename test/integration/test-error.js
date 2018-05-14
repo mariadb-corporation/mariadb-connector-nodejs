@@ -4,15 +4,38 @@ const base = require("../base.js");
 const assert = require("chai").assert;
 
 describe("Error", () => {
-  it("query error", function(done) {
-    shareConn.query("wrong query", err => {
-      assert.isTrue(err != null);
-      assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
-      assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
-      assert.equal(err.errno, 1064);
-      assert.equal(err.sqlState, 42000);
-      assert.equal(err.code, "ER_PARSE_ERROR");
-      done();
+  it("query error with trace", function(done) {
+    const conn = base.createConnection({trace: true});
+    conn.connect(function(err) {
+      conn.query("wrong query", err => {
+        console.log(err);
+        assert.isTrue(err.stack.includes("test-error.js"));
+        assert.isTrue(err != null);
+        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+        assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
+        assert.equal(err.errno, 1064);
+        assert.equal(err.sqlState, 42000);
+        assert.equal(err.code, "ER_PARSE_ERROR");
+        conn.end();
+        done();
+      });
+    });
+  });
+
+  it("query error without trace", function(done) {
+    const conn = base.createConnection({trace: false});
+    conn.connect(function(err) {
+      conn.query("wrong query", err => {
+        assert.isFalse(err.stack.includes("test-error.js"));
+        assert.isTrue(err != null);
+        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+        assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
+        assert.equal(err.errno, 1064);
+        assert.equal(err.sqlState, 42000);
+        assert.equal(err.code, "ER_PARSE_ERROR");
+        conn.end();
+        done();
+      });
     });
   });
 
