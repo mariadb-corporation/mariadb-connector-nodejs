@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const ServerStatus = require("../../src/const/server-status");
+const ServerStatus = require("../../lib/const/server-status");
 const assert = require("chai").assert;
 
 describe("transaction", () => {

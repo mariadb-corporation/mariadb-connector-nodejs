@@ -2,7 +2,7 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
-const Collations = require("../../src/const/collations.js");
+const Collations = require("../../lib/const/collations.js");
 
 describe("connection", () => {
   it("multiple connection.connect() call", function(done) {

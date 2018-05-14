@@ -1,7 +1,7 @@
 "use strict";
 
-const Connection = require("../src/connection");
-const ConnOptions = require("../src/config/connection-options");
+const Connection = require("../lib/connection");
+const ConnOptions = require("../lib/config/connection-options");
 const Conf = require('../test/conf');
 
 const connOptions = new ConnOptions(Conf.baseConfig);

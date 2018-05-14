@@ -5,10 +5,9 @@ const assert = require("chai").assert;
 
 describe("Error", () => {
   it("query error with trace", function(done) {
-    const conn = base.createConnection({trace: true});
+    const conn = base.createConnection({ trace: true });
     conn.connect(function(err) {
       conn.query("wrong query", err => {
-        console.log(err);
         assert.isTrue(err.stack.includes("test-error.js"));
         assert.isTrue(err != null);
         assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
@@ -23,7 +22,7 @@ describe("Error", () => {
   });
 
   it("query error without trace", function(done) {
-    const conn = base.createConnection({trace: false});
+    const conn = base.createConnection({ trace: false });
     conn.connect(function(err) {
       conn.query("wrong query", err => {
         assert.isFalse(err.stack.includes("test-error.js"));

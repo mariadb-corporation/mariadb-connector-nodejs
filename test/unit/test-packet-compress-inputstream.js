@@ -1,13 +1,13 @@
 "use strict";
 
-const CompressionInputStream = require("../../src/io/compression-input-stream");
-const PacketInputStream = require("../../src/io/packet-input-stream");
+const CompressionInputStream = require("../../lib/io/compression-input-stream");
+const PacketInputStream = require("../../lib/io/packet-input-stream");
 const assert = require("chai").assert;
 const Conf = require("../conf");
-const ConnOptions = require("../../src/config/connection-options");
+const ConnOptions = require("../../lib/config/connection-options");
 const Queue = require("denque");
-const Command = require("../../src/cmd/command");
-const ConnectionInformation = require("../../src/misc/connection-information");
+const Command = require("../../lib/cmd/command");
+const ConnectionInformation = require("../../lib/misc/connection-information");
 const EventEmitter = require("events");
 const ZLib = require("zlib");
 

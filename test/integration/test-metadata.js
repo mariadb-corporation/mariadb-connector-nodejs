@@ -2,8 +2,8 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
-const Collations = require("../../src/const/collations.js");
-const FieldType = require("../../src/const/field-type");
+const Collations = require("../../lib/const/collations.js");
+const FieldType = require("../../lib/const/field-type");
 
 describe("metadata", () => {
   it("result metadata values", function(done) {

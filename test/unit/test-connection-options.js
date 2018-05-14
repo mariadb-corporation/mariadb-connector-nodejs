@@ -2,7 +2,7 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
-const ConnOptions = require("../../src/config/connection-options");
+const ConnOptions = require("../../lib/config/connection-options");
 
 describe("test connection options", () => {
   it("permitLocalInfile/pipelining combination ", () => {
