@@ -17,7 +17,7 @@ print_usage () {
 gen_cert_subject () {
   local fqdn="$1"
   [[ "${fqdn}" != "" ]] || print_error "FQDN cannot be blank"
-  echo "/C=/ST=/O=/localityName=/CN=${fqdn}/organizationalUnitName=/emailAddress=/"
+  echo "/C=XX/ST=X/O=X/localityName=X/CN=${fqdn}/organizationalUnitName=X/emailAddress=X/"
 }
 
 main () {
