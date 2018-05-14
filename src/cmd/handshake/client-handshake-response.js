@@ -3,6 +3,8 @@
 const Capabilities = require("../../const/capabilities");
 const Iconv = require("iconv-lite");
 const NativePasswordAuth = require("./auth/native_password_auth");
+const driverVersion = require('../../../package.json').version;
+const os = require("os");
 
 /**
  * Send Handshake response packet
@@ -82,9 +84,17 @@ module.exports.send = function send(cmd, out, opts, pluginName, info) {
     writeParam(out, "_client_name", encoding);
     writeParam(out, "MariaDB connector/Node", encoding);
 
-    let packageJson = require("../../../package.json");
     writeParam(out, "_client_version", encoding);
-    writeParam(out, packageJson.version, encoding);
+    writeParam(out, driverVersion, encoding);
+
+    writeParam(out, "_server_host", encoding);
+    writeParam(out, cmd.getSocket().address().address, encoding);
+
+    writeParam(out, "_os", encoding);
+    writeParam(out, process.platform, encoding);
+
+    writeParam(out, "_client_host", encoding);
+    writeParam(out, os.hostname(), encoding);
 
     writeParam(out, "_node_version", encoding);
     writeParam(out, process.versions.node, encoding);

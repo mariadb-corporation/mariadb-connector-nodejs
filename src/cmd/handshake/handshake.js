@@ -13,12 +13,13 @@ const Capabilities = require("../../const/capabilities");
  * see https://mariadb.com/kb/en/library/1-connecting-connecting/
  */
 class Handshake extends Command {
-  constructor(_events, _succeedAuthentication, _createSecureContext, _addCommand, callback) {
+  constructor(_events, _succeedAuthentication, _createSecureContext, _addCommand, callback, getSocket) {
     super(_events);
     this._succeedAuthentication = _succeedAuthentication;
     this._createSecureContext = _createSecureContext;
     this._addCommand = _addCommand;
     this.onResult = callback;
+    this.getSocket = getSocket;
   }
 
   start(out, opts, info) {

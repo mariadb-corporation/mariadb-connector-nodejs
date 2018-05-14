@@ -410,9 +410,14 @@ function Connection(options) {
         _connected = !err;
         _events.emit("connect", err);
         if (err) _fatalError(err, true);
-      }
+      },
+      _getSocket
     );
     _addCommand(handshake, false);
+  };
+
+  const _getSocket = () => {
+    return _socket;
   };
 
   /**
