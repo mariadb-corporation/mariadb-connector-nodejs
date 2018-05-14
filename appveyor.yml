@@ -30,13 +30,13 @@ environment:
     - DB: '10.3.6'
       nodejs_version: "8"
 
-    - DB: '10.1.31'
+    - DB: '10.1.33'
       nodejs_version: "8"
 
-    - DB: '10.0.34'
+    - DB: '10.0.35'
       nodejs_version: "8"
 
-    - DB: '5.5.59'
+    - DB: '5.5.60'
       nodejs_version: "8"
 
 cache:
