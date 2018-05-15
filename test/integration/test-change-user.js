@@ -78,7 +78,7 @@ describe("change user", () => {
     });
   });
 
-  it("autocommit state after changing user", done => {
+  it("autocommit state after changing user", function(done) {
     if (!shareConn.isMariaDB()) this.skip();
     const conn = base.createConnection();
     conn.connect(err => {
