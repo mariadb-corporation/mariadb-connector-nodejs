@@ -1,7 +1,7 @@
 {
   "name": "mariadb",
   "version": "0.1.0",
-  "description": "fast mariadb/mysql driver.",
+  "description": "fast mariadb/mysql connector.",
   "main": "index.js",
   "directories": {
     "src": "src",
@@ -24,8 +24,8 @@
     "mariadb",
     "mysql",
     "client",
-    "server",
-    "driver"
+    "driver",
+    "connector"
   ],
   "files": [
     "src",
@@ -51,8 +51,7 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-markdown": "^1.0.0-beta.8",
     "mocha": "^5.1.1",
-    "prettier": "^1.12.1",
-    "prettier-markdown": "^0.1.6"
+    "prettier": "^1.12.1"
   },
   "bugs": {
     "url": "https://jira.mariadb.org/projects/CONJS/"
