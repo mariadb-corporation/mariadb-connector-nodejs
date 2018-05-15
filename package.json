@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "fast mariadb/mysql driver.",
   "main": "index.js",
   "directories": {
@@ -11,8 +11,8 @@
   "scripts": {
     "test": "npm run test:lint && npm run test:prettier && npm run test:base",
     "test:base": "mocha \"test/**/*.js\"",
-    "test:lint": "eslint index.js 'src/**/*.js' 'test/**/*.js'",
-    "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{src,test,benchmarks}/**/*.js\"",
+    "test:lint": "eslint index.js 'lib/**/*.js' 'test/**/*.js'",
+    "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{lib,test,benchmarks}/**/*.js\"",
     "benchmark": "node ./benchmarks/benchmarks.js",
     "generate": "node ./tools/generate-mariadb.js"
   },

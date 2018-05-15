@@ -262,4 +262,15 @@ describe("connection", () => {
       } else done();
     });
   });
+
+  it("connection validity", function(done) {
+    const conn = base.createConnection();
+    assert.isFalse(conn.isValid());
+    conn.connect(() => {
+      assert.isTrue(conn.isValid());
+      conn.end();
+      assert.isFalse(conn.isValid());
+      done();
+    });
+  });
 });
