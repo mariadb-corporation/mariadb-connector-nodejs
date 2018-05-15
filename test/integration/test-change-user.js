@@ -2,6 +2,7 @@
 
 const base = require("../base.js");
 const assert = require("chai").assert;
+const ServerStatus = require("../../lib/const/server-status");
 
 describe("change user", () => {
   before(done => {
@@ -74,6 +75,26 @@ describe("change user", () => {
     shareConn.changeUser({ user: "ChangeUser" }, err => {
       assert.isTrue(err.message.includes("method changeUser not available"));
       done();
+    });
+  });
+
+  it("autocommit state after changing user", done => {
+    if (!shareConn.isMariaDB()) this.skip();
+    const conn = base.createConnection();
+    conn.connect(err => {
+      if (err) done(err);
+      assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+      conn.query("SET autocommit=1", () => {
+        assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+        conn.query("SET autocommit=0", () => {
+          assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+          conn.changeUser({ user: "ChangeUser", password: "mypassword" }, err => {
+            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+            conn.end();
+            done();
+          });
+        });
+      });
     });
   });
 });
