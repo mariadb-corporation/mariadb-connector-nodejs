@@ -6,7 +6,7 @@ module.exports.displaySql = "INSERT INTO testn.perfTest(test) VALUES (?) (into B
 module.exports.benchFct = function(conn, deferred) {
   conn.query(
     "INSERT INTO testn.perfTest(test) VALUES (?)",
-    [Math.floor(Math.random() * 50000000)],
+    ["" + Math.floor(Math.random() * 50000000)],
     function(err, rows) {
       assert.ifError(err);
       assert.equal(1, rows.info ? rows.info.affectedRows : rows.affectedRows);
@@ -25,7 +25,7 @@ module.exports.initFct = async function(conn) {
         if (err) console.log(err);
       }),
       conn.query(
-        "CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test int, PRIMARY KEY (id) ) " +
+        "CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test varchar(10), PRIMARY KEY (id) ) " +
           "ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'",
         err => {
           if (err) console.log(err);
