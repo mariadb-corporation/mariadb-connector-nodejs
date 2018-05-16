@@ -54,19 +54,16 @@ describe("change user", () => {
       conn.changeUser(
         { user: "ChangeUser", password: "mypassword", charset: "UTF8_PERSIAN_CI" },
         err => {
-          if (err) {
-            done(err);
-          } else {
-            conn.query("SELECT CURRENT_USER", (err, res) => {
-              const user = res[0]["CURRENT_USER"];
-              assert.equal(user, "ChangeUser@%");
-              assert.equal(conn.__tests.getCollation().name, "UTF8_PERSIAN_CI");
-              conn.end();
-              done();
-            });
-          }
+          if (err) done(err);
         }
       );
+      conn.query("SELECT CURRENT_USER", (err, res) => {
+        const user = res[0]["CURRENT_USER"];
+        assert.equal(user, "ChangeUser@%");
+        assert.equal(conn.__tests.getCollation().name, "UTF8_PERSIAN_CI");
+        conn.end();
+        done();
+      });
     });
   });
 
