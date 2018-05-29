@@ -14,8 +14,13 @@ grep -o ">build-[0-9]*" index.html | grep -o "[0-9]*" | tac | while read -r line
     echo "**************************************************************************"
     wget -q -o /dev/null -O $line.html  http://hasky.askmonty.org/archive/10.3/build-$line/kvm-deb-jessie-amd64/debs/binary/
     grep -o ">[^\"]*\.deb" $line.html | grep -o "[^>]*\.deb" | while read -r file ; do
-      echo "download file: $file"
-      wget -q -o /dev/null -O .travis/build/$file http://hasky.askmonty.org/archive/10.3/build-$line/kvm-deb-jessie-amd64/debs/binary/$file
+        if  [[ "$file" =~ ^mariadb-plugin.* ]] ;
+        then
+          echo "skipped file: $file"
+        else
+          echo "download file: $file"
+          wget -q -o /dev/null -O .travis/build/$file http://hasky.askmonty.org/archive/10.3/build-$line/kvm-deb-jessie-amd64/debs/binary/$file
+        fi
     done
 
     exit
