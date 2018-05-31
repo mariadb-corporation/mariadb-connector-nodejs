@@ -186,6 +186,7 @@ describe("ok packet", () => {
 
   it("update result text changedRows", function(done) {
     const conn = base.createConnection({ foundRows: false });
+    conn.connect();
     conn.query("CREATE TEMPORARY TABLE updateResultSet1(id int(11))");
     conn.query("INSERT INTO updateResultSet1 values (1), (1), (2), (3)");
     conn.query("UPDATE updateResultSet1 set id = 1", function(err, res) {
@@ -208,6 +209,7 @@ describe("ok packet", () => {
 
   it("update result binary changedRows", function(done) {
     const conn = base.createConnection({ foundRows: false });
+    conn.connect();
     conn.query("CREATE TEMPORARY TABLE updateResultSet2(id int(11))");
     conn.query("INSERT INTO updateResultSet2 values (1), (1), (2), (3)");
     conn.execute("UPDATE updateResultSet2 set id = 1", function(err, res) {

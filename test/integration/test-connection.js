@@ -26,7 +26,7 @@ describe("connection", () => {
   it("connection event subscription", function(done) {
     let eventNumber = 0;
     const conn = base.createConnection();
-    conn.on("connect", () => {
+    conn.connect(() => {
       eventNumber++;
     });
 
@@ -118,6 +118,7 @@ describe("connection", () => {
   it("connection timeout error (wrong url)", done => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
+    conn.connect();
     conn.on("error", err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
@@ -256,6 +257,7 @@ describe("connection", () => {
 
   it("connection on error event", function(done) {
     const conn = base.createConnection({ user: "fooUser" });
+    conn.connect();
     conn.on("error", err => {
       if (!err) {
         done(new Error("must have thrown error"));
