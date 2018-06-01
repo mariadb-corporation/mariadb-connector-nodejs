@@ -5,7 +5,7 @@ const assert = require("chai").assert;
 const Collations = require("../../lib/const/collations.js");
 
 describe("connection", () => {
-  it("multiple connection.connect() call", function(done) {
+  it("multiple connection.connect() with callback", function(done) {
     const conn = base.createConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -21,6 +21,52 @@ describe("connection", () => {
         });
       });
     });
+  });
+
+  it("multiple connection.connect() with promise", function(done) {
+    const conn = base.createConnection();
+    conn
+      .connect()
+      .then(() => {
+        return conn.connect();
+      })
+      .then(() => {
+        return conn.end();
+      })
+      .then(() => {
+        return conn.end();
+      })
+      .then(() => {
+        conn
+          .connect()
+          .then(() => {
+            done(new Error("must have thrown error"));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes("Connection closed"));
+            done();
+          });
+      })
+      .catch(done);
+  });
+
+  it("multiple simultaneous connection.connect()", function(done) {
+    const conn = base.createConnection();
+    conn.connect().then(() => {
+      return conn.end();
+    });
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.equal(
+          err.message,
+          "(conn=-1, no: 45002, SQLState: 08S01) Connection is already connecting"
+        );
+        done();
+      });
   });
 
   it("connection event subscription", function(done) {
@@ -118,8 +164,7 @@ describe("connection", () => {
   it("connection timeout error (wrong url)", done => {
     const initTime = Date.now();
     const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
-    conn.connect();
-    conn.on("error", err => {
+    conn.connect().catch(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
         Date.now() - initTime >= 999,
@@ -255,10 +300,9 @@ describe("connection", () => {
     });
   });
 
-  it("connection on error event", function(done) {
+  it("connection on error promise", function(done) {
     const conn = base.createConnection({ user: "fooUser" });
-    conn.connect();
-    conn.on("error", err => {
+    conn.connect().catch(err => {
       if (!err) {
         done(new Error("must have thrown error"));
       } else done();

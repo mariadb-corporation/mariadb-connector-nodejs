@@ -8,18 +8,22 @@ TODO have automatically generated table of contents
 
 common API to mysql/mysql2:
 
-* `connect(callback)`: Connect event with callback
-* `changeUser(options, callback)`: change current connection user
-* `beginTransaction(options, callback)`: begin transaction
-* `commit(options, callback)`: commit current transaction if any
-* `rollback(options, callback)`: rollback current transaction if any
-* `ping(options, callback)`: send an empty packet to server to check that connection is active
+* `connect([callback]) => Promise`: connect to database. <br/>
+   Callback parameter is for compatibility with existing drivers.<br/> 
+   return Promise when no callback
+* `changeUser([options][,callback])`: change current connection user
+* `beginTransaction([options][,callback])`: begin transaction
+* `commit([options][,callback])`: commit current transaction if any
+* `rollback([options][,callback])`: rollback current transaction if any
+* `ping([options][,callback])`: send an empty packet to server to check that connection is active
 * `query(sql[, values][,callback])`: execute a [query](#query).
 * `pause()`: pause socket output.
 * `resume()`: resume socket output.
 * `on(eventName, listener)`: register to connection event
 * `once(eventName, listener)`: register to next connection event
-* `end(callback)`: gracefully end connection
+* `end([callback]) => Promise`: gracefully end connection<br/>
+   Callback parameter is for compatibility with existing drivers.<br/> 
+   return Promise when no callback
 * `destroy()`: force connection ending. 
 
 
