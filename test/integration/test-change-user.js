@@ -20,7 +20,7 @@ describe("change user", () => {
     });
   });
 
-  it("basic change user", function(done) {
+  it("basic change user using callback", function(done) {
     if (!shareConn.isMariaDB()) this.skip();
     const conn = base.createConnection();
     conn.connect(err => {
@@ -43,6 +43,32 @@ describe("change user", () => {
         });
       });
     });
+  });
+
+  it("basic change user using promise", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
+
+    const conn = base.createConnection();
+    conn
+      .connect()
+      .then(() => {
+        conn.query("SELECT CURRENT_USER", (err, res) => {
+          const currUser = res[0]["CURRENT_USER"];
+          conn
+            .changeUser({ user: "ChangeUser", password: "mypassword" })
+            .then(() => {
+              conn.query("SELECT CURRENT_USER", (err, res) => {
+                const user = res[0]["CURRENT_USER"];
+                assert.equal(user, "ChangeUser@%");
+                assert.isTrue(user !== currUser);
+                conn.end();
+                done();
+              });
+            })
+            .catch(done);
+        });
+      })
+      .catch(done);
   });
 
   it("change user with collation", function(done) {
