@@ -56,6 +56,7 @@ describe("connection", () => {
     conn.query("SELECT 1", (err, rows) => {
       if (err) done(err);
       assert.deepEqual(rows, [{ "1": 1 }]);
+      conn.end();
       done();
     });
   });
