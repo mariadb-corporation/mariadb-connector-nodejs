@@ -50,6 +50,16 @@ describe("connection", () => {
       .catch(done);
   });
 
+  it("connection.connect() and query no waiting", function(done) {
+    const conn = base.createConnection();
+    conn.connect();
+    conn.query("SELECT 1", (err, rows) => {
+      if (err) done(err);
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      done();
+    });
+  });
+
   it("multiple simultaneous connection.connect()", function(done) {
     const conn = base.createConnection();
     conn.connect().then(() => {
