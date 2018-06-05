@@ -4,17 +4,19 @@ require("../base.js");
 const assert = require("chai").assert;
 
 describe("stored procedure", () => {
-  before(function(done) {
+  before(done => {
     shareConn.query(
       "CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end",
       err => done()
     );
   });
 
-  after(function() {
+  after(done => {
     shareConn.query("DROP PROCEDURE IF EXISTS stmtOutParam", err => {});
     shareConn.query("DROP PROCEDURE IF EXISTS stmtSimple", err => {});
-    shareConn.query("DROP FUNCTION IF EXISTS stmtSimpleFunct", err => {});
+    shareConn.query("DROP FUNCTION IF EXISTS stmtSimpleFunct", err => {
+      done();
+    });
   });
 
   it("simple call query", function(done) {

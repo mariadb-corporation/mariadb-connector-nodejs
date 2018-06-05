@@ -6,7 +6,7 @@ const Collations = require("../../lib/const/collations.js");
 
 describe("connection", () => {
   it("multiple connection.connect() with callback", function(done) {
-    const conn = base.createConnection();
+    const conn = base.createConnection({ useCallback: true });
     conn.connect(err => {
       if (err) done(err);
       //ensure double connect execute callback immediately
@@ -83,7 +83,7 @@ describe("connection", () => {
   it("connection event subscription", function(done) {
     let eventNumber = 0;
     const conn = base.createConnection();
-    conn.connect(() => {
+    conn.connect().then(() => {
       eventNumber++;
     });
 
@@ -115,8 +115,8 @@ describe("connection", () => {
     done();
   });
 
-  it("connection.end() callback testing", function(done) {
-    const conn = base.createConnection();
+  it("connection.end() callback", function(done) {
+    const conn = base.createConnection({ useCallback: true });
     conn.connect(function(err) {
       if (err) return done(err);
       conn.end(function() {
@@ -125,20 +125,33 @@ describe("connection", () => {
     });
   });
 
+  it("connection.end() promise", function(done) {
+    const conn = base.createConnection();
+    conn
+      .connect()
+      .then(() => {
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
   it("connection.destroy()", function(done) {
     this.timeout(10000);
     const conn = base.createConnection();
-    conn.connect(function(err) {
-      if (err) return done(err);
-      conn.destroy();
-      done();
-    });
+    conn
+      .connect()
+      .then(() => {
+        conn.destroy();
+        done();
+      })
+      .catch(done);
   });
 
   it("connection.destroy() during query execution", function(done) {
     const conn = base.createConnection();
     this.timeout(10000);
-    conn.connect(() => {
+    conn.connect().then(() => {
       //launch very long query
       conn.query(
         "select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2",
@@ -149,15 +162,19 @@ describe("connection", () => {
           done();
         }
       );
-      setTimeout(() => {
-        conn.destroy();
-      }, 10);
     });
+    setTimeout(() => {
+      conn.destroy();
+    }, 10);
   });
 
-  it("connection timeout connect (wrong url)", done => {
+  it("connection timeout connect (wrong url) with callback", done => {
     const initTime = Date.now();
-    const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
+    const conn = base.createConnection({
+      host: "www.google.fr",
+      connectTimeout: 1000,
+      useCallback: true
+    });
     conn.connect(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
@@ -170,6 +187,28 @@ describe("connection", () => {
       );
       done();
     });
+  });
+
+  it("connection timeout connect (wrong url) with promise", done => {
+    const initTime = Date.now();
+    const conn = base.createConnection({ host: "www.google.fr", connectTimeout: 1000 });
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
+        assert.isTrue(
+          Date.now() - initTime >= 999,
+          "expected > 999, but was " + (Date.now() - initTime)
+        );
+        assert.isTrue(
+          Date.now() - initTime < 2000,
+          "expected < 2000, but was " + (Date.now() - initTime)
+        );
+        done();
+      });
   });
 
   it("connection timeout error (wrong url)", done => {
@@ -199,30 +238,33 @@ describe("connection", () => {
     }
 
     const conn = base.createConnection();
-    conn.connect(() => {
-      if (
-        (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 3, 1)) ||
-        (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 2))
-      ) {
-        //mariadb session tracking default value was empty before 10.3.1
-        conn.query(
-          "SET @@session_track_system_variables = " +
-            "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
-        );
-      }
-      assert.equal(conn.__tests.getCollation(), Collations.fromName("UTF8MB4_UNICODE_CI"));
-      conn.query("SET time_zone = '+00:00', character_set_client = cp850", (err, rows) => {
-        if (err) done(err);
-        assert.equal(conn.__tests.getCollation(), Collations.fromName("CP850_GENERAL_CI"));
-        conn.end(() => done());
-      });
-    });
+    conn
+      .connect()
+      .then(() => {
+        if (
+          (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 3, 1)) ||
+          (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 2))
+        ) {
+          //mariadb session tracking default value was empty before 10.3.1
+          conn.query(
+            "SET @@session_track_system_variables = " +
+              "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
+          );
+        }
+        assert.equal(conn.__tests.getCollation(), Collations.fromName("UTF8MB4_UNICODE_CI"));
+        conn.query("SET time_zone = '+00:00', character_set_client = cp850", (err, rows) => {
+          if (err) done(err);
+          assert.equal(conn.__tests.getCollation(), Collations.fromName("CP850_GENERAL_CI"));
+          conn.end().then(() => done());
+        });
+      })
+      .catch(done);
   });
 
   it("connection row event", function(done) {
     this.timeout(10000); //can take some time
     const conn = base.createConnection();
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("CREATE TEMPORARY TABLE row_event (val varchar(1024))");
       const array1 = [];
       array1[996] = "a";
@@ -270,8 +312,8 @@ describe("connection", () => {
     return add + val;
   }
 
-  it("connection.connect() error code validation", function(done) {
-    const conn = base.createConnection({ user: "fooUser" });
+  it("connection.connect() error code validation callback", function(done) {
+    const conn = base.createConnection({ user: "fooUser", useCallback: true });
     conn.connect(err => {
       if (!err) done(new Error("must have thrown error"));
       switch (err.errno) {
@@ -302,8 +344,44 @@ describe("connection", () => {
     });
   });
 
-  it("connection error connect event", function(done) {
+  it("connection.connect() error code validation promise", function(done) {
     const conn = base.createConnection({ user: "fooUser" });
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        switch (err.errno) {
+          case 1251:
+            //authentication method unavailable
+            assert.equal(err.sqlState, "08004");
+            break;
+
+          case 1524:
+            //GSSAPI plugin not loaded
+            assert.equal(err.sqlState, "HY000");
+            break;
+
+          case 1045:
+            assert.equal(err.sqlState, "28000");
+            break;
+
+          case 1044:
+            //mysql
+            assert.equal(err.sqlState, "42000");
+            break;
+
+          default:
+            done(err);
+            return;
+        }
+        done();
+      });
+  });
+
+  it("connection error connect event", function(done) {
+    const conn = base.createConnection({ user: "fooUser", useCallback: true });
     conn.connect(err => {
       if (!err) {
         done(new Error("must have thrown error"));
@@ -323,11 +401,15 @@ describe("connection", () => {
   it("connection validity", function(done) {
     const conn = base.createConnection();
     assert.isFalse(conn.isValid());
-    conn.connect(() => {
-      assert.isTrue(conn.isValid());
-      conn.end();
-      assert.isFalse(conn.isValid());
-      done();
-    });
+    conn
+      .connect()
+      .then(() => {
+        assert.isTrue(conn.isValid());
+        return conn.end();
+      })
+      .then(() => {
+        assert.isFalse(conn.isValid());
+        done();
+      });
   });
 });

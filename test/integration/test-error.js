@@ -4,26 +4,44 @@ const base = require("../base.js");
 const assert = require("chai").assert;
 
 describe("Error", () => {
-  it("query error with trace", function(done) {
-    const conn = base.createConnection({ trace: true });
-    conn.connect(function(err) {
-      conn.query("wrong query", err => {
-        assert.isTrue(err.stack.includes("test-error.js"));
-        assert.isTrue(err != null);
-        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
-        assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
-        assert.equal(err.errno, 1064);
-        assert.equal(err.sqlState, 42000);
-        assert.equal(err.code, "ER_PARSE_ERROR");
-        conn.end();
+  it("connection with callback without setting option", function(done) {
+    const conn = base.createConnection();
+    conn
+      .connect(() => {})
+      .then(() => {
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.equal(err.errno, 45027);
+        assert.equal(err.sqlState, "08S01");
+        assert.equal(err.code, "ER_WRONG_PARAMETERS");
         done();
       });
-    });
+  });
+
+  it("query error with trace", function(done) {
+    const conn = base.createConnection({ trace: true });
+    conn
+      .connect()
+      .then(() => {
+        conn.query("wrong query", err => {
+          assert.isTrue(err.stack.includes("test-error.js"));
+          assert.isTrue(err != null);
+          assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+          assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
+          assert.equal(err.errno, 1064);
+          assert.equal(err.sqlState, 42000);
+          assert.equal(err.code, "ER_PARSE_ERROR");
+          conn.end();
+          done();
+        });
+      })
+      .catch(done);
   });
 
   it("query error without trace", function(done) {
     const conn = base.createConnection({ trace: false });
-    conn.connect(function(err) {
+    conn.connect().then(() => {
       conn.query("wrong query", err => {
         assert.isFalse(err.stack.includes("test-error.js"));
         assert.isTrue(err != null);
@@ -52,8 +70,12 @@ describe("Error", () => {
 
   it("query after connection ended", function(done) {
     const conn = base.createConnection();
-    conn.connect(() => {
-      conn.end(() => {
+    conn
+      .connect()
+      .then(() => {
+        return conn.end();
+      })
+      .then(() => {
         conn.query("DO 1", err => {
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
@@ -71,14 +93,18 @@ describe("Error", () => {
             done();
           });
         });
-      });
-    });
+      })
+      .catch(done);
   });
 
   it("transaction after connection ended", function(done) {
     const conn = base.createConnection();
-    conn.connect(() => {
-      conn.end(() => {
+    conn
+      .connect()
+      .then(() => {
+        return conn.end();
+      })
+      .then(() => {
         conn.beginTransaction(err => {
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
@@ -88,8 +114,8 @@ describe("Error", () => {
           assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
           done();
         });
-      });
-    });
+      })
+      .catch(done);
   });
 
   it("server close connection without warning", function(done) {
@@ -100,10 +126,9 @@ describe("Error", () => {
       assert.equal(err.sqlState, "08S01");
       assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
     });
-    conn.connect(function(err) {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.query("set @@wait_timeout = 1");
         setTimeout(function() {
           conn.query("SELECT 2", function(err, rows) {
@@ -113,8 +138,8 @@ describe("Error", () => {
             done();
           });
         }, 2000);
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("server close connection - no connection error event", function(done) {
@@ -136,10 +161,9 @@ describe("Error", () => {
     });
 
     const conn = base.createConnection();
-    conn.connect(function(err) {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.query("set @@wait_timeout = 1");
         setTimeout(function() {
           conn.query("SELECT 2", function(err, rows) {
@@ -148,15 +172,15 @@ describe("Error", () => {
             assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
           });
         }, 2000);
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("server close connection during query", function(done) {
     this.timeout(20000);
     const conn = base.createConnection();
     conn.on("error", err => {});
-    conn.connect(function() {
+    conn.connect().then(() => {
       conn.query("SELECT SLEEP(5)", function(err) {
         if (err) {
           assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
@@ -175,7 +199,7 @@ describe("Error", () => {
 
   it("end connection query error", function(done) {
     const conn = base.createConnection();
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query(
         "select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2",
         err => {

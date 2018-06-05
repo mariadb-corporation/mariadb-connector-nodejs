@@ -111,7 +111,7 @@ describe("ok packet", () => {
 
   it("multiple insert result", function(done) {
     const conn = base.createConnection({ multipleStatements: true });
-    conn.connect(function(err) {
+    conn.connect().then(() => {
       conn.query(
         "CREATE TEMPORARY TABLE multiple_insert_result(" +
           "id int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY," +

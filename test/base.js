@@ -13,24 +13,18 @@ before("share initialization", done => {
   if (global.shareConn) {
     done();
   } else {
-    // console.log("connecting share connection : ");
-    // console.log(connOptions);
-    // console.log(" ");
     let conn = new Connection(connOptions);
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
-        done();
-      }
-    });
+    conn
+      .connect()
+      .then(done)
+      .catch(done);
     global.shareConn = conn;
   }
 });
 
 after("share destroy", () => {
   if (shareConn) {
-    shareConn.end(() => (global.shareConn = undefined));
+    shareConn.end().then(() => (global.shareConn = undefined));
   }
 });
 

@@ -29,7 +29,7 @@ describe("TypeCast", () => {
 
   it("connection level typecast function", function(done) {
     const conn = base.createConnection({ typeCast: changeCaseCast });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query(
         "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r",
         (err, rows) => {
@@ -43,7 +43,7 @@ describe("TypeCast", () => {
 
   it("compatibility automatic cast", function(done) {
     const conn = base.createConnection({ typeCast: true });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("SELECT 1 as r", (err, rows) => {
         assert.deepEqual(rows, [{ r: 1 }]);
         conn.end();
@@ -54,7 +54,7 @@ describe("TypeCast", () => {
 
   it("connection level typecast function", function(done) {
     const conn = base.createConnection({ typeCast: changeCaseCast });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query(
         "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r",
         (err, rows) => {
@@ -93,7 +93,7 @@ describe("TypeCast", () => {
       return next();
     };
     const conn = base.createConnection({ typeCast: tinyToBoolean });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("CREATE TEMPORARY TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2))");
       conn.query("INSERT INTO tinyToBool VALUES (0,0), (1,1), (2,2), (null,null)");
       conn.query("SELECT * from tinyToBool", (err, rows) => {

@@ -10,13 +10,15 @@ describe("pipelining", () => {
   before(function(done) {
     conn1 = base.createConnection({ pipelining: false });
     conn2 = base.createConnection({ pipelining: true });
-    conn1.connect(function(err) {
-      if (err) done(err);
-      conn2.connect(function(err) {
-        if (err) done(err);
+    conn1
+      .connect()
+      .then(() => {
+        return conn2.connect();
+      })
+      .then(() => {
         done();
-      });
-    });
+      })
+      .catch(done);
   });
 
   after(function() {

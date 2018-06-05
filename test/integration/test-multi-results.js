@@ -8,10 +8,10 @@ describe("multi-results", () => {
 
   before(function(done) {
     conn = base.createConnection({ multipleStatements: true });
-    conn.connect(function(err) {
-      if (err) done(err);
-      done();
-    });
+    conn
+      .connect()
+      .then(done)
+      .catch(done);
   });
 
   after(function() {

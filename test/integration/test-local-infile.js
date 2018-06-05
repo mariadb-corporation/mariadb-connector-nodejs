@@ -25,7 +25,7 @@ describe("local-infile", () => {
 
   it("local infile disable when permitLocalInfile option is set", function(done) {
     conn = base.createConnection({ permitLocalInfile: false });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
@@ -38,7 +38,7 @@ describe("local-infile", () => {
 
   it("local infile disable when pipelining option is set", function(done) {
     conn = base.createConnection({ pipelining: true });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
@@ -51,7 +51,7 @@ describe("local-infile", () => {
 
   it("local infile disable using default options", function(done) {
     conn = base.createConnection({ pipelining: undefined, permitLocalInfile: undefined });
-    conn.connect(() => {
+    conn.connect().then(() => {
       conn.query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)", err => {
         assert.isTrue(err != null);
         assert.equal(err.errno, 1148);
@@ -68,7 +68,7 @@ describe("local-infile", () => {
       if (rows[0]["@@local_infile"] === 0) return done(err);
 
       conn = base.createConnection({ permitLocalInfile: true });
-      conn.connect(() => {
+      conn.connect().then(() => {
         conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
         conn.query(
           "LOAD DATA LOCAL INFILE '" +
@@ -97,7 +97,7 @@ describe("local-infile", () => {
           done(err);
         } else {
           conn = base.createConnection({ permitLocalInfile: true });
-          conn.connect(() => {
+          conn.connect().then(() => {
             conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
             conn.query(
               "LOAD DATA LOCAL INFILE '" +
@@ -141,7 +141,7 @@ describe("local-infile", () => {
             done(err);
           } else {
             conn = base.createConnection({ permitLocalInfile: true });
-            conn.connect(() => {
+            conn.connect().then(() => {
               conn.query("CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))");
               conn.query(
                 "LOAD DATA LOCAL INFILE '" +

@@ -74,27 +74,27 @@ describe("ssl", function() {
   it("signed certificate error ", function(done) {
     if (!sslEnable) this.skip();
     const conn = base.createConnection({ user: "sslTestUser", password: null, ssl: true });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(err.message.includes("self signed certificate"));
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("signed certificate forcing", function(done) {
     if (!sslEnable) this.skip();
     const conn = base.createConnection({ ssl: { rejectUnauthorized: false } });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("ensure connection use SSL ", function(done) {
@@ -104,14 +104,13 @@ describe("ssl", function() {
       password: null,
       ssl: { rejectUnauthorized: false }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("SSLv3 disable", function(done) {
@@ -119,16 +118,16 @@ describe("ssl", function() {
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "SSLv3_client_method" }
     });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(err.message.includes("SSLv3 methods disabled"));
         conn.end();
-
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("SSLv2 disable", function(done) {
@@ -136,14 +135,15 @@ describe("ssl", function() {
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "SSLv2_method" }
     });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(err.message.includes("SSLv2 methods disabled"));
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("TLSv1 working", function(done) {
@@ -151,15 +151,14 @@ describe("ssl", function() {
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_method" }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         checkProtocol(conn, "TLSv1");
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("TLSv1.1 working", function(done) {
@@ -168,15 +167,14 @@ describe("ssl", function() {
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_1_method" }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("TLSv1.1 with permit cipher", function(done) {
@@ -190,15 +188,14 @@ describe("ssl", function() {
           "DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
       }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         checkProtocol(conn, "TLSv1.1");
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("TLSv1.1 no common cipher", function(done) {
@@ -211,14 +208,15 @@ describe("ssl", function() {
         ciphers: "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
       }
     });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(err.message.includes("no ciphers available"));
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("TLSv1.1 wrong cipher", function(done) {
@@ -231,14 +229,15 @@ describe("ssl", function() {
         ciphers: "ECDHE-ECDSA-AES256-STRANGE"
       }
     });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(err.message.includes("no ciphers available"));
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("TLSv1.2 working", function(done) {
@@ -251,15 +250,14 @@ describe("ssl", function() {
     const conn = base.createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_2_method" }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         checkProtocol(conn, "TLSv1.2");
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("TLSv1.2 with cipher working", function(done) {
@@ -277,15 +275,14 @@ describe("ssl", function() {
           "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
       }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         checkProtocol(conn, "TLSv1.2");
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("CA provided ignoring name verification", function(done) {
@@ -302,14 +299,13 @@ describe("ssl", function() {
         }
       }
     });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("CA name verification error", function(done) {
@@ -319,18 +315,19 @@ describe("ssl", function() {
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
     const conn = base.createConnection({ host: "127.0.0.1", ssl: { ca: ca } });
-    conn.connect(err => {
-      if (err) {
+    conn
+      .connect()
+      .then(() => {
+        done(new Error("Must have thrown an exception !"));
+      })
+      .catch(err => {
         assert.isTrue(
           err.message.includes(
             "Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"
           )
         );
         done();
-      } else {
-        done(new Error("Must have thrown an exception !"));
-      }
-    });
+      });
   });
 
   it("CA provided with matching cn", function(done) {
@@ -339,10 +336,9 @@ describe("ssl", function() {
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
 
     const conn = base.createConnection({ host: "mariadb.example.com", ssl: { ca: ca } });
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         const isWin = process.platform === "win32";
         let expectedProtocol = "TLSv1.2";
         if (shareConn.isMariaDB()) {
@@ -353,8 +349,8 @@ describe("ssl", function() {
         checkProtocol(conn, expectedProtocol);
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("Mutual authentication without providing client certificate", function(done) {
@@ -367,13 +363,14 @@ describe("ssl", function() {
       host: "mariadb.example.com",
       ssl: { ca: ca }
     });
-    conn.connect(err => {
-      if (err) {
-        done();
-      } else {
+    conn
+      .connect()
+      .then(() => {
         done(new Error("Must have thrown an exception !"));
-      }
-    });
+      })
+      .catch(err => {
+        done();
+      });
   });
 
   it("Mutual authentication providing client certificate", function(done) {
@@ -398,14 +395,13 @@ describe("ssl", function() {
       }
     });
 
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 
   it("Mutual authentication providing client keystore", function(done) {
@@ -428,14 +424,13 @@ describe("ssl", function() {
       }
     });
 
-    conn.connect(err => {
-      if (err) {
-        done(err);
-      } else {
+    conn
+      .connect()
+      .then(() => {
         conn.end();
         done();
-      }
-    });
+      })
+      .catch(done);
   });
 });
 

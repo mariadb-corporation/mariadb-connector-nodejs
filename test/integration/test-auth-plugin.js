@@ -19,18 +19,19 @@ describe("authentication plugin", () => {
         user: "verificationEd25519AuthPlugin",
         password: "secret"
       });
-      conn.connect(function(err) {
-        if (err) {
+      conn
+        .connect()
+        .then(() => {
+          done(new Error("must have throw an error"));
+        })
+        .catch(err => {
           const expectedMsg = err.message.includes(
             "Client does not support authentication protocol 'client_ed25519' requested by server."
           );
           if (!expectedMsg) console.log(err);
           assert.isTrue(expectedMsg);
           done();
-        } else {
-          done(new Error("must have throw an error"));
-        }
-      });
+        });
     });
   });
 
@@ -49,11 +50,13 @@ describe("authentication plugin", () => {
 
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
       const conn = base.createConnection({ user: null, socketPath: "\\\\.\\pipe\\" + res[0].soc });
-      conn.connect(function(err) {
-        if (err) return done(err);
-        conn.end();
-        done();
-      });
+      conn
+        .connect()
+        .then(() => {
+          return conn.end();
+        })
+        .then(done)
+        .catch(done);
     });
   });
 
@@ -73,11 +76,13 @@ describe("authentication plugin", () => {
       shareConn.query("CREATE USER " + unixUser + " IDENTIFIED VIA unix_socket using 'test'");
       shareConn.query("GRANT ALL on *.* to " + unixUser);
       const conn = base.createConnection({ user: null, socketPath: res[0].soc });
-      conn.connect(function(err) {
-        if (err) return done(err);
-        conn.end();
-        done();
-      });
+      conn
+        .connect()
+        .then(() => {
+          return conn.end();
+        })
+        .then(done)
+        .catch(done);
     });
   });
 
@@ -92,10 +97,12 @@ describe("authentication plugin", () => {
 
     //password is unix password "myPwd"
     const conn = base.createConnection({ user: "testPam", password: "myPwd" });
-    conn.connect(function(err) {
-      if (err) return done(err);
-      conn.end();
-      done();
-    });
+    conn
+      .connect()
+      .then(() => {
+        return conn.end();
+      })
+      .then(done)
+      .catch(done);
   });
 });

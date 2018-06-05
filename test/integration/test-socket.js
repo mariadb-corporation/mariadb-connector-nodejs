@@ -12,24 +12,24 @@ describe("test socket", () => {
       this.skip();
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
       const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\" + res[0].soc });
-      conn.connect(err => {
-        if (err) {
-          done(err);
-        } else {
+      conn
+        .connect()
+        .then(() => {
           //ensure double connect execute callback immediately
-          conn.connect(err => {
-            conn.query("DO 1", (err, res) => {
-              if (err) done(err);
-              conn.end(() => {
-                conn.connect(err => {
-                  assert.isTrue(err.message.includes("Connection closed"));
-                  done();
-                });
+          return conn.connect();
+        })
+        .then(() => {
+          conn.query("DO 1", (err, res) => {
+            if (err) done(err);
+            conn.end().then(() => {
+              conn.connect().catch(err => {
+                assert.isTrue(err.message.includes("Connection closed"));
+                done();
               });
             });
           });
-        }
-      });
+        })
+        .catch(done);
     });
   });
 
@@ -41,15 +41,17 @@ describe("test socket", () => {
 
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
       const conn = base.createConnection({ socketPath: res[0].soc });
-      conn.connect(err => {
-        if (err) done();
-        conn.query("DO 1", (err, res) => {
-          if (err) done(err);
-          conn.end(() => {
-            done();
+      conn
+        .connect()
+        .then(() => {
+          conn.query("DO 1", (err, res) => {
+            if (err) done(err);
+            conn.end(() => {
+              done();
+            });
           });
-        });
-      });
+        })
+        .catch(done);
     });
   });
 });

@@ -68,15 +68,17 @@ describe("string", () => {
     const encodings = ["KOI8R_GENERAL_CI", "UTF8_GENERAL_CI", "CP850_BIN", "CP1251_GENERAL_CI"];
     for (let i = 0; i < encodings.length; i++) {
       const conn = base.createConnection({ charset: encodings[i] });
-      conn.connect(err => {
-        if (err) return done(err);
-        conn.query("select ? as t", value, (err, res) => assert.strictEqual(res[0].t, value));
-        conn.execute("select ? as t", value, (err, res) => {
-          assert.strictEqual(res[0].t, value);
-          conn.end();
-          if (i === encodings.length - 1) done();
-        });
-      });
+      conn
+        .connect()
+        .then(() => {
+          conn.query("select ? as t", value, (err, res) => assert.strictEqual(res[0].t, value));
+          conn.execute("select ? as t", value, (err, res) => {
+            assert.strictEqual(res[0].t, value);
+            conn.end();
+            if (i === encodings.length - 1) done();
+          });
+        })
+        .catch(done);
     }
   });
 
