@@ -16,7 +16,9 @@ before("share initialization", done => {
     let conn = new Connection(connOptions);
     conn
       .connect()
-      .then(done)
+      .then(() => {
+        done();
+      })
       .catch(done);
     global.shareConn = conn;
   }
@@ -33,5 +35,7 @@ after("share destroy", () => {
 //*****************************************************************
 module.exports.createConnection = function createConnection(opts) {
   let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
-  return new Connection(new ConnOptions(connOptionTemp));
+  const conn = new Connection(new ConnOptions(connOptionTemp));
+  if (connOptionTemp.useCallback) return conn;
+  return conn.connect();
 };

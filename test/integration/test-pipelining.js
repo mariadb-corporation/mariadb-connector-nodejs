@@ -8,12 +8,23 @@ describe("pipelining", () => {
   const iterations = 500;
 
   before(function(done) {
-    conn1 = base.createConnection({ pipelining: false });
-    conn2 = base.createConnection({ pipelining: true });
+    Promise.all([
+      base.createConnection({ pipelining: false }),
+      base.createConnection({ pipelining: true })
+    ])
+      .then(connections => {
+        conn1 = connections[0];
+        conn2 = connections[1];
+        done();
+      })
+      .catch(done);
+  });
+
+  after(done => {
     conn1
-      .connect()
+      .end()
       .then(() => {
-        return conn2.connect();
+        return conn2.end();
       })
       .then(() => {
         done();
@@ -21,48 +32,58 @@ describe("pipelining", () => {
       .catch(done);
   });
 
-  after(function() {
-    conn1.end();
-    conn2.end();
-  });
-
   it("500 insert test speed", function(done) {
     this.timeout(60000);
-    conn1.query("CREATE TEMPORARY TABLE pipeline1 (test int)");
-    conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)", (err, res) => {
-      insertBulk(conn1, "pipeline1", diff => {
-        insertBulk(conn2, "pipeline2", pipelineDiff => {
-          if (shareConn.hasMinVersion(10, 2, 0)) {
-            //before 10.1, speed is sometime nearly equivalent using pipelining or not
-            //remove speed test then to avoid random error in CIs
-            if (
-              diff[0] < pipelineDiff[0] ||
-              (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])
-            ) {
-              console.log(
-                "time to insert 1000 : std=" +
-                  Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
-                  "ms pipelining=" +
-                  Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
-                  "ms"
-              );
-            }
+    let diff, pipelineDiff;
+    conn1
+      .query("CREATE TEMPORARY TABLE pipeline1 (test int)")
+      .then(() => {
+        return conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)");
+      })
+      .then(() => {
+        return insertBulk(conn1, "pipeline1");
+      })
+      .then(time => {
+        diff = time;
+        return insertBulk(conn2, "pipeline2");
+      })
+      .then(time => {
+        pipelineDiff = time;
+        if (shareConn.hasMinVersion(10, 2, 0)) {
+          //before 10.1, speed is sometime nearly equivalent using pipelining or not
+          //remove speed test then to avoid random error in CIs
+          if (
+            diff[0] < pipelineDiff[0] ||
+            (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])
+          ) {
+            console.log(
+              "time to insert 1000 : std=" +
+                Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
+                "ms pipelining=" +
+                Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
+                "ms"
+            );
           }
-          done();
-        });
-      });
-    });
+        }
+        done();
+      })
+      .catch(done);
   });
 
-  function insertBulk(conn, tableName, cb) {
+  function insertBulk(conn, tableName) {
     const startTime = process.hrtime();
     let ended = 0;
-    for (let i = 0; i < iterations; i++) {
-      conn.query("INSERT INTO " + tableName + " VALUES(?)", [i], function(err) {
-        if (++ended === iterations) {
-          cb(process.hrtime(startTime));
-        }
-      });
-    }
+    return new Promise(function(resolve, reject) {
+      for (let i = 0; i < iterations; i++) {
+        conn
+          .query("INSERT INTO " + tableName + " VALUES(?)", [i])
+          .then(() => {
+            if (++ended === iterations) {
+              resolve(process.hrtime(startTime));
+            }
+          })
+          .catch(reject);
+      }
+    });
   }
 });

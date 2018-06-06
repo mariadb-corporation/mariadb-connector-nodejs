@@ -7,7 +7,9 @@ let ConnOptions = require('./lib/config/connection-options.js');
 
 module.exports.createConnection = function createConnection(opts) {
   let connOptions = new ConnOptions(opts);
-  return new Connection(connOptions);
+  const conn = new Connection(connOptions);
+  if (connOptions.useCallback) return conn;
+  return conn.connect();
 };
 
 exports.createPool = function createPool(config) {

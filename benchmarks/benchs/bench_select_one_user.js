@@ -51,13 +51,13 @@ module.exports.benchFct = function(conn, deferred) {
       "u.is_role,\n" +
       "u.default_role,\n" +
       "u.max_statement_time , 50000000 as t" +
-      " from mysql.user u LIMIT 1",
-    function(err, rows, fields) {
-      if (err) console.log(err);
-      assert.ifError(err);
-      assert.equal(50000000, rows[0]["t"]);
+      " from mysql.user u LIMIT 1")
+    .then(rows => {
+      // assert.equal(50000000, rows[0]["t"]);
 
       deferred.resolve();
-    }
-  );
+    })
+    .catch(err => {
+      throw err;
+    });
 };

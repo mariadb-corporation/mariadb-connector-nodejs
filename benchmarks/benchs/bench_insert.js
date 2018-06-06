@@ -34,34 +34,32 @@ module.exports.benchFct = function(conn, deferred) {
     params.push(randomString(100));
   }
 
-  conn.query(sqlInsert, params, function(err, rows) {
-    if (err) {
+  conn.query(sqlInsert, params)
+    .then(rows => {
+      // let val = Array.isArray(rows) ? rows[0] : rows;
+      // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
+      deferred.resolve();
+    })
+    .catch(err => {
       throw err;
-    }
-    assert.equal(rows.info ? rows.info.affectedRows : rows.affectedRows, 1);
-    deferred.resolve();
-  });
+    });
 };
 
 module.exports.initFct = async function(conn) {
   try {
-    await Promise.all([
-      conn.query("DROP TABLE IF EXISTS testn.perfTestText", err => {
-        if (err) console.log(err);
-      }),
-      //conn.query('SET max_heap_table_size = 1000000000'),
-      conn.query("INSTALL SONAME 'ha_blackhole'", err => {
-        if (err) console.log(err);
-      }),
-      conn.query(sqlTable, err => {
-        if (err) console.log(err);
-      })
-    ]);
-  } catch (err) {
-    console.log(err);
+    await conn.query("DROP TABLE IF EXISTS testn.perfTestText");
+    await conn.query("INSTALL SONAME 'ha_blackhole'");
+    await conn.query(sqlTable);
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
 };
 
-module.exports.onComplete = function(conn) {
-  // conn.query('TRUNCATE TABLE testn.perfTestText');
+module.exports.onComplete = async function(conn) {
+  try {
+    await conn.query("TRUNCATE TABLE testn.perfTestText");
+  } catch (e) {
+    //eat
+  }
 };

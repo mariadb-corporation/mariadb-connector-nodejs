@@ -54,13 +54,12 @@ module.exports.benchFct = function(conn, deferred) {
       "u.default_role,\n" +
       "u.max_statement_time , 1 as t" +
       rand +
-      " from mysql.user u LIMIT 1",
-    function(err, rows, fields) {
-      if (err) console.log(err);
-      assert.ifError(err);
-      assert.equal(1, rows[0]["t" + rand]);
-
+      " from mysql.user u LIMIT 1")
+    .then(rows => {
+      // assert.equal(1, rows[0]["t" + rand]);
       deferred.resolve();
-    }
-  );
+    })
+    .catch(err => {
+      throw err;
+    });
 };

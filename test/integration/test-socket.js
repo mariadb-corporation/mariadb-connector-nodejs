@@ -10,27 +10,38 @@ describe("test socket", () => {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
-    shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
-      const conn = base.createConnection({ socketPath: "\\\\.\\pipe\\" + res[0].soc });
-      conn
-        .connect()
-        .then(() => {
-          //ensure double connect execute callback immediately
-          return conn.connect();
-        })
-        .then(() => {
-          conn.query("DO 1", (err, res) => {
-            if (err) done(err);
-            conn.end().then(() => {
-              conn.connect().catch(err => {
-                assert.isTrue(err.message.includes("Connection closed"));
-                done();
-              });
-            });
-          });
-        })
-        .catch(done);
-    });
+
+    shareConn
+      .query("select @@version_compile_os,@@socket soc")
+      .then(res => {
+        base
+          .createConnection({ socketPath: "\\\\.\\pipe\\" + res[0].soc })
+          .then(conn => {
+            //ensure double connect execute callback immediately
+            conn
+              .connect()
+              .then(() => {
+                return conn.query("DO 1");
+              })
+              .then(() => {
+                return conn.end();
+              })
+              .then(() => {
+                conn
+                  .connect()
+                  .then(() => {
+                    done(new Error("must have thrown error"));
+                  })
+                  .catch(err => {
+                    assert.isTrue(err.message.includes("Connection closed"));
+                    done();
+                  });
+              })
+              .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
   });
 
   it("unix socket", function(done) {
@@ -40,16 +51,18 @@ describe("test socket", () => {
       this.skip();
 
     shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
-      const conn = base.createConnection({ socketPath: res[0].soc });
-      conn
-        .connect()
-        .then(() => {
-          conn.query("DO 1", (err, res) => {
-            if (err) done(err);
-            conn.end(() => {
+      base
+        .createConnection({ socketPath: res[0].soc })
+        .then(conn => {
+          conn
+            .query("DO 1")
+            .then(() => {
+              return conn.end();
+            })
+            .then(() => {
               done();
-            });
-          });
+            })
+            .catch(done);
         })
         .catch(done);
     });

@@ -14,47 +14,46 @@ function randomString(length) {
 }
 
 let sqlTable =
-  "CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text" +
+  "CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text" +
   ", PRIMARY KEY (id)) ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'";
-sqlInsert = "INSERT INTO testn.perfTestText(t0) VALUES (?)";
+sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
 module.exports.title = "100 * insert 100 characters";
-module.exports.displaySql = "INSERT INTO testn.perfTestText VALUES (?) (into BLACKHOLE ENGINE)";
+module.exports.displaySql = "INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)";
 const iterations = 10;
 module.exports.benchFct = function(conn, deferred) {
   const params = [randomString(100)];
   let ended = 0;
   for (let i = 0; i < iterations; i++) {
-    conn.query(sqlInsert, params, function(err, rows) {
-      if (err) {
+    conn.query(sqlInsert, params)
+      .then(rows => {
+        // let val = Array.isArray(rows) ? rows[0] : rows;
+        // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
+        if (++ended === iterations) {
+          deferred.resolve();
+        }
+      })
+      .catch(err => {
         throw err;
-      }
-      assert.equal(rows.info ? rows.info.affectedRows : rows.affectedRows, 1);
-      if (++ended === iterations) {
-        deferred.resolve();
-      }
-    });
+      });
   }
 };
 
 module.exports.initFct = async function(conn) {
   try {
-    await Promise.all([
-      conn.query("DROP TABLE IF EXISTS testn.perfTestText", err => {
-        if (err) console.log(err);
-      }),
-      conn.query("INSTALL SONAME 'ha_blackhole'", err => {
-        if (err) console.log(err);
-      }),
-      conn.query(sqlTable, err => {
-        if (err) console.log(err);
-      })
-    ]);
-  } catch (err) {
-    console.log(err);
+    await conn.query("DROP TABLE IF EXISTS testn.perfTestTextPipe");
+    await conn.query("INSTALL SONAME 'ha_blackhole'");
+    await conn.query(sqlTable);
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
 };
 
-module.exports.onComplete = function(conn) {
-  // conn.query('TRUNCATE TABLE testn.perfTestText');
+module.exports.onComplete = async function(conn) {
+  try {
+    await conn.query("TRUNCATE TABLE testn.perfTestTextPipe");
+  } catch (e) {
+    //eat
+  }
 };

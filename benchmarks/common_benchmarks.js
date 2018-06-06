@@ -9,15 +9,15 @@ const mariadb = require("../index.js");
 let mariasql, mysql, mysql2;
 
 try {
-  mysql = require("mysql");
+  mysql = require("promise-mysql");
 } catch (err) {}
 
 try {
-  mysql2 = require("mysql2");
+  mysql2 = require("mysql2/promise");
 } catch (err) {}
 
 try {
-  mariasql = require("mariasql");
+  mariasql = require("mariasql-promise");
 } catch (err) {}
 
 function Bench() {
@@ -45,6 +45,7 @@ function Bench() {
   const config = conf.baseConfig;
   config.charsetNumber = 224;
   config.trace = false;
+  // config.debug = true;
   // if (!mariasql && process.platform === "win32") {
   //   config.socketPath = "\\\\.\\pipe\\MySQL";
   // }
@@ -55,27 +56,55 @@ function Bench() {
   const bench = this;
   if (mysql) {
     this.driverLen++;
-    this.CONN["MYSQL"] = { drv: mysql.createConnection(config), desc: "mysql" };
-    this.CONN.MYSQL.drv.connect(() => dbReady("mysql", this.driverLen));
-    this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
+    this.CONN["MYSQL"] = {
+      desc: "mysql"
+    };
+    mysql
+      .createConnection(config)
+      .then((conn) => {
+        this.CONN["MYSQL"].drv = conn;
+        // conn.on("error", err => console.log("driver mysql error :" + err));
+        dbReady("mysql", this.driverLen)
+      })
+      .catch(err => {
+        throw err;
+      });
+    // this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
   }
 
   if (mysql2) {
     this.driverLen++;
     this.CONN["MYSQL2"] = {
-      drv: mysql2.createConnection(config),
       desc: "mysql2"
     };
-    this.CONN.MYSQL2.drv.connect(() => dbReady("mysql2", this.driverLen));
-    this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
+    mysql2
+      .createConnection(config)
+      .then((conn) => {
+        this.CONN["MYSQL2"].drv = conn;
+        conn.on("error", err => console.log("driver mysql2 error :" + err));
+        dbReady("mysql2", this.driverLen)
+      })
+      .catch(err => {
+        throw err;
+      });
+
+    // this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
   }
 
   this.CONN["MARIADB"] = {
-    drv: mariadb.createConnection(config),
     desc: "mariadb"
   };
-  this.CONN.MARIADB.drv.connect(() => dbReady("mariadb", this.driverLen));
-  this.CONN.MARIADB.drv.on("error", err => console.log("driver mariadb error :" + err));
+
+  mariadb.createConnection(config)
+    .then((conn) => {
+      this.CONN["MARIADB"].drv = conn;
+      conn.on("error", err => console.log("driver mariadb error :" + err));
+      dbReady("mariadb", this.driverLen)
+    })
+    .catch(err => {
+      throw err;
+    });
+
 
   if (mariasql) {
     this.driverLen++;
@@ -89,11 +118,18 @@ function Bench() {
     }
 
     this.CONN["MARIASQLC"] = {
-      drv: new mariasql(configC),
       desc: "mariasql"
     };
-    this.CONN.MARIASQLC.drv.connect(() => dbReady("mariasql", this.driverLen));
-    this.CONN.MARIASQLC.drv.on("error", err => console.log("driver mariasql error :" + err));
+    mysql
+      .createConnection(config)
+      .then((conn) => {
+        this.CONN["MARIASQLC"].drv = conn;
+        // conn.on("error", err => console.log("driver mariasql error :" + err));
+        dbReady("mariasql", this.driverLen)
+      })
+      .catch(err => {
+        throw err;
+      });
   }
 
   this.initFcts = [];
@@ -116,7 +152,7 @@ function Bench() {
     // called between running benchmarks
     onCycle: function(event) {
       //to avoid mysql2 taking all the server memory
-      if (mysql2) mysql2.clearParserCache();
+      if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
