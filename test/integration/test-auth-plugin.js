@@ -7,16 +7,21 @@ const Conf = require("../conf");
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
-    shareConn.query("INSTALL PLUGIN client_ed25519 SONAME 'auth_ed25519'").catch(() => {});
-
-    shareConn.query("drop user verificationEd25519AuthPlugin@'%'").catch(err => {});
     shareConn
-      .query(
-        "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-          "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
-      )
+      .query("INSTALL SONAME 'auth_ed25519'")
       .then(() => {
-        shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'").catch(err => {});
+        return shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
+      })
+      .then(() => {
+        return shareConn.query(
+          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+            "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
+        );
+      })
+      .then(() => {
+        return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
+      })
+      .then(() => {
         base
           .createConnection({
             user: "verificationEd25519AuthPlugin",

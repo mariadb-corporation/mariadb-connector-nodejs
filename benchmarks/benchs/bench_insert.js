@@ -34,7 +34,8 @@ module.exports.benchFct = function(conn, deferred) {
     params.push(randomString(100));
   }
 
-  conn.query(sqlInsert, params)
+  conn
+    .query(sqlInsert, params)
     .then(rows => {
       // let val = Array.isArray(rows) ? rows[0] : rows;
       // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);

@@ -85,12 +85,12 @@ describe("local-infile", () => {
   });
 
   it("file error missing", function(done) {
+    const self = this;
     shareConn
       .query("select @@local_infile")
       .then(rows => {
         if (rows[0]["@@local_infile"] === 0) {
-          done(err);
-          return;
+          self.skip();
         }
         base
           .createConnection({ permitLocalInfile: true })
@@ -125,10 +125,13 @@ describe("local-infile", () => {
   });
 
   it("small local infile", function(done) {
+    const self = this;
     shareConn
       .query("select @@local_infile")
       .then(rows => {
-        if (rows[0]["@@local_infile"] === 0) return done(err);
+        if (rows[0]["@@local_infile"] === 0) {
+          self.skip();
+        }
         return new Promise(function(resolve, reject) {
           fs.writeFile(smallFileName, "1,hello\n2,world\n", "utf8", function(err) {
             if (err) reject(err);
@@ -165,12 +168,12 @@ describe("local-infile", () => {
   it("big local infile", function(done) {
     this.timeout(180000);
     let size;
+    const self = this;
     shareConn
       .query("select @@local_infile")
       .then(rows => {
         if (rows[0]["@@local_infile"] === 0) {
-          done();
-          return;
+          self.skip();
         }
         return shareConn.query("SELECT @@max_allowed_packet as t");
       })

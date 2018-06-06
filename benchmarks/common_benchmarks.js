@@ -61,10 +61,10 @@ function Bench() {
     };
     mysql
       .createConnection(config)
-      .then((conn) => {
+      .then(conn => {
         this.CONN["MYSQL"].drv = conn;
         // conn.on("error", err => console.log("driver mysql error :" + err));
-        dbReady("mysql", this.driverLen)
+        dbReady("mysql", this.driverLen);
       })
       .catch(err => {
         throw err;
@@ -79,10 +79,10 @@ function Bench() {
     };
     mysql2
       .createConnection(config)
-      .then((conn) => {
+      .then(conn => {
         this.CONN["MYSQL2"].drv = conn;
         conn.on("error", err => console.log("driver mysql2 error :" + err));
-        dbReady("mysql2", this.driverLen)
+        dbReady("mysql2", this.driverLen);
       })
       .catch(err => {
         throw err;
@@ -95,16 +95,16 @@ function Bench() {
     desc: "mariadb"
   };
 
-  mariadb.createConnection(config)
-    .then((conn) => {
+  mariadb
+    .createConnection(config)
+    .then(conn => {
       this.CONN["MARIADB"].drv = conn;
       conn.on("error", err => console.log("driver mariadb error :" + err));
-      dbReady("mariadb", this.driverLen)
+      dbReady("mariadb", this.driverLen);
     })
     .catch(err => {
       throw err;
     });
-
 
   if (mariasql) {
     this.driverLen++;
@@ -122,10 +122,10 @@ function Bench() {
     };
     mysql
       .createConnection(config)
-      .then((conn) => {
+      .then(conn => {
         this.CONN["MARIASQLC"].drv = conn;
         // conn.on("error", err => console.log("driver mariasql error :" + err));
-        dbReady("mariasql", this.driverLen)
+        dbReady("mariasql", this.driverLen);
       })
       .catch(err => {
         throw err;
