@@ -28,8 +28,9 @@
     "connector"
   ],
   "files": [
-    "src",
-    "index.js"
+    "lib",
+    "index.js",
+    "callback.js"
   ],
   "engines": {
     "node": ">= 4.0"

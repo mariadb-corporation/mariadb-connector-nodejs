@@ -1,10 +1,8 @@
 "use strict";
 
-const Connection = require("../lib/connection");
-const ConnOptions = require("../lib/config/connection-options");
+const basePromise = require("../index");
+const baseCallback = require("../callback");
 const Conf = require("./conf");
-
-const connOptions = new ConnOptions(Conf.baseConfig);
 
 //*****************************************************************
 // initialize share connection
@@ -13,20 +11,25 @@ before("share initialization", done => {
   if (global.shareConn) {
     done();
   } else {
-    let conn = new Connection(connOptions);
-    conn
-      .connect()
-      .then(() => {
+    basePromise
+      .createConnection(Conf.baseConfig)
+      .then(conn => {
+        global.shareConn = conn;
         done();
       })
       .catch(done);
-    global.shareConn = conn;
   }
 });
 
 after("share destroy", () => {
   if (shareConn) {
-    shareConn.end().then(() => (global.shareConn = undefined));
+    shareConn
+      .end()
+      .then(() => (global.shareConn = undefined))
+      .catch(err => {
+        global.shareConn = undefined;
+        console.log("Error when ending shared connection : " + err.message);
+      });
   }
 });
 
@@ -35,7 +38,10 @@ after("share destroy", () => {
 //*****************************************************************
 module.exports.createConnection = function createConnection(opts) {
   let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
-  const conn = new Connection(new ConnOptions(connOptionTemp));
-  if (connOptionTemp.useCallback) return conn;
-  return conn.connect();
+  return basePromise.createConnection(connOptionTemp);
+};
+
+module.exports.createCallbackConnection = function createConnection(opts) {
+  let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
+  return baseCallback.createConnection(connOptionTemp);
 };

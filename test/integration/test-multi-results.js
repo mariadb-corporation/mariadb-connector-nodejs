@@ -32,7 +32,7 @@ describe("multi-results", () => {
   });
 
   it("simple do 1 with callback", function(done) {
-    const callbackConn = base.createConnection({ useCallback: true });
+    const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {
       if (err) {
         done(err);
@@ -60,8 +60,22 @@ describe("multi-results", () => {
       .catch(done);
   });
 
+  it("query using callback and promise mode", function(done) {
+    shareConn
+      .query("select 1", (err, rows) => {})
+      .then(() => {
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.equal(err.errno, 45027);
+        assert.equal(err.sqlState, "08S01");
+        assert.equal(err.code, "ER_WRONG_PARAMETERS");
+        done();
+      });
+  });
+
   it("simple select 1 with callback", function(done) {
-    const callbackConn = base.createConnection({ useCallback: true });
+    const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {
       if (err) {
         done(err);
@@ -93,7 +107,7 @@ describe("multi-results", () => {
   });
 
   it("multiple selects with callbacks", function(done) {
-    const callbackConn = base.createConnection({ multipleStatements: true, useCallback: true });
+    const callbackConn = base.createCallbackConnection({ multipleStatements: true });
     callbackConn.connect(err => {
       if (err) {
         done(err);
@@ -127,7 +141,7 @@ describe("multi-results", () => {
   });
 
   it("multiple result type with callback", function(done) {
-    const callbackConn = base.createConnection({ multipleStatements: true, useCallback: true });
+    const callbackConn = base.createCallbackConnection({ multipleStatements: true });
     callbackConn.connect(err => {
       if (err) {
         done(err);

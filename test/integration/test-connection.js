@@ -9,7 +9,7 @@ const ConnOptions = require("../../lib/config/connection-options");
 
 describe("connection", () => {
   it("multiple connection.connect() with callback", function(done) {
-    const conn = base.createConnection({ useCallback: true });
+    const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
       //ensure double connect execute callback immediately
@@ -82,22 +82,6 @@ describe("connection", () => {
       .catch(done);
   });
 
-  it("connection with callback without setting option", function(done) {
-    let connOptionTemp = Conf.baseConfig;
-    const conn = new Connection(new ConnOptions(connOptionTemp));
-    conn
-      .connect(() => {})
-      .then(() => {
-        done(new Error("must have thrown error"));
-      })
-      .catch(err => {
-        assert.equal(err.errno, 45027);
-        assert.equal(err.sqlState, "08S01");
-        assert.equal(err.code, "ER_WRONG_PARAMETERS");
-        done();
-      });
-  });
-
   it("multiple simultaneous connection.connect()", function(done) {
     let connOptionTemp = Conf.baseConfig;
     const conn = new Connection(new ConnOptions(connOptionTemp));
@@ -132,7 +116,7 @@ describe("connection", () => {
   });
 
   it("connection.ping() with callback", function(done) {
-    const conn = base.createConnection({ useCallback: true });
+    const conn = base.createCallbackConnection();
     conn.connect(err => {
       conn.ping();
       conn.ping(err => {
@@ -150,7 +134,7 @@ describe("connection", () => {
   });
 
   it("connection.end() callback", function(done) {
-    const conn = base.createConnection({ useCallback: true });
+    const conn = base.createCallbackConnection();
     conn.connect(function(err) {
       if (err) return done(err);
       conn.end(function() {
@@ -207,10 +191,9 @@ describe("connection", () => {
 
   it("connection timeout connect (wrong url) with callback", done => {
     const initTime = Date.now();
-    const conn = base.createConnection({
+    const conn = base.createCallbackConnection({
       host: "www.google.fr",
-      connectTimeout: 1000,
-      useCallback: true
+      connectTimeout: 1000
     });
     conn.connect(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
@@ -307,7 +290,7 @@ describe("connection", () => {
   }
 
   it("connection.connect() error code validation callback", function(done) {
-    const conn = base.createConnection({ user: "fooUser", useCallback: true });
+    const conn = base.createCallbackConnection({ user: "fooUser" });
     conn.connect(err => {
       if (!err) done(new Error("must have thrown error"));
       switch (err.errno) {
@@ -374,7 +357,7 @@ describe("connection", () => {
   });
 
   it("connection error connect event", function(done) {
-    const conn = base.createConnection({ user: "fooUser", useCallback: true });
+    const conn = base.createCallbackConnection({ user: "fooUser" });
     conn.connect(err => {
       if (!err) {
         done(new Error("must have thrown error"));

@@ -24,7 +24,7 @@ describe("change user", () => {
 
   it("basic change user using callback", function(done) {
     if (!shareConn.isMariaDB()) this.skip();
-    const conn = base.createConnection({ useCallback: true });
+    const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
 

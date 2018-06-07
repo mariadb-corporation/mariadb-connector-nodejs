@@ -31,7 +31,7 @@ module.exports.initFct = async function(conn) {
       await conn.query("DROP TABLE IF EXISTS testn.perfTest");
       await conn.query(
         "CREATE TABLE testn.perfTest ( id int(11) NOT NULL AUTO_INCREMENT, test varchar(10), PRIMARY KEY (id) ) " +
-        "COLLATE='utf8mb4_unicode_ci'"
+          "COLLATE='utf8mb4_unicode_ci'"
       );
     } catch (e) {
       console.log(e);
