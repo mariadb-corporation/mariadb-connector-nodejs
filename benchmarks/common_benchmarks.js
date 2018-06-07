@@ -222,7 +222,7 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.iteration > best && o.drvType !== "mariadb") {
+      if (o.iteration > best) {
         base = o.iteration;
         best = o.iteration;
       }
@@ -231,7 +231,6 @@ Bench.prototype.displayReport = function() {
     //display results
     console.log("");
     console.log("bench : " + keys[i]);
-    let mariaTxt;
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
       const val = 100 * (o.iteration - base) / base;
@@ -248,20 +247,14 @@ Bench.prototype.displayReport = function() {
           : " ( " + this.fill((val > 0 ? "+" : "") + perc, 6, false) + "% )");
       if (o.drvType === "mariadb") {
         if (o.iteration < best) {
-          mariaTxt = tt.red
+          console.log(tt.red);
         } else {
-          mariaTxt = tt.cyan;
+          console.log(tt.green);
         }
       } else {
-        if (o.iteration === base) {
-          console.log(tt.green);
-        } else {
-          console.log(tt);
-        }
+        console.log(tt);
       }
     }
-    console.log("     --------------------------");
-    console.log(mariaTxt);
 
   }
 };
