@@ -10,28 +10,33 @@ describe("authentication plugin", () => {
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
     shareConn.query("INSTALL SONAME 'auth_ed25519'")
       .then(() => {
-        return shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
-      }, (err) => {
-        //server wasn't build with this plugin, cancelling test
-        self.skip();
-      })
-      .then(() => {
-        return shareConn.query(
-          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-          "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
-        );
-      })
-      .then(() => {
-        return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
-      })
-      .then(() => {
-        base
-          .createConnection({
-            user: "verificationEd25519AuthPlugin",
-            password: "secret"
+        shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'")
+          .then(() => {
+            return shareConn.query(
+              "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+              "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
+            );
           })
           .then(() => {
-            done(new Error("must have throw an error"));
+            return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
+          })
+          .then(() => {
+            base
+              .createConnection({
+                user: "verificationEd25519AuthPlugin",
+                password: "secret"
+              })
+              .then(() => {
+                done(new Error("must have throw an error"));
+              })
+              .catch(err => {
+                const expectedMsg = err.message.includes(
+                  "Client does not support authentication protocol 'client_ed25519' requested by server."
+                );
+                if (!expectedMsg) console.log(err);
+                assert.isTrue(expectedMsg);
+                done();
+              });
           })
           .catch(err => {
             const expectedMsg = err.message.includes(
@@ -41,15 +46,10 @@ describe("authentication plugin", () => {
             assert.isTrue(expectedMsg);
             done();
           });
-      })
-      .catch(err => {
-        const expectedMsg = err.message.includes(
-          "Client does not support authentication protocol 'client_ed25519' requested by server."
-        );
-        if (!expectedMsg) console.log(err);
-        assert.isTrue(expectedMsg);
-        done();
-      });
+      }, (err) => {
+        //server wasn't build with this plugin, cancelling test
+        self.skip();
+      }).catch(done)
   });
 
   it("name pipe authentication plugin", function(done) {

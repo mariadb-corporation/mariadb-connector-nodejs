@@ -210,7 +210,7 @@ Bench.prototype.displayReport = function() {
   console.log("");
   console.log("--- BENCHMARK RESULTS ---".yellow);
   console.log(
-    "/* travis bench are not to take in account, because VM might run some other testing script that can change results */"
+    "/* travis bench are not to take as is, because VM might run some other testing script that can change results */"
       .gray
   );
 
@@ -222,10 +222,7 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      // if (o.drvType === (mariasql ? "mariasql" : "mysql")) {
-      //   base = o.iteration;
-      // }
-      if (o.iteration > best) {
+      if (o.iteration > best && o.drvType !== "mariadb") {
         base = o.iteration;
         best = o.iteration;
       }
@@ -234,7 +231,7 @@ Bench.prototype.displayReport = function() {
     //display results
     console.log("");
     console.log("bench : " + keys[i]);
-
+    let mariaTxt;
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
       const val = 100 * (o.iteration - base) / base;
@@ -251,14 +248,21 @@ Bench.prototype.displayReport = function() {
           : " ( " + this.fill((val > 0 ? "+" : "") + perc, 6, false) + "% )");
       if (o.drvType === "mariadb") {
         if (o.iteration < best) {
-          console.log(tt.red);
+          mariaTxt = tt.red
         } else {
-          console.log(tt.green);
+          mariaTxt = tt.cyan;
         }
       } else {
-        console.log(tt);
+        if (o.iteration === base) {
+          console.log(tt.green);
+        } else {
+          console.log(tt);
+        }
       }
     }
+    console.log("     --------------------------");
+    console.log(mariaTxt);
+
   }
 };
 
