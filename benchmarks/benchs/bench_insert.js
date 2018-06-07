@@ -22,7 +22,7 @@ for (let i = 1; i < 10; i++) {
   sqlTable += ",t" + i + " text";
 }
 sqlInsert = "INSERT INTO testn.perfTestText(" + sqlCol + ") VALUES (?" + sqlParam + ")";
-sqlTable += ", PRIMARY KEY (id)) ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'";
+sqlTable += ", PRIMARY KEY (id))";
 
 module.exports.title = "insert 10 parameters of 100 characters";
 module.exports.displaySql =
@@ -50,10 +50,15 @@ module.exports.initFct = async function(conn) {
   try {
     await conn.query("DROP TABLE IF EXISTS testn.perfTestText");
     await conn.query("INSTALL SONAME 'ha_blackhole'");
-    await conn.query(sqlTable);
+    await conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'");
   } catch (e) {
-    console.log(e);
-    throw e;
+    try {
+      await conn.query("DROP TABLE IF EXISTS testn.perfTestText");
+      await conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'");
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 };
 

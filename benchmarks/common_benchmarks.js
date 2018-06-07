@@ -255,7 +255,6 @@ Bench.prototype.displayReport = function() {
         console.log(tt);
       }
     }
-
   }
 };
 

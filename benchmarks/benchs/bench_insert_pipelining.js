@@ -15,7 +15,7 @@ function randomString(length) {
 
 let sqlTable =
   "CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text" +
-  ", PRIMARY KEY (id)) ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'";
+  ", PRIMARY KEY (id))";
 sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
 module.exports.title = "100 * insert 100 characters";
@@ -44,10 +44,15 @@ module.exports.initFct = async function(conn) {
   try {
     await conn.query("DROP TABLE IF EXISTS testn.perfTestTextPipe");
     await conn.query("INSTALL SONAME 'ha_blackhole'");
-    await conn.query(sqlTable);
+    await conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'");
   } catch (e) {
-    console.log(e);
-    throw e;
+    try {
+      await conn.query("DROP TABLE IF EXISTS testn.perfTestTextPipe");
+      await conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'");
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 };
 
