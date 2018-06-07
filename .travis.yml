@@ -87,7 +87,7 @@ script:
   - if [ "$DB" = "build" ] ; then .travis/build/build.sh; fi
   - if [ "$DB" = "build" ] ; then docker build -t build:latest --label build .travis/build/; fi
   - docker-compose -f .travis/docker-compose.yml up -d
-  - npm install npm -g
+#  - npm install npm -g
   - npm install denque
   - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
