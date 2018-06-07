@@ -6,16 +6,19 @@ const Conf = require("../conf");
 
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
+    const self = this;
     if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
-    shareConn
-      .query("INSTALL SONAME 'auth_ed25519'")
+    shareConn.query("INSTALL SONAME 'auth_ed25519'")
       .then(() => {
         return shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
+      }, (err) => {
+        //server wasn't build with this plugin, cancelling test
+        self.skip();
       })
       .then(() => {
         return shareConn.query(
           "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-            "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
+          "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
         );
       })
       .then(() => {

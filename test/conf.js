@@ -4,7 +4,7 @@ let baseConfig = {
   user: "root",
   database: "testn",
   host: "localhost",
-  port: 3310,
+  port: 3306,
   trace: true
 };
 
