@@ -87,6 +87,7 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - npm install npm -g
   - npm install
+  - npm install memwatch-next
   - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
   - sleep 1

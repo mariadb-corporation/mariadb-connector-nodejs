@@ -52,7 +52,6 @@
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-markdown": "^1.0.0-beta.8",
-    "memwatch-next": "^0.3.0",
     "mocha": "^5.1.1",
     "prettier": "^1.12.1"
   },
