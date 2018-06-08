@@ -70,7 +70,6 @@ build: off
 
 test_script:
   - node --version
-  - npm install node-memwatch
   - if "%SKIP_LEAK%" == "" npm install node-memwatch
   - if "%BENCH%" == "1" ( npm install microtime ) else ( npm test )
   - if "%BENCH%" == "1" ( npm install promise-mysql mysql2 )
