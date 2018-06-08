@@ -87,7 +87,7 @@ script:
   - docker-compose -f .travis/docker-compose.yml up -d
   - npm install npm -g
   - npm install
-  - if [ -z "$SKIP_LEAK" ] ; npm install node-memwatch; fi
+  - if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
   - node .travis/wait-for-docker-up.js
   - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
   - sleep 1
