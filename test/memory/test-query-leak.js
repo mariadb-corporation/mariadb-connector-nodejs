@@ -41,7 +41,7 @@ describe("leaks", () => {
 
 const queryUsers = queryCount => {
   if (queryCount > 0) {
-    shareConn.query("SELECT * FROM mysql.USER").then(rows => {
+    shareConn.query("SELECT * FROM mysql.user").then(rows => {
       return queryUsers(--queryCount);
     });
   }
@@ -73,7 +73,7 @@ const handleDiff = (hd, done) => {
 const queryPipelineUsers = queryCount => {
   const queries = [];
   for (let i = 0; i < queryCount; i++) {
-    queries.push(shareConn.query("SELECT * FROM mysql.USER"));
+    queries.push(shareConn.query("SELECT * FROM mysql.user"));
   }
   return Promise.all(queries)
     .then(() => {
