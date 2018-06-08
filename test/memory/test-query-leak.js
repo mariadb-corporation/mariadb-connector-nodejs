@@ -53,7 +53,7 @@ const handleDiff = (hd, done) => {
   const errs = [];
   for (let i = 0; i < diff.change.details.length; i++) {
     const obj = diff.change.details[i];
-    if (obj["what"] === "Code") continue;
+    if (["Code", "InternalArray"].includes(obj["what"])) continue;
     if (obj["+"] > obj["-"] + 5) {
       errs.push(obj);
     }
