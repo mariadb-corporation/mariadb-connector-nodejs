@@ -47,6 +47,10 @@ describe("results-set streaming", () => {
       write: (row, encoding, callback) => {
         assert.equal(currRow++, row.v);
         callback();
+        if (process.versions.node.startsWith("6.") && currRow === 10000) {
+          //final was implemented in v8
+          done();
+        }
       },
       writev: (rows, callback) => {
         for (let i = 0; i < rows.length; i++) {
