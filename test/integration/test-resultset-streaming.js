@@ -9,10 +9,13 @@ describe("results-set streaming", () => {
     shareConn
       .query("CREATE TEMPORARY TABLE testStreamResult (v int)")
       .then(() => {
+        let sql = "INSERT INTO testStreamResult VALUE (?)";
+        const params = [0];
         for (let i = 1; i < 10000; i++) {
-          shareConn.query("INSERT INTO testStreamResult VALUE (?)", i);
+          sql += ",(?)";
+          params.push(i);
         }
-        return shareConn.query("INSERT INTO testStreamResult VALUE (?)", 10000);
+        return shareConn.query(sql, params);
       })
       .then(() => {
         done();
@@ -28,7 +31,7 @@ describe("results-set streaming", () => {
         done(new Error("must not have thrown any error !"));
       })
       .on("data", row => {
-        assert.equal(++currRow, row.v);
+        assert.equal(currRow++, row.v);
       })
       .on("end", () => {
         assert.equal(10000, currRow);
@@ -42,7 +45,7 @@ describe("results-set streaming", () => {
       objectMode: true,
       decodeStrings: false,
       write: (row, encoding, callback) => {
-        assert.equal(++currRow, row.v);
+        assert.equal(currRow++, row.v);
         callback();
       },
       writev: (rows, callback) => {
