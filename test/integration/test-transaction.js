@@ -137,8 +137,7 @@ describe("transaction", () => {
                     if (err) return done(err);
                     assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
                     assert.equal(rows[0].nb, 1);
-                    conn.end();
-                    done();
+                    conn.end(done);
                   });
                 });
               });
