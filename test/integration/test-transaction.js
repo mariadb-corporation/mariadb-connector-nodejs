@@ -45,6 +45,41 @@ describe("transaction", () => {
       .catch(done);
   });
 
+  it("transaction rollback with callback", done => {
+    const conn = base.createCallbackConnection();
+    conn.connect(function(err) {
+      if (err) return done(err);
+      conn.query("CREATE TEMPORARY TABLE testTransaction2 (v varchar(10))", err => {
+        if (err) return done(err);
+        conn.rollback(err => {
+          if (err) return done(err);
+          conn.query("SET autocommit=0", err => {
+            if (err) return done(err);
+            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            conn.beginTransaction(err => {
+              if (err) return done(err);
+              assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.query("INSERT INTO testTransaction2 values ('test')");
+              assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.rollback(err => {
+                if (err) return done(err);
+                assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+                conn.query("SELECT count(*) as nb FROM testTransaction2", (err, rows) => {
+                  if (err) return done(err);
+                  assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+                  assert.equal(rows[0].nb, 0);
+                  conn.end();
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
   it("transaction commit", done => {
     shareConn
       .commit()
@@ -75,5 +110,42 @@ describe("transaction", () => {
         done();
       })
       .catch(done);
+  });
+
+  it("transaction commit with callback", done => {
+    const conn = base.createCallbackConnection();
+    conn.connect(err => {
+      if (err) return done(err);
+      conn.query("CREATE TEMPORARY TABLE testTransaction (v varchar(10))", err => {
+        if (err) return done(err);
+        conn.commit(err => {
+          if (err) return done(err);
+          conn.query("SET autocommit=0", err => {
+            if (err) return done(err);
+            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            conn.beginTransaction(err => {
+              if (err) return done(err);
+              assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.query("INSERT INTO testTransaction values ('test')", err => {
+                if (err) return done(err);
+                assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+                conn.commit(err => {
+                  if (err) return done(err);
+                  assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 0);
+                  conn.query("SELECT count(*) as nb FROM testTransaction", (err, rows) => {
+                    if (err) return done(err);
+                    assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_IN_TRANS, 1);
+                    assert.equal(rows[0].nb, 1);
+                    conn.end();
+                    done();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   });
 });

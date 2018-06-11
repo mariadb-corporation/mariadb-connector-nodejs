@@ -5,13 +5,12 @@ require("../base.js");
 let memwatch;
 
 try {
-  memwatch = require("memwatch-next")
+  memwatch = require("memwatch-next");
 } catch (err) {}
 
 const assert = require("chai").assert;
 
 describe("leaks", () => {
-
   it("1000 select leaking test", function(done) {
     if (!memwatch) this.skip();
     this.timeout(20000);
@@ -85,4 +84,3 @@ const queryPipelineUsers = queryCount => {
       return Promise.reject(err);
     });
 };
-
