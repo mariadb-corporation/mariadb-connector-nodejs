@@ -222,8 +222,10 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.iteration > best) {
+      if (o.drvType === "mysql") {
         base = o.iteration;
+      }
+      if (o.iteration > best) {
         best = o.iteration;
       }
     }
