@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const ServerStatus = require("../../lib/const/server-status");
 
 describe("change user", () => {
@@ -47,6 +47,38 @@ describe("change user", () => {
     });
   });
 
+  it("wrong charset", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
+    base.createConnection().then(conn => {
+      conn
+        .changeUser({ user: "ChangeUser", password: "mypassword", charset: "wrong" })
+        .then(() => {
+          done(new Error("must have thrown error!"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Unknown charset"));
+          conn.end();
+          done();
+        });
+    });
+  });
+
+  it("basic change user using callback no function", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
+    const conn = base.createCallbackConnection();
+    conn.connect(err => {
+      if (err) done(err);
+      conn.changeUser();
+      conn.changeUser(err => {});
+      conn.query("SELECT CURRENT_USER", (err, res) => {
+        conn.changeUser({ user: "ChangeUser", password: "mypassword" });
+        conn.end(() => {
+          done();
+        });
+      });
+    });
+  });
+
   it("basic change user using promise", function(done) {
     if (!shareConn.isMariaDB()) this.skip();
     var currUser;
@@ -57,7 +89,11 @@ describe("change user", () => {
           .query("SELECT CURRENT_USER")
           .then(res => {
             currUser = res[0]["CURRENT_USER"];
-            return conn.changeUser({ user: "ChangeUser", password: "mypassword" });
+            return conn.changeUser({
+              user: "ChangeUser",
+              password: "mypassword",
+              connectAttributes: { par1: "bouh", par2: "bla" }
+            });
           })
           .then(() => {
             return conn.query("SELECT CURRENT_USER");

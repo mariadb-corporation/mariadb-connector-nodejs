@@ -4,38 +4,20 @@
 TODO have automatically generated table of contents
 
 
-## Connection
+## Connection API
 
-common API to mysql/mysql2:
-
-* `connect([callback]) => Promise`: connect to database. <br/>
-   Callback parameter is for compatibility with existing drivers.<br/> 
-   return Promise when no callback
-* `changeUser([options][,callback])`: change current connection user
-* `beginTransaction([options][,callback])`: begin transaction
-* `commit([options][,callback])`: commit current transaction if any
-* `rollback([options][,callback])`: rollback current transaction if any
-* `ping([options][,callback])`: send an empty packet to server to check that connection is active
-* `query(sql[, values][,callback])`: execute a [query](#query).
+* `connect() => Promise`: connect to database. 
+* `changeUser([options]) => Promise`: change current connection user
+* `beginTransaction() => Promise`: begin transaction
+* `commit() => Promise`: commit current transaction if any
+* `rollback() => Promise`: rollback current transaction if any
+* `ping() => boolean`: send an empty packet to server to check that connection is active
+* `isValid() => boolean`: check that connection is active
+* `query(sql[, values]) => Promise`: execute a [query](#query).
 * `pause()`: pause socket output.
 * `resume()`: resume socket output.
-* `on(eventName, listener)`: register to connection event
-* `once(eventName, listener)`: register to next connection event
-* `end([callback]) => Promise`: gracefully end connection<br/>
-   Callback parameter is for compatibility with existing drivers.<br/> 
-   return Promise when no callback
+* `end() => Promise`: gracefully end connection
 * `destroy()`: force connection ending. 
-
-
-Not implemented : 
-
-* `escape(value)`
-* `escapeId(value)`
-* `format(sql, value)`
-* `stats(options, callback)`
-
-escape function are not intentionally implemented, since it can lead to injection. use Connection.query(sql, values), it will be more secure and faster
-statistic method is public in mysql, but not documented. 
 
 ### Initiate a connection
 
@@ -51,17 +33,26 @@ If not on localhost, then hostname must be set, port is optional with default 33
 const mariadb      = require('mariadb');
 
 //localhost on windows
-const conn1 = mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'});
+mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
+    .then(conn => {
+      console.log("connected ! connection id is " + conn.threadId);
+    })
+    .catch(err => {
+      console.log("not connected due to error: " + err);
+    });
 
 //localhost on unix
-const conn2 = mariadb.createConnection({socketPath: '/tmp/mysql.sock'});
+mariadb.createConnection({socketPath: '/tmp/mysql.sock'})
+    .then(...)
+    .catch(...);
 
 //not localhost
-const conn3 = mariadb.createConnection({host: 'mydb.com', port:9999});
+mariadb.createConnection({host: 'mydb.com', port:9999})
+    .then(...)
+    .catch(...);
 ```
 
 ### Connection options
-
 
 #### Important option 
 
@@ -113,58 +104,55 @@ default: false
 * `typeCast`: permit casting results type  
  
 ## Query
-`connection.query(sql[, values][,callback])`
 
+#### `query(sql[, values])` -> `Promise`
 
-* `sql` : *string / object*
-* `values`: *object / array* of placeholder values
-* `callback`: *function* that will be called after reception of error/results. see [description](#callback)
-* `return`: command object that emits event. see [query events](#query-events) list  
+Execute a Query.
 
-sql parameter Object can be used to supersede default option.
-Object must then have sql property.
-example : {dateStrings:true, sql:'SELECT now()'}
+* `sql` : *string | object*
+           sql parameter Object can be used to supersede default option.
+           Object must then have sql property.
+           example : {dateStrings:true, sql:'SELECT now()'}
+* `values`: *array | object* placeholder values
 
+return a Promise.
 
-```javascript
-connection.query('SELECT 1', (err, res, fields) => {
-  //...
-});
-
-//with placeholder
-connection.query('INSERT INTO mytable VALUES (?,?)', ['data', 5], (err, res) => {
-  //...
-});
-
-//with options
-connection.query({dateStrings:true, sql:'SELECT now()'}, (err, res, fields) => {
-  //...
-});
+example:
+```js
+   connection
+      .query("SELECT 1 as col")
+      .then(rows => {
+        console.log(rows[0]); //{ col: 1 }
+      })
+      .catch(err => {
+        //handle error
+      });
 ```
 
-## Query callback function
-* `Error`: an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object
-* `results`: a resultset. See [callback results](#callback-results).
-* `column metadatas`: an array describing the fields. see [Field metadata](#field-metadata)
-
-### Error
-The [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) may have the following additional properties :
-         
-* fatal : *boolean* indicating if connection is still valid
-* errno = error number. 
-* sqlState = sql state code
-
-see [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for error number and sql state signification.
+with options:
+```js
+    connection.query({dateStrings:true, sql:'SELECT now()'})
+    .then(...)
+    .catch(...)
+```
 
 ### Placeholder
 
 To avoid SQL Injection, queries permit using question mark place holder. Values will be escaped accordingly to their type.
 
 example :  
-```javascript
-connection.query('INSERT INTO someTable VALUES (?, ?, ?)', [1, Buffer.from("D6E742F72", "hex"), 'mariadb']);
-//will send INSERT INTO someTable VALUES (1, _BINARY '..B.', 'mariadb'); 
+```js
+    connection
+      .query("INSERT INTO someTable VALUES (?, ?, ?)", [
+        1,
+        Buffer.from("c327a97374", "hex"),
+        "mariadb"
+      ])
+      .then(...)
+      .catch(...);
+      //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
 ```
+
 The option "namedPlaceholders" permit using named placeholder. 
 Values must then have the key corresponding to placeholder names. 
 
@@ -172,11 +160,64 @@ Values must then have the key corresponding to placeholder names.
  
 example :  
 ```javascript
-connection.query({namedPlaceholders:true, 'INSERT INTO someTable VALUES (:id, :img, :db)', { id: 1, img: Buffer.from("D6E742F72", "hex"), db: 'mariadb'});
-//will send INSERT INTO someTable VALUES (1, _BINARY '..B.', 'mariadb'); 
-``` 
+    connection
+      .query(
+        { namedPlaceholders: true, sql: "INSERT INTO someTable VALUES (:id, :img, :db)" },
+        { id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
+      )
+      .then(...)
+      .catch(...);
+ 
+```
 
-### Callback results
+### Promise results
+
+#### Promise rejection
+
+On error, Promise return an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object with the following additional properties :
+* fatal : *boolean* indicating if connection is still valid
+* errno : error number. 
+* sqlState : sql state code
+* code : error code.
+
+Example on console.log(error): 
+```
+{ Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
+  sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
+      ...
+      at Socket.Readable.push (_stream_readable.js:134:10)
+      at TCP.onread (net.js:559:20)
+    fatal: false,
+    errno: 1146,
+    sqlState: '42S02',
+    code: 'ER_NO_SUCH_TABLE' } }
+```
+
+Errors contain error stack, query and parameter values (length limited to 1024 characters).
+To get initial stack trace, connection option "trace" must be enable.  
+
+Example on console.log(error) with connection option trace: 
+```
+{ Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
+  sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
+      ...
+      at Socket.Readable.push (_stream_readable.js:134:10)
+      at TCP.onread (net.js:559:20)
+   From event:
+      at C:\projects\mariadb\mariadb-connector-nodejs\lib\connection.js:185:29
+      at Connection.query (C:\projects\mariadb\mariadb-connector-nodejs\lib\connection.js:183:12)
+      at Context.<anonymous> (C:\projects\mariadb\mariadb-connector-nodejs\test\integration\test-error.js:250:8)
+    fatal: false,
+    errno: 1146,
+    sqlState: '42S02',
+    code: 'ER_NO_SUCH_TABLE' } }
+```
+
+See [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for error number and sql state signification.
+
+
+#### Promise fulfilled
+
 There is 2 different kind of results : a "change" result and a result-set.
 
 for insert/delete/update commands, results is a "change" result object with the following properties: 
@@ -185,65 +226,69 @@ for insert/delete/update commands, results is a "change" result object with the 
 * insertId: last auto increment insert id
 * warningStatus: indicating if query ended with warning. 
 
-```javascript
+```js
 connection.query('CREATE TABLE animals (' +
                        'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
                        'name VARCHAR(30) NOT NULL,' +
-                       'PRIMARY KEY (id))');
-connection.query('INSERT INTO animals(name) value (?)', ['sea lions'], (err, res, fields) => {
-  console.log(res); 
-  //log : ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
-});
+                       'PRIMARY KEY (id))')
+connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
+    .then(res => {
+      console.log(res); 
+      //log : ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
+    })
+    .catch(...);
 ```
 
 For result-set, an array representing the data of each rows. Data results format can differ according to options nestTables and rowsAsArray.
 
-default return an array containing a json object of data.
+default return an array containing a json object of data, with metadata information.
 Examples :
 ```javascript
-connection.query('select * from animals', (err, res, fields) => {
-  console.log(res); 
-  //log : 
-  // [ 
-  //    { id: 1, name: 'sea lions' }, 
-  //    { id: 2, name: 'bird' } 
-  // ]
-});
+connection.query('select * from animals')
+    .then(res => {
+      console.log(res); 
+      // [ 
+      //    { id: 1, name: 'sea lions' }, 
+      //    { id: 2, name: 'bird' }, 
+      //    meta: {...} 
+      // ]
+    });
 ```
 
 using option nestTables, return an array of a json object is returned, separated by tables
 Examples :
 ```javascript
 connection.query({nestTables:true, 
-                sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'}, 
-                (err, res, fields) => {
-  console.log(res); 
-  //log : 
-  //[ 
-  // { 
-  //   a: { name: 'sea lions', id: 1 }, 
-  //   b: { name: 'sea lions' } 
-  // },
-  // { 
-  //   a: { name: 'bird', id: 2 }, 
-  //   b: { name: 'sea lions' } 
-  // }
-  //]
-});
+                sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'})
+    .then(res => {
+      console.log(res); 
+      //[ 
+      // { 
+      //   a: { name: 'sea lions', id: 1 }, 
+      //   b: { name: 'sea lions' } 
+      // },
+      // { 
+      //   a: { name: 'bird', id: 2 }, 
+      //   b: { name: 'sea lions' } 
+      // },
+      // meta: {...} 
+      //]
+    });
 ```
 
 using option rowsAsArray is fastest (by 5-10% with local database), return an array of data array :
 (driver do not parse metadata to read names)
 Examples :
 ```javascript
-connection.query({rowsAsArray:true, sql:'select * from animals'}, (err, res, fields) => {
-  console.log(res); 
-  //log : 
-  // [ 
-  //    [ 1, 'sea lions' ], 
-  //    [ 2, 'bird' ] 
-  // ]
-});
+connection.query({rowsAsArray:true, sql:'select * from animals'})
+    .then(res => {
+      console.log(res); 
+      // [ 
+      //    [ 1, 'sea lions' ], 
+      //    [ 2, 'bird' ],
+      //    meta: {...} 
+      // ]
+    });
 ```
 
 If can cast type yourself if needed using option `typeCast`.
@@ -285,44 +330,29 @@ methods
 * `getPrecision()`: return decimal precision
 * `getDisplaySize()`: return max displayed size or -1 if size cannot be known
 
-## query events
-Event can be set on returning command object.
-List of events :
-
-| event name  | event arguments |
-| ----------- | ------------- |
-| "error"     | Error object  |
-| "fields"    | Column array  |
-| "result"    | row data  |
-| "end"       | -  |
-
-```javascript
-let query = connection.query('SELECT host, user FROM mysql.user');
-query.on('error', (err) => console.log(err));
-query.on('result', (res) => console.log(res.host + '/' + res.user));
-```
 
 ### Transaction
-* `connection.beginTransaction(options, callback)`: begin transaction
-* `connection.commit(options, callback)`: commit current transaction
-* `connection.rollback(options, callback)`: rollback current transaction
+* `beginTransaction() => Promise`: begin transaction
+* `commit() => Promise`: commit current transaction
+* `rollback()`: rollback current transaction
 
-Driver does know current transaction state, if no transaction is active, 
+Driver does know current transaction state: if no transaction is active, 
 commit/rollback commands won't send any command to server. 
 
 ```javascript
-conn.beginTransaction();
-conn.query("INSERT INTO testTransaction values ('test')");
-conn.query("INSERT INTO testTransaction values ('test2')", (err) => {
-  if (err) return conn.rollback();
-  conn.commit();
-});
+conn.beginTransaction()
+  .then(() => {
+    conn.query("INSERT INTO testTransaction values ('test')");
+    return conn.query("INSERT INTO testTransaction values ('test2')");
+  })
+  .then(() => {
+    conn.commit();
+  })
+  .catch((err) => {
+    conn.rollback();
+  })
 ```
  
-TODO difference
-- error print command + parameters
-- changedRows resultset that depend on language not defined (available if disabling foundRows).
-
 ### Change connection user
 
 This permit to resets the connection and re-authenticates with the given credentials. 

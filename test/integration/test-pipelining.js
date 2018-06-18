@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("pipelining", () => {
   let conn1, conn2;
@@ -30,6 +30,31 @@ describe("pipelining", () => {
         done();
       })
       .catch(done);
+  });
+
+  it("simple query chain no pipelining", function(done) {
+    conn1
+      .query("DO 1")
+      .then(rows => {
+        assert.deepEqual(rows, { affectedRows: 0, insertId: 0, warningStatus: 0 });
+        return conn1.query("DO 2");
+      })
+      .then(rows => {
+        assert.deepEqual(rows, { affectedRows: 0, insertId: 0, warningStatus: 0 });
+        done();
+      })
+      .catch(done);
+  });
+
+  it("pipelining without waiting for connect", function(done) {
+    const conn = base.createCallbackConnection();
+    conn.connect();
+    conn.query("DO 1");
+    conn.query("SELECT 1", (err, rows) => {
+      assert.deepEqual(rows, [{ "1": 1 }]);
+      conn.end();
+      done();
+    });
   });
 
   it("500 insert test speed", function(done) {

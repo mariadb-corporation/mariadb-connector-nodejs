@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const fs = require("fs");
 const Conf = require("../conf");
 
@@ -428,6 +428,46 @@ describe("ssl", function() {
       .then(conn => {
         conn.end();
         done();
+      })
+      .catch(done);
+  });
+
+  it("ssl change user", function(done) {
+    if (!shareConn.isMariaDB()) this.skip();
+    if (!sslEnable) this.skip();
+    let currUser;
+    let conn;
+    base
+      .createConnection({ ssl: { rejectUnauthorized: false } })
+      .then(con => {
+        conn = con;
+        conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
+        conn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
+        return conn.query("FLUSH PRIVILEGES");
+      })
+      .then(() => {
+        conn
+          .query("SELECT CURRENT_USER")
+          .then(res => {
+            currUser = res[0]["CURRENT_USER"];
+            return conn.changeUser({
+              user: "ChangeUser",
+              password: "mypassword",
+              connectAttributes: { par1: "bouh", par2: "bla" }
+            });
+          })
+          .then(() => {
+            return conn.query("SELECT CURRENT_USER");
+          })
+          .then(res => {
+            const user = res[0]["CURRENT_USER"];
+            assert.equal(user, "ChangeUser@%");
+            assert.isTrue(user !== currUser);
+            conn.query("DROP USER ChangeUser@'%'");
+            conn.end();
+            done();
+          })
+          .catch(done);
       })
       .catch(done);
   });

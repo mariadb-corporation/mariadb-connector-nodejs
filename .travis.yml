@@ -56,8 +56,6 @@ matrix:
     - node_js: "node"
       env: DB=mariadb:10.2 BENCH=1 TEST_ZIP=1
     - node_js: "node"
-      env: DB=mariadb:10.2 TEST_ZIP=1
-    - node_js: "node"
       env: DB=mariadb:5.5
     - node_js: "node"
       env: DB=mariadb:10.0
@@ -85,7 +83,7 @@ script:
   - if [ "$DB" = "build" ] ; then .travis/build/build.sh; fi
   - if [ "$DB" = "build" ] ; then docker build -t build:latest --label build .travis/build/; fi
   - docker-compose -f .travis/docker-compose.yml up -d
-  - npm install npm -g
+  - npm install coveralls
   - npm install
   - if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
   - node .travis/wait-for-docker-up.js
@@ -102,3 +100,6 @@ script:
   - if [ -n "$BENCH" ] ; then npm install promise-mysql mysql2; fi
   - if [ -n "$BENCH" ] ; then npm install microtime; fi
   - if [ -n "$BENCH" ] ; then npm run benchmark; fi
+after_success:
+  - npm i nyc -g
+  - npm run coveralls

@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("mapping", () => {
   const dateNoMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));

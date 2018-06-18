@@ -2,7 +2,7 @@
 
 const base = require("../base.js");
 const Conf = require("../conf");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");

@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("string", () => {
   it("utf8 buffer verification", done => {
@@ -33,7 +33,7 @@ describe("string", () => {
 
     shareConn.query(
       "INSERT INTO buf_utf8_string values " +
-        "('hello'), " +
+        "('hel\\'lo'), " +
         "('您好 (chinese)'), " +
         "('नमस्ते (Hindi)'), " +
         "('привет (Russian)'), " +
@@ -50,7 +50,7 @@ describe("string", () => {
   });
 
   const checkUtf8String = res => {
-    assert.equal(res[0].tt, "hello");
+    assert.equal(res[0].tt, "hel'lo");
     assert.equal(res[1].tt, "您好 (chinese)");
     assert.equal(res[2].tt, "नमस्ते (Hindi)");
     assert.equal(res[3].tt, "привет (Russian)");

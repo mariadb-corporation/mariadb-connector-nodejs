@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../../base");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("buffer", () => {
   it("query a basic buffer", done => {

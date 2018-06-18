@@ -9,18 +9,22 @@
 [![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
 [![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
-
+[![Coverage Status](https://coveralls.io/repos/github/rusher/mariadb-connector-nodejs/badge.svg?branch=documentation)](https://coveralls.io/github/rusher/mariadb-connector-nodejs?branch=documentation)
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-100% javascript, compatible with [mysql client](https://www.npmjs.com/package/mysql) with some additional features : 
+MariaDB and MySQL client, 100% javascript, compatible with node 6+, with promise API.
 
-#### Streaming
-```script
-    const readable = fs.createReadStream(fileName);
-    connection.query("insert into StreamingTable(b) values(?)", [readable], (err, res) => {
-        //id of new record is res.insertId
-    }};
+Why a new client when having already nice and popular [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) client ? <br/>
+To offer new functionality like insert streaming, pipelining, and make no compromise on performance. 
+
+#### Streaming insert data
+```javascript
+    
+    https.get('https://node.green/#ES2018-features-Promise-prototype-finally-basic-support', (res) => {
+        //res implement Readable, driver will stream data to database 
+        connnection.query("INSERT INTO myTable VALUE (?)", [res]);
+    });
 ```
  
 #### Pipelining
@@ -39,6 +43,34 @@ Client    │ <―――――――――――――――――――― firs
 
 queries are not send one by one, waiting for result before sending next one.
 queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
+
+## Quick Start
+
+    npm install mariadb
+
+```js
+  const mariadb = require('mariadb');
+  mariadb.createConnection()
+    .then(conn => {
+      
+      conn.query("SELECT 1 as val")
+        .then((rows) => {
+          console.log(rows); //[ {val: 1}, meta: ... ]
+          return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+        })
+        .then((res) => {
+          console.log(res); //ChangeResult { affectedRows: 1, insertId: 1, warningStatus: 0 }
+          conn.end();
+        })
+        .catch(err => {
+          //handle error
+          conn.end();
+        })
+        
+    }).catch(err => {
+      //not connected
+    });
+```
 
 ## Benchmarks
 
@@ -67,14 +99,6 @@ Some features are not implemented in first beta version, but will in next beta v
     * Query timeout
     * Bulk insert (fast batch)  
 
-## Obtaining the driver
-
-Driver is compatible with node 6+.
-
-The driver can be install using npm : 
-```script
-npm install mariadb --save
-```
 
 ## Documentation
 

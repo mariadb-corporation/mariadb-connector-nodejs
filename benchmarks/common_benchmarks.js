@@ -235,7 +235,7 @@ Bench.prototype.displayReport = function() {
     console.log("bench : " + keys[i]);
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      const val = 100 * (o.iteration - base) / base;
+      const val = (100 * (o.iteration - base)) / base;
       const perc = simpleFormat.format(val);
       const tt =
         "   " +

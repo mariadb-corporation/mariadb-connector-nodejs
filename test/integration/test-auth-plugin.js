@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const Conf = require("../conf");
 
 describe("authentication plugin", () => {
@@ -131,7 +131,8 @@ describe("authentication plugin", () => {
     if (!process.env.TRAVIS) this.skip();
     if (!shareConn.isMariaDB()) this.skip();
     this.timeout(10000);
-    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
+    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch(err => {});
+    shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
     shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
 

@@ -2,7 +2,7 @@
 
 const CompressionInputStream = require("../../lib/io/compression-input-stream");
 const PacketInputStream = require("../../lib/io/packet-input-stream");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const Conf = require("../conf");
 const ConnOptions = require("../../lib/config/connection-options");
 const Queue = require("denque");
@@ -35,7 +35,7 @@ describe("test compress PacketInputStream data", () => {
   before(() => {
     buf = Buffer.alloc(bigSize);
     for (let i = 0; i < buf.length; i++) {
-      buf[i] = 65 + i % 26;
+      buf[i] = 65 + (i % 26);
     }
   });
 

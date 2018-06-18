@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -15,6 +15,7 @@ describe("streaming", () => {
   let maxAllowedSize;
 
   before(function(done) {
+    this.timeout(20000);
     shareConn
       .query(
         "CREATE TEMPORARY TABLE Streaming (id int NOT NULL AUTO_INCREMENT, b longblob, c varchar(10), d longblob, e varchar(10), PRIMARY KEY (id))"
@@ -33,6 +34,28 @@ describe("streaming", () => {
     //create
     fs.unlink(fileName, err => {});
     fs.unlink(halfFileName, err => {});
+  });
+
+  it("Streaming url content", function(done) {
+    const https = require("https");
+    https.get(
+      "https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
+      res => {
+        base.createConnection().then(conn => {
+          conn
+            .query(
+              "CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, PRIMARY KEY (id))"
+            )
+            .then(() => conn.query("INSERT INTO StreamingContent (b) VALUE (?)", [res]))
+            .then(() => conn.query("SELECT * FROM StreamingContent"))
+            .then(rows => {
+              conn.end();
+              done();
+            })
+            .catch(done);
+        });
+      }
+    );
   });
 
   it("Streaming single parameter", function(done) {
@@ -147,7 +170,7 @@ describe("streaming", () => {
 
   function createTmpFiles(done) {
     for (let i = 0; i < buf.length; i++) {
-      buf[i] = 97 + i % 10;
+      buf[i] = 97 + (i % 10);
     }
 
     //create
@@ -156,7 +179,7 @@ describe("streaming", () => {
         done(err);
       } else {
         for (let i = 0; i < buf2.length; i++) {
-          buf2[i] = 97 + i % 10;
+          buf2[i] = 97 + (i % 10);
         }
         fs.writeFile(halfFileName, buf2, "utf8", function(err) {
           if (err) {

@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../../base");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const Conf = require("../../conf");
 
 describe("datetime", () => {

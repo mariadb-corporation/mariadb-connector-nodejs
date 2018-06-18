@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const Long = require("long");
 
 describe("integer with big value", () => {

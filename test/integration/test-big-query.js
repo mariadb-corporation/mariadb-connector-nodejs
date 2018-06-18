@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("Big query", function() {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
@@ -15,7 +15,7 @@ describe("Big query", function() {
         if (testSize < maxAllowedSize) {
           buf = Buffer.alloc(testSize);
           for (let i = 0; i < buf.length; i++) {
-            buf[i] = 97 + i % 10;
+            buf[i] = 97 + (i % 10);
           }
         }
         done();

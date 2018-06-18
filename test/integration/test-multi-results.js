@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("multi-results", () => {
   let conn;
@@ -46,6 +46,20 @@ describe("multi-results", () => {
             done();
           }
         });
+      }
+    });
+  });
+
+  it("simple do 1 with callback no function", function(done) {
+    const callbackConn = base.createCallbackConnection();
+    callbackConn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        callbackConn.query("DO 1");
+        callbackConn.query("DO ?", [2]);
+        callbackConn.end();
+        done();
       }
     });
   });

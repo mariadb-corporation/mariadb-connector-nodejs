@@ -1,13 +1,23 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const Collations = require("../../lib/const/collations.js");
 const Conf = require("../conf");
 const Connection = require("../../lib/connection");
 const ConnOptions = require("../../lib/config/connection-options");
 
 describe("connection", () => {
+  it("with connection attributes", function(done) {
+    base
+      .createConnection({ connectAttributes: { par1: "bouh", par2: "bla" } })
+      .then(conn => {
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
   it("multiple connection.connect() with callback", function(done) {
     const conn = base.createCallbackConnection();
     conn.connect(err => {
@@ -19,10 +29,51 @@ describe("connection", () => {
           conn.connect(err => {
             //normal error
             assert.isTrue(err.message.includes("Connection closed"));
+            assert.equal(err.sqlState, "08S01");
+            assert.equal(err.code, "ER_CONNECTION_ALREADY_CLOSED");
             done();
           });
         });
       });
+    });
+  });
+
+  it("socket timeout", function(done) {
+    let conn;
+    base
+      .createConnection({ socketTimeout: 100, connectTimeout: null })
+      .then(con => {
+        conn = con;
+        return conn.query("SELECT SLEEP(1)");
+      })
+      .then(() => {
+        done(new Error("must have thrown error !"));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("socket timeout"));
+        assert.equal(err.sqlState, "08S01");
+        assert.equal(err.errno, 45026);
+        assert.equal(err.code, "ER_SOCKET_TIMEOUT");
+        done();
+      });
+  });
+
+  it("connection.connect() callback mode without callback", function(done) {
+    const conn = base.createCallbackConnection();
+    conn.connect();
+    setTimeout(() => {
+      conn.end();
+      done();
+    }, 500);
+  });
+
+  it("multiple connection.connect() with callback no function", function(done) {
+    const conn = base.createCallbackConnection();
+    conn.connect();
+    conn.connect();
+    conn.end(() => {
+      conn.connect();
+      done();
     });
   });
 
@@ -207,6 +258,57 @@ describe("connection", () => {
       );
       done();
     });
+  });
+
+  it("connection error", function(done) {
+    base
+      .createConnection({
+        host: "www.facebook.com",
+        port: 443,
+        connectTimeout: 200,
+        socketTimeout: 200
+      })
+      .then(conn => {
+        done(new Error("must have thrown error!"));
+        conn.end();
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("socket timeout"));
+        assert.equal(err.sqlState, "08S01");
+        assert.equal(err.errno, 45026);
+        assert.equal(err.code, "ER_SOCKET_TIMEOUT");
+        done();
+      });
+  });
+
+  it("connection timeout", function(done) {
+    base
+      .createConnection({
+        host: "www.facebook.com",
+        port: 443,
+        connectTimeout: 1
+      })
+      .then(conn => {
+        done(new Error("must have thrown error!"));
+        conn.end();
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Connection timeout"));
+        assert.equal(err.sqlState, "08S01");
+        assert.equal(err.errno, 45012);
+        assert.equal(err.code, "ER_CONNECTION_TIMEOUT");
+        done();
+      });
+  });
+
+  it("connection timeout connect (wrong url) with callback no function", done => {
+    const conn = base.createCallbackConnection({
+      host: "www.google.fr",
+      connectTimeout: 1000
+    });
+    conn.connect();
+    conn.end();
+    done();
   });
 
   it("connection timeout connect (wrong url) with promise", done => {

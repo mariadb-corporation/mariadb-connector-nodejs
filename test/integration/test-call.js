@@ -1,7 +1,7 @@
 "use strict";
 
 require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 
 describe("stored procedure", () => {
   before(done => {

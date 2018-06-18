@@ -1,7 +1,7 @@
 "use strict";
 
 const base = require("../base.js");
-const assert = require("chai").assert;
+const { assert } = require("chai");
 const ConnOptions = require("../../lib/config/connection-options");
 
 describe("test connection options", () => {
