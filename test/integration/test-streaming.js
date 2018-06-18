@@ -170,7 +170,7 @@ describe("streaming", () => {
 
   function createTmpFiles(done) {
     for (let i = 0; i < buf.length; i++) {
-      buf[i] = 97 + (i % 10);
+      buf[i] = 97 + i % 10;
     }
 
     //create
@@ -179,7 +179,7 @@ describe("streaming", () => {
         done(err);
       } else {
         for (let i = 0; i < buf2.length; i++) {
-          buf2[i] = 97 + (i % 10);
+          buf2[i] = 97 + i % 10;
         }
         fs.writeFile(halfFileName, buf2, "utf8", function(err) {
           if (err) {

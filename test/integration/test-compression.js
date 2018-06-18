@@ -18,7 +18,7 @@ describe("Compression", function() {
           if (testSize < maxAllowedSize) {
             buf = Buffer.alloc(testSize);
             for (let i = 0; i < buf.length; i++) {
-              buf[i] = 97 + (i % 10);
+              buf[i] = 97 + i % 10;
             }
           }
           done();

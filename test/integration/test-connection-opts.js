@@ -33,7 +33,6 @@ describe("connection option", () => {
       .catch(done);
   });
 
-
   it("timezone +2h", function(done) {
     base
       .createConnection({ timezone: "+02" })
