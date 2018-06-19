@@ -19,7 +19,9 @@ describe("integer with big value", () => {
       .query("INSERT INTO testBigint values (127), (128)")
       .then(rows => {
         assert.strictEqual(rows.insertId, 128);
-        return shareConn.query("INSERT INTO testBigint values (9007199254740991)");
+        return shareConn.query(
+          "INSERT INTO testBigint values (-9007199254740991), (9007199254740991)"
+        );
       })
       .then(rows => {
         assert.strictEqual(rows.insertId, 9007199254740991);
@@ -30,30 +32,33 @@ describe("integer with big value", () => {
         return shareConn.query("SELECT * FROM testBigint");
       })
       .then(rows => {
-        assert.strictEqual(rows.length, 4);
-        assert.strictEqual(rows[0].v, 127);
-        assert.strictEqual(rows[1].v, 128);
-        assert.strictEqual(rows[2].v, 9007199254740991);
-        assert.strictEqual(rows[3].v, 9007199254740992);
+        assert.strictEqual(rows.length, 5);
+        assert.strictEqual(rows[0].v, -9007199254740991);
+        assert.strictEqual(rows[1].v, 127);
+        assert.strictEqual(rows[2].v, 128);
+        assert.strictEqual(rows[3].v, 9007199254740991);
+        assert.strictEqual(rows[4].v, 9007199254740992);
         assert.strictEqual(typeof rows[3].v, "number");
         return shareConn.query({ supportBigNumbers: true, sql: "SELECT * FROM testBigint" });
       })
       .then(rows => {
-        assert.strictEqual(rows.length, 4);
-        assert.strictEqual(rows[0].v, 127);
-        assert.strictEqual(rows[1].v, 128);
-        assert.strictEqual(rows[2].v, 9007199254740991);
-        assert.strictEqual(typeof rows[3].v, "object");
-        assert.strictEqual(rows[3].v.toString(), "9007199254740992");
+        assert.strictEqual(rows.length, 5);
+        assert.strictEqual(rows[0].v, -9007199254740991);
+        assert.strictEqual(rows[1].v, 127);
+        assert.strictEqual(rows[2].v, 128);
+        assert.strictEqual(rows[3].v, 9007199254740991);
+        assert.strictEqual(typeof rows[4].v, "object");
+        assert.strictEqual(rows[4].v.toString(), "9007199254740992");
         return shareConn.query({ bigNumberStrings: true, sql: "SELECT * FROM testBigint" });
       })
       .then(rows => {
-        assert.strictEqual(rows.length, 4);
-        assert.strictEqual(rows[0].v, 127);
-        assert.strictEqual(rows[1].v, 128);
-        assert.strictEqual(rows[2].v, 9007199254740991);
-        assert.strictEqual(rows[3].v, "9007199254740992");
-        assert.strictEqual(typeof rows[3].v, "string");
+        assert.strictEqual(rows.length, 5);
+        assert.strictEqual(rows[0].v, -9007199254740991);
+        assert.strictEqual(rows[1].v, 127);
+        assert.strictEqual(rows[2].v, 128);
+        assert.strictEqual(rows[3].v, 9007199254740991);
+        assert.strictEqual(rows[4].v, "9007199254740992");
+        assert.strictEqual(typeof rows[4].v, "string");
         done();
       })
       .catch(done);

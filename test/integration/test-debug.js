@@ -12,26 +12,25 @@ describe("debug", () => {
   let initialStdOut;
   let initialStdErr;
   let access;
-  const fileName = path.join(os.tmpdir(), "tmp.txt");
 
-  before(function() {
+  it("select request debug", function(done) {
+    testQueryDebug(false, err => {
+      if (err) {
+        done(err);
+      }
+      testQueryDebug(true, done);
+    });
+  });
+
+  function testQueryDebug(compress, done) {
+    const fileName = path.join(os.tmpdir(), "tmp.txt");
     initialStdOut = process.stdout.write;
     initialStdErr = process.stderr.write;
     access = fs.createWriteStream(fileName);
-  });
 
-  after(function() {
-    process.stdout.write = initialStdOut;
-    process.stderr.write = initialStdErr;
-    access.end();
-    fs.unlink(fileName, err => {});
-  });
-
-  it("select request debug", function(done) {
     process.stdout.write = process.stderr.write = access.write.bind(access);
-
     base
-      .createConnection()
+      .createConnection({ compress: compress })
       .then(conn => {
         conn
           .query("SELECT 1")
@@ -46,15 +45,15 @@ describe("debug", () => {
           .then(() => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
-              const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-              process.stdout.write = initialStdOut;
-              process.stderr.write = initialStdErr;
-              const serverVersion = conn.serverVersion();
-              const rangeWithEOF = Conf.baseConfig.compress ? [470, 500] : [680, 710];
-              const rangeWithoutEOF = Conf.baseConfig.compress ? [470, 500] : [572, 590];
               conn
                 .end()
                 .then(() => {
+                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
+                  process.stdout.write = initialStdOut;
+                  process.stderr.write = initialStdErr;
+                  const serverVersion = conn.serverVersion();
+                  const rangeWithEOF = compress ? [470, 500] : [680, 710];
+                  const rangeWithoutEOF = compress ? [470, 500] : [572, 590];
                   if (
                     (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                     (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
@@ -90,7 +89,10 @@ describe("debug", () => {
                         data
                     );
                   }
-                  fs.truncateSync(fileName, 0);
+                  process.stdout.write = initialStdOut;
+                  process.stderr.write = initialStdErr;
+                  access.end();
+                  fs.unlink(fileName, err => {});
                   done();
                 })
                 .catch(done);
@@ -99,9 +101,22 @@ describe("debug", () => {
           .catch(done);
       })
       .catch(done);
-  });
+  }
 
   it("load local infile debug", function(done) {
+    testLocalInfileDebug(false, err => {
+      if (err) {
+        done(err);
+      }
+      testLocalInfileDebug(true, done);
+    });
+  });
+
+  function testLocalInfileDebug(compress, done) {
+    const fileName = path.join(os.tmpdir(), "tmp.txt");
+    initialStdOut = process.stdout.write;
+    initialStdErr = process.stderr.write;
+    access = fs.createWriteStream(fileName);
     process.stdout.write = process.stderr.write = access.write.bind(access);
 
     shareConn
@@ -119,7 +134,7 @@ describe("debug", () => {
       })
       .then(() => {
         base
-          .createConnection({ permitLocalInfile: true, debug: true })
+          .createConnection({ permitLocalInfile: true, debug: true, compress: compress })
           .then(conn => {
             conn.query("CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))");
             conn
@@ -131,53 +146,58 @@ describe("debug", () => {
               .then(() => {
                 //wait 100ms to ensure stream has been written
                 setTimeout(() => {
-                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  const serverVersion = conn.serverVersion();
-                  conn.end();
-                  const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [4300 , 4430];
-                  const rangeWithoutEOF = Conf.baseConfig.compress ? [4450, 4470] : [4280, 4350];
-                  if (
-                    (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
-                    (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
-                  ) {
-                    assert.isTrue(
-                      data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithoutEOF[0] +
-                        " and " +
-                        rangeWithoutEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  } else {
-                    //EOF Packet make exchange bigger
-                    assert.isTrue(
-                      data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithEOF[0] +
-                        " and " +
-                        rangeWithEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  }
                   conn
                     .end()
                     .then(() => {
+                      const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
+                      process.stdout.write = initialStdOut;
+                      process.stderr.write = initialStdErr;
+                      const serverVersion = conn.serverVersion();
+
+                      const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [4300, 4430];
+                      const rangeWithoutEOF = Conf.baseConfig.compress
+                        ? [4450, 4470]
+                        : [3950, 4390];
+                      if (
+                        (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
+                        (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
+                      ) {
+                        assert.isTrue(
+                          data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
+                          "wrong data length : " +
+                            data.length +
+                            " expected value between " +
+                            rangeWithoutEOF[0] +
+                            " and " +
+                            rangeWithoutEOF[1] +
+                            "." +
+                            "\n server version : " +
+                            serverVersion +
+                            "\n data :\n" +
+                            data
+                        );
+                      } else {
+                        //EOF Packet make exchange bigger
+                        assert.isTrue(
+                          data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
+                          "wrong data length : " +
+                            data.length +
+                            " expected value between " +
+                            rangeWithEOF[0] +
+                            " and " +
+                            rangeWithEOF[1] +
+                            "." +
+                            "\n server version : " +
+                            serverVersion +
+                            "\n data :\n" +
+                            data
+                        );
+                      }
                       fs.unlink(smallFileName, err => {});
-                      fs.truncateSync(fileName, 0);
+                      process.stdout.write = initialStdOut;
+                      process.stderr.write = initialStdErr;
+                      access.end();
+                      fs.unlink(fileName, err => {});
                       done();
                     })
                     .catch(done);
@@ -188,5 +208,5 @@ describe("debug", () => {
           .catch(done);
       })
       .catch(done);
-  });
+  }
 });
