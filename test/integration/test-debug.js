@@ -136,8 +136,8 @@ describe("debug", () => {
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
                   conn.end();
-                  const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [4390, 4430];
-                  const rangeWithoutEOF = Conf.baseConfig.compress ? [4450, 4470] : [4280, 4330];
+                  const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [4300 , 4430];
+                  const rangeWithoutEOF = Conf.baseConfig.compress ? [4450, 4470] : [4280, 4350];
                   if (
                     (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                     (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))

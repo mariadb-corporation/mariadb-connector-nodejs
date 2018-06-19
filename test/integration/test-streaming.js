@@ -37,6 +37,7 @@ describe("streaming", () => {
   });
 
   it("Streaming url content", function(done) {
+    this.timeout(10000);
     const https = require("https");
     https.get(
       "https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
