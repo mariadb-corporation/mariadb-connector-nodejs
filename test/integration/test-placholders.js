@@ -249,17 +249,22 @@ describe("Placeholder", () => {
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
         conn
-          .query("select '\\'' as a, ' ' as b, :par as c, \"\\\"\" as d, \" \" as e, :par2 as f", {
-            par: "val",
-            par2: "val2"
-          })
+          .query(
+            "select /* \\ :par ` # */ '\\\\\"\\'?' as a, ' ' as b, :par as c, \"\\\\'\\\"?\" as d, \" \" as e\n" +
+              ", :par2  -- comment \n" +
+              " as f # another comment",
+            {
+              par: "val",
+              par2: "val2"
+            }
+          )
           .then(rows => {
             assert.deepEqual(rows, [
               {
-                a: "'",
+                a: "\\\"'?",
                 b: " ",
                 c: "val",
-                d: '"',
+                d: "\\'\"?",
                 e: " ",
                 f: "val2"
               }
