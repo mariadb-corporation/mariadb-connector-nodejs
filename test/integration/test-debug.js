@@ -17,8 +17,9 @@ describe("debug", () => {
     testQueryDebug(false, err => {
       if (err) {
         done(err);
+      } else {
+        testQueryDebug(true, done);
       }
-      testQueryDebug(true, done);
     });
   });
 
@@ -107,8 +108,9 @@ describe("debug", () => {
     testLocalInfileDebug(false, err => {
       if (err) {
         done(err);
+      } else {
+        testLocalInfileDebug(true, done);
       }
-      testLocalInfileDebug(true, done);
     });
   });
 
