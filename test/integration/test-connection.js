@@ -374,7 +374,13 @@ describe("connection", () => {
         conn
           .query("SET time_zone = '+00:00', character_set_client = cp850")
           .then(() => {
+            //encoding supported by iconv.js, but not by node.js
             assert.equal(conn.__tests.getCollation(), Collations.fromName("CP850_GENERAL_CI"));
+            return conn.query("SET character_set_client = latin1, time_zone = '+01:00'");
+          })
+          .then(() => {
+            //encoding supported by node.js
+            assert.equal(conn.__tests.getCollation(), Collations.fromName("LATIN1_SWEDISH_CI"));
             return conn.end();
           })
           .then(() => done())

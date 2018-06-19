@@ -103,4 +103,20 @@ describe("string", () => {
       })
       .catch(done);
   });
+
+  it("wrong surrogate", done => {
+    const wrongString = "a\ue800\ud800b\udc01c\ud800";
+    base.createConnection().then(conn => {
+      conn.query("CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4");
+      conn.query("INSERT INTO wrong_utf8_string values (?)", [wrongString]);
+      conn
+        .query("SELECT * from wrong_utf8_string")
+        .then(res => {
+          assert.deepEqual(res, [{ tt: "a?b?c?" }]);
+          conn.end();
+          done();
+        })
+        .catch(done);
+    });
+  });
 });
