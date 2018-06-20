@@ -159,7 +159,7 @@ describe("debug", () => {
                       process.stderr.write = initialStdErr;
                       const serverVersion = conn.serverVersion();
 
-                      const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [2800, 4430];
+                      const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [2700, 4430];
                       const rangeWithoutEOF = Conf.baseConfig.compress
                         ? [4450, 4470]
                         : [3600, 4390];
