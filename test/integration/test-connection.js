@@ -507,7 +507,13 @@ describe("connection", () => {
         return shareConn.query("USE changedb");
       })
       .then(() => {
-        assert.equal(shareConn.__tests.getInfo().database, "changedb");
+        if (
+          (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2)) ||
+          (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7))
+        ) {
+          //ok packet contain meta change
+          assert.equal(shareConn.__tests.getInfo().database, "changedb");
+        }
         shareConn.query("use " + currDb);
         shareConn.query("DROP DATABASE changedb");
         done();
