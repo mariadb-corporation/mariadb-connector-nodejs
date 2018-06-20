@@ -497,4 +497,21 @@ describe("connection", () => {
         done();
       });
   });
+
+  it("changing database", function(done) {
+    let currDb = Conf.baseConfig.database;
+    assert.equal(currDb, shareConn.__tests.getInfo().database);
+    shareConn
+      .query("CREATE DATABASE changedb")
+      .then(() => {
+        return shareConn.query("USE changedb");
+      })
+      .then(() => {
+        assert.equal(shareConn.__tests.getInfo().database, "changedb");
+        shareConn.query("use " + currDb);
+        shareConn.query("DROP DATABASE changedb");
+        done();
+      })
+      .catch(done);
+  });
 });

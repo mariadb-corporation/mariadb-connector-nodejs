@@ -90,7 +90,6 @@ describe("Big query", function() {
     });
   });
 
-
   it("buffer growing", function(done) {
     this.timeout(10000); //can take some time
     base.createConnection().then(conn => {

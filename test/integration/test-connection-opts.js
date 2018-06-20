@@ -118,4 +118,44 @@ describe("connection option", () => {
       })
       .catch(done);
   });
+
+  it("nestTables results", function(done) {
+    base
+      .createConnection({ nestTables: "_" })
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE t1 (a varchar(20))");
+        conn.query("CREATE TEMPORARY TABLE t2 (b varchar(20))");
+        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+        conn.query("INSERT INTO t2 VALUES ('bou')");
+        conn
+          .query("SELECT * FROM t1, t2")
+          .then(rows => {
+            assert.deepEqual(rows, [{ t1_a: "bla", t2_b: "bou" }, { t1_a: "bla2", t2_b: "bou" }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it("rows as array", function(done) {
+    base
+      .createConnection({ rowsAsArray: true })
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE t1 (a varchar(20))");
+        conn.query("CREATE TEMPORARY TABLE t2 (b varchar(20))");
+        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+        conn.query("INSERT INTO t2 VALUES ('bou')");
+        conn
+          .query("SELECT * FROM t1, t2")
+          .then(rows => {
+            assert.deepEqual(rows, [["bla", "bou"], ["bla2", "bou"]]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });
