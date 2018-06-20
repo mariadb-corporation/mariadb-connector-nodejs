@@ -16,6 +16,16 @@ describe("string", () => {
         assert.equal(results[0].t1, "🤘💪");
         assert.equal(results[0].t2, "🤘💪");
         assert.equal(results[0].tt, "🤘💪");
+        return shareConn.query("INSERT INTO buf_utf8_chars VALUES (?)", ["🤘🤖"]);
+      })
+      .then(() => {
+        return shareConn.query("SELECT ? t2, tt FROM buf_utf8_chars", ["🤖"]);
+      })
+      .then(rows => {
+        assert.equal(rows[0].tt, "🤘💪");
+        assert.equal(rows[0].t2, "🤖");
+        assert.equal(rows[1].tt, "🤘🤖");
+        assert.equal(rows[1].t2, "🤖");
         done();
       })
       .catch(done);

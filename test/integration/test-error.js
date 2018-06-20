@@ -60,7 +60,6 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            console.log(err);
             assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
             assert.isTrue(
               err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
@@ -104,7 +103,6 @@ describe("Error", () => {
         done(new Error("must have thrown error !"));
       })
       .catch(err => {
-        console.log(err);
         assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
         assert.isTrue(
           err.message.includes(
