@@ -28,6 +28,125 @@ describe("Error", () => {
       .catch(done);
   });
 
+  it("query error sql length", function(done) {
+    base
+      .createConnection({ debugLen: 10 })
+      .then(conn => {
+        conn
+          .query("wrong query /*comments*/ ?", ["par"])
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(err.message.includes("sql: wrong quer..."));
+            assert.equal(err.errno, 1064);
+            assert.equal(err.sqlState, 42000);
+            assert.equal(err.code, "ER_PARSE_ERROR");
+            conn.end();
+            done();
+          });
+      })
+      .catch(done);
+  });
+
+  it("query error parameter length", function(done) {
+    base
+      .createConnection({ debugLen: 55 })
+      .then(conn => {
+        conn
+          .query("wrong query ?, ?", [123456789, "long parameter that must be truncated"])
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            console.log(err);
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(
+              err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
+            );
+            assert.equal(err.errno, 1064);
+            assert.equal(err.sqlState, 42000);
+            assert.equal(err.code, "ER_PARSE_ERROR");
+            conn.end();
+            done();
+          });
+      })
+      .catch(done);
+  });
+
+  it("query error check parameter type", function(done) {
+    class strangeParam {
+      constructor(par) {
+        this.param = par;
+      }
+
+      toString() {
+        return "addon-" + this.param;
+      }
+    }
+    const o = new Object();
+    o.toString = function() {
+      return "objectValue";
+    };
+
+    shareConn
+      .query("wrong query ?, ?, ?, ?, ?, ?, ?", [
+        new strangeParam("bla"),
+        true,
+        123,
+        456.5,
+        "long parameter that must be truncated",
+        { bla: 4, blou: "t" },
+        o
+      ])
+      .then(() => {
+        done(new Error("must have thrown error !"));
+      })
+      .catch(err => {
+        console.log(err);
+        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+        assert.isTrue(
+          err.message.includes(
+            "sql: wrong query ?, ?, ?, ?, ?, ?, ? - " +
+              "parameters:[addon-bla,true,123,456.5,'long parameter that must be truncated'," +
+              '{"bla":4,"blou":"t"},{}]'
+          )
+        );
+        assert.equal(err.errno, 1064);
+        assert.equal(err.sqlState, 42000);
+        assert.equal(err.code, "ER_PARSE_ERROR");
+        done();
+      });
+  });
+
+  it("query error parameter length using namedPlaceholders", function(done) {
+    base
+      .createConnection({ debugLen: 55, namedPlaceholders: true })
+      .then(conn => {
+        conn
+          .query("wrong query :par1, :par2", {
+            par1: "some param",
+            par2: "long parameter that must be truncated"
+          })
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(
+              err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
+            );
+            assert.equal(err.errno, 1064);
+            assert.equal(err.sqlState, 42000);
+            assert.equal(err.code, "ER_PARSE_ERROR");
+            conn.end();
+            done();
+          });
+      })
+      .catch(done);
+  });
+
   it("query error without trace", function(done) {
     base
       .createConnection({ trace: false })
