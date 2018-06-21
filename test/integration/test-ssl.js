@@ -56,7 +56,9 @@ describe("ssl", function() {
         );
       })
       .then(() => {
-        shareConn.query("SET PASSWORD for user 'sslTestUser'@'%' = PASSWORD('myPwd')");
+        return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')");
+      })
+      .then(() => {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then(rows => {
