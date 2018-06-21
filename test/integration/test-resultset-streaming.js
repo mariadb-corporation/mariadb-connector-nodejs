@@ -39,6 +39,23 @@ describe("results-set streaming", () => {
       });
   });
 
+  it("streaming with option rows as array", function(done) {
+    let currRow = 0;
+    shareConn
+      .stream({ rowsAsArray: true, sql: "SELECT * FROM testStreamResult" })
+      .on("error", err => {
+        done(new Error("must not have thrown any error !"));
+      })
+      .on("data", row => {
+        assert(Array.isArray(row));
+        assert.deepEqual(row, [currRow++]);
+      })
+      .on("end", () => {
+        assert.equal(10000, currRow);
+        done();
+      });
+  });
+
   it("Streaming result-set pipe", function(done) {
     let currRow = 0;
     const writableStream = new Writable({

@@ -11,7 +11,7 @@ describe("connection option", () => {
         done(new Error("must have thrown error!"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Unknown charset"));
+        assert(err.message.includes("Unknown charset"));
         done();
       });
   });
@@ -91,7 +91,7 @@ describe("connection option", () => {
         done(new Error("Must have thrown exception"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("timezone format error"));
+        assert(err.message.includes("timezone format error"));
         done();
       });
   });

@@ -21,7 +21,7 @@ describe("server additional information API", () => {
       assert.equal(serverInfo[0] === "mariadb", shareConn.isMariaDB());
     } else {
       //appveyor use mariadb only
-      assert.isTrue(shareConn.isMariaDB());
+      assert(shareConn.isMariaDB());
     }
   });
 });

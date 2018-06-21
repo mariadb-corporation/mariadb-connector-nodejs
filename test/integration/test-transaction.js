@@ -209,7 +209,7 @@ describe("transaction", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            assert(err.message.includes("Cannot execute new commands: connection closed"));
             assert.equal(err.sqlState, "08S01");
             assert.equal(err.errno, 45013);
             assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");

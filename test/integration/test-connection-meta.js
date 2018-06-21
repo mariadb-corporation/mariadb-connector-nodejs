@@ -9,13 +9,13 @@ describe("Connection meta", function() {
     if (process.env.DB) {
       if (process.env.DB === "build") {
         //last mariadb build version
-        assert.isTrue(serverVersion.startsWith("10.3"));
+        assert(serverVersion.startsWith("10.3"));
       } else {
         const version =
           process.platform === "win32"
             ? process.env.DB
             : process.env.DB.substr(process.env.DB.indexOf(":") + 1);
-        assert.isTrue(serverVersion.startsWith(version));
+        assert(serverVersion.startsWith(version));
       }
     }
   });
@@ -26,7 +26,7 @@ describe("Connection meta", function() {
       conn.serverVersion();
       done(new Error("Must have thrown exception"));
     } catch (err) {
-      assert.isTrue(
+      assert(
         err.message.includes("cannot know if server information until connection is established")
       );
       done();
@@ -37,7 +37,7 @@ describe("Connection meta", function() {
     const isMariadb = shareConn.isMariaDB();
     if (process.env.DB) {
       if (process.env.DB === "build") {
-        assert.isTrue(isMariadb);
+        assert(isMariadb);
       } else {
         //Appveyor test only mariadb, travis use docker image with DB=mariadb/mysql:version
         assert.equal(
@@ -54,7 +54,7 @@ describe("Connection meta", function() {
       conn.isMariaDB();
       done(new Error("Must have thrown exception"));
     } catch (err) {
-      assert.isTrue(
+      assert(
         err.message.includes("cannot know if server is MariaDB until connection is established")
       );
       done();
@@ -67,9 +67,7 @@ describe("Connection meta", function() {
       conn.hasMinVersion();
       done(new Error("Must have thrown exception"));
     } catch (err) {
-      assert.isTrue(
-        err.message.includes("cannot know if server version until connection is established")
-      );
+      assert(err.message.includes("cannot know if server version until connection is established"));
       done();
     }
   });
@@ -79,14 +77,14 @@ describe("Connection meta", function() {
       shareConn.hasMinVersion();
       throw new Error("Must have thrown exception");
     } catch (err) {
-      assert.isTrue(err.message.includes("a major version must be set"));
+      assert(err.message.includes("a major version must be set"));
     }
 
-    assert.isTrue(shareConn.hasMinVersion(3));
-    assert.isTrue(shareConn.hasMinVersion(3, 4));
-    assert.isTrue(shareConn.hasMinVersion(3, 4, 10));
-    assert.isFalse(shareConn.hasMinVersion(13));
-    assert.isFalse(shareConn.hasMinVersion(13, 5));
-    assert.isFalse(shareConn.hasMinVersion(13, 5, 20));
+    assert(shareConn.hasMinVersion(3));
+    assert(shareConn.hasMinVersion(3, 4));
+    assert(shareConn.hasMinVersion(3, 4, 10));
+    assert(!shareConn.hasMinVersion(13));
+    assert(!shareConn.hasMinVersion(13, 5));
+    assert(!shareConn.hasMinVersion(13, 5, 20));
   });
 });

@@ -99,7 +99,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("self signed certificate"));
+        assert(err.message.includes("self signed certificate"));
         done();
       });
   });
@@ -140,7 +140,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("SSLv3 methods disabled"));
+        assert(err.message.includes("SSLv3 methods disabled"));
         done();
       });
   });
@@ -155,7 +155,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("SSLv2 methods disabled"));
+        assert(err.message.includes("SSLv2 methods disabled"));
         done();
       });
   });
@@ -224,7 +224,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("no ciphers available"));
+        assert(err.message.includes("no ciphers available"));
         done();
       });
   });
@@ -244,7 +244,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("no ciphers available"));
+        assert(err.message.includes("no ciphers available"));
         done();
       });
   });
@@ -326,7 +326,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert.isTrue(
+        assert(
           err.message.includes(
             "Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"
           )
@@ -462,7 +462,7 @@ describe("ssl", function() {
           .then(res => {
             const user = res[0]["CURRENT_USER"];
             assert.equal(user, "ChangeUser@%");
-            assert.isTrue(user !== currUser);
+            assert(user !== currUser);
             conn.query("DROP USER ChangeUser@'%'");
             conn.end();
             done();

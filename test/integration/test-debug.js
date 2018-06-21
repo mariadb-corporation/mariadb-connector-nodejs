@@ -80,7 +80,7 @@ describe("debug", () => {
                     (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                     (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
                   ) {
-                    assert.isTrue(
+                    assert(
                       data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
                       "wrong data length : " +
                         data.length +
@@ -96,7 +96,7 @@ describe("debug", () => {
                     );
                   } else {
                     //EOF Packet make exchange bigger
-                    assert.isTrue(
+                    assert(
                       data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
                       "wrong data length : " +
                         data.length +
@@ -162,13 +162,13 @@ describe("debug", () => {
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
 
-                  const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [2700, 4430];
-                  const rangeWithoutEOF = Conf.baseConfig.compress ? [4450, 4470] : [3500, 4390];
+                  const rangeWithEOF = compress ? [3800, 4470] : [2700, 4430];
+                  const rangeWithoutEOF = compress ? [3700, 4470] : [3500, 4390];
                   if (
                     (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                     (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
                   ) {
-                    assert.isTrue(
+                    assert(
                       data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
                       "wrong data length : " +
                         data.length +
@@ -184,7 +184,7 @@ describe("debug", () => {
                     );
                   } else {
                     //EOF Packet make exchange bigger
-                    assert.isTrue(
+                    assert(
                       data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
                       "wrong data length : " +
                         data.length +

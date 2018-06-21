@@ -35,7 +35,7 @@ describe("local-infile", () => {
           .catch(err => {
             assert.equal(err.errno, 1148);
             assert.equal(err.sqlState, "42000");
-            assert.isFalse(err.fatal);
+            assert(!err.fatal);
             conn.end();
             done();
           });
@@ -55,7 +55,7 @@ describe("local-infile", () => {
           .catch(err => {
             assert.equal(err.errno, 1148);
             assert.equal(err.sqlState, "42000");
-            assert.isFalse(err.fatal);
+            assert(!err.fatal);
             conn.end();
             done();
           });
@@ -73,10 +73,10 @@ describe("local-infile", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert.isTrue(err != null);
+            assert(err != null);
             assert.equal(err.errno, 1148);
             assert.equal(err.sqlState, "42000");
-            assert.isFalse(err.fatal);
+            assert(!err.fatal);
             conn.end();
             done();
           });
@@ -108,13 +108,13 @@ describe("local-infile", () => {
                 done(new Error("must have thrown error !"));
               })
               .catch(err => {
-                assert.isTrue(
+                assert(
                   err.message.includes(
                     "LOCAL INFILE command failed: ENOENT: no such file or directory"
                   )
                 );
                 assert.equal(err.sqlState, "22000");
-                assert.isFalse(err.fatal);
+                assert(!err.fatal);
                 conn.end();
                 done();
               });

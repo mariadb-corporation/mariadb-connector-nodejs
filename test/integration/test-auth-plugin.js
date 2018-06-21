@@ -37,7 +37,7 @@ describe("authentication plugin", () => {
                     "Client does not support authentication protocol 'client_ed25519' requested by server."
                   );
                   if (!expectedMsg) console.log(err);
-                  assert.isTrue(expectedMsg);
+                  assert(expectedMsg);
                   done();
                 });
             })
@@ -46,7 +46,7 @@ describe("authentication plugin", () => {
                 "Client does not support authentication protocol 'client_ed25519' requested by server."
               );
               if (!expectedMsg) console.log(err);
-              assert.isTrue(expectedMsg);
+              assert(expectedMsg);
               done();
             });
         },

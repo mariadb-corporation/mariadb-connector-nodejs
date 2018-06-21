@@ -57,8 +57,8 @@ describe("Placeholder", () => {
     const handleResult = function(err) {
       assert.equal(1146, err.errno);
       assert.equal("42S02", err.sqlState);
-      assert.isFalse(err.fatal);
-      assert.isTrue(
+      assert(!err.fatal);
+      assert(
         err.message.includes(
           "sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (:t1, :t2, :t3, :t4, :t5)  - parameters:{'t1':1,'t2':0x01ff,'t3':'hh','t4':'01/01/2001 00:00:00.000','t5':null}"
         )
@@ -93,7 +93,7 @@ describe("Placeholder", () => {
       assert.equal(err.errno, 45018);
       assert.equal(err.code, "ER_PLACEHOLDER_UNDEFINED");
       assert.equal(err.sqlState, "HY000");
-      assert.isFalse(err.fatal);
+      assert(!err.fatal);
       assert.ok(
         err.message.includes(
           "Placeholder 'param2' is not defined\n" +
@@ -129,7 +129,7 @@ describe("Placeholder", () => {
       assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.code, "ER_PLACEHOLDER_UNDEFINED");
-      assert.isFalse(err.fatal);
+      assert(!err.fatal);
       assert.ok(
         err.message.includes(
           "Placeholder 't2' is not defined\n" +
@@ -162,7 +162,7 @@ describe("Placeholder", () => {
     const handleResult = function(err) {
       assert.equal(err.errno, 45018);
       assert.equal(err.sqlState, "HY000");
-      assert.isFalse(err.fatal);
+      assert(!err.fatal);
       assert.ok(
         err.message.includes(
           "Placeholder 't1' is not defined\n" +

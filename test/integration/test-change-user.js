@@ -37,7 +37,7 @@ describe("change user", () => {
             conn.query("SELECT CURRENT_USER", (err, res) => {
               const user = res[0]["CURRENT_USER"];
               assert.equal(user, "ChangeUser@%");
-              assert.isTrue(user !== currUser);
+              assert(user !== currUser);
               conn.end();
               done();
             });
@@ -56,7 +56,7 @@ describe("change user", () => {
           done(new Error("must have thrown error!"));
         })
         .catch(err => {
-          assert.isTrue(err.message.includes("Unknown charset"));
+          assert(err.message.includes("Unknown charset"));
           conn.end();
           done();
         });
@@ -101,7 +101,7 @@ describe("change user", () => {
           .then(res => {
             const user = res[0]["CURRENT_USER"];
             assert.equal(user, "ChangeUser@%");
-            assert.isTrue(user !== currUser);
+            assert(user !== currUser);
             conn.end();
             done();
           })
@@ -144,7 +144,7 @@ describe("change user", () => {
         done(new Error("must have thrown an error"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("method changeUser not available"));
+        assert(err.message.includes("method changeUser not available"));
         done();
       });
   });

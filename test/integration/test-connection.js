@@ -28,7 +28,7 @@ describe("connection", () => {
         conn.end(() => {
           conn.connect(err => {
             //normal error
-            assert.isTrue(err.message.includes("Connection closed"));
+            assert(err.message.includes("Connection closed"));
             assert.equal(err.sqlState, "08S01");
             assert.equal(err.code, "ER_CONNECTION_ALREADY_CLOSED");
             done();
@@ -50,7 +50,7 @@ describe("connection", () => {
         done(new Error("must have thrown error !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("socket timeout"));
+        assert(err.message.includes("socket timeout"));
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45026);
         assert.equal(err.code, "ER_SOCKET_TIMEOUT");
@@ -110,7 +110,7 @@ describe("connection", () => {
             done(new Error("must have thrown error"));
           })
           .catch(err => {
-            assert.isTrue(err.message.includes("Connection closed"));
+            assert(err.message.includes("Connection closed"));
             done();
           });
       })
@@ -180,7 +180,7 @@ describe("connection", () => {
 
   it("threadId access compatibility", function(done) {
     assert.isDefined(shareConn.threadId);
-    assert.isTrue(shareConn.threadId !== -1);
+    assert(shareConn.threadId !== -1);
     done();
   });
 
@@ -229,9 +229,9 @@ describe("connection", () => {
         )
         .then(() => done(new Error("expected error !")))
         .catch(err => {
-          assert.isTrue(err != null);
-          assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
-          assert.isTrue(err.fatal);
+          assert(err != null);
+          assert(err.message.includes("Connection destroyed, command was killed"));
+          assert(err.fatal);
           done();
         });
       setTimeout(() => {
@@ -248,14 +248,8 @@ describe("connection", () => {
     });
     conn.connect(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-      assert.isTrue(
-        Date.now() - initTime >= 999,
-        "expected > 999, but was " + (Date.now() - initTime)
-      );
-      assert.isTrue(
-        Date.now() - initTime < 2000,
-        "expected < 2000, but was " + (Date.now() - initTime)
-      );
+      assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
+      assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
       done();
     });
   });
@@ -273,7 +267,7 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("socket timeout"));
+        assert(err.message.includes("socket timeout"));
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45026);
         assert.equal(err.code, "ER_SOCKET_TIMEOUT");
@@ -293,7 +287,7 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Connection timeout"));
+        assert(err.message.includes("Connection timeout"));
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45012);
         assert.equal(err.code, "ER_CONNECTION_TIMEOUT");
@@ -320,14 +314,8 @@ describe("connection", () => {
       })
       .catch(err => {
         assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-        assert.isTrue(
-          Date.now() - initTime >= 999,
-          "expected > 999, but was " + (Date.now() - initTime)
-        );
-        assert.isTrue(
-          Date.now() - initTime < 2000,
-          "expected < 2000, but was " + (Date.now() - initTime)
-        );
+        assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
+        assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
         done();
       });
   });
@@ -336,14 +324,8 @@ describe("connection", () => {
     const initTime = Date.now();
     base.createConnection({ host: "www.google.fr", connectTimeout: 1000 }).catch(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-      assert.isTrue(
-        Date.now() - initTime >= 999,
-        "expected > 999, but was " + (Date.now() - initTime)
-      );
-      assert.isTrue(
-        Date.now() - initTime < 2000,
-        "expected < 2000, but was " + (Date.now() - initTime)
-      );
+      assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
+      assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
       done();
     });
   });
@@ -485,15 +467,15 @@ describe("connection", () => {
     let connOptionTemp = Conf.baseConfig;
     const conn = new Connection(new ConnOptions(connOptionTemp));
 
-    assert.isFalse(conn.isValid());
+    assert(!conn.isValid());
     conn
       .connect()
       .then(() => {
-        assert.isTrue(conn.isValid());
+        assert(conn.isValid());
         return conn.end();
       })
       .then(() => {
-        assert.isFalse(conn.isValid());
+        assert(!conn.isValid());
         done();
       });
   });

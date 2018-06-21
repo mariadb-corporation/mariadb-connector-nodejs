@@ -33,7 +33,7 @@ describe("test socket", () => {
                     done(new Error("must have thrown error"));
                   })
                   .catch(err => {
-                    assert.isTrue(err.message.includes("Connection closed"));
+                    assert(err.message.includes("Connection closed"));
                     done();
                   });
               })
