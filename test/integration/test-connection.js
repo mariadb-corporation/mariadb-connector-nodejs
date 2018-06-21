@@ -17,29 +17,18 @@ describe("connection", () => {
     connectWithAttributes({ par1: "bouh", par2: mediumAttribute }, done);
   });
 
-  it("with big connection attributes", function(done) {
-    const bigAttribute = Buffer.alloc(100000, "b").toString();
-    connectWithAttributes({ par1: "bouh", par2: bigAttribute }, done);
-  });
-
-  it("with huge connection attributes", function(done) {
-    const self = this;
-    shareConn
-      .query("SELECT @@max_allowed_packet as t")
-      .then(row => {
-        if (row[0].t < 18000000) self.skip();
-        const bigAttribute = Buffer.alloc(17000000, "c").toString();
-        connectWithAttributes({ par1: "bouh", par2: bigAttribute }, done);
-      })
-      .catch(done);
-  });
-
   function connectWithAttributes(attr, done) {
     base
-      .createConnection({ connectAttributes: attr })
+      .createConnection({ connectAttributes: attr, debug:true })
       .then(conn => {
-        conn.end();
-        done();
+        conn
+          .query("SELECT 1")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "1": 1 }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
       })
       .catch(done);
   }
