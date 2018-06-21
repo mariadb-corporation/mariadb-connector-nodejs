@@ -18,13 +18,13 @@ describe("debug", () => {
     shareConn
       .query("select @@local_infile")
       .then(rows => {
-        permitLocalInfile = (rows[0]["@@local_infile"] === 1);
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(smallFileName, "1,hello\n2,world\n", "utf8", function (err) {
+        permitLocalInfile = rows[0]["@@local_infile"] === 1;
+        return new Promise(function(resolve, reject) {
+          fs.writeFile(smallFileName, "1,hello\n2,world\n", "utf8", function(err) {
             if (err) reject(err);
             else resolve();
           });
-        })
+        });
       })
       .then(() => {
         done();
@@ -130,7 +130,6 @@ describe("debug", () => {
     testLocalInfileDebug(false, done);
   });
 
-
   it("load local infile debug compress", function(done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(true, done);
@@ -164,9 +163,7 @@ describe("debug", () => {
                   const serverVersion = conn.serverVersion();
 
                   const rangeWithEOF = Conf.baseConfig.compress ? [4450, 4470] : [2700, 4430];
-                  const rangeWithoutEOF = Conf.baseConfig.compress
-                    ? [4450, 4470]
-                    : [3600, 4390];
+                  const rangeWithoutEOF = Conf.baseConfig.compress ? [4450, 4470] : [3500, 4390];
                   if (
                     (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
                     (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))

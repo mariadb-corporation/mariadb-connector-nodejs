@@ -11,7 +11,10 @@ describe("Connection meta", function() {
         //last mariadb build version
         assert.isTrue(serverVersion.startsWith("10.3"));
       } else {
-        const version = process.env.DB.substr(process.env.DB.indexOf(":") + 1);
+        const version =
+          process.platform === "win32"
+            ? process.env.DB
+            : process.env.DB.substr(process.env.DB.indexOf(":") + 1);
         assert.isTrue(serverVersion.startsWith(version));
       }
     }
@@ -36,7 +39,11 @@ describe("Connection meta", function() {
       if (process.env.DB === "build") {
         assert.isTrue(isMariadb);
       } else {
-        assert.equal(isMariadb, process.env.DB.startsWith("mariadb"));
+        //Appveyor test only mariadb, travis use docker image with DB=mariadb/mysql:version
+        assert.equal(
+          isMariadb,
+          process.platform === "win32" || process.env.DB.startsWith("mariadb")
+        );
       }
     }
   });
