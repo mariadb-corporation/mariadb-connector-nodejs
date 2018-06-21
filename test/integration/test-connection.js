@@ -547,7 +547,7 @@ describe("connection", () => {
 
   it("API format error", function(done) {
     try {
-      shareConn.escapeId("fff");
+      shareConn.format("fff");
       done(new Error("should have thrown error!"));
     } catch (err) {
       assert.equal(err.sqlState, "0A000");
