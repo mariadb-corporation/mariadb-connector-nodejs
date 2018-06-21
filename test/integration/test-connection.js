@@ -502,4 +502,58 @@ describe("connection", () => {
       })
       .catch(done);
   });
+
+  it("pause socket", function(done) {
+    shareConn.pause();
+    const startTime = process.hrtime();
+    setTimeout(() => {
+      shareConn.resume();
+    }, 500);
+
+    shareConn
+      .query("SELECT 1")
+      .then(rows => {
+        assert.deepEqual(rows, [{ "1": 1 }]);
+        const diff = process.hrtime(startTime);
+        //query has take more than 500ms
+        assert(diff[1] > 500000000);
+        done();
+      })
+      .catch(done);
+  });
+
+
+  it("API escape error", function(done) {
+    try {
+      shareConn.escape("fff");
+      done(new Error("should have thrown error!"));
+    } catch (err) {
+      assert.equal(err.sqlState, "0A000");
+      assert.equal(err.code, "ER_NOT_IMPLEMENTED_ESCAPE");
+      done();
+    }
+  });
+
+  it("API escapeId error", function(done) {
+    try {
+      shareConn.escapeId("fff");
+      done(new Error("should have thrown error!"));
+    } catch (err) {
+      assert.equal(err.sqlState, "0A000");
+      assert.equal(err.code, "ER_NOT_IMPLEMENTED_ESCAPEID");
+      done();
+    }
+  });
+
+  it("API format error", function(done) {
+    try {
+      shareConn.escapeId("fff");
+      done(new Error("should have thrown error!"));
+    } catch (err) {
+      assert.equal(err.sqlState, "0A000");
+      assert.equal(err.code, "ER_NOT_IMPLEMENTED_FORMAT");
+      done();
+    }
+  });
+
 });
