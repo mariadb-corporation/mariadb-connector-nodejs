@@ -55,6 +55,7 @@ install:
   - cmd: echo port=3306 >> c:\projects\server\data\my.ini
   - cmd: echo innodb_log_file_size=50M >> c:\projects\server\data\my.ini
   - cmd: echo innodb_buffer_pool_size=200M >> c:\projects\server\data\my.ini
+  - cmd: echo max-allowed-packet=20m >> c:\projects\server\data\my.ini
   - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
   - cmd: echo ssl-ca=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\ca.crt >> c:\projects\server\data\my.ini
