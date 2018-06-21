@@ -56,6 +56,7 @@ describe("ssl", function() {
         );
       })
       .then(() => {
+        shareConn.query("SET PASSWORD for user 'sslTestUser'@'%' = PASSWORD('myPwd')");
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then(rows => {
@@ -94,7 +95,7 @@ describe("ssl", function() {
   it("signed certificate error ", function(done) {
     if (!sslEnable) this.skip();
     base
-      .createConnection({ user: "sslTestUser", password: null, ssl: true })
+      .createConnection({ user: "sslTestUser", password: "myPwd", ssl: true })
       .then(() => {
         done(new Error("Must have thrown an exception !"));
       })
@@ -107,7 +108,7 @@ describe("ssl", function() {
   it("signed certificate forcing", function(done) {
     if (!sslEnable) this.skip();
     base
-      .createConnection({ ssl: { rejectUnauthorized: false } })
+      .createConnection({ ssl: { rejectUnauthorized: false }})
       .then(conn => {
         conn.end();
         done();
@@ -120,7 +121,7 @@ describe("ssl", function() {
     base
       .createConnection({
         user: "sslTestUser",
-        password: null,
+        password: "myPwd",
         ssl: { rejectUnauthorized: false }
       })
       .then(conn => {
