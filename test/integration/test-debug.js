@@ -125,6 +125,60 @@ describe("debug", () => {
       .catch(done);
   }
 
+  it("select big request (compressed data) debug", function(done) {
+    const fileName = path.join(os.tmpdir(), "tmp.txt");
+    initialStdOut = process.stdout.write;
+    initialStdErr = process.stderr.write;
+    access = fs.createWriteStream(fileName);
+
+    const buf = Buffer.alloc(5000, "z");
+
+    process.stdout.write = process.stderr.write = access.write.bind(access);
+    base
+      .createConnection({ compress: true, debug:true })
+      .then(conn => {
+        conn
+          .query("SELECT ?", buf)
+          .then(rows => {
+            //wait 100ms to ensure stream has been written
+            setTimeout(() => {
+              conn
+                .end()
+                .then(() => {
+                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
+                  process.stdout.write = initialStdOut;
+                  process.stderr.write = initialStdErr;
+                  const serverVersion = conn.serverVersion();
+                  const range = [1850, 2650];
+                  assert(
+                    data.length > range[0] && data.length < range[1],
+                    "wrong data length : " +
+                    data.length +
+                    " expected value between " +
+                    range[0] +
+                    " and " +
+                    range[1] +
+                    "." +
+                    "\n server version : " +
+                    serverVersion +
+                    "\n data :\n" +
+                    data
+                  );
+                  process.stdout.write = initialStdOut;
+                  process.stderr.write = initialStdErr;
+                  access.end();
+                  fs.unlink(fileName, err => {});
+                  done();
+                })
+                .catch(done);
+            }, 100);
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+
   it("load local infile debug", function(done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(false, done);

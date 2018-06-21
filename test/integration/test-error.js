@@ -442,6 +442,42 @@ describe("Error", () => {
       .catch(done);
   });
 
+
+  it("query missing parameter with compression", function(done) {
+    const handleResult = function(err) {
+      assert.equal(err.errno, 45016);
+      assert.equal(err.sqlState, "HY000");
+      assert.equal(err.code, "ER_MISSING_PARAMETER");
+      assert(!err.fatal);
+      assert.ok(
+        err.message.includes(
+          "Parameter at position 3 is not set\n" +
+          "sql: INSERT INTO execute_missing_parameter values (?, ?, ?) - parameters:[1,3]"
+        )
+      );
+    };
+    base.createConnection({compress: true})
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)");
+        conn
+          .query("INSERT INTO execute_missing_parameter values (?, ?, ?)", [1, 3])
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(handleResult);
+        conn
+          .query("SELECT 1")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "1": 1 }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+
+      })
+      .catch(done);
+  });
+
   it("query no parameter", function(done) {
     const handleResult = function(err) {
       assert.equal(err.errno, 45016);

@@ -1,6 +1,7 @@
 "use strict";
 
 require("../base.js");
+const base = require("../base.js");
 const { assert } = require("chai");
 
 describe("stored procedure", () => {
@@ -28,6 +29,20 @@ describe("stored procedure", () => {
     shareConn
       .query("call stmtSimple(?,?)", [2, 2])
       .then(rows => testRes(rows, done))
+      .catch(done);
+  });
+
+  it("simple call query using compression", function(done) {
+    base.createConnection({compress:true})
+      .then(conn => {
+        const finish = (err) => {
+          conn.end();
+          done(err);
+        };
+        conn.query("call stmtSimple(?,?)", [2, 2])
+          .then(rows => testRes(rows, finish))
+          .catch(finish);
+      })
       .catch(done);
   });
 
