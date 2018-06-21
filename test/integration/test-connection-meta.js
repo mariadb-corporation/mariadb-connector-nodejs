@@ -7,8 +7,13 @@ describe("Connection meta", function() {
   it("server version", () => {
     const serverVersion = shareConn.serverVersion();
     if (process.env.DB) {
-      const version = process.env.DB.substr(process.env.DB.indexOf(":") + 1);
-      assert.isTrue(serverVersion.startsWith(version));
+      if (process.env.DB === "build") {
+        //last mariadb build version
+        assert.isTrue(serverVersion.startsWith("10.3"));
+      } else {
+        const version = process.env.DB.substr(process.env.DB.indexOf(":") + 1);
+        assert.isTrue(serverVersion.startsWith(version));
+      }
     }
   });
 
@@ -28,7 +33,11 @@ describe("Connection meta", function() {
   it("isMariaDB", () => {
     const isMariadb = shareConn.isMariaDB();
     if (process.env.DB) {
-      assert.equal(isMariadb, process.env.DB.startsWith("mariadb"));
+      if (process.env.DB === "build") {
+        assert.isTrue(isMariadb);
+      } else {
+        assert.equal(isMariadb, process.env.DB.startsWith("mariadb"));
+      }
     }
   });
 
