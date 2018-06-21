@@ -26,11 +26,11 @@ describe("Big query", function() {
   it("parameter bigger than 16M packet size", function(done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(10000); //can take some time
-    shareConn.query("CREATE TEMPORARY TABLE bigParameter (b longblob)");
+    shareConn.query("CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)");
     shareConn
-      .query("insert into bigParameter(b) values(?)", [buf])
+      .query("insert into bigParameterBigParam(b) values(?)", [buf])
       .then(() => {
-        return shareConn.query("SELECT * from bigParameter");
+        return shareConn.query("SELECT * from bigParameterBigParam");
       })
       .then(rows => {
         assert.deepEqual(rows[0].b, buf);
@@ -59,22 +59,23 @@ describe("Big query", function() {
   });
 
   it("buffer growing", function(done) {
+    if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
     base
       .createConnection()
       .then(conn => {
-        bufferGrowing(conn, err => {
-          if (err) {
-            done(err);
-          } else {
-            base
-              .createConnection({ compress: true })
-              .then(conn => {
-                bufferGrowing(conn, done);
-              })
-              .catch(done);
-          }
-        });
+        bufferGrowing(conn, done);
+      })
+      .catch(done);
+  });
+
+  it("buffer growing compression", function(done) {
+    if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
+    this.timeout(10000); //can take some time
+    base
+      .createConnection({ compress: true })
+      .then(conn => {
+        bufferGrowing(conn, done);
       })
       .catch(done);
   });
@@ -108,35 +109,4 @@ describe("Big query", function() {
       .catch(done);
   }
 
-  it("buffer growing", function(done) {
-    this.timeout(10000); //can take some time
-    base.createConnection().then(conn => {
-      const st = Buffer.alloc(65536, "0").toString();
-      const st2 = Buffer.alloc(1048576, "0").toString();
-      const params = [st];
-      let sql = "CREATE TEMPORARY TABLE bigParameter (a0 MEDIUMTEXT ";
-      let sqlInsert = "insert into bigParameter values (?";
-      for (let i = 1; i < 10; i++) {
-        sql += ",a" + i + " MEDIUMTEXT ";
-        sqlInsert += ",?";
-        params.push(i < 4 ? st : st2);
-      }
-      sql += ")";
-      sqlInsert += ")";
-      conn.query(sql);
-      conn
-        .query(sqlInsert, params)
-        .then(() => {
-          return conn.query("SELECT * from bigParameter");
-        })
-        .then(rows => {
-          for (let i = 0; i < 10; i++) {
-            assert.deepEqual(rows[0]["a" + i], params[i]);
-          }
-          conn.end();
-          done();
-        })
-        .catch(done);
-    });
-  });
 });
