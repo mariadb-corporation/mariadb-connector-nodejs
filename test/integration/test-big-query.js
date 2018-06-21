@@ -108,5 +108,4 @@ describe("Big query", function() {
       })
       .catch(done);
   }
-
 });

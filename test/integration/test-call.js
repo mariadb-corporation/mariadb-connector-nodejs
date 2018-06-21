@@ -33,13 +33,15 @@ describe("stored procedure", () => {
   });
 
   it("simple call query using compression", function(done) {
-    base.createConnection({compress:true})
+    base
+      .createConnection({ compress: true })
       .then(conn => {
-        const finish = (err) => {
+        const finish = err => {
           conn.end();
           done(err);
         };
-        conn.query("call stmtSimple(?,?)", [2, 2])
+        conn
+          .query("call stmtSimple(?,?)", [2, 2])
           .then(rows => testRes(rows, finish))
           .catch(finish);
       })

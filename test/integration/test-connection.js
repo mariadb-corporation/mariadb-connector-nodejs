@@ -8,15 +8,41 @@ const Connection = require("../../lib/connection");
 const ConnOptions = require("../../lib/config/connection-options");
 
 describe("connection", () => {
-  it("with connection attributes", function(done) {
+  it("with small connection attributes", function(done) {
+    connectWithAttributes({ par1: "bouh", par2: "bla" }, done);
+  });
+
+  it("with medium connection attributes", function(done) {
+    const mediumAttribute = Buffer.alloc(20000, "a").toString();
+    connectWithAttributes({ par1: "bouh", par2: mediumAttribute }, done);
+  });
+
+  it("with big connection attributes", function(done) {
+    const bigAttribute = Buffer.alloc(100000, "b").toString();
+    connectWithAttributes({ par1: "bouh", par2: bigAttribute }, done);
+  });
+
+  it("with huge connection attributes", function(done) {
+    const self = this;
+    shareConn
+      .query("SELECT @@max_allowed_packet as t")
+      .then(row => {
+        if (row[0].t < 18000000) self.skip();
+        const bigAttribute = Buffer.alloc(17000000, "c").toString();
+        connectWithAttributes({ par1: "bouh", par2: bigAttribute }, done);
+      })
+      .catch(done);
+  });
+
+  function connectWithAttributes(attr, done) {
     base
-      .createConnection({ connectAttributes: { par1: "bouh", par2: "bla" } })
+      .createConnection({ connectAttributes: attr })
       .then(conn => {
         conn.end();
         done();
       })
       .catch(done);
-  });
+  }
 
   it("multiple connection.connect() with callback", function(done) {
     const conn = base.createCallbackConnection();
@@ -403,6 +429,10 @@ describe("connection", () => {
           assert.equal(err.sqlState, "42000");
           break;
 
+        case 1698:
+          assert.equal(err.sqlState, "28000");
+          break;
+
         default:
           done(err);
           return;
@@ -436,6 +466,10 @@ describe("connection", () => {
           case 1044:
             //mysql
             assert.equal(err.sqlState, "42000");
+            break;
+
+          case 1698:
+            assert.equal(err.sqlState, "28000");
             break;
 
           default:
@@ -522,7 +556,6 @@ describe("connection", () => {
       .catch(done);
   });
 
-
   it("API escape error", function(done) {
     try {
       shareConn.escape("fff");
@@ -555,5 +588,4 @@ describe("connection", () => {
       done();
     }
   });
-
 });

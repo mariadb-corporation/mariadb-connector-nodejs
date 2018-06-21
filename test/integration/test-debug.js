@@ -135,7 +135,7 @@ describe("debug", () => {
 
     process.stdout.write = process.stderr.write = access.write.bind(access);
     base
-      .createConnection({ compress: true, debug:true })
+      .createConnection({ compress: true, debug: true })
       .then(conn => {
         conn
           .query("SELECT ?", buf)
@@ -153,16 +153,16 @@ describe("debug", () => {
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +
-                    data.length +
-                    " expected value between " +
-                    range[0] +
-                    " and " +
-                    range[1] +
-                    "." +
-                    "\n server version : " +
-                    serverVersion +
-                    "\n data :\n" +
-                    data
+                      data.length +
+                      " expected value between " +
+                      range[0] +
+                      " and " +
+                      range[1] +
+                      "." +
+                      "\n server version : " +
+                      serverVersion +
+                      "\n data :\n" +
+                      data
                   );
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
@@ -177,7 +177,6 @@ describe("debug", () => {
       })
       .catch(done);
   });
-
 
   it("load local infile debug", function(done) {
     if (!permitLocalInfile) this.skip();

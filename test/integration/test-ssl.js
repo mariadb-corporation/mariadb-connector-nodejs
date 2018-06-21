@@ -113,7 +113,7 @@ describe("ssl", function() {
   it("signed certificate forcing", function(done) {
     if (!sslEnable) this.skip();
     base
-      .createConnection({ ssl: { rejectUnauthorized: false }})
+      .createConnection({ ssl: { rejectUnauthorized: false } })
       .then(conn => {
         conn.end();
         done();
