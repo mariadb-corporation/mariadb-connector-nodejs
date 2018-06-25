@@ -2,7 +2,7 @@
   "name": "mariadb",
   "version": "0.6.0",
   "description": "fast mariadb/mysql connector.",
-  "main": "index.js",
+  "main": "./lib",
   "directories": {
     "src": "src",
     "test": "test"

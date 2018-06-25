@@ -57,7 +57,9 @@ describe("ssl", function() {
       })
       .then(() => {
         if (!shareConn.isMariaDB() && shareConn.hasMinVersion(8)) {
-          return shareConn.query("ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'");
+          return shareConn.query(
+            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
+          );
         }
         return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')");
       })

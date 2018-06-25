@@ -4,7 +4,7 @@ const Benchmark = require("benchmark");
 const conf = require("../test/conf");
 
 const colors = require("colors");
-const mariadb = require("../index.js");
+const mariadb = require("../lib/index.js");
 
 let mariasql, mysql, mysql2;
 

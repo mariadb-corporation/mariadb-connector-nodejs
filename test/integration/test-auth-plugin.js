@@ -37,6 +37,7 @@ describe("authentication plugin", () => {
                     "Client does not support authentication protocol 'client_ed25519' requested by server."
                   );
                   if (!expectedMsg) console.log(err);
+                  shareConn.query("UNINSTALL PLUGIN ed25519");
                   assert(expectedMsg);
                   done();
                 });

@@ -19,7 +19,7 @@ describe("connection", () => {
 
   function connectWithAttributes(attr, done) {
     base
-      .createConnection({ connectAttributes: attr, debug:true })
+      .createConnection({ connectAttributes: attr })
       .then(conn => {
         conn
           .query("SELECT 1")
@@ -395,7 +395,7 @@ describe("connection", () => {
   }
 
   it("connection.connect() error code validation callback", function(done) {
-    const conn = base.createCallbackConnection({ user: "fooUser" });
+    const conn = base.createCallbackConnection({ user: "fooUser", password: "myPwd"});
     conn.connect(err => {
       if (!err) done(new Error("must have thrown error"));
       switch (err.errno) {
@@ -432,7 +432,7 @@ describe("connection", () => {
 
   it("connection.connect() error code validation promise", function(done) {
     base
-      .createConnection({ user: "fooUser" })
+      .createConnection({ user: "fooUser", password: "myPwd" })
       .then(() => {
         done(new Error("must have thrown error"));
       })
@@ -539,7 +539,7 @@ describe("connection", () => {
         assert.deepEqual(rows, [{ "1": 1 }]);
         const diff = process.hrtime(startTime);
         //query has take more than 500ms
-        assert(diff[1] > 500000000);
+        assert(diff[1] > 500000000, " diff[1]:" + diff[1] + " expected to be more than 500000000");
         done();
       })
       .catch(done);

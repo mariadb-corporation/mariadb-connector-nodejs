@@ -65,59 +65,57 @@ describe("debug", () => {
             return conn.query("SELECT 3");
           })
           .then(() => {
+            return conn.end();
+          })
+          .then(() => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
-              conn
-                .end()
-                .then(() => {
-                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  const serverVersion = conn.serverVersion();
-                  const rangeWithEOF = compress ? [470, 500] : [670, 710];
-                  const rangeWithoutEOF = compress ? [470, 500] : [570, 590];
-                  if (
-                    (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
-                    (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
-                  ) {
-                    assert(
-                      data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithoutEOF[0] +
-                        " and " +
-                        rangeWithoutEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  } else {
-                    //EOF Packet make exchange bigger
-                    assert(
-                      data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithEOF[0] +
-                        " and " +
-                        rangeWithEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  }
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  access.end();
-                  fs.unlink(fileName, err => {});
-                  done();
-                })
-                .catch(done);
+              const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
+              process.stdout.write = initialStdOut;
+              process.stderr.write = initialStdErr;
+              const serverVersion = conn.serverVersion();
+              const rangeWithEOF = compress ? [470, 500] : [670, 710];
+              const rangeWithoutEOF = compress ? [470, 500] : [570, 590];
+              if (
+                (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
+                (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
+              ) {
+                assert(
+                  data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
+                  "wrong data length : " +
+                    data.length +
+                    " expected value between " +
+                    rangeWithoutEOF[0] +
+                    " and " +
+                    rangeWithoutEOF[1] +
+                    "." +
+                    "\n server version : " +
+                    serverVersion +
+                    "\n data :\n" +
+                    data
+                );
+              } else {
+                //EOF Packet make exchange bigger
+                assert(
+                  data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
+                  "wrong data length : " +
+                    data.length +
+                    " expected value between " +
+                    rangeWithEOF[0] +
+                    " and " +
+                    rangeWithEOF[1] +
+                    "." +
+                    "\n server version : " +
+                    serverVersion +
+                    "\n data :\n" +
+                    data
+                );
+              }
+              process.stdout.write = initialStdOut;
+              process.stderr.write = initialStdErr;
+              access.end();
+              fs.unlink(fileName, err => {});
+              done();
             }, 100);
           })
           .catch(done);
@@ -205,60 +203,58 @@ describe("debug", () => {
               "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
           )
           .then(() => {
+            return conn.end();
+          })
+          .then(() => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
-              conn
-                .end()
-                .then(() => {
-                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  const serverVersion = conn.serverVersion();
+              const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
+              process.stdout.write = initialStdOut;
+              process.stderr.write = initialStdErr;
+              const serverVersion = conn.serverVersion();
 
-                  const rangeWithEOF = compress ? [3000, 4470] : [2700, 4430];
-                  const rangeWithoutEOF = compress ? [3700, 4470] : [3500, 4390];
-                  if (
-                    (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
-                    (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
-                  ) {
-                    assert(
-                      data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithoutEOF[0] +
-                        " and " +
-                        rangeWithoutEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  } else {
-                    //EOF Packet make exchange bigger
-                    assert(
-                      data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
-                      "wrong data length : " +
-                        data.length +
-                        " expected value between " +
-                        rangeWithEOF[0] +
-                        " and " +
-                        rangeWithEOF[1] +
-                        "." +
-                        "\n server version : " +
-                        serverVersion +
-                        "\n data :\n" +
-                        data
-                    );
-                  }
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  access.end();
-                  fs.unlinkSync(fileName);
-                  done();
-                })
-                .catch(done);
+              const rangeWithEOF = compress ? [3000, 4470] : [2700, 4430];
+              const rangeWithoutEOF = compress ? [3700, 4470] : [3500, 4390];
+              if (
+                (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
+                (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
+              ) {
+                assert(
+                  data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
+                  "wrong data length : " +
+                    data.length +
+                    " expected value between " +
+                    rangeWithoutEOF[0] +
+                    " and " +
+                    rangeWithoutEOF[1] +
+                    "." +
+                    "\n server version : " +
+                    serverVersion +
+                    "\n data :\n" +
+                    data
+                );
+              } else {
+                //EOF Packet make exchange bigger
+                assert(
+                  data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
+                  "wrong data length : " +
+                    data.length +
+                    " expected value between " +
+                    rangeWithEOF[0] +
+                    " and " +
+                    rangeWithEOF[1] +
+                    "." +
+                    "\n server version : " +
+                    serverVersion +
+                    "\n data :\n" +
+                    data
+                );
+              }
+              process.stdout.write = initialStdOut;
+              process.stderr.write = initialStdErr;
+              access.end();
+              fs.unlinkSync(fileName);
+              done();
             }, 100);
           })
           .catch(done);
