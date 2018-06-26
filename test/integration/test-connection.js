@@ -395,7 +395,7 @@ describe("connection", () => {
   }
 
   it("connection.connect() error code validation callback", function(done) {
-    const conn = base.createCallbackConnection({ user: "fooUser", password: "myPwd"});
+    const conn = base.createCallbackConnection({ user: "fooUser", password: "myPwd" });
     conn.connect(err => {
       if (!err) done(new Error("must have thrown error"));
       switch (err.errno) {

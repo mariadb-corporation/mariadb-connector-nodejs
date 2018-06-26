@@ -1,8 +1,8 @@
 const assert = require("assert");
 
-module.exports.title = "select multiple collation";
+module.exports.title = "select multiple collation using promise";
 module.exports.displaySql = "select * from information_schema.COLLATIONS";
-
+module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred) {
   conn
     .query("select * from information_schema.COLLATIONS")

@@ -18,7 +18,7 @@ const launchBenchs = function(path) {
       console.log("benchmark: ./benchs/" + list[i]);
       const m = require("./benchs/" + list[i]);
       bench.initFcts.push(m.initFct);
-      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete);
+      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.promise);
     }
 
     bench.suiteReady();

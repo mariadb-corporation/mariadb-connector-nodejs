@@ -54,13 +54,13 @@ install:
   - cmd: echo datadir=C:/projects/server/data >> c:\projects\server\data\my.ini
   - cmd: echo port=3306 >> c:\projects\server\data\my.ini
   - cmd: echo innodb_log_file_size=210M >> c:\projects\server\data\my.ini
-  - cmd: echo max-allowed-packet=21m >> c:\projects\server\data\my.ini
-  - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
-  - cmd: echo collation-server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-ca=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\ca.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-cert=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl-key=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.key >> c:\projects\server\data\my.ini
-  - cmd: echo enable-named-pipe=1 >> c:\projects\server\data\my.ini
+  - cmd: echo max_allowed_packet=21m >> c:\projects\server\data\my.ini
+  - cmd: echo character_set_server=utf8mb4 >> c:\projects\server\data\my.ini
+  - cmd: echo collation_server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_ca=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\ca.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_cert=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_key=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.key >> c:\projects\server\data\my.ini
+  - cmd: echo named_pipe=1 >> c:\projects\server\data\my.ini
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
   - cmd: cd c:\projects\mariadb-connector-nodejs

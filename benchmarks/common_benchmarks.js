@@ -4,27 +4,40 @@ const Benchmark = require("benchmark");
 const conf = require("../test/conf");
 
 const colors = require("colors");
-const mariadb = require("../lib/index.js");
+const mariadb = require("../lib/index");
+const callbackMariadb = require("../lib/callback");
 
-let mariasql, mysql, mysql2;
+let promiseMariasql, mariasql, promiseMysql, mysql, promiseMysql2, mysql2;
 
 try {
-  mysql = require("promise-mysql");
+  promiseMysql = require("promise-mysql");
 } catch (err) {}
 
 try {
-  mysql2 = require("mysql2/promise");
+  promiseMysql2 = require("mysql2/promise");
 } catch (err) {}
 
 try {
-  mariasql = require("mariasql-promise");
+  promiseMariasql = require("mariasql-promise");
+} catch (err) {}
+
+try {
+  mysql = require("mysql");
+} catch (err) {}
+
+try {
+  mysql2 = require("mysql2");
+} catch (err) {}
+
+try {
+  mariasql = require("mariasql");
 } catch (err) {}
 
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};
 
-  this.driverLen = 1;
+  this.driverLen = 2;
 
   this.ready = 0;
   this.suiteReady = function() {
@@ -54,82 +67,110 @@ function Bench() {
 
   this.CONN = {};
   const bench = this;
-  if (mysql) {
+  const connList = this.CONN;
+
+  if (promiseMysql) {
     this.driverLen++;
-    this.CONN["MYSQL"] = {
-      desc: "mysql"
-    };
-    mysql
+    connList["PROMISE_MYSQL"] = { desc: "promise-mysql", promise: true };
+    promiseMysql
       .createConnection(config)
       .then(conn => {
-        this.CONN["MYSQL"].drv = conn;
-        // conn.on("error", err => console.log("driver mysql error :" + err));
-        dbReady("mysql", this.driverLen);
+        connList["PROMISE_MYSQL"].drv = conn;
+        dbReady("promise-mysql", this.driverLen);
       })
       .catch(err => {
         throw err;
       });
-    // this.CONN.MYSQL.drv.on("error", err => console.log("driver mysql error :" + err));
+  }
+
+  if (mysql) {
+    this.driverLen++;
+    connList["MYSQL"] = { desc: "mysql", promise: false };
+    const conn = mysql.createConnection(config);
+    conn.connect(err => {
+      connList["MYSQL"].drv = conn;
+      conn.on("error", err => console.log("driver mysql error :" + err));
+      dbReady("mysql", this.driverLen);
+    });
   }
 
   if (mysql2) {
     this.driverLen++;
-    this.CONN["MYSQL2"] = {
-      desc: "mysql2"
-    };
-    mysql2
+    connList["MYSQL2"] = { desc: "mysql2", promise: false };
+    const conn = mysql2.createConnection(config);
+    conn.connect(() => {
+      connList["MYSQL2"].drv = conn;
+      conn.on("error", err => console.log("driver mysql2 error :" + err));
+      dbReady("mysql2", this.driverLen);
+    });
+  }
+
+  if (promiseMysql2) {
+    this.driverLen++;
+    connList["PROMISE_MYSQL2"] = { desc: "promise mysql2", promise: true };
+    promiseMysql2
       .createConnection(config)
       .then(conn => {
-        this.CONN["MYSQL2"].drv = conn;
-        conn.on("error", err => console.log("driver mysql2 error :" + err));
-        dbReady("mysql2", this.driverLen);
+        connList["PROMISE_MYSQL2"].drv = conn;
+        conn.on("error", err => console.log("driver mysql2 promise error :" + err));
+        dbReady("promise mysql2", this.driverLen);
       })
       .catch(err => {
         throw err;
       });
-
-    // this.CONN.MYSQL2.drv.on("error", err => console.log("driver mysql2 error :" + err));
   }
 
-  this.CONN["MARIADB"] = {
-    desc: "mariadb"
-  };
+  const mariaConn = callbackMariadb.createConnection(config);
+  connList["MARIADB"] = { desc: "mariadb", promise: true };
+  mariaConn.connect(() => {
+    connList["MARIADB"].drv = mariaConn;
+    mariaConn.on("error", err => console.log("driver mariadb error :" + err));
+    dbReady("mariadb", this.driverLen);
+  });
 
+  connList["PROMISE_MARIADB"] = { desc: "promise mariadb", promise: false };
   mariadb
     .createConnection(config)
     .then(conn => {
-      this.CONN["MARIADB"].drv = conn;
-      conn.on("error", err => console.log("driver mariadb error :" + err));
-      dbReady("mariadb", this.driverLen);
+      connList["PROMISE_MARIADB"].drv = conn;
+      conn.on("error", err => console.log("driver mariadb promise error :" + err));
+      dbReady("promise-mariadb", this.driverLen);
     })
     .catch(err => {
       throw err;
     });
 
-  if (mariasql) {
-    this.driverLen++;
-    const configC = Object.assign({}, config);
-    configC.charset = "utf8mb4";
-    configC.db = config.database;
-    configC.metadata = true;
-    if (config.socketPath != null) {
-      configC.unixSocket = config.socketPath;
-      configC.protocol = "socket";
-    }
+  const configC = Object.assign({}, config);
+  configC.charset = "utf8mb4";
+  configC.db = config.database;
+  configC.metadata = true;
+  if (config.socketPath != null) {
+    configC.unixSocket = config.socketPath;
+    configC.protocol = "socket";
+  }
 
-    this.CONN["MARIASQLC"] = {
-      desc: "mariasql"
-    };
-    mysql
+  if (promiseMariasql) {
+    this.driverLen++;
+    connList["PROMISE_MARIASQL"] = { desc: "promise mariasql", promise: false };
+    promiseMariasql
       .createConnection(config)
       .then(conn => {
-        this.CONN["MARIASQLC"].drv = conn;
-        // conn.on("error", err => console.log("driver mariasql error :" + err));
-        dbReady("mariasql", this.driverLen);
+        connList["PROMISE_MARIASQL"].drv = conn;
+        dbReady("promise-mariasql", this.driverLen);
       })
       .catch(err => {
         throw err;
       });
+  }
+
+  if (mariasql) {
+    this.driverLen++;
+    connList["MARIASQL"] = { desc: "mariasql", drv: conn, promise: true };
+    const conn = mariasql.createConnection(config);
+    conn.connect(err => {
+      connList["MARIASQL"].drv = conn;
+      dbReady("mariasql", this.driverLen);
+    });
   }
 
   this.initFcts = [];
@@ -152,6 +193,7 @@ function Bench() {
     // called between running benchmarks
     onCycle: function(event) {
       //to avoid mysql2 taking all the server memory
+      if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
@@ -181,9 +223,14 @@ function Bench() {
 Bench.prototype.end = function(bench) {
   console.log("ending connectors");
   this.endConnection(this.CONN.MARIADB);
+  this.endConnection(this.CONN.PROMISE_MARIADB);
   if (mysql) this.endConnection(this.CONN.MYSQL);
   if (mysql2) this.endConnection(this.CONN.MYSQL2);
-  if (mariasql) this.endConnection(this.CONN.MARIASQLC);
+  if (mariasql) this.endConnection(this.CONN.MARIASQL);
+
+  if (promiseMysql) this.endConnection(this.CONN.PROMISE_MYSQL);
+  if (promiseMysql2) this.endConnection(this.CONN.PROMISE_MYSQL2);
+  if (promiseMariasql) this.endConnection(this.CONN.PROMISE_MARIASQL);
   bench.displayReport();
 };
 
@@ -222,7 +269,7 @@ Bench.prototype.displayReport = function() {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === "mysql") {
+      if (o.drvType === "mysql" || o.drvType === "promise-mysql") {
         base = o.iteration;
       }
       if (o.iteration > best) {
@@ -247,7 +294,7 @@ Bench.prototype.displayReport = function() {
         (o.iteration === base
           ? ""
           : " ( " + this.fill((val > 0 ? "+" : "") + perc, 6, false) + "% )");
-      if (o.drvType === "mariadb") {
+      if (o.drvType.includes("mariadb")) {
         if (o.iteration < best) {
           console.log(tt.red);
         } else {
@@ -273,104 +320,68 @@ Bench.prototype.fill = function(val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function(title, displaySql, fct, onComplete, conn) {
+Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, conn) {
   const self = this;
+  const addTest = getAddTest(self, this.suite, fct, this.minSamples, title, displaySql, onComplete);
 
   if (conn) {
-    this.suite.add({
-      name: title + " - " + conn.desc,
+    addTest(conn, conn.desc);
+  } else {
+    if (isPromise) {
+      addTest(self.CONN.PROMISE_MARIADB, "warmup");
+    } else {
+      addTest(self.CONN.MARIADB, "warmup");
+    }
+
+    if (!isPromise && mysql) {
+      addTest(self.CONN.MYSQL, self.CONN.MYSQL.desc);
+    }
+
+    if (isPromise && promiseMysql) {
+      addTest(self.CONN.PROMISE_MYSQL, self.CONN.PROMISE_MYSQL.desc);
+    }
+
+    if (!isPromise && mysql2) {
+      addTest(self.CONN.MYSQL2, self.CONN.MYSQL2.desc);
+    }
+
+    if (isPromise && promiseMysql2) {
+      addTest(self.CONN.PROMISE_MYSQL2, self.CONN.PROMISE_MYSQL2.desc);
+    }
+
+    if (isPromise) {
+      addTest(self.CONN.PROMISE_MARIADB, self.CONN.PROMISE_MARIADB.desc);
+    } else {
+      addTest(self.CONN.MARIADB, self.CONN.MARIADB.desc);
+    }
+
+    if (isPromise && promiseMariasql) {
+      addTest(self.CONN.PROMISE_MARIASQL, self.CONN.PROMISE_MARIASQL.desc);
+    }
+
+    if (!isPromise && mariasql) {
+      addTest(self.CONN.MARIASQL, self.CONN.MARIASQL.desc);
+    }
+  }
+};
+
+const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onComplete) {
+  return function(conn, name) {
+    suite.add({
+      name: title + " - " + name,
       fn: function(deferred) {
         fct.call(self, conn.drv, deferred);
       },
       onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
+        if (onComplete) onComplete.call(self, conn.drv);
       },
-      minSamples: this.minSamples,
+      minSamples: minSamples,
       defer: true,
-      drvType: conn.desc,
+      drvType: name,
       benchTitle: title,
       displaySql: displaySql
     });
-  } else {
-    this.suite.add({
-      name: title + " - warmup",
-      fn: function(deferred) {
-        fct.call(self, self.CONN.MARIADB.drv, deferred);
-      },
-      onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
-      },
-      minSamples: this.minSamples,
-      defer: true,
-      drvType: "warmup",
-      benchTitle: title,
-      displaySql: displaySql
-    });
-    if (mysql) {
-      this.suite.add({
-        name: title + " - " + self.CONN.MYSQL.desc,
-        fn: function(deferred) {
-          fct.call(self, self.CONN.MYSQL.drv, deferred);
-        },
-        onComplete: () => {
-          if (onComplete) onComplete.call(self, self.CONN.MYSQL.drv);
-        },
-        minSamples: this.minSamples,
-        defer: true,
-        drvType: self.CONN.MYSQL.desc,
-        benchTitle: title,
-        displaySql: displaySql
-      });
-    }
-    if (mysql2) {
-      this.suite.add({
-        name: title + " - " + self.CONN.MYSQL2.desc,
-        fn: function(deferred) {
-          fct.call(self, self.CONN.MYSQL2.drv, deferred);
-        },
-        onComplete: () => {
-          if (onComplete) onComplete.call(self, self.CONN.MYSQL2.drv);
-        },
-        minSamples: this.minSamples,
-        defer: true,
-        drvType: self.CONN.MYSQL2.desc,
-        benchTitle: title,
-        displaySql: displaySql
-      });
-    }
-
-    this.suite.add({
-      name: title + " - " + self.CONN.MARIADB.desc,
-      fn: function(deferred) {
-        fct.call(self, self.CONN.MARIADB.drv, deferred);
-      },
-      onComplete: () => {
-        if (onComplete) onComplete.call(self, self.CONN.MARIADB.drv);
-      },
-      minSamples: this.minSamples,
-      defer: true,
-      drvType: self.CONN.MARIADB.desc,
-      benchTitle: title,
-      displaySql: displaySql
-    });
-
-    if (mariasql) {
-      this.suite.add({
-        name: title + " - " + self.CONN.MARIASQLC.desc,
-        fn: function(deferred) {
-          fct.call(self, self.CONN.MARIASQLC.drv, deferred);
-        },
-        onComplete: () => {
-          if (onComplete) onComplete.call(self, self.CONN.MARIASQLC.drv);
-        },
-        minSamples: this.minSamples,
-        defer: true,
-        drvType: self.CONN.MARIASQLC.desc,
-        benchTitle: title,
-        displaySql: displaySql
-      });
-    }
-  }
+  };
 };
 
 module.exports = Bench;

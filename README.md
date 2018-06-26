@@ -92,7 +92,7 @@ _Those results are done without any caching for mariadb connector, mysql2 use so
 
 ## Roadmap 
 
-Some features are not implemented in first beta version, but will in next beta version : 
+Some features are not implemented in first beta version, but will in next versions : 
 
     * Pooling and "PoolCluster" are not implemented in first version
     * MariaDB new ed25519 plugin authentication

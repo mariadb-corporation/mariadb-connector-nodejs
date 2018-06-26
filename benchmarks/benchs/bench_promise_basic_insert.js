@@ -1,8 +1,8 @@
 const assert = require("assert");
 
-module.exports.title = "simple insert";
+module.exports.title = "simple insert using promise";
 module.exports.displaySql = "INSERT INTO testn.perfTest(test) VALUES (?) (into BLACKHOLE ENGINE) ";
-
+module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred) {
   conn
     .query("INSERT INTO testn.perfTest(test) VALUES (?)", [

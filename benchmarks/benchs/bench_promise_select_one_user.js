@@ -1,11 +1,9 @@
 const assert = require("assert");
 
-module.exports.title = "select one mysql.user and a random number (no caching client side)";
-module.exports.displaySql =
-  "select <all mysql.user fields>, <random field> from mysql.user u LIMIT 1";
-
+module.exports.title = "select one mysql.user and 1 integer using promise";
+module.exports.displaySql = "select <all mysql.user fields>, 1 from mysql.user u LIMIT 1";
+module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred) {
-  const rand = Math.floor(Math.random() * 50000000);
   conn
     .query(
       "select u.Host,\n" +
@@ -53,12 +51,12 @@ module.exports.benchFct = function(conn, deferred) {
         "u.password_expired,\n" +
         "u.is_role,\n" +
         "u.default_role,\n" +
-        "u.max_statement_time , 1 as t" +
-        rand +
+        "u.max_statement_time , 50000000 as t" +
         " from mysql.user u LIMIT 1"
     )
     .then(rows => {
-      // assert.equal(1, rows[0]["t" + rand]);
+      // assert.equal(50000000, rows[0]["t"]);
+
       deferred.resolve();
     })
     .catch(err => {

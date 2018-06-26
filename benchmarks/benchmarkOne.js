@@ -10,7 +10,7 @@ const launchBenchs = function(path) {
   const test = "bench_select_param.js";
   const m = require(path + "/" + test);
   bench.initFcts.push(m.initFct);
-  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete); //, bench.CONN.MYSQL);
+  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.promise); //, bench.CONN.MYSQL);
 
   bench.suiteReady();
 };
