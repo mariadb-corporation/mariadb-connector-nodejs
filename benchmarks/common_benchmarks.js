@@ -390,7 +390,6 @@ const pingAll = function(conns) {
   for (let k = 0; k < keys.length; ++k) {
     conns[keys[k]].drv.ping();
   }
-
 };
 
 module.exports = Bench;

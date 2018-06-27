@@ -73,7 +73,7 @@ describe("ssl", function() {
         } else {
           //ssl is not enable on database, skipping test.
           shareConn
-            .query("SHOW VARIABLES LIKE 'ssl'")
+            .query("SHOW VARIABLES LIKE '%ssl%'")
             .then(rows => {
               console.log("ssl is not enable on database, skipping test :");
               for (let i = 0; i < rows.length; i++) {
@@ -449,6 +449,8 @@ describe("ssl", function() {
       .createConnection({ ssl: { rejectUnauthorized: false } })
       .then(con => {
         conn = con;
+        conn.query("DROP USER IF EXISTS ChangeUser@'%'").catch(err => {});
+        conn.query("FLUSH PRIVILEGES");
         conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
         conn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
         return conn.query("FLUSH PRIVILEGES");
