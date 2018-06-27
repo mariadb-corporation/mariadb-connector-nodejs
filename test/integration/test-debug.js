@@ -213,7 +213,7 @@ describe("debug", () => {
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
 
-              const range = compress ? [3400, 4170] : [3100, 4090];
+              const range = [3000, 4090];
               assert(
                 data.length > range[0] && data.length < range[1],
                 "wrong data length : " +
