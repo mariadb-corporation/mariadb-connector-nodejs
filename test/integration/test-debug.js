@@ -213,43 +213,21 @@ describe("debug", () => {
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
 
-              const rangeWithEOF = compress ? [3000, 4470] : [2700, 4430];
-              const rangeWithoutEOF = compress ? [3700, 4470] : [3500, 4390];
-              if (
-                (conn.isMariaDB() && conn.hasMinVersion(10, 2, 2)) ||
-                (!conn.isMariaDB() && conn.hasMinVersion(5, 7, 5))
-              ) {
-                assert(
-                  data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
-                  "wrong data length : " +
-                    data.length +
-                    " expected value between " +
-                    rangeWithoutEOF[0] +
-                    " and " +
-                    rangeWithoutEOF[1] +
-                    "." +
-                    "\n server version : " +
-                    serverVersion +
-                    "\n data :\n" +
-                    data
-                );
-              } else {
-                //EOF Packet make exchange bigger
-                assert(
-                  data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
-                  "wrong data length : " +
-                    data.length +
-                    " expected value between " +
-                    rangeWithEOF[0] +
-                    " and " +
-                    rangeWithEOF[1] +
-                    "." +
-                    "\n server version : " +
-                    serverVersion +
-                    "\n data :\n" +
-                    data
-                );
-              }
+              const range = compress ? [3400, 4170] : [3100, 4090];
+              assert(
+                data.length > range[0] && data.length < range[1],
+                "wrong data length : " +
+                  data.length +
+                  " expected value between " +
+                  range[0] +
+                  " and " +
+                  range[1] +
+                  "." +
+                  "\n server version : " +
+                  serverVersion +
+                  "\n data :\n" +
+                  data
+              );
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
               access.end();

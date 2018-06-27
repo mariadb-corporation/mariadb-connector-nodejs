@@ -102,7 +102,8 @@ default: false
 * `pipelining`: *boolean* will send query one by one, but without waiting the results of previous entry ([detail information](/documentation/pipelining.md)). default true
 * `trace`: *boolean* will add the stack trace at the time of query creation to error stacktrace 
 * `typeCast`: permit casting results type  
- 
+* `connectAttributes`: *boolean/json* if true, some information (client name, version, os, node version, ...) will be send to performance schema (see [connection attributes](https://mariadb.com/kb/en/library/performance-schema-session_connect_attrs-table/) ). if set, JSON attributes will be additionally sent. default to false
+  
 ## Query
 
 #### `query(sql[, values])` -> `Promise`

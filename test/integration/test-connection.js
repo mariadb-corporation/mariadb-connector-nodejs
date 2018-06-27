@@ -8,6 +8,14 @@ const Connection = require("../../lib/connection");
 const ConnOptions = require("../../lib/config/connection-options");
 
 describe("connection", () => {
+  it("with no connection attributes", function(done) {
+    connectWithAttributes(false, done);
+  });
+
+  it("with basic connection attributes", function(done) {
+    connectWithAttributes(false, done);
+  });
+
   it("with small connection attributes", function(done) {
     connectWithAttributes({ par1: "bouh", par2: "bla" }, done);
   });

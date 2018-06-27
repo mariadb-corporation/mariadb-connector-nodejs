@@ -3,6 +3,7 @@
 const base = require("../base.js");
 const { assert } = require("chai");
 const ServerStatus = require("../../lib/const/server-status");
+const Conf = require("../conf");
 
 describe("change user", () => {
   before(done => {
@@ -81,14 +82,16 @@ describe("change user", () => {
 
   it("basic change user using promise", function(done) {
     if (!shareConn.isMariaDB()) this.skip();
-    var currUser;
+    const baseConf = Conf.baseConfig;
+
+    let initialUser;
     base
       .createConnection()
       .then(conn => {
         conn
           .query("SELECT CURRENT_USER")
           .then(res => {
-            currUser = res[0]["CURRENT_USER"];
+            initialUser = res[0]["CURRENT_USER"];
             return conn.changeUser({
               user: "ChangeUser",
               password: "mypassword",
@@ -101,7 +104,19 @@ describe("change user", () => {
           .then(res => {
             const user = res[0]["CURRENT_USER"];
             assert.equal(user, "ChangeUser@%");
-            assert(user !== currUser);
+            assert(user !== initialUser);
+            return conn.changeUser({
+              user: baseConf.user,
+              password: baseConf.password,
+              connectAttributes: true
+            });
+          })
+          .then(() => {
+            return conn.query("SELECT CURRENT_USER");
+          })
+          .then(res => {
+            const user = res[0]["CURRENT_USER"];
+            assert.equal(user, initialUser);
             conn.end();
             done();
           })
