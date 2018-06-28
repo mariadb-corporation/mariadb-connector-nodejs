@@ -12,29 +12,37 @@ environment:
   matrix:
     - DB: '10.2.14'
       nodejs_version: "6"
+      MEM: "21"
       SKIP_LEAK: "1"
 
     - DB: '10.2.14'
+      MEM: "21"
       nodejs_version: "8"
 
     - DB: '10.2.14'
+      MEM: "21"
       nodejs_version: "9"
 
     - DB: '10.2.14'
       nodejs_version: "9"
+      MEM: "21"
       TEST_ZIP: 1
 
     - DB: '10.2.14'
       nodejs_version: "9"
+      MEM: "21"
       BENCH: "1"
 
     - DB: '10.3.6'
+      MEM: "21"
       nodejs_version: "8"
 
     - DB: '10.1.33'
+      MEM: "21"
       nodejs_version: "8"
 
     - DB: '10.0.35'
+      MEM: "21"
       nodejs_version: "8"
 
     - DB: '5.5.60'
@@ -53,14 +61,17 @@ install:
   - cmd: echo [mysqld] > c:\projects\server\data\my.ini
   - cmd: echo datadir=C:/projects/server/data >> c:\projects\server\data\my.ini
   - cmd: echo port=3306 >> c:\projects\server\data\my.ini
-  - cmd: echo innodb_log_file_size=210M >> c:\projects\server\data\my.ini
-  - cmd: echo max_allowed_packet=21m >> c:\projects\server\data\my.ini
-  - cmd: echo character_set_server=utf8mb4 >> c:\projects\server\data\my.ini
+  - cmd: echo innodb_buffer_pool_size=2037M >> c:\projects\server\data\my.ini
+  - cmd: echo innodb_log_file_size=%MEM%0m >> c:\projects\server\data\my.ini
+  - cmd: echo max_allowed_packet=%MEM%m >> c:\projects\server\data\my.ini
+  - cmd: echo bind-address=0.0.0.0 >> c:\projects\server\data\my.ini
+  - cmd: echo character-set-server=utf8mb4 >> c:\projects\server\data\my.ini
   - cmd: echo collation_server=utf8mb4_unicode_ci >> c:\projects\server\data\my.ini
-  - cmd: echo ssl_ca=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\ca.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl_cert=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.crt >> c:\projects\server\data\my.ini
-  - cmd: echo ssl_key=c:\\projects\\mariadb-connector-nodejs\\test\\certificats\\server.key >> c:\projects\server\data\my.ini
-  - cmd: echo named_pipe=1 >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_ca=c:\projects\mariadb-connector-nodejs\test\certificats\ca.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_cert=c:\projects\mariadb-connector-nodejs\test\certificats\server.crt >> c:\projects\server\data\my.ini
+  - cmd: echo ssl_key=c:\projects\mariadb-connector-nodejs\test\certificats\server.key >> c:\projects\server\data\my.ini
+  - cmd: echo enable-named-pipe=1 >> c:\projects\server\data\my.ini
+  - cmd: type c:\projects\server\data\my.ini
   - ps: Restart-Service "mariadb"
   - ps: Install-Product node $env:nodejs_version
   - cmd: cd c:\projects\mariadb-connector-nodejs
