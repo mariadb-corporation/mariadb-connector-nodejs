@@ -77,15 +77,11 @@ describe("multi-results", () => {
   it("query using callback and promise mode", function(done) {
     shareConn
       .query("select 1", (err, rows) => {})
-      .then(() => {
-        done(new Error("must have thrown error"));
-      })
-      .catch(err => {
-        assert.equal(err.errno, 45027);
-        assert.equal(err.sqlState, "08S01");
-        assert.equal(err.code, "ER_WRONG_PARAMETERS");
+      .then(rows => {
+        assert.deepEqual(rows, [{ "1": 1 }]);
         done();
-      });
+      })
+      .catch(done);
   });
 
   it("simple select 1 with callback", function(done) {

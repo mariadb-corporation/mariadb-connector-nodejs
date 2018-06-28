@@ -7,7 +7,7 @@ const { Writable } = require("stream");
 describe("results-set streaming", () => {
   before(function(done) {
     shareConn
-      .query("CREATE TEMPORARY TABLE testStreamResult (v int)")
+      .query("CREATE TABLE testStreamResult (v int)")
       .then(() => {
         let sql = "INSERT INTO testStreamResult VALUE (?)";
         const params = [0];
@@ -23,28 +23,78 @@ describe("results-set streaming", () => {
       .catch(done);
   });
 
+  after(function(done) {
+    shareConn
+      .query("DROP TABLE testStreamResult")
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
   it("Streaming result-set with promise implementation", function(done) {
     let currRow = 0;
+    let metaReceived = false;
     shareConn
       .stream("SELECT * FROM testStreamResult")
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
+      })
+      .on("columns", meta => {
+        assert.equal(meta.length, 1);
+        metaReceived = true;
       })
       .on("data", row => {
         assert.equal(currRow++, row.v);
       })
       .on("end", () => {
         assert.equal(10000, currRow);
+        assert.isOk(metaReceived);
         done();
       });
   });
 
+  it("Streaming result-set with callback implementation", function(done) {
+    let currRow = 0;
+    let metaReceived = false;
+    const conn = base.createCallbackConnection();
+    conn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        const query = conn.query("SELECT * FROM testStreamResult");
+        query
+          .on("error", err => {
+            done(new Error("must not have thrown any error !"));
+          })
+          .on("columns", meta => {
+            assert.equal(meta.length, 1);
+            metaReceived = true;
+          })
+          .on("data", row => {
+            assert.equal(currRow++, row.v);
+          })
+          .on("end", () => {
+            assert.equal(10000, currRow);
+            assert.isOk(metaReceived);
+            conn.end();
+            done();
+          });
+      }
+    });
+  });
+
   it("streaming with option rows as array", function(done) {
     let currRow = 0;
+    let metaReceived = false;
     shareConn
       .stream({ rowsAsArray: true, sql: "SELECT * FROM testStreamResult" })
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
+      })
+      .on("columns", meta => {
+        assert.equal(meta.length, 1);
+        metaReceived = true;
       })
       .on("data", row => {
         assert(Array.isArray(row));
@@ -52,6 +102,7 @@ describe("results-set streaming", () => {
       })
       .on("end", () => {
         assert.equal(10000, currRow);
+        assert.isOk(metaReceived);
         done();
       });
   });

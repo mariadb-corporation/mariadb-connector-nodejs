@@ -28,6 +28,27 @@ describe("Error", () => {
       .catch(done);
   });
 
+  it("query callback error with trace", function(done) {
+    const conn = base.createCallbackConnection({ trace: true });
+    conn.connect(err1 => {
+      conn.query("wrong query", (err, rows, meta) => {
+        if (!err) {
+          done(new Error("must have thrown error !"));
+        } else {
+          assert(err.stack.includes("test-error.js"));
+          assert(err != null);
+          assert(err.message.includes("You have an error in your SQL syntax"));
+          assert(err.message.includes("sql: wrong query - parameters:[]"));
+          assert.equal(err.errno, 1064);
+          assert.equal(err.sqlState, 42000);
+          assert.equal(err.code, "ER_PARSE_ERROR");
+          conn.end();
+          done();
+        }
+      });
+    });
+  });
+
   it("query error sql length", function(done) {
     base
       .createConnection({ debugLen: 10 })
