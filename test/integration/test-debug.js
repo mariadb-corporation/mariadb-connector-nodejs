@@ -147,7 +147,7 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  const range = [1850, 2900];
+                  const range = [1790, 2900];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +
