@@ -61,6 +61,28 @@ describe("connection", () => {
     });
   });
 
+  it("callback with connection error", function(done) {
+    const conn = base.createCallbackConnection();
+    conn.connect(err => {
+      if (!err) done(new Error("must have throw an error!"));
+      assert(err.message.includes("close forced"));
+      done();
+    });
+    process.nextTick(
+      conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error("close forced"))
+    );
+  });
+
+  it("callback with socket failing without error", function(done) {
+    const conn = base.createCallbackConnection({ connectTimeout: 100 });
+    conn.connect(err => {
+      if (!err) done(new Error("must have throw an error!"));
+      assert(err.message.includes("Connection timeout"));
+      done();
+    });
+    process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket()));
+  });
+
   it("socket timeout", function(done) {
     let conn;
     base
@@ -547,7 +569,7 @@ describe("connection", () => {
         assert.deepEqual(rows, [{ "1": 1 }]);
         const diff = process.hrtime(startTime);
         //query has take more than 500ms
-        assert(diff[1] > 500000000, " diff[1]:" + diff[1] + " expected to be more than 500000000");
+        assert(diff[1] > 499000000, " diff[1]:" + diff[1] + " expected to be more than 500000000");
         done();
       })
       .catch(done);

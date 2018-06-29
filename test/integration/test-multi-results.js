@@ -50,6 +50,25 @@ describe("multi-results", () => {
     });
   });
 
+  it("simple query with sql option andcallback", function(done) {
+    const callbackConn = base.createCallbackConnection();
+    callbackConn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        callbackConn.query({ sql: "SELECT 1, 2", rowsAsArray: true }, (err, rows) => {
+          if (err) {
+            done(err);
+          } else {
+            assert.deepEqual(rows, [[1, 2]]);
+            callbackConn.end();
+            done();
+          }
+        });
+      }
+    });
+  });
+
   it("simple do 1 with callback no function", function(done) {
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {

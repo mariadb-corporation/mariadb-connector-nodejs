@@ -36,7 +36,7 @@ describe("results-set streaming", () => {
     let currRow = 0;
     let metaReceived = false;
     shareConn
-      .stream("SELECT * FROM testStreamResult")
+      .queryStream("SELECT * FROM testStreamResult")
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
       })
@@ -88,7 +88,7 @@ describe("results-set streaming", () => {
     let currRow = 0;
     let metaReceived = false;
     shareConn
-      .stream({ rowsAsArray: true, sql: "SELECT * FROM testStreamResult" })
+      .queryStream({ rowsAsArray: true, sql: "SELECT * FROM testStreamResult" })
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
       })
@@ -132,11 +132,11 @@ describe("results-set streaming", () => {
       }
     });
 
-    shareConn.stream("SELECT * FROM testStreamResult").pipe(writableStream);
+    shareConn.queryStream("SELECT * FROM testStreamResult").pipe(writableStream);
   });
 
   it("Streaming error handling", function(done) {
-    shareConn.stream("SELECT * FROM UnknownTable").on("error", err => {
+    shareConn.queryStream("SELECT * FROM UnknownTable").on("error", err => {
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, "42S02");
       assert.equal(err.code, "ER_NO_SUCH_TABLE");

@@ -9,7 +9,7 @@
 [![Linux Build](https://travis-ci.org/rusher/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/rusher/mariadb-connector-nodejs)
 [![Windows status](https://ci.appveyor.com/api/projects/status/nuvvbkx82ixfhp12?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
-[![Coverage Status](https://coveralls.io/repos/github/rusher/mariadb-connector-nodejs/badge.svg?branch=documentation)](https://coveralls.io/github/rusher/mariadb-connector-nodejs?branch=documentation)
+[![Coverage Status](https://coveralls.io/repos/github/rusher/mariadb-connector-nodejs/badge.svg)](https://coveralls.io/github/rusher/mariadb-connector-nodejs)
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 

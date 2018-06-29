@@ -44,6 +44,30 @@ describe("test socket", () => {
       .catch(done);
   });
 
+  it("named pipe error", function(done) {
+    if (process.platform !== "win32") this.skip();
+    if (process.env.MUST_USE_TCPIP) this.skip();
+    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
+      this.skip();
+
+    shareConn
+      .query("select @@version_compile_os,@@socket soc")
+      .then(res => {
+        base
+          .createConnection({ socketPath: "\\\\.\\pipe\\wrong" + res[0].soc })
+          .then(() => {
+            done(new Error("must have thrown error"));
+          })
+          .catch(err => {
+            assert(err.message.includes("connect ENOENT \\\\.\\pipe\\"));
+            assert.equal(err.errno, "ENOENT");
+            assert.equal(err.code, "ENOENT");
+            done();
+          });
+      })
+      .catch(done);
+  });
+
   it("unix socket", function(done) {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (process.platform === "win32") this.skip();
