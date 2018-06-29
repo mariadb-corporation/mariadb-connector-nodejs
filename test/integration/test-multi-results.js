@@ -84,6 +84,35 @@ describe("multi-results", () => {
       .catch(done);
   });
 
+  it("query result with option metaPromiseAsArray", function(done) {
+    base.createConnection({ metaAsArray: true }).then(conn => {
+      conn
+        .query("select 1")
+        .then(obj => {
+          assert.equal(obj.length, 2);
+          assert.deepEqual(obj[0], [{ "1": 1 }]);
+          conn.end();
+          done();
+        })
+        .catch(done);
+    });
+  });
+
+  it("query result with option metaPromiseAsArray multiple", function(done) {
+    base.createConnection({ metaAsArray: true, multipleStatements: true }).then(conn => {
+      conn
+        .query("select 1; select 2")
+        .then(obj => {
+          assert.equal(obj[0].length, 2);
+          assert.equal(obj[1].length, 2);
+          assert.deepEqual(obj[0], [[{ "1": 1 }], [{ "2": 2 }]]);
+          conn.end();
+          done();
+        })
+        .catch(done);
+    });
+  });
+
   it("simple select 1 with callback", function(done) {
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {
