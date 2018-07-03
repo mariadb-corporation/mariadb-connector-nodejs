@@ -38,25 +38,25 @@ describe("streaming", () => {
 
   it("Streaming url content", function(done) {
     this.timeout(10000);
-    const https = require("https");
-    https.get(
-      "https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
-      res => {
-        base.createConnection().then(conn => {
-          conn
-            .query(
-              "CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, PRIMARY KEY (id))"
-            )
-            .then(() => conn.query("INSERT INTO StreamingContent (b) VALUE (?)", [res]))
-            .then(() => conn.query("SELECT * FROM StreamingContent"))
-            .then(rows => {
-              conn.end();
-              done();
-            })
-            .catch(done);
-        });
-      }
-    );
+    shareConn
+      .query(
+        "CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, PRIMARY KEY (id))"
+      )
+      .then(() => {
+        const https = require("https");
+        https.get(
+          "https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
+          readableStream => {
+            shareConn
+              .query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream])
+              .then(() => shareConn.query("SELECT * FROM StreamingContent"))
+              .then(rows => {
+                done();
+              })
+              .catch(done);
+          }
+        );
+      });
   });
 
   it("Streaming single parameter", function(done) {
@@ -171,7 +171,7 @@ describe("streaming", () => {
 
   function createTmpFiles(done) {
     for (let i = 0; i < buf.length; i++) {
-      buf[i] = 97 + i % 10;
+      buf[i] = 97 + (i % 10);
     }
 
     //create
@@ -180,7 +180,7 @@ describe("streaming", () => {
         done(err);
       } else {
         for (let i = 0; i < buf2.length; i++) {
-          buf2[i] = 97 + i % 10;
+          buf2[i] = 97 + (i % 10);
         }
         fs.writeFile(halfFileName, buf2, "utf8", function(err) {
           if (err) {

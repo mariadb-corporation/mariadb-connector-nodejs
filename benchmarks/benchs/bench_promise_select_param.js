@@ -1,6 +1,6 @@
 const assert = require("assert");
 
-module.exports.title = "select ? using promise";
+module.exports.title = "select random number using promise";
 module.exports.displaySql = "select ?";
 module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred) {

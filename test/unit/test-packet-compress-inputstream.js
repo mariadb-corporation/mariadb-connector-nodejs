@@ -35,7 +35,7 @@ describe("test compress PacketInputStream data", () => {
   before(() => {
     buf = Buffer.alloc(bigSize);
     for (let i = 0; i < buf.length; i++) {
-      buf[i] = 65 + i % 26;
+      buf[i] = 65 + (i % 26);
     }
   });
 

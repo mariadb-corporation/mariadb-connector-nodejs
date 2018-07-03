@@ -169,19 +169,19 @@ describe("change user", () => {
     base
       .createConnection()
       .then(conn => {
-        assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+        assert.equal(conn.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
         conn
           .query("SET autocommit=1")
           .then(() => {
-            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+            assert.equal(conn.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
             return conn.query("SET autocommit=0");
           })
           .then(() => {
-            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            assert.equal(conn.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 0);
             return conn.changeUser({ user: "ChangeUser", password: "mypassword" });
           })
           .then(() => {
-            assert.equal(conn.__tests.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+            assert.equal(conn.getInfo().status & ServerStatus.STATUS_AUTOCOMMIT, 2);
             conn.end();
             done();
           })

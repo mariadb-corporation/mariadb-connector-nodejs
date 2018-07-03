@@ -61,8 +61,21 @@ describe("connection", () => {
     });
   });
 
-  it("callback with connection error", function(done) {
+  it("callback without connect", function(done) {
     const conn = base.createCallbackConnection();
+    conn.query("select 1", (err, rows) => {
+      if (err) {
+        done(err);
+      } else {
+        assert.deepEqual(rows, [{ "1": 1 }]);
+        conn.end();
+        done();
+      }
+    });
+  });
+
+  it("callback with connection error", function(done) {
+    const conn = base.createCallbackConnection({ connectTimeout: 200, socketTimeout: 200 });
     conn.connect(err => {
       if (!err) done(new Error("must have throw an error!"));
       assert(err.message.includes("close forced"));
@@ -105,7 +118,14 @@ describe("connection", () => {
 
   it("connection.connect() callback mode without callback", function(done) {
     const conn = base.createCallbackConnection();
-    conn.connect();
+    try {
+      conn.connect();
+    } catch (err) {
+      assert(err.message.includes("missing callback parameter"));
+      assert.equal(err.sqlState, "HY000");
+      assert.equal(err.errno, 45016);
+      assert.equal(err.code, "ER_MISSING_PARAMETER");
+    }
     setTimeout(() => {
       conn.end();
       done();
@@ -114,10 +134,10 @@ describe("connection", () => {
 
   it("multiple connection.connect() with callback no function", function(done) {
     const conn = base.createCallbackConnection();
-    conn.connect();
-    conn.connect();
+    conn.connect(err => {});
+    conn.connect(err => {});
     conn.end(() => {
-      conn.connect();
+      conn.connect(err => {});
       done();
     });
   });
@@ -130,6 +150,38 @@ describe("connection", () => {
       })
       .then(() => {
         done();
+      })
+      .catch(done);
+  });
+
+  it("connection error event", function(done) {
+    base
+      .createConnection()
+      .then(conn => {
+        conn.on("error", err => {
+          done();
+        });
+        conn.query("KILL " + conn.threadId).catch(err => {
+          assert(err.message.includes("Connection was killed"));
+          assert.equal(err.sqlState, "70100");
+          assert.equal(err.errno, 1927);
+        });
+      })
+      .catch(done);
+  });
+
+  it("connection error event socket failed", function(done) {
+    base
+      .createConnection({ socketTimeout: 100 })
+      .then(conn => {
+        conn.on("error", err => {
+          assert(err.message.includes("socket timeout"));
+          assert.equal(err.fatal, true);
+          assert.equal(err.sqlState, "08S01");
+          assert.equal(err.errno, 45026);
+          assert.equal(err.code, "ER_SOCKET_TIMEOUT");
+          done();
+        });
       })
       .catch(done);
   });
@@ -312,7 +364,7 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert(err.message.includes("socket timeout"));
+        assert(err.message.includes("socket timeout"), err.message);
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45026);
         assert.equal(err.code, "ER_SOCKET_TIMEOUT");
@@ -343,9 +395,9 @@ describe("connection", () => {
   it("connection timeout connect (wrong url) with callback no function", done => {
     const conn = base.createCallbackConnection({
       host: "www.google.fr",
-      connectTimeout: 1000
+      connectTimeout: 500
     });
-    conn.connect();
+    conn.connect(err => {});
     conn.end();
     done();
   });
@@ -535,7 +587,7 @@ describe("connection", () => {
 
   it("changing database", function(done) {
     let currDb = Conf.baseConfig.database;
-    assert.equal(currDb, shareConn.__tests.getInfo().database);
+    assert.equal(currDb, shareConn.getInfo().database);
     shareConn
       .query("CREATE DATABASE changedb")
       .then(() => {
@@ -547,7 +599,7 @@ describe("connection", () => {
           (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7))
         ) {
           //ok packet contain meta change
-          assert.equal(shareConn.__tests.getInfo().database, "changedb");
+          assert.equal(shareConn.getInfo().database, "changedb");
         }
         shareConn.query("use " + currDb);
         shareConn.query("DROP DATABASE changedb");
