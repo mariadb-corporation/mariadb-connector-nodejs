@@ -85,9 +85,43 @@ describe("multi-results", () => {
 
   it("simple select 1", function(done) {
     shareConn
-      .query("SELECT 1")
+      .query("SELECT 1, 'a'")
       .then(rows => {
-        assert.deepEqual(rows, [{ "1": 1 }]);
+        console.log(rows);
+        // [
+        //   { '1': 1, a: 'a' },
+        //   meta: [
+        //     {
+        //       collation: [Object],
+        //       columnLength: 1,
+        //       columnType: 8,
+        //       scale: 0,
+        //       type: 'LONGLONG',
+        //       flags: 129,
+        //       db: [Function: bound getStringProperty],
+        //       schema: [Function: bound getStringProperty],
+        //       table: [Function: bound getStringProperty],
+        //       orgTable: [Function: bound getStringProperty],
+        //       name: [Function: bound getStringProperty],
+        //       orgName: [Function: bound getStringProperty]
+        //     },
+        //     {
+        //       collation: [Object],
+        //       columnLength: 4,
+        //       columnType: 253,
+        //       scale: 39,
+        //       type: 'VAR_STRING',
+        //       flags: 1,
+        //       db: [Function: bound getStringProperty],
+        //       schema: [Function: bound getStringProperty],
+        //       table: [Function: bound getStringProperty],
+        //       orgTable: [Function: bound getStringProperty],
+        //       name: [Function: bound getStringProperty],
+        //       orgName: [Function: bound getStringProperty]
+        //     }
+        //   ]
+        // ]
+        assert.equal(rows.length, 1);
         done();
       })
       .catch(done);
@@ -142,7 +176,6 @@ describe("multi-results", () => {
           if (err) {
             done(err);
           } else {
-            console.log(rows);
             assert.deepEqual(rows, [{ "1": 1 }]);
             callbackConn.end();
             done();

@@ -261,12 +261,12 @@ example with json options:
 
 ### Placeholder
 
-To avoid SQL Injection, queries permit using question mark place holder. Values will be escaped accordingly to their type.
-Values can be of native javascript type, Buffer, Readable or object with toSqlString method. if not object will be stringified (JSON.stringify). 
+To avoid SQL Injection, queries permit using question mark placeholders. Values will be escaped accordingly to their type.
+Values can be of native javascript type, Buffer, Readable, object with toSqlString method, or object will be stringified (JSON.stringify). 
 
-For streaming, Objects that implement Readable will be streamed automatically. 
+For streaming, objects that implement Readable will be streamed automatically. 
 You may look at 2 server option that might interfere : 
-- [@@net_write_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
+- [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
 - [@@max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) : Maximum data size send to server. 
   
 
@@ -286,6 +286,7 @@ example :
 example streaming: 
 ```javascript
 const https = require("https");
+//3Mb page
 https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
   readableStream => {
     connection.query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream]);
@@ -310,7 +311,7 @@ For insert/delete/update commands, results is a JSON object with the following p
 connection.query('CREATE TABLE animals (' +
                        'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
                        'name VARCHAR(30) NOT NULL,' +
-                       'PRIMARY KEY (id))')
+                       'PRIMARY KEY (id))');
 connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
     .then(res => {
       console.log(res); 
@@ -321,8 +322,9 @@ connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
 
 #### Result-set array
 
-For result-set, an array representing the data of each rows. Data results format can differ according to options nestTables and rowsAsArray.
-default return an array containing a json object of each row, with an additional property "meta" containing metadata information.
+For result-set, the result is an array of rows, with an additional property "meta" containing metadata information. 
+
+Row default format is JSON, but 2 other formats are possible with options nestTables and rowsAsArray.
 
 Examples :
 ```javascript
@@ -332,10 +334,7 @@ connection.query('select * from animals')
       // [ 
       //    { id: 1, name: 'sea lions' }, 
       //    { id: 2, name: 'bird' }, 
-      //    meta: [ 
-      //         ColumnDefinition {name: 'id', ...},
-      //         ColumnDefinition {name: 'name', ...}
-      //    ]
+      //    meta: [ ... ]
       // ]
     });
 ```
@@ -357,7 +356,7 @@ Those options can be set on query level, but are usually set at connection level
 *boolean, default false*
 
 Using question mark is the recommended method, but the option "namedPlaceholders" permit using named placeholder. 
-Values must then have the key corresponding to placeholder names. 
+Values must contain the keys corresponding to placeholder names. 
  
 example :  
 ```javascript
@@ -374,8 +373,12 @@ example :
 
 *boolean, default false*
 
-Using option rowsAsArray permit to return resultset as an array of data, not as JSON.
-This permit to save memory and avoid connector to have to parse metadata completly. Then it is fastest (by 5-10% with local database).
+Using option rowsAsArray permit to have row format as an array (not as JSON).
+This permit to save memory and avoid connector to have to parse metadata completely. It is fastest row format (by 5-10% with local database).
+
+
+Default format : { id: 1, name: 'sea lions' }
+with option "rowsAsArray" : [ 1, 'sea lions' ]
 
 Example :
 ```javascript
@@ -394,10 +397,23 @@ connection.query({rowsAsArray:true, sql:'select * from animals'})
 
 *boolean / string, default false*
 
-Some resultset can return the same property name. 
-Using option nestTables, return an array of a json object is returned, separated by tables
+Some row could return the name field name for different table. 
+Setting the option nestTables to true, data will be group by table.
 When using string parameter, json field name will be prefixed by table name + nestTable value. 
 
+An example that wouldn't work : table A with fields id and name, table B with field name.
+Row would be 
+```js
+    //default row format:
+    { name: 'sea lions', id: 1, name: 'bird' }
+    //with nestTable=true
+    { 
+      A: { name: 'sea lions', id:1 },
+      B: { name:'bird' }
+    }
+    //with nestTable='_':
+    { A_name: 'sea lions', A_id: 1, B_name: 'bird' }
+```      
 
 Example with boolean value:
 ```javascript
@@ -437,22 +453,25 @@ connection.query({nestTables: '_',
 
 *boolean, default: false*
 
-indicate if date must be retrieved as string (not as date)  
+Indicate if date must be retrieved as a string (not as date)  
 
 #### supportBigNumbers
 
 *boolean, default: false*
 
-if integer is not in "safe" range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
+If integer is not in ["safe"](documentation/connection-options.md#support-for-big-integer) range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
+
 
 #### bigNumberStrings
 
 *boolean, default: false*
 
-if integer is not in "safe" range, the value will be return as a string
+if integer is not in ["safe"](documentation/connection-options.md#support-for-big-integer) range, the value will be return as a string
 
 #### typeCast
+
 *Experimental*
+
 *function(column, next)*
 
 If can cast type yourself if needed using option `typeCast`.
@@ -469,28 +488,61 @@ connection.query({typeCast: tinyToBoolean, sql:"..."});
 ```
 
 ## Metadata field
-properties
-* `db`: database schema name (alias `schema` exists for compatibility with mysql2)
-* `table`: field table alias
-* `orgTable`: field table
-* `name`: field alias
-* `orgName`: field name
-* `columnLength`: column length
-* `columnType`: column type (see FieldType)
-* `decimals`: decimal length (for DECIMAL field type)
 
-methods
-* `isUnsigned()`: indicate if field type is unsigned
-* `canBeNull()`: indicate if field can be null
-* `isPrimaryKey()`: indicate if field is part of primary key
-* `isUniqueKey()`: indicate if field is part of unique key
-* `isBlob()`: indicate if field is blob
-* `isZeroFill()`: indicate if field is configured to fill with zero
-* `isBinary()`: indicate if field contain binary data
-* `isAutoIncrement()`: indicate if field is auto increment
-* `getPrecision()`: return decimal precision
-* `getScale()`: return scale. Example the number 123.45 has a precision of 5 and a scale of 2.
-* `getDisplaySize()`: return max displayed size or -1 if size cannot be known
+* `collation`: object indicating field collation. properties : index, name, encoding, maxlen. Example : 33, "UTF8_GENERAL_CI", "utf8", 3 
+* `columnLength`: column maximum length if there is a limit, 0 if not (for blob).
+* `type`: column type int value. see [values](/lib/const/field-type.js)
+* `columnType`: column type string value. see [values](/lib/const/field-type.js). example "DECIMAL"
+* `scale`: decimal length.  
+* `flags`: byte encoded flags. see [values](/lib/const/field-detail.js) 
+* `db()`: database schema name (alias `schema()` exists)
+* `table()`: field table alias
+* `orgTable()`: field table
+* `name()`: field alias
+* `orgName()`: field name
+
+```js
+    connection
+      .query("SELECT 1, 'a'")
+      .then(rows => {
+        console.log(rows);
+        // [ 
+        //   { '1': 1, a: 'a' },
+        //   meta: [ 
+        //     { 
+        //       collation: [Object],
+        //       columnLength: 1,
+        //       columnType: 8,
+        //       scale: 0,
+        //       type: 'LONGLONG',
+        //       flags: 129,
+        //       db: [Function],
+        //       schema: [Function],
+        //       table: [Function],
+        //       orgTable: [Function],
+        //       name: [Function],
+        //       orgName: [Function] 
+        //     },
+        //     { 
+        //       collation: [Object],
+        //       columnLength: 4,
+        //       columnType: 253,
+        //       scale: 39,
+        //       type: 'VAR_STRING',
+        //       flags: 1,
+        //       db: [Function],
+        //       schema: [Function],
+        //       table: [Function],
+        //       orgTable: [Function],
+        //       name: [Function],
+        //       orgName: [Function] 
+        //     } 
+        //   ] 
+        // ]
+        assert.equal(rows.length, 1);
+      })
+```
+
 
 ## queryStream(sql[, values]) → Emitter
 
@@ -518,13 +570,7 @@ connection.queryStream("SELECT * FROM mysql.user")
         console.log(err); //when error
       })
       .on("columns", meta => {
-        console.log(meta);
-        //    meta: [ 
-        //         ColumnDefinition {name: 'Host', ...},
-        //         ColumnDefinition {name: 'User', ...},
-        //         ... 
-        //    ]
-
+        console.log(meta); // [ ...]
       })
       .on("data", row => {
         console.log(row);

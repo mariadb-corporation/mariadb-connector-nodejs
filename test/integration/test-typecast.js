@@ -7,8 +7,8 @@ describe("TypeCast", () => {
   const changeCaseCast = (column, next) => {
     if (column.type == "VAR_STRING") {
       const val = column.string();
-      if (column.name.startsWith("upp")) return val.toUpperCase();
-      if (column.name.startsWith("low")) return val.toLowerCase();
+      if (column.name().startsWith("upp")) return val.toUpperCase();
+      if (column.name().startsWith("low")) return val.toLowerCase();
       return val;
     }
     return next();
@@ -78,7 +78,7 @@ describe("TypeCast", () => {
   it("cast fields", function(done) {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, "VAR_STRING");
-      assert.equal(field.length, 24);
+      assert.equal(field.columnLength, 24);
       return next();
     };
     shareConn
@@ -95,7 +95,7 @@ describe("TypeCast", () => {
 
   it("TINY(1) to boolean cast", function(done) {
     const tinyToBoolean = (column, next) => {
-      if (column.type == "TINY" && column.length === 1) {
+      if (column.type == "TINY" && column.columnLength === 1) {
         const val = column.int();
         return val === null ? null : val === 1;
       }

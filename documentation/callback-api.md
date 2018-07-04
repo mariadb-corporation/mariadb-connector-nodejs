@@ -185,10 +185,7 @@ Examples :
       // [ 
       //    { id: 1, name: 'sea lions' }, 
       //    { id: 2, name: 'bird' }, 
-      //    meta: [ 
-      //         ColumnDefinition {name: 'id', ...},
-      //         ColumnDefinition {name: 'name', ...}
-      //    ]
+      //    meta: [ ... ]
       // ]  
     });
 ```
@@ -202,13 +199,7 @@ connection.query("SELECT * FROM mysql.user")
         console.log(err); //when error
       })
       .on("columns", meta => {
-        console.log(meta);
-        //    meta: [ 
-        //         ColumnDefinition {name: 'Host', ...},
-        //         ColumnDefinition {name: 'User', ...},
-        //         ... 
-        //    ]
-
+        console.log(meta); // [ ... ]
       })
       .on("data", row => {
         console.log(row);

@@ -96,7 +96,7 @@ describe("connection option", () => {
       });
   });
 
-  it("nestTables results", function(done) {
+  it("nestTables results boolean", function(done) {
     base
       .createConnection({ nestTables: true })
       .then(conn => {
@@ -119,7 +119,7 @@ describe("connection option", () => {
       .catch(done);
   });
 
-  it("nestTables results", function(done) {
+  it("nestTables results string", function(done) {
     base
       .createConnection({ nestTables: "_" })
       .then(conn => {
@@ -179,7 +179,7 @@ describe("connection option", () => {
       .catch(done);
   });
 
-  it("nestTables results", function(done) {
+  it("nestTables results query boolean", function(done) {
     base
       .createConnection()
       .then(conn => {
@@ -202,7 +202,7 @@ describe("connection option", () => {
       .catch(done);
   });
 
-  it("nestTables results", function(done) {
+  it("nestTables results query string", function(done) {
     base
       .createConnection()
       .then(conn => {
