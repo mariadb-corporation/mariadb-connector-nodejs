@@ -287,7 +287,7 @@ Bench.prototype.displayReport = function() {
       const perc = simpleFormat.format(val);
       const tt =
         "   " +
-        this.fill(o.drvType, 10) +
+        this.fill(o.drvType, 16) +
         " : " +
         this.fill(simpleFormat.format(o.iteration), 8, false) +
         " ops/s  " +
