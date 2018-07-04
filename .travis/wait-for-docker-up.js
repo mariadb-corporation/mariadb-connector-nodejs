@@ -1,6 +1,6 @@
 "use strict";
 
-const basePromise = require("../lib/index");
+const basePromise = require("../promise");
 const Conf = require('../test/conf');
 
 let decrement = 30;

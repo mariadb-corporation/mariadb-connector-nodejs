@@ -142,6 +142,7 @@ describe("multi-results", () => {
           if (err) {
             done(err);
           } else {
+            console.log(rows);
             assert.deepEqual(rows, [{ "1": 1 }]);
             callbackConn.end();
             done();

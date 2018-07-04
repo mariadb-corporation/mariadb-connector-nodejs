@@ -4,8 +4,8 @@ const Benchmark = require("benchmark");
 const conf = require("../test/conf");
 
 const colors = require("colors");
-const mariadb = require("../lib/index");
-const callbackMariadb = require("../lib/callback");
+const mariadb = require("../promise");
+const callbackMariadb = require("../callback");
 
 let promiseMariasql, mariasql, promiseMysql, mysql, promiseMysql2, mysql2;
 

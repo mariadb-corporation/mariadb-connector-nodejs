@@ -1,7 +1,7 @@
 "use strict";
 
-let ConnectionCallback = require("./connection-callback");
-let ConnOptions = require("./config/connection-options");
+let ConnectionCallback = require("./lib/connection-callback");
+let ConnOptions = require("./lib/config/connection-options");
 
 module.exports.createConnection = function createConnection(opts) {
   return new ConnectionCallback(new ConnOptions(opts));

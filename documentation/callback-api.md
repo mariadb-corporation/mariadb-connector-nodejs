@@ -15,6 +15,24 @@ npm install mariadb
 import is not `require('mariadb')`, but `require('mariadb/callback')`
 Callback API is similar to the Promise one, with this difference : 
 
+
+# Quick Start
+
+    npm install mariadb
+
+```js
+  const mariadb = require('mariadb/callback');
+  const conn = mariadb.createConnection({host: 'mydb.com', user:'myUser'});
+  conn.query("SELECT 1 as val", (err, rows) => {
+      console.log(rows); //[ {val: 1}, meta: ... ]
+      conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"], (err, res) => {
+        console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+        conn.end();
+      });
+  });    
+```
+
+
 ## Callback API
 
 Create Connection

@@ -1,7 +1,7 @@
 "use strict";
 
-let Connection = require("./connection.js");
-let ConnOptions = require("./config/connection-options.js");
+let Connection = require("./lib/connection.js");
+let ConnOptions = require("./lib/config/connection-options.js");
 
 module.exports.createConnection = function createConnection(opts) {
   try {

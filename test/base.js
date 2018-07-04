@@ -1,7 +1,7 @@
 "use strict";
 
-const basePromise = require("../lib/index");
-const baseCallback = require("../lib/callback");
+const basePromise = require("../promise");
+const baseCallback = require("../callback");
 const Conf = require("./conf");
 
 //*****************************************************************
