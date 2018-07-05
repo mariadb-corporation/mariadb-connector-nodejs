@@ -48,13 +48,13 @@ Queries are send one after another, avoiding a lot of network latency ([detail i
 ## Benchmarks
 
 Comparison with popular connectors :
-* mysql - https://www.npmjs.com/package/mysql (version 2.15.0)
-* mysql2 - https://www.npmjs.com/package/mysql2 (version 1.5.3)
+* [promise-mysql](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [mysql](https://www.npmjs.com/package/mysql) version 2.15.0 
+* [mysql2](https://www.npmjs.com/package/mysql2) version 1.5.3
 
 ```
-mysql   : 5,841 ops/sec ±0.70%
-mysql2  : 6,971 ops/sec ±0.64%
-mariadb : 8,526 ops/sec ±0.96%
+promise-mysql  : 1,366 ops/sec ±1.42%
+mysql2         : 1,469 ops/sec ±1.63%
+mariadb        : 1,802 ops/sec ±1.19%
 ```
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
