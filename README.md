@@ -30,7 +30,7 @@ To offer new functionality like insert streaming, pipelining, and make no compro
 ### Pipelining
   
 Commands will be send without waiting for server results, preserving order<br/>
-Example: executing two queries, ""INSERT xxx" and "INSERT yyy"
+Example: executing two queries, "INSERT xxx" and "INSERT yyy"
 
 <pre>
           │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
@@ -41,8 +41,8 @@ Client    │ <―――――――――――――――――――― firs
           │                                                        │    │
           │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ </pre>
 
-queries are not send one by one, waiting for result before sending next one.
-queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
+Connector won't wait for query results to send next one.
+Queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
 
 
 ## Benchmarks
@@ -59,11 +59,11 @@ mariadb : 8,526 ops/sec ±0.96%
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
 
-[Benchmarks in details](/documentation/benchmarks.md) //TODO explaining using benchmark.js 
+[Benchmarks in details](/documentation/benchmarks.md) 
 
 ## Roadmap 
 
-Some features are not implemented in first beta version, but will in next versions : 
+Some features are not implemented yet, but will in next versions : 
 
     * Pooling and "PoolCluster" are not implemented in first version
     * MariaDB new ed25519 plugin authentication
@@ -74,7 +74,7 @@ Some features are not implemented in first beta version, but will in next versio
 
     npm install mariadb
 
-Using ES6:
+Using ECMAScript < 2017:
 ```js
   const mariadb = require('mariadb');
   mariadb.createConnection({host: 'mydb.com', user:'myUser'})
@@ -99,22 +99,23 @@ Using ES6:
     });
 ```
 
-Using ES7:
+Using ECMAScript 2017:
 ```js
   const mariadb = require('mariadb');
+  let conn;
   try {
-    const conn = await mariadb.createConnection({host: 'mydb.com', user:'myUser'});
+    conn = await  mariadb.createConnection({host: 'mydb.com', user:'myUser'});
     
-    const rows = await conn.query("SELECT 1 as val");
+    const rows = await  conn.query("SELECT 1 as val");
     console.log(rows); //[ {val: 1}, meta: ... ]
-    const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+    const res = await  conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
     console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
-    conn.end();
     
   } catch(err) {
     //handle error
+  } finally {
+    if (conn) conn.end();
   }
-
 ```
 
 # Documentation
@@ -139,17 +140,18 @@ Create Connection
 Connection API: 
 
 * [`query(sql[, values]) → Promise`](#querysql-values---promise): execute a query.
-* [`queryStream(sql[, values]) → Emitter`](#querystreamsql-values--emitter): execute a query, returning an emitter object permitting streaming rows.
+* [`queryStream(sql[, values]) → Emitter`](#querystreamsql-values--emitter): execute a query, returning an emitter object to stream rows.
 * [`beginTransaction() → Promise`](#begintransaction--promise): begin transaction
 * [`commit() → Promise`](#commit--promise): commit current transaction if any
 * [`rollback() → Promise`](#rollback--promise): rollback current transaction if any
 * [`changeUser(options) → Promise`](#changeuseroptions--promise): change current connection user
-* [`ping() → Promise`](#ping--promise): send an empty packet to database to validate connection
+* [`ping() → Promise`](#ping--promise): send a 1 byte packet to database to validate connection
 * [`isValid() → boolean`](#isvalid--boolean): check that connection is active without checking socket state
 * [`end() → Promise`](#end--promise): gracefully end connection
 * [`destroy()`](#destroy): force connection ending. 
 * [`pause()`](#pause): pause socket output.
 * [`resume()`](#resume): resume socket output.
+* [`serverVersion()`](#serverversion): get current server version 
 * [`events`](#events): to subscribe to connection error event.
 
 ## `createConnection(options) → Promise`
@@ -186,7 +188,7 @@ Essential options list:
 | **user** | user to access database |*string* | 
 | **password** | user password |*string* | 
 | **host** | IP or DNS of database server. *Not used when using option `socketPath`*|*string*| "localhost"|  
-| **port** | database server port number|*integer*| 3306|
+| **port** | database server port number. *Not used when using option `socketPath`*|*integer*| 3306|
 | **ssl** | tls support. see [option documentation](/documentation/connection-options.md#ssl) for detailed explanation|*mixed*|
 | **database** | default database when establishing connection| *string* | 
 | **socketPath** | Permits connecting to the database via Unix domain socket or named pipe|  *string* |  
@@ -225,9 +227,9 @@ mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
  
 ## `query(sql[, values])` -> `Promise`
 
-> * `sql`: *string | JSON* sql string value or JSON object to supersede default connections options.
->           When using JSON object, object must have a "sql" property
->           example : {dateStrings:true, sql:'SELECT now()'}
+> * `sql`: *string | JSON* sql string or JSON object to supersede default connections options.
+>           When using JSON object, object must have a "sql" key
+>           example : { dateStrings: true, sql: 'SELECT now()' }
 > * `values`: *array | object* placeholder values. Usually an array, but in case of only one placeholder, can be given as is. 
 >
 >Returns a promise that :
@@ -304,8 +306,8 @@ There is 2 different kind of results depending on queries.
 For insert/delete/update commands, results is a JSON object with the following properties: 
 
 * affectedRows: *integer* number of affected rows
-* insertId: *integer* last auto increment insert id. In case of value > 9,007,199,254,740,991, then a Long object is returned. 
-* warningStatus: *integer* indicating if query ended with warning. 
+* insertId: *integer* last auto increment insert id. 
+* warningStatus: *integer* indicate if query ends with warning. 
 
 ```js
 connection.query('CREATE TABLE animals (' +
@@ -322,7 +324,7 @@ connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
 
 #### Result-set array
 
-For result-set, the result is an array of rows, with an additional property "meta" containing metadata information. 
+For result-set, the result is an array of rows, with an additional property "meta" containing an array of [column metadata](#column-metadata) information. 
 
 Row default format is JSON, but 2 other formats are possible with options nestTables and rowsAsArray.
 
@@ -374,7 +376,7 @@ example :
 *boolean, default false*
 
 Using option rowsAsArray permit to have row format as an array (not as JSON).
-This permit to save memory and avoid connector to have to parse metadata completely. It is fastest row format (by 5-10% with local database).
+This permit to save memory and avoid connector to have to parse [column metadata](#column-metadata) completely. It is fastest row format (by 5-10% with local database).
 
 
 Default format : { id: 1, name: 'sea lions' }
@@ -382,7 +384,7 @@ with option "rowsAsArray" : [ 1, 'sea lions' ]
 
 Example :
 ```javascript
-connection.query({rowsAsArray:true, sql:'select * from animals'})
+connection.query({ rowsAsArray: true, sql: 'select * from animals' })
     .then(res => {
       console.log(res); 
       // [ 
@@ -397,23 +399,10 @@ connection.query({rowsAsArray:true, sql:'select * from animals'})
 
 *boolean / string, default false*
 
-Some row could return the name field name for different table. 
+Some queries could return the columns with the **same** name. The standard JSON format won't permit having 2 keys with same name.
+ 
 Setting the option nestTables to true, data will be group by table.
 When using string parameter, json field name will be prefixed by table name + nestTable value. 
-
-An example that wouldn't work : table A with fields id and name, table B with field name.
-Row would be 
-```js
-    //default row format:
-    { name: 'sea lions', id: 1, name: 'bird' }
-    //with nestTable=true
-    { 
-      A: { name: 'sea lions', id:1 },
-      B: { name:'bird' }
-    }
-    //with nestTable='_':
-    { A_name: 'sea lions', A_id: 1, B_name: 'bird' }
-```      
 
 Example with boolean value:
 ```javascript
@@ -453,7 +442,7 @@ connection.query({nestTables: '_',
 
 *boolean, default: false*
 
-Indicate if date must be retrieved as a string (not as date)  
+Indicate if date must be retrieved as a string (not as a Date object)  
 
 #### supportBigNumbers
 
@@ -475,7 +464,8 @@ if integer is not in ["safe"](documentation/connection-options.md#support-for-bi
 *function(column, next)*
 
 If can cast type yourself if needed using option `typeCast`.
-example for casting all TINYINT(1) to boolean :
+
+Example for casting all TINYINT(1) to boolean :
 ```javascript
 const tinyToBoolean = (column, next) => {
   if (column.type == "TINY" && column.length === 1) {
@@ -487,19 +477,19 @@ const tinyToBoolean = (column, next) => {
 connection.query({typeCast: tinyToBoolean, sql:"..."});
 ```
 
-## Metadata field
+## Column metadata
 
-* `collation`: object indicating field collation. properties : index, name, encoding, maxlen. Example : 33, "UTF8_GENERAL_CI", "utf8", 3 
+* `collation`: object indicating column collation. Properties : index, name, encoding, maxlen. Example : 33, "UTF8_GENERAL_CI", "utf8", 3 
 * `columnLength`: column maximum length if there is a limit, 0 if not (for blob).
 * `type`: column type int value. see [values](/lib/const/field-type.js)
 * `columnType`: column type string value. see [values](/lib/const/field-type.js). example "DECIMAL"
-* `scale`: decimal length.  
+* `scale`: decimal part length.  
 * `flags`: byte encoded flags. see [values](/lib/const/field-detail.js) 
 * `db()`: database schema name (alias `schema()` exists)
-* `table()`: field table alias
-* `orgTable()`: field table
-* `name()`: field alias
-* `orgName()`: field name
+* `table()`: table alias
+* `orgTable()`: real table name
+* `name()`: column alias
+* `orgName()`: real column name
 
 ```js
     connection
@@ -548,17 +538,17 @@ connection.query({typeCast: tinyToBoolean, sql:"..."});
 
 > * `sql`: *string | JSON* sql string value or JSON object to supersede default connections options.
 >           if JSON object, must have a "sql" property
->           example : {dateStrings:true, sql:'SELECT now()'}
+>           example : { dateStrings: true, sql: 'SELECT now()' }
 > * `values`: *array | object* placeholder values. usually an array, but in case of only one placeholder, can be given as is. 
 >
 >Returns an Emitter object that emit different type of event:
->  * error : emit an [Error](#error) object when query failed.
+>  * error : emit an [Error](#error) object if query failed. (No "end" event will be emit then).
 >  * columns : emit when columns metadata from result-set are received (parameter is an array of [Metadata fields](#metadata-field)).
 >  * data : emit each time a row is received (parameter is a row). 
->  * end : emit query ended (no parameter). 
+>  * end : emit when query ended (no parameter). 
 
-the function "query" return a promise returning all data at once. For huge result-set, that mean stored all data in memory. 
-The function "queryStream" is very similar to query, but the even driver architecture will permit to handle a row one by one, avoiding overload memory.   
+The function "query" return a promise returning all data at once. For huge result-set, that mean stored all data in memory. 
+The function "queryStream" is very similar to query, but the event driven architecture will permit to handle a row one by one, to avoid overloading memory.   
 
 If query time and result handle will take some amount of time, you may consider changing [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout): 
 Query must be received totally before this timeout (default to 60s).
@@ -567,7 +557,7 @@ example :
 ```javascript
 connection.queryStream("SELECT * FROM mysql.user")
       .on("error", err => {
-        console.log(err); //when error
+        console.log(err); //if error
       })
       .on("columns", meta => {
         console.log(meta); // [ ...]
@@ -680,7 +670,7 @@ Socket might be disconnected without connector still knowing it.
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Gracefully end the connection. Connector will wait for current query, then close connection. 
+Gracefully end the connection. Connector will wait for current executing queries to finish, then close connection. 
 
 Example : 
 ```javascript
@@ -696,8 +686,7 @@ conn.end()
 
 ## `destroy()`
 
-Immediately close the connection. current executing query will be stopped. 
-Server will log this as an unexpected socket close. 
+Immediately close the connection. If there is a running query, it will be interrupted, and database will log this as an unexpected socket close. 
 
 Example : 
 ```javascript
@@ -728,6 +717,18 @@ Pauses the reading of data.
 ## `resume()`
 
 Resume the pause. 
+
+
+## `serverVersion()` 
+
+> Returns a string 
+
+Return current connected server version or throw an Error if not connected. 
+
+Example : 
+```javascript
+  console.log(connection.serverVersion()); //10.2.14-MariaDB
+```
 
 ## Error
 
@@ -761,7 +762,8 @@ See [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for er
 
 ## `events`
 
-Connection object inherit from node.js [EventEmitter](https://nodejs.org/api/events.html), then permit receive event 'error' when connection close unexpectedly.
+Connection object inherit from node.js [EventEmitter](https://nodejs.org/api/events.html), to emit 'error' event when connection close unexpectedly.
+
 Example : 
 ```javascript
   const mariadb = require('mariadb');

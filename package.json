@@ -11,7 +11,7 @@
   "scripts": {
     "test": "npm run test:lint && npm run test:prettier && npm run test:base",
     "test:base": "mocha \"test/**/*.js\" ",
-    "test:lint": "eslint '{lib,test,benchmarks}/**/*.js'",
+    "test:lint": "eslint '{lib,test}/**/*.js'",
     "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{lib,test,benchmarks}/**/*.js\"",
     "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "benchmark": "node ./benchmarks/benchmarks.js",
@@ -51,7 +51,6 @@
     "error-stack-parser": "^2.0.1",
     "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-markdown": "^1.0.0-beta.6",
     "mocha": "^5.1.1",
     "mocha-lcov-reporter": "^1.3.0",
