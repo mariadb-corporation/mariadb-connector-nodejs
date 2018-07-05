@@ -4,18 +4,6 @@
 There is 2 different connection implementation Promise (default) and callback for compatibility with mysql/mysql2 API.
 The following documentation describe the callback API.
 
-## Install
-
-Using npm:
-
-```javascript
-npm install mariadb
-```
-
-import is not `require('mariadb')`, but `require('mariadb/callback')`
-Callback API is similar to the Promise one, with this difference : 
-
-
 # Quick Start
 
     npm install mariadb
@@ -33,7 +21,20 @@ Callback API is similar to the Promise one, with this difference :
 ```
 
 
+## Install
+
+Using npm:
+
+```javascript
+npm install mariadb
+```
+
+import is not `require('mariadb')`, but `require('mariadb/callback')`
+
+
 ## Callback API
+
+Callback API is similar to the Promise one, with this difference : 
 
 Create Connection
 
@@ -91,7 +92,7 @@ conn.connect(err => {
 
 
 Send a query to database with callback function when done. 
-For huge result-set, that mean stored all data in memory, the prefered way is then to use the Emitter object to handle a row one by one, avoiding overload memory.  
+For huge result-set, that mean stored all data in memory, the preferred way is then to use the Emitter object to handle a row one by one, to avoid overloading memory.     
 
 example with sql string:
 ```js
@@ -114,13 +115,13 @@ example with json options:
 To avoid SQL Injection, queries permit using question mark place holder. Values will be escaped accordingly to their type.
 Values can be of native javascript type, Buffer, Readable or object with toSqlString method. if not object will be stringified (JSON.stringify). 
 
-For streaming, Objects that implement Readable will be streamed automatically. 
+For streaming, objects that implement Readable will be streamed automatically. 
 You may look at 2 server option that might interfere : 
-- [@@net_write_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
+- [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
 - [@@max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) : Maximum data size send to server. 
   
 
-example :  
+Example :  
 ```js
     //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
     connection.query(
@@ -135,7 +136,7 @@ example :
 ```
 
 
-example streaming: 
+Example streaming: 
 ```javascript
 const https = require("https");
 https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
@@ -190,13 +191,13 @@ Examples :
     });
 ```
 
-### streaming
+### Streaming
 
 example : 
 ```javascript
 connection.query("SELECT * FROM mysql.user")
       .on("error", err => {
-        console.log(err); //when error
+        console.log(err); //if error
       })
       .on("columns", meta => {
         console.log(meta); // [ ... ]

@@ -61,7 +61,7 @@ mariadb : 8,526 ops/sec ±0.96%
 
 [Benchmarks in details](/documentation/benchmarks.md) 
 
-## Roadmap 
+## Road-map 
 
 Some features are not implemented yet, but will in next versions : 
 
@@ -69,6 +69,14 @@ Some features are not implemented yet, but will in next versions :
     * MariaDB new ed25519 plugin authentication
     * Query timeout
     * Bulk insert (fast batch)  
+
+
+## Contributing
+To get started with a development installation and learn more about contributing, please follow the instructions at our 
+[Developers Guide.](/documentation/developers-guide.md)
+
+Tracker link [https://jira.mariadb.org/projects/CONJS/issues/](https://jira.mariadb.org/projects/CONJS/issues/)
+
 
 # Quick Start
 
@@ -789,9 +797,4 @@ Example :
   .catch(done);
 ```
 
-## Contributing
-To get started with a development installation and learn more about contributing, please follow the instructions at our 
-[Developers Guide.](/documentation/developers-guide.md)
-
-Tracker link <a href="https://jira.mariadb.org/projects/CONJS/issues/">https://jira.mariadb.org/projects/CONJS/issues/</a>
 
