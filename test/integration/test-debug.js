@@ -233,7 +233,7 @@ describe("debug", () => {
               access.end();
               fs.unlinkSync(fileName);
               done();
-            }, 100);
+            }, 500);
           })
           .catch(done);
       })
