@@ -109,21 +109,24 @@ Using ECMAScript < 2017:
 
 Using ECMAScript 2017:
 ```js
-  const mariadb = require('mariadb');
-  let conn;
-  try {
-    conn = await  mariadb.createConnection({host: 'mydb.com', user:'myUser'});
+    const mariadb = require('mariadb');
+    async function asyncFunction() {
+      let conn;
+      try {
+        conn = await mariadb.createConnection({host: 'localhost', user: 'root'});
     
-    const rows = await  conn.query("SELECT 1 as val");
-    console.log(rows); //[ {val: 1}, meta: ... ]
-    const res = await  conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-    console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+        const rows = await conn.query("SELECT 1 as val");
+        console.log(rows); //[ {val: 1}, meta: ... ]
+        const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+        console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
     
-  } catch(err) {
-    //handle error
-  } finally {
-    if (conn) conn.end();
-  }
+      } catch (err) {
+        return Promise.reject(err);
+      } finally {
+        if (conn) return conn.end();
+      }
+      return Promise.resolve();
+    }
 ```
 
 # Documentation
