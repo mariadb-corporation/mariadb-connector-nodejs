@@ -232,7 +232,7 @@ When working with a local database, (that is, cases where MariaDB and your Node.
 In order to set this up, you need to assign the connection a `socketPath` value.  When this is done, the Connector ignores the `host` and `port` options.
 
 The specific socket path you need to set is defined by the 
-[socket](https://mariadb.com/kb/en/library/server-system-variables/#socket) server system variable.  If you don't know it off hand, you can retrieve it from the server.
+[`socket`](https://mariadb.com/kb/en/library/server-system-variables/#socket) server system variable.  If you don't know it off hand, you can retrieve it from the server.
 
 ```sql
 SHOW VARIABLES LIKE 'socket';
@@ -260,66 +260,68 @@ mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
  
 #### `query(sql[, values])` -> `Promise`
 
-> * `sql`: *string | JSON* sql string or JSON object to supersede default connections options.
->           When using JSON object, object must have a "sql" key
->           example : { dateStrings: true, sql: 'SELECT now()' }
-> * `values`: *array | object* placeholder values. Usually an array, but in case of only one placeholder, can be given as is. 
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance,
 >
->Returns a promise that :
->  * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
->  * rejects with an [Error](#error).
+>   `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is. 
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
 
 
-Send a query to database and return result as a Promise.
+Sends a query to database and return result as a Promise.
 
-example with sql string:
+For instnace, when using an SQL string:
+
 ```js
-   connection
-      .query("SELECT now()")
-      .then(rows => {
-        console.log(rows); //[ { 'now()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
-      })
-      .catch(err => {
-        //handle error
-      });
+connection
+  .query("SELECT NOW()")
+  .then(rows => {
+	console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
+  })
+  .catch(err => {
+	//handle error
+  });
 ```
 
-example with json options:
+Alternatively, you could use the JSON object:
+
 ```js
-    connection
-       .query({dateStrings:true, sql:'SELECT now()'})
-       .then(rows => {
-          console.log(rows); //[ { 'now()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
-        })
-        .catch(...)
+connection
+   .query({dateStrings:true, sql:'SELECT NOW()'})
+   .then(rows => {
+	  console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
+	})
+	.catch(...)
 ```
 
-### Placeholder
+##### Placeholder
 
-To avoid SQL Injection, queries permit using question mark placeholders. Values will be escaped accordingly to their type.
-Values can be of native javascript type, Buffer, Readable, object with toSqlString method, or object will be stringified (JSON.stringify). 
+To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified, (that is, `JSON.stringfy`)
 
-For streaming, objects that implement Readable will be streamed automatically. 
-You may look at 2 server option that might interfere : 
-- [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
-- [@@max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) : Maximum data size send to server. 
-  
+When streaming, objects that implement Readable are streamed automatically.  But, there are two server system variables that may interfere:
 
-example :  
+- [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout): The server must receive queries before reaching this timeout, which defaults to 30 seconds.
+- [`max_allowed_packet`](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet): This system variable defines the maximum amount of data the Connector can send to the server.
+
+For instance,
+
 ```js
-    connection
-      .query(
-         "INSERT INTO someTable VALUES (?, ?, ?)", 
-         [1,Buffer.from("c327a97374", "hex"),"mariadb"]
-      )
-      .then(...)
-      .catch(...);
-      //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
+connection
+  .query(
+	 "INSERT INTO someTable VALUES (?, ?, ?)", 
+	 [1,Buffer.from("c327a97374", "hex"),"mariadb"]
+  )
+  .then(...)
+  .catch(...);
+  //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
 ```
 
 
-example streaming: 
-```javascript
+In the case of streaming, 
+
+```js
 const https = require("https");
 //3Mb page
 https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
@@ -333,14 +335,13 @@ https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-s
 )
 ```
 
-### Query result
+##### JSON Result-sets 
 
-There is 2 different kind of results depending on queries. 
-For insert/delete/update commands, results is a JSON object with the following properties: 
+Queries return two different kinds of results, depending on the type of query you execute.  When you execute write statements, (such as `INSERT`, `DELETE` and `UPDATE`), the method returns a JSON object with the following properties:
 
-* affectedRows: *integer* number of affected rows
-* insertId: *integer* last auto increment insert id. 
-* warningStatus: *integer* indicate if query ends with warning. 
+* `affectedRows`: An integer listing the number of affected rows.
+* `insertId`: An integer noting the auto-increment ID of the last row written to the table.
+* `warningStatus`: An integer indicating whether the query ended with a warning.
 
 ```js
 connection.query('CREATE TABLE animals (' +
@@ -355,13 +356,12 @@ connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
     .catch(...);
 ```
 
-#### Result-set array
+##### Array Result-sets 
 
-For result-set, the result is an array of rows, with an additional property "meta" containing an array of [column metadata](#column-metadata) information. 
+When the query executes a `SELECT` statement, the method returns the result-set as an array.  Each value in the array is a returned row as a JSON object.  Additionally, the method returns a special `meta` array that contains the [column metadata](#column-metadata) information. 
 
-Row default format is JSON, but 2 other formats are possible with options nestTables and rowsAsArray.
+The rows default to JSON objects, but two other formats are also possible with the `nestTables` and `rowsAsArray` options.
 
-Examples :
 ```javascript
 connection.query('select * from animals')
     .then(res => {
@@ -374,34 +374,32 @@ connection.query('select * from animals')
     });
 ```
 
-### Query options
+##### Query options
 
-* [namedPlaceholders](#namedPlaceholders)
-* [typeCast](#typeCast)
-* [rowsAsArray](#rowsAsArray)
-* [nestTables](#nestTables)
-* [dateStrings](#dateStrings)
-* [supportBigNumbers](#supportBigNumbers)
-* [bigNumberStrings](#bigNumberStrings)
+* [`namedPlaceholders`](#namedPlaceholders)
+* [`typeCast`](#typeCast)
+* [`rowsAsArray`](#rowsAsArray)
+* [`nestTables`](#nestTables)
+* [`dateStrings`](#dateStrings)
+* [`supportBigNumbers`](#supportBigNumbers)
+* [`bigNumberStrings`](#bigNumberStrings)
 
 Those options can be set on query level, but are usually set at connection level, then will apply to all queries. 
 
-#### namedPlaceholders
+###### `namedPlaceholders`
 
 *boolean, default false*
 
-Using question mark is the recommended method, but the option "namedPlaceholders" permit using named placeholder. 
-Values must contain the keys corresponding to placeholder names. 
- 
-example :  
+While the recommended method is to use the question mark [placeholder](#placeholder), you can alternatively allow named placeholders by setting this query option.  Values given in the query must contain keys corresponding  to the placeholder names. 
+
 ```javascript
-    connection
-      .query(
-        { namedPlaceholders: true, sql: "INSERT INTO someTable VALUES (:id, :img, :db)" },
-        { id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
-      )
-      .then(...)
-      .catch(...);
+connection
+  .query(
+	{ namedPlaceholders: true, sql: "INSERT INTO someTable VALUES (:id, :img, :db)" },
+	{ id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
+  )
+  .then(...)
+  .catch(...);
 ```
 
 #### rowsAsArray
