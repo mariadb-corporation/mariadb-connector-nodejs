@@ -13,12 +13,16 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-MariaDB and MySQL client, 100% javascript, compatible with node 6+, with promise API.
+MariaDB and MySQL client, 100% JavaScript, compatible with Node.js 6+, with the Promise API.
 
-Why a new client when having already nice and popular [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) client ? <br/>
-To offer new functionality like insert streaming, pipelining, and make no compromise on performance. 
+## Why a New Client?
 
-### Streaming insert data
+While there are existing MySQL clients that work with MariaDB, (such as the [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming) and [Pipelining](#pipelining) while making no compromises on performance.
+
+### Insert Streaming 
+
+Using a Readable stream in your application, you can stream `INSERT` statements to MariaDB through the Connector.
+
 ```javascript
     
     https.get('https://someContent', readableStream => {
@@ -28,21 +32,22 @@ To offer new functionality like insert streaming, pipelining, and make no compro
 ```
  
 ### Pipelining
-  
-Commands will be send without waiting for server results, preserving order<br/>
-Example: executing two queries, "INSERT xxx" and "INSERT yyy"
 
-<pre>
+With Piplining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
+
+```
           │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
           │ ――――――――――――――――――――― send second insert ――――――――――――> │ │  processing first insert
           │                                                        │ │ 
 Client    │ <―――――――――――――――――――― first insert result ―――――――――――― │ ▼  ┯
           │                                                        │    │ processing second insert
           │                                                        │    │
-          │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ </pre>
+          │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ 
+```
 
-Connector won't wait for query results to send next one.
-Queries are send one after another, avoiding a lot of network latency ([detail information](/documentation/pipelining.md)). 
+The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoidng much of the network latency.
+
+For more information, see the [Pipelining](/documentation/piplining.md) documentation.
 
 
 ## Benchmarks
