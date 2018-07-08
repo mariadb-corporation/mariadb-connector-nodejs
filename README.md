@@ -17,7 +17,7 @@ MariaDB and MySQL client, 100% JavaScript, compatible with Node.js 6+, with the 
 
 ## Why a New Client?
 
-While there are existing MySQL clients that work with MariaDB, (such as the [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming) and [Pipelining](#pipelining) while making no compromises on performance.
+While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming) and [Pipelining](#pipelining) while making no compromises on performance.
 
 ### Insert Streaming 
 
@@ -33,7 +33,7 @@ Using a Readable stream in your application, you can stream `INSERT` statements 
  
 ### Pipelining
 
-With Piplining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
+With Pipelining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
 
 ```
           │ ――――――――――――――――――――― send first insert ―――――――――――――> │ ┯ 
@@ -45,7 +45,7 @@ Client    │ <―――――――――――――――――――― firs
           │ <―――――――――――――――――――― second insert result ――――――――――― │    ▼ 
 ```
 
-The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoidng much of the network latency.
+The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
 
 For more information, see the [Pipelining](/documentation/piplining.md) documentation.
 
@@ -54,7 +54,7 @@ For more information, see the [Pipelining](/documentation/piplining.md) document
 
 MariaDB provides benchmarks comparing the Connector with popular Node.js MySQL clients, including: 
 
-* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [mysql](https://www.npmjs.com/package/mysql) version 2.15.0 
+* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.15.0 
 * [`mysql2`](https://www.npmjs.com/package/mysql2) version 1.5.3
 
 ```
@@ -223,7 +223,7 @@ Essential options list:
 | **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
 | **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
 
-For more infomration, see the [Connection Options](/documentation/connection-options.md) documentation. 
+For more information, see the [Connection Options](/documentation/connection-options.md) documentation. 
 
 #### Connecting to Local Databases 
 
@@ -272,7 +272,7 @@ mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
 
 Sends a query to database and return result as a Promise.
 
-For instnace, when using an SQL string:
+For instance, when using an SQL string:
 
 ```js
 connection
@@ -427,7 +427,7 @@ connection.query({ rowsAsArray: true, sql: 'select * from animals' })
 
 *boolean / string, default false*
 
-Occasionally, you may have issue with queries that return coluns with the **same** name.  The standard JSON format does not permit key duplication.  To get around this, you can set the `nestTables` option to `true`.  This causes the Connector to group data by table.  When using string parameters, it prefixes the JSON field name with the table name and the `nestTables` value.
+Occasionally, you may have issue with queries that return columns with the **same** name.  The standard JSON format does not permit key duplication.  To get around this, you can set the `nestTables` option to `true`.  This causes the Connector to group data by table.  When using string parameters, it prefixes the JSON field name with the table name and the `nestTables` value.
 
 For instance, when using a boolean value:
 
@@ -576,13 +576,12 @@ connection
 > * data : Emits each time a row is received (parameter is a row). 
 > * end : Emits when the query ends (no parameter). 
 
-The function "query" return a promise returning all data at once. For huge result-set, that mean stored all data in memory. 
-The function "queryStream" is very similar to query, but the event driven architecture will permit to handle a row one by one, to avoid overloading memory.   
+When using the `query()` method, documented above, the Connector returns the entire result-set with all its data in a single call.  While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets.  Instead of retrieving all of the data into memory, you can use the `queryStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
 
-If query time and result handle will take some amount of time, you may consider changing [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout): 
-Query must be received totally before this timeout (default to 60s).
+Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults at 60 seconds.
 
-example : 
+For instance,
+
 ```javascript
 connection.queryStream("SELECT * FROM mysql.user")
       .on("error", err => {
@@ -599,37 +598,31 @@ connection.queryStream("SELECT * FROM mysql.user")
       });
 ```
 
-## `beginTransaction() → Promise`
+#### `beginTransaction() → Promise`
 
->
 >Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Begin a new transaction.
+Begins a new transaction.
 
-## `commit() → Promise`
+#### `commit() → Promise`
 
->
 >Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Commit current transaction, if there is any active.
-(Driver does know current transaction state: if no transaction is active, no commands will be send to database) 
+Commits the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `commit()` method when there's active no transaction, it ignores the method and sends no commands to MariaDB. 
 
 
-## `rollback() → Promise`
+#### `rollback() → Promise`
 
->
 >Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Rollback current transaction, if there is any active.
-(Driver does know current transaction state: if no transaction is active, no commands will be send to database) 
+Rolls back the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `rollback()` method when there's no active transaction, it ignores the method and sends no commands to MariaDB. 
 
-Example : 
 ```javascript
 conn.beginTransaction()
   .then(() => {
@@ -644,7 +637,7 @@ conn.beginTransaction()
   })
 ```
  
-## `changeUser(options) → Promise`
+#### `changeUser(options) → Promise`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
 >
@@ -652,10 +645,8 @@ conn.beginTransaction()
 >   * resolves without result
 >   * rejects with an [Error](#error).
 
-This permit to resets the connection and re-authenticates with the given credentials. 
-This is equivalent of creating a new connection with a new user, reusing open socket. 
+Resets the connection and re-authorizes it using the given credentials.  It is the equivalent of creating a new connection with a new user, reusing the open socket.
 
-Example : 
 ```javascript
 conn.changeUser({user: 'changeUser', password: 'mypassword'})
    .then(() => {
@@ -666,16 +657,14 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'})
    });
 ```
 
-## `ping() → Promise`
+#### `ping() → Promise`
 
->
 >Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Send to database a packet containing one byte to check that the connection is active.
+Sends a packet to the database containing one byte to check that the connection is still active.
 
-Example : 
 ```javascript
 conn.ping()
   .then(() => {
@@ -686,22 +675,20 @@ conn.ping()
   })
 ```
 
-## `isValid() → boolean`
+#### `isValid() → boolean`
 
 > Returns a boolean
 
-Indicates the state of the connection as the driver knows it.
-Socket might be disconnected without connector still knowing it.
+Indicates the connection state as the Connector knows it.  If it returns false, there is an issue with the connection, such the socket disconnected without the Connector knowing about it.
 
-## `end() → Promise`
+#### `end() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Gracefully end the connection. Connector will wait for current executing queries to finish, then close connection. 
+Closes the connection gracefully, after waiting for any currently executing queries to finish.
 
-Example : 
 ```javascript
 conn.end()
   .then(() => {
@@ -713,61 +700,59 @@ conn.end()
 ```
 
 
-## `destroy()`
+#### `destroy()`
 
-Immediately close the connection. If there is a running query, it will be interrupted, and database will log this as an unexpected socket close. 
+Closes the connection without waiting for any currently executing queries.  These queries are interrupted.  MariaDB logs the event as an unexpected socket close.
 
-Example : 
 ```javascript
-  conn.query(
-      "select * from information_schema.columns as c1, " +
-       "information_schema.tables, information_schema.tables as t2"
-    )
-    .then(rows => {
-      //won't occur
-    })
-    .catch(err => {
-      console.log(err);
-      //Error: Connection destroyed, command was killed
-      //    ...
-      //  fatal: true,
-      //  errno: 45004,
-      //  sqlState: '08S01',
-      //  code: 'ER_CMD_NOT_EXECUTED_DESTROYED' 
-      done();
-    });
-  conn.destroy(); //will immediately close the connection, even if query above would have take a minute
+conn.query(
+  "select * from information_schema.columns as c1, " +
+   "information_schema.tables, information_schema.tables as t2"
+)
+.then(rows => {
+  //won't occur
+})
+.catch(err => {
+  console.log(err);
+  //Error: Connection destroyed, command was killed
+  //    ...
+  //  fatal: true,
+  //  errno: 45004,
+  //  sqlState: '08S01',
+  //  code: 'ER_CMD_NOT_EXECUTED_DESTROYED' 
+  done();
+});
+conn.destroy(); //will immediately close the connection, even if query above would have take a minute
 ```
 
-## `pause()`
+#### `pause()`
 
-Pauses the reading of data.  
+Pauses data reads.
 
-## `resume()`
+#### `resume()`
 
-Resume the pause. 
+Resumes data reads from a pause. 
 
 
-## `serverVersion()` 
+#### `serverVersion()` 
 
 > Returns a string 
 
-Return current connected server version or throw an Error if not connected. 
+Retrieves the version of the currently connected server.  Throws an error when not connected to a server.
 
-Example : 
 ```javascript
   console.log(connection.serverVersion()); //10.2.14-MariaDB
 ```
 
-## Error
+#### `Error`
 
-On error, Promise return an [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object with the following additional properties :
-* fatal : *boolean* indicating if connection is still valid
-* errno : error number. 
-* sqlState : sql state code
-* code : error code.
+When the Connector encounters an error, Promise returns an [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object.  In addition to the standard properties, this object has the following properties:
+* `fatal`: A boolean value indicating whether the connection remains valid.
+* `errno`: The error number. 
+* `sqlState`: The SQL state code
+* `code`: The error code.
 
-Example on console.log(error): 
+Example on `console.log(error)`: 
 ```
 { Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
   sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
@@ -784,38 +769,35 @@ Example on console.log(error):
     code: 'ER_NO_SUCH_TABLE' } }
 ```
 
-Errors contain error stack, query and parameter values (length limited to 1024 characters by default).
-To get initial stack trace (the "From event ..."  part of previous example), connection option "trace" must be enable.  
+Errors contain an error stack, query and parameter values (the length of which is limited to 1,024 characters, by default).  To retrieve the initial stack trace, (shown as `From event...` in the example above), you must have the Connection option `trace` enabled.
 
-See [error codes](https://mariadb.com/kb/en/library/mariadb-error-codes/) for error number and sql state signification.
+For more information on error numbers and SQL state signification, see the [MariaDB Error Code](https://mariadb.com/kb/en/library/mariadb-error-codes/) documentation.
 
-## `events`
 
-Connection object inherit from node.js [EventEmitter](https://nodejs.org/api/events.html), to emit 'error' event when connection close unexpectedly.
+#### `events`
 
-Example : 
+Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html).  Emits an error event when the connection closes unexpectedly.
+
 ```javascript
-  const mariadb = require('mariadb');
-  mariadb.createConnection({user: 'root', host: 'localhost', socketTimeout: 100})
-  .then(conn => {
-    conn.on('error', err => {
-      //will be executed after 100ms due to inactivity, socket has closed. 
-      console.log(err);
-      //log : 
-      //{ Error: (conn=6283, no: 45026, SQLState: 08S01) socket timeout
-      //    ...
-      //    at Socket.emit (events.js:208:7)
-      //    at Socket._onTimeout (net.js:410:8)
-      //    at ontimeout (timers.js:498:11)
-      //    at tryOnTimeout (timers.js:323:5)
-      //    at Timer.listOnTimeout (timers.js:290:5)
-      //  fatal: true,
-      //  errno: 45026,
-      //  sqlState: '08S01',
-      //  code: 'ER_SOCKET_TIMEOUT' }
-    });
-  })
-  .catch(done);
+const mariadb = require('mariadb');
+mariadb.createConnection({user: 'root', host: 'localhost', socketTimeout: 100})
+.then(conn => {
+conn.on('error', err => {
+  //will be executed after 100ms due to inactivity, socket has closed. 
+  console.log(err);
+  //log : 
+  //{ Error: (conn=6283, no: 45026, SQLState: 08S01) socket timeout
+  //    ...
+  //    at Socket.emit (events.js:208:7)
+  //    at Socket._onTimeout (net.js:410:8)
+  //    at ontimeout (timers.js:498:11)
+  //    at tryOnTimeout (timers.js:323:5)
+  //    at Timer.listOnTimeout (timers.js:290:5)
+  //  fatal: true,
+  //  errno: 45026,
+  //  sqlState: '08S01',
+  //  code: 'ER_SOCKET_TIMEOUT' }
+});
+})
+.catch(done);
 ```
-
-
