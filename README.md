@@ -52,9 +52,10 @@ For more information, see the [Pipelining](/documentation/piplining.md) document
 
 ## Benchmarks
 
-Comparison with popular connectors :
-* [promise-mysql](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [mysql](https://www.npmjs.com/package/mysql) version 2.15.0 
-* [mysql2](https://www.npmjs.com/package/mysql2) version 1.5.3
+MariaDB provides benchmarks comparing the Connector with popular Node.js MySQL clients, including: 
+
+* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [mysql](https://www.npmjs.com/package/mysql) version 2.15.0 
+* [`mysql2`](https://www.npmjs.com/package/mysql2) version 1.5.3
 
 ```
 promise-mysql  : 1,366 ops/sec ±1.42%
@@ -64,7 +65,7 @@ mariadb        : 1,802 ops/sec ±1.19%
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
 
-[Benchmarks in details](/documentation/benchmarks.md) 
+For more information, see the [Benchmarks](/documentation/benchmarks.md) page.
 
 ## Road-map 
 
