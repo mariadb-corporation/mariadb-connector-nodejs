@@ -402,18 +402,15 @@ connection
   .catch(...);
 ```
 
-#### rowsAsArray
+##### `rowsAsArray`
 
 *boolean, default false*
 
-Using option rowsAsArray permit to have row format as an array (not as JSON).
-This permit to save memory and avoid connector to have to parse [column metadata](#column-metadata) completely. It is fastest row format (by 5-10% with local database).
+Using this option causes the Connector to format rows in the result-set  as arrays, rather than JSON objects.  Doing so allows you to save memory and avoid having the Connector parse [column metadata](#column-metadata) completely.  It is the fastest row format, (by 5-10%), with a local database.
 
+Default format : `{ id: 1, name: 'sea lions' }`
+with option `"rowsAsArray" : [ 1, 'sea lions' ]`
 
-Default format : { id: 1, name: 'sea lions' }
-with option "rowsAsArray" : [ 1, 'sea lions' ]
-
-Example :
 ```javascript
 connection.query({ rowsAsArray: true, sql: 'select * from animals' })
     .then(res => {
@@ -426,16 +423,14 @@ connection.query({ rowsAsArray: true, sql: 'select * from animals' })
     });
 ```
 
-#### nestTables
+##### `nestTables`
 
 *boolean / string, default false*
 
-Some queries could return the columns with the **same** name. The standard JSON format won't permit having 2 keys with same name.
- 
-Setting the option nestTables to true, data will be group by table.
-When using string parameter, json field name will be prefixed by table name + nestTable value. 
+Occasionally, you may have issue with queries that return coluns with the **same** name.  The standard JSON format does not permit key duplication.  To get around this, you can set the `nestTables` option to `true`.  This causes the Connector to group data by table.  When using string parameters, it prefixes the JSON field name with the table name and the `nestTables` value.
 
-Example with boolean value:
+For instance, when using a boolean value:
+
 ```javascript
 connection.query({nestTables:true, 
                 sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'})
@@ -455,7 +450,8 @@ connection.query({nestTables:true,
     });
 ```
 
-Example with string value:
+Alternatively, using a string value:
+
 ```javascript
 connection.query({nestTables: '_', 
                 sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'})
@@ -469,34 +465,37 @@ connection.query({nestTables: '_',
     });
 ```
 
-#### dateStrings
+##### `dateStrings`
 
 *boolean, default: false*
 
-Indicate if date must be retrieved as a string (not as a Date object)  
-
-#### supportBigNumbers
-
-*boolean, default: false*
-
-If integer is not in ["safe"](documentation/connection-options.md#support-for-big-integer) range, the value will be return as a [Long](https://www.npmjs.com/package/long) object.
+Whether you want the Connector to retrieve date values as strings, rather than `Date` objects.
 
 
-#### bigNumberStrings
+##### `supportBigNumbers`
 
 *boolean, default: false*
 
-if integer is not in ["safe"](documentation/connection-options.md#support-for-big-integer) range, the value will be return as a string
+Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in the [safe](documentation/connection-options.md#support-for-big-integer) range.
 
-#### typeCast
+
+##### `bigNumberStrings`
+
+*boolean, default: false*
+
+Whether the query should return integers as strings when they are not in the [safe](documentation/connection-options.md#support-for-big-integer) range.
+
+
+##### `typeCast`
 
 *Experimental*
 
 *function(column, next)*
 
-If can cast type yourself if needed using option `typeCast`.
+In the event that you need certain values returned as a different type, you can use this function to cast the value into that type yourself.
 
-Example for casting all TINYINT(1) to boolean :
+For instance, casting all `TINYINT(1)` values as boolean values:
+
 ```javascript
 const tinyToBoolean = (column, next) => {
   if (column.type == "TINY" && column.length === 1) {
@@ -508,75 +507,74 @@ const tinyToBoolean = (column, next) => {
 connection.query({typeCast: tinyToBoolean, sql:"..."});
 ```
 
-## Column metadata
+##### Column Metadata
 
-* `collation`: object indicating column collation. Properties : index, name, encoding, maxlen. Example : 33, "UTF8_GENERAL_CI", "utf8", 3 
-* `columnLength`: column maximum length if there is a limit, 0 if not (for blob).
-* `type`: column type int value. see [values](/lib/const/field-type.js)
-* `columnType`: column type string value. see [values](/lib/const/field-type.js). example "DECIMAL"
-* `scale`: decimal part length.  
-* `flags`: byte encoded flags. see [values](/lib/const/field-detail.js) 
-* `db()`: database schema name (alias `schema()` exists)
-* `table()`: table alias
-* `orgTable()`: real table name
-* `name()`: column alias
-* `orgName()`: real column name
+* `collation`: Object indicates the column collation.  It has the properties: `index`, `name`, `encoding`, and `maxlen`.  For instance, `33, "UTF8_GENERAL_CI", "utf8", 3`
+* `columnLength`: Shows the column's maximum length if there's a limit and `0` if there is no limit, (such as with a `BLOB` column).
+* `type`: 
+Shows the column type as an integer value.  For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
+* `columnType`: Shows the column type as a string value.  For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
+* `scale`: Provides the decimal part length.
+* `flags`: Shows the byte-encoded flags.  For more information, see [`field-detail.js`](/lib/const/field-detail.js).
+* `db()`: Name of the database schema.    You can also retrieve this using `schema()`.
+* `table()`: Table alias.
+* `orgTable()`: Real table name.
+* `name()`: Column alias. 
+* `orgName()`: Real column name.
 
 ```js
-    connection
-      .query("SELECT 1, 'a'")
-      .then(rows => {
-        console.log(rows);
-        // [ 
-        //   { '1': 1, a: 'a' },
-        //   meta: [ 
-        //     { 
-        //       collation: [Object],
-        //       columnLength: 1,
-        //       columnType: 8,
-        //       scale: 0,
-        //       type: 'LONGLONG',
-        //       flags: 129,
-        //       db: [Function],
-        //       schema: [Function],
-        //       table: [Function],
-        //       orgTable: [Function],
-        //       name: [Function],
-        //       orgName: [Function] 
-        //     },
-        //     { 
-        //       collation: [Object],
-        //       columnLength: 4,
-        //       columnType: 253,
-        //       scale: 39,
-        //       type: 'VAR_STRING',
-        //       flags: 1,
-        //       db: [Function],
-        //       schema: [Function],
-        //       table: [Function],
-        //       orgTable: [Function],
-        //       name: [Function],
-        //       orgName: [Function] 
-        //     } 
-        //   ] 
-        // ]
-        assert.equal(rows.length, 1);
-      })
+connection
+  .query("SELECT 1, 'a'")
+  .then(rows => {
+	console.log(rows);
+	// [ 
+	//   { '1': 1, a: 'a' },
+	//   meta: [ 
+	//     { 
+	//       collation: [Object],
+	//       columnLength: 1,
+	//       columnType: 8,
+	//       scale: 0,
+	//       type: 'LONGLONG',
+	//       flags: 129,
+	//       db: [Function],
+	//       schema: [Function],
+	//       table: [Function],
+	//       orgTable: [Function],
+	//       name: [Function],
+	//       orgName: [Function] 
+	//     },
+	//     { 
+	//       collation: [Object],
+	//       columnLength: 4,
+	//       columnType: 253,
+	//       scale: 39,
+	//       type: 'VAR_STRING',
+	//       flags: 1,
+	//       db: [Function],
+	//       schema: [Function],
+	//       table: [Function],
+	//       orgTable: [Function],
+	//       name: [Function],
+	//       orgName: [Function] 
+	//     } 
+	//   ] 
+	// ]
+	assert.equal(rows.length, 1);
+  })
 ```
 
 
-## queryStream(sql[, values]) → Emitter
+#### `queryStream(sql[, values]) → Emitter`
 
-> * `sql`: *string | JSON* sql string value or JSON object to supersede default connections options.
->           if JSON object, must have a "sql" property
->           example : { dateStrings: true, sql: 'SELECT now()' }
-> * `values`: *array | object* placeholder values. usually an array, but in case of only one placeholder, can be given as is. 
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string. 
 >
->Returns an Emitter object that emit different type of event:
->  * error : emit an [Error](#error) object if query failed. (No "end" event will be emit then).
->  * columns : emit when columns metadata from result-set are received (parameter is an array of [Metadata fields](#metadata-field)).
->  * data : emit each time a row is received (parameter is a row). 
->  * end : emit when query ended (no parameter). 
+> Returns an Emitter object that emit different type of event:
+> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will be emit then).
+> * columns : Emits when columns metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
+> * data : Emits each time a row is received (parameter is a row). 
+> * end : Emits when the query ends (no parameter). 
 
 The function "query" return a promise returning all data at once. For huge result-set, that mean stored all data in memory. 
 The function "queryStream" is very similar to query, but the event driven architecture will permit to handle a row one by one, to avoid overloading memory.   
