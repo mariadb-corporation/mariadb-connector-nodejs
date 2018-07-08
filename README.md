@@ -67,72 +67,78 @@ mariadb        : 1,802 ops/sec ±1.19%
 
 For more information, see the [Benchmarks](/documentation/benchmarks.md) page.
 
-## Road-map 
+## Road Map 
 
-Some features are not implemented yet, but will in next versions : 
+The Connector remains in development.  Here's a list of features being developed for future releases:
 
-    * Pooling and "PoolCluster" are not implemented in first version
-    * MariaDB new ed25519 plugin authentication
-    * Query timeout
-    * Bulk insert (fast batch)  
-
-
-## Contributing
-To get started with a development installation and learn more about contributing, please follow the instructions at our 
-[Developers Guide.](/documentation/developers-guide.md)
-
-Tracker link [https://jira.mariadb.org/projects/CONJS/issues/](https://jira.mariadb.org/projects/CONJS/issues/)
+* Pooling and `PoolCluster`
+* MariaDB `ed25519` plugin authentication
+* Query Timeouts
+* Bulk Insertion, (that is, fast batch).
 
 
-# Quick Start
+## Contributing 
 
-    npm install mariadb
+If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [Developers Guide.](/documentation/developers-guide.md)
 
-Using ECMAScript < 2017:
+To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
+
+
+## Quick Start
+
+The MariaDB Connector is available through the Node.js repositories.  You can install it using npm.
+
+```
+$ npm install mariadb
+```
+
+Using the ECMAScript, prior to 2017:
+
 ```js
-  const mariadb = require('mariadb');
-  mariadb.createConnection({host: 'mydb.com', user:'myUser'})
-    .then(conn => {
-      
-      conn.query("SELECT 1 as val")
-        .then((rows) => {
-          console.log(rows); //[ {val: 1}, meta: ... ]
-          return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-        })
-        .then((res) => {
-          console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
-          conn.end();
-        })
-        .catch(err => {
-          //handle error
-          conn.end();
-        })
-        
-    }).catch(err => {
-      //not connected
-    });
+const mariadb = require('mariadb');
+mariadb.createConnection({host: 'mydb.com', user:'myUser'})
+.then(conn => {
+
+  conn.query("SELECT 1 as val")
+	.then((rows) => {
+	  console.log(rows); //[ {val: 1}, meta: ... ]
+	  return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+	})
+	.then((res) => {
+	  console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+	  conn.end();
+	})
+	.catch(err => {
+	  //handle error
+	  conn.end();
+	})
+	
+}).catch(err => {
+  //not connected
+});
 ```
 
 Using ECMAScript 2017:
+
 ```js
-    const mariadb = require('mariadb');
-    async function asyncFunction() {
-      let conn;
-      try {
-        conn = await mariadb.createConnection({host: 'localhost', user: 'root'});
-    
-        const rows = await conn.query("SELECT 1 as val");
-        console.log(rows); //[ {val: 1}, meta: ... ]
-        const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-        console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
-    
-      } catch (err) {
-        return Promise.reject(err);
-      } finally {
-        if (conn) return conn.end();
-      }
-      return Promise.resolve();
-    }
+const mariadb = require('mariadb');
+async function asyncFunction() {
+  let conn;
+  try {
+	conn = await mariadb.createConnection({host: 'localhost', user: 'root'});
+
+	const rows = await conn.query("SELECT 1 as val");
+	console.log(rows); //[ {val: 1}, meta: ... ]
+	const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+	console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+
+  } catch (err) {
+	return Promise.reject(err);
+  } finally {
+	if (conn) return conn.end();
+  }
+  return Promise.resolve();
+}
 ```
 
 # Documentation
