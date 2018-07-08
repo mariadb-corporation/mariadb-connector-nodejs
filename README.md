@@ -141,53 +141,56 @@ async function asyncFunction() {
 }
 ```
 
-# Documentation
+## Documentation
 
-There is 2 different API: Promise (default) and callback (for compatibility with mysql/mysql2 API).
-The following documentation describe the Promise API. Check [Callback API documentation](/documentation/callback-api.md) for callback API difference.   
+The MariaDB Connector can use different API's on the back-end: Promise and Callback.  The default API is Promise.  Callback is provided for compatibility with the `mysql` and `mysql2` API's.
 
-## Install
+Documentation provided on this page uses the Promise API.  If you would like to develop an application with the Callback API or have an existing application that you want to switch from the MySQL API's to the MariaDB Connector, see the [Callback API](/documentation/callback-api.md) documentation.
 
-Using npm:
+### Installation
 
-```javascript
-npm install mariadb
+As described in the quick start section above, you can install the MariaDB Connector using npm.
+
+```
+$ npm install mariadb
 ```
 
-## API
 
-Create Connection
+### API
 
-* [`createConnection(options) → Promise`](#createconnectionoptions--promise) : create a new connection
+**Creating a Connection:**
 
-Connection API: 
+* [`createConnection(options) → Promise`](#createconnectionoptions--promise) : Creates a new connection.
 
-* [`query(sql[, values]) → Promise`](#querysql-values---promise): execute a query.
-* [`queryStream(sql[, values]) → Emitter`](#querystreamsql-values--emitter): execute a query, returning an emitter object to stream rows.
-* [`beginTransaction() → Promise`](#begintransaction--promise): begin transaction
-* [`commit() → Promise`](#commit--promise): commit current transaction if any
-* [`rollback() → Promise`](#rollback--promise): rollback current transaction if any
-* [`changeUser(options) → Promise`](#changeuseroptions--promise): change current connection user
-* [`ping() → Promise`](#ping--promise): send a 1 byte packet to database to validate connection
-* [`isValid() → boolean`](#isvalid--boolean): check that connection is active without checking socket state
-* [`end() → Promise`](#end--promise): gracefully end connection
-* [`destroy()`](#destroy): force connection ending. 
-* [`pause()`](#pause): pause socket output.
-* [`resume()`](#resume): resume socket output.
-* [`serverVersion()`](#serverversion): get current server version 
-* [`events`](#events): to subscribe to connection error event.
+**Connection API:** 
 
-## `createConnection(options) → Promise`
+* [`query(sql[, values]) → Promise`](#querysql-values---promise): Executes a query.
+* [`queryStream(sql[, values]) → Emitter`](#querystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`beginTransaction() → Promise`](#begintransaction--promise): Begins a transaction.
+* [`commit() → Promise`](#commit--promise): Commits the current transaction, if any.
+* [`rollback() → Promise`](#rollback--promise): Rolls back the current transaction, if any.
+* [`changeUser(options) → Promise`](#changeuseroptions--promise): Changes the current connection user
+* [`ping() → Promise`](#ping--promise): Sends a 1 byte packet to database to validate the connection.
+* [`isValid() → boolean`](#isvalid--boolean): Checks that the connection is active without checking socket state.
+* [`end() → Promise`](#end--promise): Gracefully closes the connection.
+* [`destroy()`](#destroy): Forces the connection to close. 
+* [`pause()`](#pause): Pauses the socket output.
+* [`resume()`](#resume): Resumes the socket output.
+* [`serverVersion()`](#serverversion): Retrieves the current server version.
+* [`events`](#events): Subscribes to connection error events.
+
+#### `createConnection(options) → Promise`
 
 > * `options`: *JSON* [connection option documentation](#connection-options)
 >
->Returns a promise that :
->  * resolves with a [connection object](#connection-object)
->  * rejects with an [Error](#error).
+> Returns a promise that :
+> * resolves with a [Connection](#connection-object) object,
+> * raises an [Error](#error).
 
-Create a new connection.
+Creates a new connection.
 
-Example : 
+**Example:**
+
 ```javascript
 const mariadb = require('mariadb');
 mariadb.createConnection({
@@ -202,37 +205,43 @@ mariadb.createConnection({
     });
 ```
 
-### Connection options
+##### Connection options
 
 Essential options list:
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **user** | user to access database |*string* | 
-| **password** | user password |*string* | 
-| **host** | IP or DNS of database server. *Not used when using option `socketPath`*|*string*| "localhost"|  
-| **port** | database server port number. *Not used when using option `socketPath`*|*integer*| 3306|
-| **ssl** | tls support. see [option documentation](/documentation/connection-options.md#ssl) for detailed explanation|*mixed*|
-| **database** | default database when establishing connection| *string* | 
-| **socketPath** | Permits connecting to the database via Unix domain socket or named pipe|  *string* |  
-| **compress** | the exchanges with database will be gzipped. That permit better performance when database is distant (not in same location)|*boolean*| false|  
-| **connectTimeout** | connection timeout in ms|*integer* | 10 000|
-| **socketTimeout** | socket timeout in ms after connection succeed. (0 = no timeout)|*integer* | 0|
-| **rowsAsArray** | return resultset as array, not JSON. Faster way to get results. See Query for detail information|*boolean* | false|
+| **`user`** | User to access database. |*string* | 
+| **`password`** | User password. |*string* | 
+| **`host`** | IP address or DNS of the database server. *Not used when using option `socketPath`*. |*string*| "localhost"|
+| **`port`** | Database server port number. *Not used when using option `socketPath`*|*integer*| 3306|
+| **`ssl`** | Enables TLS support. For more information, see the [`ssl` option](/documentation/connection-options.md#ssl) documentation. |*mixed*|
+| **`database`** | Default database to use when establishing the connection. | *string* | 
+| **`socketPath`** | Permits connections to the database through the Unix domain socket or named pipe. |  *string* | 
+| **`compress`** | Compresses the exchange with the database through gzip.  This permits better performance when the database is not in the same location.  |*boolean*| false|
+| **`connectTimeout`** | Sets the connection timeout in milliseconds. |*integer* | 10 000|
+| **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
+| **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
 
-See [option documentation](/documentation/connection-options.md) for complete list.    
+For more infomration, see the [Connection Options](/documentation/connection-options.md) documentation. 
 
-### Connecting to a local database
+#### Connecting to Local Databases 
 
-With local database, the TCP-IP layer can be avoided to have better performance. 
+When working with a local database, (that is, cases where MariaDB and your Node.js application run on the same host), you can connect to MariaDB through the Unix socket or Windows named pipe for better performance, rather than using the TCP/IP layer.
 
-This is done by setting the option 'socketPath' to either the Unix socket file or the Windows named pipe.
-The `host` and `port` options are then ignored. 
+In order to set this up, you need to assign the connection a `socketPath` value.  When this is done, the Connector ignores the `host` and `port` options.
 
-The server variable [@@socket](https://mariadb.com/kb/en/library/server-system-variables/#socket) contain the socket name. 
-Default is usually '/tmp/mysql.sock' on Unix and 'MySQL' on windows (the server must have been started with the --enable-named-pipe option for windows).
+The specific socket path you need to set is defined by the 
+[socket](https://mariadb.com/kb/en/library/server-system-variables/#socket) server system variable.  If you don't know it off hand, you can retrieve it from the server.
 
-Example with local database on unix : 
+```sql
+SHOW VARIABLES LIKE 'socket';
+```
+
+It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on Windows.  Additionally, on Windows this feature only works when the server is started with the `--enable-named-pipe` option.
+
+For instance, on Unix a connection might look like this:
+
 ```javascript
 const mariadb = require('mariadb');
 mariadb.createConnection({socketPath: '/tmp/mysql.sock'})
@@ -240,7 +249,8 @@ mariadb.createConnection({socketPath: '/tmp/mysql.sock'})
     .catch(err => { ... });
 ```
 
-example with local database on windows :
+It has a similar syntax on Windows: 
+
 ```javascript
 const mariadb = require('mariadb');
 mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
@@ -248,7 +258,7 @@ mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
     .catch(err => { ... });
 ```
  
-## `query(sql[, values])` -> `Promise`
+#### `query(sql[, values])` -> `Promise`
 
 > * `sql`: *string | JSON* sql string or JSON object to supersede default connections options.
 >           When using JSON object, object must have a "sql" key
