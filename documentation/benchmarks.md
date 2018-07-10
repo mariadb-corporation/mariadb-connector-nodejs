@@ -1,39 +1,43 @@
 # Benchmark 
 
-Benchmarks are done using [benchmark package](https://www.npmjs.com/package/benchmark).
+Benchmarks for the MariaDB Node.js Connector are done using the [benchmark](https://www.npmjs.com/package/benchmark) package.   You can find the source code for our benchmarks in the [`benchmarks/`](../benchmarks) folder.
 
-Benchmark source code is integrated to connection in /benchmarks folder.
+You can run benchmarks using npm.  To run it on the `mariadb` Connector only, use the following command:
 
-running benchmark for mariadb only :  
-```Bash
-    npm run benchmark
-``` 
-
-To compare with [mysql](https://www.npmjs.com/package/mysql) / [mysql2](https://www.npmjs.com/package/mysql2)  
-they need to be installed :
-```Bash
-    npm install mysql mysql2
-    npm run benchmark
-``` 
-
-[mysql](https://www.npmjs.com/package/mysql) do not have a promise implementation, so [promise-mysql](https://www.npmjs.com/package/promise-mysql) can be used to test promise tests.
-```Bash
-    npm install mysql mysql2 promise-mysql
-    npm run benchmark
 ```
-    
-# Some result 
-Result on 2 DigitalOcean ubuntu 16.04 x64 with 8gb, 4vcpu :
-* server : mariadb 10.3 with default configuration and (collation-server=utf8mb4_unicode_ci + character-set-server=utf8mb4)
-* client : node.js v8.11.3
+$ npm run benchmark
+```
 
-version : 
-* mysql : 2.15.0
-* mysql2 : 1.5.3
-* Promise-mysql : 3.1.1
-  
+Npm runs a series on the MariaDB Server then returns the execution times.  While this may give you a rough idea of how it performs, it's better to compare to other MySQL connector packages, like [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) packages. 
+
+Install them, then re-run the benchmarks:
+
+```
+$ npm install mysql mysql2
+$ npm run benchmark
 ``` 
 
+The [mysql](https://www.npmjs.com/package/mysql) package doesn't implement Promise.  If you need to test Promise, use the [promise-mysql](https://www.npmjs.com/package/promise-mysql) package.
+
+```
+$ npm install mysql mysql2 promise-mysql
+$ npm run benchmark
+```
+
+## Results
+
+Benchmarks were run on two Digital Ocean hosts with 8GB of memory and 4 virtual CPU's, running Ubuntu 16.04.
+
+* **Server Host**: MariaDB 10.3 under the default configuration with the [`collation_server`](https://mariadb.com/kb/en/library/server-system-variables#collation_server)system variable set to `utf8mb4_unicode_ci` and the [`character_set_server`](https://mariadb.com/kb/en/library/server-system-variables#character_set_server) system variable set to `utf8mb4`.
+* **Client Host**: Node.js version 8.11.3
+
+The MariaDB Node.js Connector was then tested along side the following MySQL connectors:
+
+* [**mysql**](https://www.npmjs.com/package/mysql): version 2.15.0
+* [**mysql2**](https://www.npmjs.com/package/mysql2): version 1.5.3
+* [**promise-mysql**](https://www.npmjs.com/package/promise-mysql): version 3.1.1
+
+``` 
 { user: 'root',
   database: 'testn',
   host: '159.89.6.101',
@@ -128,7 +132,6 @@ select random number - mysql2 x 3,940 ops/sec ±1.34% (273 runs sampled)
 select random number - mariadb x 4,528 ops/sec ±1.59% (272 runs sampled)
 ending connectors
 
-
 --- BENCHMARK RESULTS ---
 /* travis bench are not to take as is, because VM might run some other testing script that can change results */
 
@@ -198,4 +201,4 @@ bench : select random number ( sql: select ? )
             mariadb :  4,527.5 ops/s   (  +11.6% )
 ```
 
-mysql2 use a metadata client caching, so queries with metadata already in cache are faster than new queries.    
+Note, the [mysql2](https://www.npmjs.com/package/mysql2) package uses metadata client caching, so queries with metadata in cache are faster than new queries.
