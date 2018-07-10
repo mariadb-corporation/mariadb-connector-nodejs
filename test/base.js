@@ -37,8 +37,13 @@ after("share destroy", () => {
 // create test connection with default test options + param
 //*****************************************************************
 module.exports.createConnection = function createConnection(opts) {
-  let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
+  const connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return basePromise.createConnection(connOptionTemp);
+};
+
+module.exports.createPool = opts => {
+  const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
+  return basePromise.createPool(poolOptionTemp);
 };
 
 module.exports.createCallbackConnection = function createConnection(opts) {
