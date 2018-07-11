@@ -10,81 +10,94 @@
 - [Other options](#other-options)
 - [F.A.Q.](#faq)
 
-# Essential options 
+## Essential options 
 
 | option| description| type| default| 
 | ---: | --- | :---: | :---: | 
-| **user** | user to access database |*string* | 
-| **password** | user password |*string* | 
-| **host** | IP or DNS of database server. *Not used when using option `socketPath`*|*string*| "localhost"|  
-| **port** | database server port number|*integer*| 3306|
-| **database** | default database when establishing connection| *string* | 
-| **socketPath** | Permits connecting to the database via Unix domain socket or named pipe, if the server allows it|  *string* |  
-| **compress** | the exchanges with database will be gzipped. That permit better performance when database is distant (not in same location)|*boolean*| false|  
-| **connectTimeout** | connection timeout in ms|*integer* | 10 000|
-| **socketTimeout** | socket timeout in ms after connection succeed|*integer* | 0|
-| **rowsAsArray** | return resultset as array, not JSON. Faster way to get results. See Query for detail information|*boolean* | false|
+| **user** | User to access database |*string* | 
+| **password** | User password |*string* | 
+| **host** | IP address or DNS of database server. *Not used when using option `socketPath`*|*string*| "localhost"|  
+| **port** | Database server port number|*integer*| 3306|
+| **database** | Default database to use when establishing the connection | *string* | 
+| **socketPath** | Permit connecting to the database via Unix domain socket or named pipe, if the server allows it|  *string* |  
+| **compress** | Compress exchanges with database using gzip.  This can give you better performance when accessing a database in a different location.  |*boolean*| false|  
+| **connectTimeout** | Connection timeout in milliseconds |*integer* | 10 000|
+| **socketTimeout** | Socket timeout in milliseconds after the connection is established |*integer* | 0|
+| **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations.|*boolean* | false|
 
 
-# Support for big integer 
+## Big Integer Support 
 
-Javascript integer use IEEE-754 representation, meaning that integer not in ±9,007,199,254,740,991 range cannot be exactly represented.
-MariaDB/MySQL server have data type that permit bigger integer. 
- 
-For those integer that are not in [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range default implementation will return an integer that may be not the exact representation. 
-2 options permit to have the exact value :          
+Integers in JavaScript use IEEE-754 representation.  This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  However, MariaDB does support larger integers. 
+
+This means that when the value set on a column is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, the default implementation receives an inexact representation of the number.
+
+The Connector provides two options to address this issue. 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **bigNumberStrings** | if integer is not in "safe" range, the value will be return as a string  |*boolean* |false| 
-| **supportBigNumbers** | if integer is not in "safe" range, the value will be return as a [Long](https://www.npmjs.com/package/long) object |*boolean* |false|
+| **bigNumberStrings** | When an integer is not in the safe range, the Connector interprets the value as a string |*boolean* |false| 
+| **supportBigNumbers** | When an integer is not in the safe range, the Connector interprets the value as a [Long](https://www.npmjs.com/package/long) object |*boolean* |false|
 
 
-# Ssl
+## SSL
 
-Data can be encrypted during transfer using the Transport Layer Security (TLS) protocol. TLS/SSL permits transfer encryption, and optionally server and client identity validation.
- 
->The term SSL (Secure Sockets Layer) is often used interchangeably with TLS, although strictly-speaking the SSL protocol is the predecessor of TLS, and is not implemented as it is now considered insecure.
+The Connector can encrypt data during transfer using the Transport Layer Security (TLS) protocol.  TLS/SSL allows for transfer encryption, and can optionally use identity validation for the server and client.
 
-There is different kind of SSL authentication : 
+> The term SSL (Secure Sockets Layer) is often used interchangeably with TLS, although strictly-speaking the SSL protocol is the predecessor of TLS, and is not implemented as it is now considered insecure.
 
-One-way SSL authentication is that the client will verifies the certificate of the server. 
-This will permit to encrypt all exhanges, and make sure that it is the expected server, i.e. no man in the middle attack.
+There are two different kinds of SSL authentication:
 
-Two-way SSL authentication (= mutual authentication, = client authentication) is if the server also verifies the certificate of the client. 
-Client will also have a dedicated certificate.
+- **One-Way SSL Authentication:** The client verifies the certificate of the server.  This allows you to encrypt all exchanges and make sure that you are connecting to the expected server, (to avoid a man-in-the-middle attack).
+- **Two-Way SSL Authentication** The client verifies the certificate of the server, the server verifies the certificate of the client.  This is also called mutual authentication or client authentication.  When using this system, the client also requires a dedicated certificate.
 
 
-### Server configuration
-To ensure that SSL is correctly configured on the server, the query `SELECT @@have_ssl;` must return YES. 
-If not, please refer to the [server documentation](https://mariadb.com/kb/en/library/secure-connections/).
+### Server Configuration
 
-### User configuration recommendation
+In order to use SSL, you need to ensure that the MariaDB Server is correctly configured.  You can determine this using the `have_ssl` system variable.
 
-Enabling the option ssl, driver will use One-way SSL authentication, but an additional step is recommended :
- 
-To ensure the type of authentication the user used for authentication must be set accordingly with "REQUIRE SSL" for One-way SSL authentication or "REQUIRE X509" for Two-way SSL authentication. 
-See [CREATE USER](https://mariadb.com/kb/en/library/create-user/) for more details.
-
-Example:
 ```sql
-CREATE USER 'myUser'@'%' IDENTIFIED BY 'MyPwd';
-GRANT ALL ON db_name.* TO 'myUser'@'%' REQUIRE SSL;
+SHOW VARIABLES LIKE 'have_ssl';
+
++---------------+----------+
+| Variable_name | Value    |
++---------------+----------+
+| have_ssl      | DISABLED |
++---------------+----------+
 ```
-Setting `REQUIRE SSL` will ensure that if option ssl isn't enable on connector, connection will be rejected. 
+
+A value of `NO` indicates that MariaDB was compiled without support for TLS.  `DISABLED` means that it was compiled with TLS support, but it's currently turned off.  In order to use SSL with the Connector, the server must return `YES`, indicating that TLS support is available and turned on.
+For more information, see the [MariaDB Server](https://mariadb.com/kb/en/library/secure-connections/) documentation.
 
 
-## Configuration
+### User Configuration 
+
+Enabling the `ssl` system variable on the server, the Connector uses one-way SSL authentication to connect to the server. Additionally, it's recommended that you also configure your users to connect through SSL.  This ensures that their accounts can only be used with an SSL connection.
+
+For the `GRANT` statements, use the `REQUIRE SSL` option for one-way SSL authentication and the `REQUIRE X509` option for two-way SSL authentication.  For more information, see the [`CREATE USER`](https://mariadb.com/kb/en/library/create-user/) documentation.
+
+
+```sql
+CREATE USER 'johnSmith'@'%' IDENTIFIED BY PASSWORD('passwd');
+GRANT ALL ON company.* TO 'johnSmith'@'%' REQUIRE SSL;
+```
+
+Now when this user attempts to connect to MariaDB without SSL, the server rejects the connection.
+
+
+
+### Configuration
+
 * `ssl`: boolean/JSON object. 
 
 JSON object: 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-|**checkServerIdentity**| function(servername, cert) to replace SNI default function| *Function*|
+|**checkServerIdentity**| `function(servername, cert)` to replace SNI default function| *Function*|
 |**minDHSize**| Minimum size of the DH parameter in bits to accept a TLS connection | *number*|1024|
 |**pfx**| Optional PFX or PKCS12 encoded private key and certificate chain. Encrypted PFX will be decrypted with `passphrase` if provided| *string / string[] / Buffer / Buffer[] / *Object[]*|
-|**key**| Optional private keys in PEM format. Encrypted keys will be decrypted with `passphrase` if provided| *string / string[] / *Buffer* / *Buffer[]* / *Object[]*|
+|**key**| Optional private keys in PEM format. Encrypted keys are decrypted with `passphrase` if provided| *string / string[] / *Buffer* / *Buffer[]* / *Object[]*|
 |**passphrase**| Optional shared passphrase used for a single private key and/or a PFX| *string*|
 |**cert**| Optional cert chains in PEM format. One cert chain should be provided per private key| *string / string[] / Buffer / Buffer[]*|
 |**ca**| Optionally override the trusted CA certificates. Default is to trust the well-known CAs curated by Mozilla. For self-signed certificates, the certificate is its own CA, and must be provided| *string / string[] / Buffer / Buffer[]*|
@@ -96,201 +109,235 @@ JSON object:
 |**dhparam**| Diffie Hellman parameters, required for Perfect Forward Secrecy| *string / Buffer*|
 |**secureProtocol**| Optional SSL method to use, default is "SSLv23_method" | *string*|
 
-Connector rely on Node.js TLS implementation. See [Node.js TLS API](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) for more detail
+The Connector uses the Node.js implementation of TLS.  For more information, see the [Node.js TLS API](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) documentation. 
 
 
-## Certificate validation
+### Certificate Validation
 
-### Trusted CA
-Node.js trust by default well-known root CAs based on Mozilla: see [list](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport) (including free Let's Encrypt certificate authority).
-If the server certificate is signed using a certificate chain using a root CA known in node.js, only needed configuration is enabling option ssl.
+#### Trusted CA
 
-### Certificate chain validation
-Certificate chain is a list of certificates that are related to each other because they were issued within the same CA hierarchy. 
-In order for any certificate to be validated, all of the certificates in its chain have to be validated.
+By default, Node.js trusts the well-know root Certificate Authorities (CA), based on Mozilla.  For a complete list, (including the popular and free Let's Encrypt), see the [CA Certificate List](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport).
 
-If intermediate/root certificate are not trusted by connector, connection will issue an error. 
+When using a certificate signed with a certificate chain from a root CA known to Node.js, the only configuration you need to do is enable the `ssl` option.
 
-Certificate can be provided to driver with  
 
-### Hostname verification (SNI)
-  hostname verification is done by default be done against the certificate’s subjectAlternativeName’s dNS name field. 
+#### Certificate Chain Validation
 
-## One-way SSL authentication
+A certificate chain is a list of certificates that were issued from the same Certification Authority hierarchy.  In order for any certificate to be validated, all certificates in the chain have to be validated.
 
-If the server certificate is signed using a certificate chain using a root CA known in java default truststore, no additional step is required, but setting `ssl` option
+In cases where intermediate or root certificates are not trusted by the Connector, the Connector rejects the connection and issues an error.
 
-Example : 
+
+#### Hostname verification (SNI)
+
+Certificates can provide hostname verification to the driver.  By default this is done against the certificate's `subjectAlternativeName` DNS name field.
+
+
+### One-way SSL authentication
+
+When the server certificate is signed using the certificate chain that uses a root CA known in the JavaScript trust store, setting the `ssl` option enables one-way SSL authentication.
+
+
+For instance, 
+
 ```javascript
-   const mariadb = require('mariadb');
-   mariadb
-     .createConnection({
-       host: 'myHost.com', 
-       ssl: true, 
-       user: 'myUser', 
-       password:'MyPwd', 
-       database:'db_name'
-     }).then(conn => {})
+const mariadb = require('mariadb');
+mariadb
+ .createConnection({
+   host: 'myHost.com', 
+   ssl: true, 
+   user: 'myUser', 
+   password:'MyPwd', 
+   database:'db_name'
+ }).then(conn => {})
 ```
 
-If server use a selft signed certificate or use intermediate certificates, there is 2 differents possibiliy : 
-* indicate connector to trust all certificates using option `rejectUnauthorized` *(NOT TO USE IN PRODUCTION)*
-    
+When the server uses a self-signed certificate or uses an intermediate certificate, there are two different possibilities:
+
+In non-production environments, you can tell the Connector to trust all certificates by setting `rejectUnauthorized` to `false`.  Do **NOT** use this in production.
+
 ```javascript
-   //connecting
-   mariadb
-     .createConnection({
-       host: 'myHost.com', 
-       ssl: {
-         rejectUnauthorized: false
-       }, 
-       user: 'myUser', 
-       password:'MyPwd', 
-     }).then(conn => {})
-```
-* provide the certificate chain to driver
-```javascript
-   const fs = require("fs");
-   const mariadb = require('mariadb');
-
-   //reading certificates from file
-   const serverCert = [fs.readFileSync("server.pem", "utf8")];
-
-   //connecting
-   mariadb
-     .createConnection({
-       user: "myUser",
-       host: "myHost.com",
-       ssl: {
-         ca: serverCert
-       }
-     }).then(conn => {})
-```
-### Force use of specific TLS protocol / ciphers
-
-A specific TLS protocol can be forced using option `secureProtocol`, and cipher using `ciphers`.
-
-Example to connect using TLSv1.2 :
-```javascript
-   //connecting
-   mariadb
-     .createConnection({ 
-       user:"myUser", 
-       host: "myHost.com",
-       ssl: {
-         ca: serverCert,
-         secureProtocol: "TLSv1_2_method",
-         ciphers:
-           "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"        
-       }
-     }).then(conn => {})
+//connecting
+mariadb
+ .createConnection({
+   host: 'myHost.com', 
+   ssl: {
+	 rejectUnauthorized: false
+   }, 
+   user: 'myUser', 
+   password:'MyPwd', 
+ }).then(conn => {})
 ```
 
-See [possible protocol](https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
+A more secure alternative is to provide the certificate chain to the Connector.
+
+```javascript
+const fs = require("fs");
+const mariadb = require('mariadb');
+
+//reading certificates from file
+const serverCert = [fs.readFileSync("server.pem", "utf8")];
+
+//connecting
+mariadb
+ .createConnection({
+   user: "myUser",
+   host: "myHost.com",
+   ssl: {
+	 ca: serverCert
+   }
+ }).then(conn => {})
+```
+
+
+#### Using specific TLS Protocols or Ciphers
+
+In situations where you don't like the default TLS protocol or cipher or where you would like to use a specific version, you force he Connector to use the one you want using the `secureProtocol` and `cipher` options.
+
+For instance, say you want to connect using TLS version 1.2:
+
+```javascript
+//connecting
+mariadb
+ .createConnection({ 
+   user:"myUser", 
+   host: "myHost.com",
+   ssl: {
+	 ca: serverCert,
+	 secureProtocol: "TLSv1_2_method",
+	 ciphers:
+	   "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"        
+   }
+ }).then(conn => {})
+```
+
+For more information on what's available, see [possible protocol](https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
  
  
-## Two-way SSL authentication
+### Two-way SSL authentication
 
-Mutual SSL authentication or certificate based mutual authentication refers to two parties authenticating each other through verifying the provided digital certificate so that both parties are assured of the other's identity.
-To enable mutual authentication, the user must be created with `REQUIRE X509` so the server asks the driver for client certificates. 
+Mutual SSL authentication or certificate-based mutual authentication refers to two parties authenticating each other by verifying the provided digital certificates.  This allows both parties to be assured of the other's identity.  In order to use mutual authentication, you must set the `REQUIRE X509` option in the `GRANT` statement.  For instance,
 
-**If the user is not set with `REQUIRE X509`, only one way authentication will be done**
-
-The client (driver) must then have its own certificate too (and related private key). 
-If the driver doesn't provide a certificate, and the user used to connect is defined with `REQUIRE X509`, 
-the server will then return a basic "Access denied for user". 
-
-It may be interesting to check how the user is defined with `select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = 'myUser'`because server might required some verification.
-
-Example:
 ```sql
-    CREATE USER 'X509testUser'@'%';
-    GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509;
+GRANT ALL ON company.* TO 'johnSmith'@'%' REQUIRE X509;
 ```
+
+This option causes the server to ask the Connector for a client certificate.  **If the user is not set with `REQUIRE X509`, the server defaults to one-way authentication**
+
+When using mutual authentication, you need a certificate, (and its related private key), for the Connector as well as the server.  If the Connector doesn't provide a certificate and the user is set to `REQUIRE X509`, the server returns a basic `Access denied for user` message.
+
+In the event that you would like to see how users are defined, you can find this information by querying the `mysql.user` table on the server.  For instance, say you wanted information on the `johnSmith` user.
+
+```sql
+SELECT ssl_type, ssl_cipher, x509_subject 
+FROM mysql.user
+WHERE User = 'johnSmith';
+```
+
+You can test it by creating a user with `REQUIRE X509` for testing:
+
+```sql
+CREATE USER 'X509testUser'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' REQUIRE X509;
+```
+Then use its credentials in your application:
 
 ```javascript
-   const fs = require("fs");
-   const mariadb = require('mariadb');
+const fs = require("fs");
+const mariadb = require('mariadb');
 
-   //reading certificates from file
-   const serverCert = [fs.readFileSync("server.pem", "utf8")];
-   const clientKey = [fs.readFileSync("client.key", "utf8")];
-   const clientCert = [fs.readFileSync("client.pem", "utf8")];
+//reading certificates from file
+const serverCert = [fs.readFileSync("server.pem", "utf8")];
+const clientKey = [fs.readFileSync("client.key", "utf8")];
+const clientCert = [fs.readFileSync("client.pem", "utf8")];
 
-   //connecting
-   mariadb
-     .createConnection({ 
-       user:"X509testUser", 
-       host: "mariadb.example.com",
-       ssl: {
-         ca: serverCert,
-         cert: clientCert,
-         key: clientKey
-       }
-     }).then(conn => {})
+//connecting
+mariadb
+ .createConnection({ 
+   user:"X509testUser", 
+   host: "mariadb.example.com",
+   ssl: {
+	 ca: serverCert,
+	 cert: clientCert,
+	 key: clientKey
+   }
+ }).then(conn => {})
 ```
 
-### Using keystore
+#### Using Keystores
 
-Keystore permit storing private key and certificate chain encrypted with a password in a file. 
+Keystores allow you to store private keys and certificate chains encrypted with a password to file.   For instance, using OpenSSL you can generate a keystore using PKCS12 format: 
 
-Generating an encrypted keystore in PKCS12 format  :
 ```
-  # generate a keystore with the client cert & key
-  openssl pkcs12 \
-    -export \
-    -in "${clientCertFile}" \
-    -inkey "${clientKeyFile}" \
-    -out "${keystoreFile}" \
-    -name "mariadbAlias" \
-    -passout pass:kspass
+$ openssl pkcs12 \
+	-export \
+	-in "${clientCertFile}" \
+	-inkey "${clientKeyFile}" \
+	-out "${keystoreFile}" \
+	-name "mariadbAlias" \
+	-passout pass:kspass
 ```    
 
-```javascript
-   const fs = require("fs");
-   const mariadb = require('mariadb');
+You can then use the keystore in your application:
 
-   //reading certificates from file (keystore must be read as binary)
-   const serverCert = fs.readFileSync("server.pem", "utf8");
-   const clientKeystore = fs.readFileSync("keystore.p12");
-    
-   //connecting
-   mariadb.createConnection({ 
-     user:"X509testUser", 
-     host: "mariadb.example.com",
-     ssl: {
-       ca: serverCert,
-       pfx: clientKeystore,
-       passphrase: "kspass"
-     }
-   }).then(conn => {});
+```javascript
+const fs = require("fs");
+const mariadb = require('mariadb');
+
+//reading certificates from file (keystore must be read as binary)
+const serverCert = fs.readFileSync("server.pem", "utf8");
+const clientKeystore = fs.readFileSync("keystore.p12");
+
+//connecting
+mariadb.createConnection({ 
+ user:"X509testUser", 
+ host: "mariadb.example.com",
+ ssl: {
+   ca: serverCert,
+   pfx: clientKeystore,
+   passphrase: "kspass"
+ }
+}).then(conn => {});
 ```
-    
-# Other options 
+
+## Other Options 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **charset** | This define the protocol charset used with server. There is very few reason for micro optimization only. you must really know what you are doing |*string* |UTF8MB4_UNICODE_CI| 
-| **dateStrings** | indicate if date must be retrieved as string (not as date)  |*boolean* |false| 
-| **debug** |  log all exchanges with servers. display in hexa|*boolean* |false| 
-| **foundRows** | active, update number correspond to update rows. disable indicate real rows changed | *boolean* |true|
-| **multipleStatements** | Permit multi-queries like "insert into ab (i) values (1); insert into ab (i) values (2)". This may be **security risk** in case of sql injection|*boolean* |false|
-| **namedPlaceholders** | Permit using named placeholder |*boolean* |false|
-| **permitLocalInfile** |permit using LOAD DATA INFILE command.<br/> this (ie: loading a file from the client) may be a security problem :<br/>A "man in the middle" proxy server can change the actual file requested from the server so the client will send a local file to this proxy. if someone can execute a query from the client, he can have access to any file on the client (according to the rights of the user running the client process) |*boolean* |false|
-| **timezone** | force using indicated timezone, not current node.js timezone. possible value are 'Z' (fot UTC), 'local' or '±HH:MM' format |*string* |
-| **nestTables** | resultset are presented by table to avoid results with colliding fields. more example in query description.  |*boolean* |false|
-| **pipelining** | query are send one by one but without waiting the results of previous entry ([detail information](/documentation/pipelining.md))|*boolean* |true|
-| **trace** | will add the stack trace at the time of query creation to error stacktrace,  permitting easy identification of the part of code that issue the query. This is not activate by default due because stack creation cost|*boolean* |false|
-| **typeCast** | permit casting results type |*function* |
-| **connectAttributes** | if true, some information (client name, version, os, node version, ...) will be send to performance schema (see [connection attributes](https://mariadb.com/kb/en/library/performance-schema-session_connect_attrs-table/) ). if set, JSON attributes will be additionally sent to default one |*boolean/json* |false|
-| **metaAsArray** | compatibility option so promise return an array object [rows, metadata] and not rows with property meta for compatibility  |*boolean* |false|
+| **charset** | 
+Protocol character set used with the server.  It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4_UNICODE_CI| 
+| **dateStrings** | 
+Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
+| **debug** |  Logs all exchanges with the server.  Displays in hexa.|*boolean* |false| 
+| **foundRows** | 
+When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
+| **multipleStatements** | 
+Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
+| **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
+| **permitLocalInfile** |
+Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to executing a query on the client gives you access to files on the client.  |*boolean* |false|
+| **timezone** | Forces use of the indicated timezone, rather than the current Node.js timezone.  Possible values are `Z` for UTC, `local` or `±HH:MM` format |*string* |
+| **nestTables** | Presents result-sets by table to avoid results with colliding fields.  See the `query()` description for more information. |*boolean* |false|
+| **pipelining** | 
+Sends queries one by one without waiting on the results of the previous entry.  For more information, see [Pipelining](/documentation/pipelining.md) |*boolean* |true|
+| **trace** | Adds the stack trace at the time of query creation to the error stack trace, making it easier to identify the  part of the code that issued the query.  Note: This feature is disabled by default due to the performance cost of stack creation.  Only turn it on when you need to debug issues.  |*boolean* |false|
+| **typeCast** | Allows you to cast result types.  |*function* |
+| **connectAttributes** | 
+Sends information, (client name, version, operating system, Node.js version, and so on) to the [Performance Schema](https://mariadb.com/kb/en/library/performance-schema-session_connect_attrs-table/). When enabled, the Connector sends JSON attributes in addition to the defaults.  |*boolean/json* |false|
+| **metaAsArray** | 
+Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property. |*boolean* |false|
 
 ## F.A.Q.
 
 #### error Hostname/IP doesn't match certificate's altnames
-Client will verify certificate SAN (subject alternatives names) and CN to ensure certificate correspond to the hostname. 
-If certificate's SAN /CN does not correspond to the `host` option, you will have an error like : 
+
+Clients verify certificate SAN (subject alternative names) and CN to ensure that the certificate corresponds to the hostname.  If the certificate's SAN/CN does not correspond to the `host` option, it returns an error like:
+
 ```
 Hostname/IP doesn't match certificate's altnames: "Host: other.example.com. is not cert's CN: mariadb.example.com"
 ```
-solution : correct `host` value to correspond certificate
+To fix this, correct the `host` value to correspond to the host identified in the certificate.
+
+
+
+
