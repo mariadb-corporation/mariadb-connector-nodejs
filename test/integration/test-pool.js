@@ -67,16 +67,22 @@ describe("Pool", () => {
   });
 
   it("pool getConnection timeout", function(done) {
-    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
-    pool.query("SELECT SLEEP(2)").then(() => {
-      pool.end();
-    });
+    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
+    let errorThrown = false;
+    pool
+      .query("SELECT SLEEP(1)")
+      .then(() => {
+        pool.end();
+        assert.isOk(errorThrown);
+        done();
+      })
+      .catch(done);
     pool.getConnection().catch(err => {
       assert(err.message.includes("retrieve connection from pool timeout"));
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.errno, 45028);
       assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-      done();
+      errorThrown = true;
     });
   });
 
@@ -104,29 +110,30 @@ describe("Pool", () => {
       assert.equal(pool.idleConnections(), 10);
       assert.equal(pool.connectionRequests(), 0);
 
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 10000; i++) {
         pool
-          .query("SELECT 1")
+          .query("SELECT ? as a", [i])
           .then(rows => {
-            assert.deepEqual(rows, [{ "1": 1 }]);
+            assert.deepEqual(rows, [{ a: i }]);
           })
           .catch(done);
       }
-
-      assert.equal(pool.activeConnections(), 10);
-      assert.equal(pool.totalConnections(), 10);
-      assert.equal(pool.idleConnections(), 0);
-      assert.equal(pool.connectionRequests(), 90);
-
-      setTimeout(() => {
-        pool.end();
-
-        assert.equal(pool.activeConnections(), 0);
-        assert.equal(pool.totalConnections(), 0);
+      process.nextTick(() => {
+        assert.equal(pool.activeConnections(), 10);
+        assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 0);
-        assert.equal(pool.connectionRequests(), 0);
-        done();
-      }, 5000);
+        assert.equal(pool.connectionRequests(), 9990);
+
+        setTimeout(() => {
+          pool.end();
+
+          assert.equal(pool.activeConnections(), 0);
+          assert.equal(pool.totalConnections(), 0);
+          assert.equal(pool.idleConnections(), 0);
+          assert.equal(pool.connectionRequests(), 0);
+          done();
+        }, 5000);
+      });
     }, 8000);
   });
 
@@ -142,25 +149,28 @@ describe("Pool", () => {
       pool
         .getConnection()
         .then(conn => {
-          return conn.query("KILL " + conn.threadId);
-        })
-        .catch(err => {
-          assert.equal(err.sqlState, 70100);
-          setTimeout(() => {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 1);
+          assert.equal(pool.activeConnections(), 1);
+          assert.equal(pool.totalConnections(), 2);
+          assert.equal(pool.idleConnections(), 1);
+          assert.equal(pool.connectionRequests(), 0);
+
+          conn.query("KILL CONNECTION_ID()").catch(err => {
+            assert.equal(err.sqlState, 70100);
+            assert.equal(pool.activeConnections(), 1);
+            assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 1);
             assert.equal(pool.connectionRequests(), 0);
-          }, 1);
-          setTimeout(() => {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 2);
-            assert.equal(pool.idleConnections(), 2);
-            assert.equal(pool.connectionRequests(), 0);
-            pool.end();
-            done();
-          }, 500);
-        });
+            conn.end().then(() => {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 1);
+              assert.equal(pool.idleConnections(), 1);
+              assert.equal(pool.connectionRequests(), 0);
+              pool.end();
+              done();
+            });
+          });
+        })
+        .catch(done);
     }, 500);
   });
 

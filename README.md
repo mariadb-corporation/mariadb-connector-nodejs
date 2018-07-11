@@ -13,7 +13,7 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-MariaDB and MySQL client, 100% javascript, compatible with node 6+, with promise API.
+MariaDB and MySQL client, 100% javascript, compatible with node 7.6+, with promise API.
 
 Why a new client when having already nice and popular [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) client ? <br/>
 To offer new functionality like insert streaming, pipelining, and make no compromise on performance. 
