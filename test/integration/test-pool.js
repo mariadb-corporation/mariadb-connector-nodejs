@@ -220,22 +220,19 @@ describe("Pool", () => {
 
           pool.query("do 1");
           pool.query("do 1").then(() => {
-            setImmediate(() => {
-              //waiting for rollback to end
+            assert.equal(pool.activeConnections(), 1);
+            assert.equal(pool.totalConnections(), 1);
+            assert.equal(pool.idleConnections(), 0);
+            assert.equal(pool.taskQueueSize(), 0);
+            setTimeout(() => {
+              //connection recreated
               assert.equal(pool.activeConnections(), 0);
-              assert.equal(pool.totalConnections(), 1);
-              assert.equal(pool.idleConnections(), 1);
+              assert.equal(pool.totalConnections(), 2);
+              assert.equal(pool.idleConnections(), 2);
               assert.equal(pool.taskQueueSize(), 0);
-              setTimeout(() => {
-                //connection recreated
-                assert.equal(pool.activeConnections(), 0);
-                assert.equal(pool.totalConnections(), 2);
-                assert.equal(pool.idleConnections(), 2);
-                assert.equal(pool.taskQueueSize(), 0);
-                pool.end();
-                done();
-              }, 250);
-            });
+              pool.end();
+              done();
+            }, 250);
           });
         });
       });

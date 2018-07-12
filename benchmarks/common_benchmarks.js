@@ -58,6 +58,8 @@ function Bench() {
   const config = conf.baseConfig;
   config.charsetNumber = 224;
   config.trace = false;
+
+  const poolConfig = Object.assign({connectionLimit: 10},config);
   // config.debug = true;
   // if (!mariasql && process.platform === "win32") {
   //   config.socketPath = "\\\\.\\pipe\\MySQL";
@@ -76,6 +78,7 @@ function Bench() {
       .createConnection(config)
       .then(conn => {
         connList["PROMISE_MYSQL"].drv = conn;
+        connList["PROMISE_MYSQL"].pool = promiseMysql.createPool(poolConfig);
         dbReady("promise-mysql", this.driverLen);
       })
       .catch(err => {
@@ -113,6 +116,7 @@ function Bench() {
       .then(conn => {
         connList["PROMISE_MYSQL2"].drv = conn;
         conn.on("error", err => console.log("driver mysql2 promise error :" + err));
+        connList["PROMISE_MYSQL2"].pool = promiseMysql2.createPool(poolConfig);
         dbReady("promise mysql2", this.driverLen);
       })
       .catch(err => {
@@ -134,6 +138,7 @@ function Bench() {
     .then(conn => {
       connList["PROMISE_MARIADB"].drv = conn;
       conn.on("error", err => console.log("driver mariadb promise error :" + err));
+      connList["PROMISE_MARIADB"].pool = mariadb.createPool(poolConfig);
       dbReady("promise-mariadb", this.driverLen);
     })
     .catch(err => {
@@ -235,13 +240,21 @@ Bench.prototype.end = function(bench) {
   bench.displayReport();
 };
 
-Bench.prototype.endConnection = function(conn) {
+Bench.prototype.endConnection = async function(conn) {
   try {
     //using destroy, because MySQL driver fail when using end() for windows named pipe
     conn.drv.destroy();
   } catch (err) {
     console.log("ending error for connection '" + conn.desc + "'");
     console.log(err);
+  }
+  if (conn.pool) {
+    try {
+      await conn.pool.end();
+    } catch (err) {
+      console.log("ending error for pool '" + conn.desc + "'");
+      console.log(err);
+    }
   }
 };
 
@@ -321,9 +334,9 @@ Bench.prototype.fill = function(val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, conn) {
+Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, usePool, conn) {
   const self = this;
-  const addTest = getAddTest(self, this.suite, fct, this.minSamples, title, displaySql, onComplete);
+  const addTest = getAddTest(self, this.suite, fct, this.minSamples, title, displaySql, onComplete, usePool);
 
   if (conn) {
     addTest(conn, conn.desc);
@@ -366,15 +379,15 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, co
   }
 };
 
-const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onComplete) {
+const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
   return function(conn, name) {
     suite.add({
       name: title + " - " + name,
       fn: function(deferred) {
-        fct.call(self, conn.drv, deferred);
+        fct.call(self, usePool ? conn.pool : conn.drv, deferred);
       },
       onComplete: () => {
-        if (onComplete) onComplete.call(self, conn.drv);
+        if (onComplete) onComplete.call(self, usePool ? conn.pool : conn.drv);
       },
       minSamples: minSamples,
       defer: true,
