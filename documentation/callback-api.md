@@ -1,12 +1,18 @@
 
 # Documentation
 
-There is 2 different connection implementation Promise (default) and callback for compatibility with mysql/mysql2 API.
-The following documentation describe the callback API.
+There are two different connection implementation: one, the default, uses Promise and the other uses Callback, allowing for compatibility with the mysql and mysql2 API's.  The documentation provided on this page follows Callback.  If you want information on the Promise API, see the  [README](../README.md). 
 
-# Quick Start
 
-    npm install mariadb
+## Quick Start
+
+Install the mariadb Connector using npm
+
+```
+$ npm install mariadb
+```
+
+You can then uses the Connector in your application code with the Callback API.  Fir instance,
 
 ```js
   const mariadb = require('mariadb/callback');
@@ -21,46 +27,54 @@ The following documentation describe the callback API.
 ```
 
 
-## Install
+## Installation
 
-Using npm:
+In order to use the Connector you first need to install it on your system.  The installation process for Promise and Callback API's is managed with the same package through npm. 
 
-```javascript
-npm install mariadb
+```
+$ npm install mariadb
 ```
 
-import is not `require('mariadb')`, but `require('mariadb/callback')`
+To use the Connector, you need to import the package into your application code.  Given that the Callback API is not the default, the `require()` statement is a little different.
+
+```js
+const mariadb = require('mariadb/callback');
+```
+
+This initializes the constant `mariadb`, which is set to use the Callback API rather than the default Promise API.
 
 
 ## Callback API
 
-Callback API is similar to the Promise one, with this difference : 
-
-Create Connection
-
-* [`createConnection(options) → Connection`](#createconnectionoptions--connection) : create connection
-
-Connection : 
-
-* [`query(sql[, values][, callback]) → Emitter`](#querysql-values-callback---emitter): execute a [query](#query).
-* [`beginTransaction([callback])`](#begintransaction-callback): begin transaction
-* [`commit([callback])`](#commit-callback): commit current transaction if any
-* [`rollback([callback])`](#rollback-callback): rollback current transaction if any
-* [`changeUser(options[, callback])`](#changeuseroptions-callback): change current connection user
-* [`ping([callback]) → Promise`](#ping-callback): send an empty packet to server to check that connection is active
-* [`end([callback])`](#end-callback): gracefully end connection
+The Connector with the Callback API is similar to the one using Promise, but with a few differences.
 
 
-## `createConnection(options) → Connection`
+**Create Connection:**
 
-> * `options`: *JSON* same option than Promise API. See [option documentation](/documentation/connection-options.md) for complete list.  
+* [`createConnection(options) → Connection`](#createconnectionoptions--connection): Creates a connection to a MariaDB Server.
+
+
+**Connection:**
+
+* [`query(sql[, values][, callback]) → Emitter`](#querysql-values-callback---emitter): Executes a [query](#query).
+* [`beginTransaction([callback])`](#begintransaction-callback): Begins a transaction
+* [`commit([callback])`](#commit-callback): Commit the current transaction, if any.
+* [`rollback([callback])`](#rollback-callback): Rolls back the current transaction, if any.
+* [`changeUser(options[, callback])`](#changeuseroptions-callback): Changes the current connection user.
+* [`ping([callback]) → Promise`](#ping-callback): Sends an empty packet to the server to check that connection is active.
+* [`end([callback])`](#end-callback): Gracefully closes the connection.
+
+
+### `createConnection(options) → Connection`
+
+> * `options`: *JSON* Uses the same options as Promise API. For a complete list, see [option documentation](/documentation/connection-options.md).
 >
 >Returns a Connection object
 
-Create a new connection.
-Difference compared to Promise API is that it return a Connection object, not a Promise that resolve with a Connection Object. 
+Creates a new connection.
 
-Example : 
+The difference between this method and the same with the Promise API is that this method returns a `Connection` object, rather than a Prromise that resolves to a `Connection` object.
+
 ```javascript
 const mariadb = require('mariadb/callback');
 const conn = mariadb.createConnection({
@@ -76,67 +90,66 @@ conn.connect(err => {
 });
 ```
  
-## `query(sql[, values][, callback])` -> `Emitter`
+### `query(sql[, values][, callback])` -> `Emitter`
 
-> * `sql`: *string | JSON* sql string value or JSON object to supersede default connections options.
->           if JSON object, must have a "sql" property
->           example : {dateStrings:true, sql:'SELECT now()'}
-> * `values`: *array | object* placeholder values. usually an array, but in case of only one placeholder, can be given as is. 
-> * `callback`: *function* callback function with arguments (error, results, metadata).
+> * `sql`: *string | JSON* An SQL string value or JSON object to supersede default connections options.  If  aJSON object, it must have an `"sql"` property.  For example: `{dateStrings:true, sql:'SELECT NOW()'}`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of just one placeholder, it can be given as is. 
+> * `callback`: *function* Callback function with arguments (error, results, metadata).
 >
->Returns an Emitter object that emit different type of event:
->  * error : emit an [Error](#error) object when query failed.
->  * columns : emit when columns metadata from result-set are received (parameter is an array of [Metadata fields](#metadata-field)).
->  * data : emit each time a row is received (parameter is a row). 
->  * end : emit query ended (no parameter). 
+>Returns an Emitter object that can emit four different types of event:
+>  * error : Emits an [Error](#error) object, when query failed.
+>  * columns : Emits when columns metadata from result-set are received (parameter is an array of [Metadata fields](#metadata-field)).
+>  * data : Emits each time a row is received (parameter is a row). 
+>  * end : Emits when the query ends (no parameter). 
+
+Sends query to the database with a Callback function to call when done. 
+
+In cases where the query returns huge result-sets, this means that all data is stored in  memory.  You may find it more practical to use the `Emitter` object to handle the rows one by one, to avoid overloading memory resources.
 
 
-Send a query to database with callback function when done. 
-For huge result-set, that mean stored all data in memory, the preferred way is then to use the Emitter object to handle a row one by one, to avoid overloading memory.     
+For example, issuing a query with an SQL string:
 
-example with sql string:
 ```js
-   connection.query("SELECT now()", (err, rows, meta) => {
-      if (err) throw err;
-      console.log(rows); //[ { 'now()': 2018-07-02T17:06:38.000Z } ]
-   });
+connection.query("SELECT NOW()", (err, rows, meta) => {
+  if (err) throw err;
+  console.log(rows); //[ { 'now()': 2018-07-02T17:06:38.000Z } ]
+});
 ```
 
-example with json options:
+Using JSON objects:
+
 ```js
-    connection.query({dateStrings:true, sql:'SELECT now()'}, (err, rows, meta) => {
-      if (err) throw err;
-      console.log(rows); //[ { 'now()': '2018-07-02 19:06:38' } ]
-   });
+connection.query({dateStrings:true, sql:'SELECT now()'}, (err, rows, meta) => {
+  if (err) throw err;
+  console.log(rows); //[ { 'now()': '2018-07-02 19:06:38' } ]
+});
 ```
 
-### Placeholder
+#### Placeholder
 
-To avoid SQL Injection, queries permit using question mark place holder. Values will be escaped accordingly to their type.
-Values can be of native javascript type, Buffer, Readable or object with toSqlString method. if not object will be stringified (JSON.stringify). 
+To avoid SQL Injection attacks, queries permit the use of a question mark as a placeholder.  The Connector escapes values according to their type.  You can use any native JavaScript type, Buffer, Readable or any object with a `toSqlString` method in these values.  All other objects are stringified using the `JSON.stringify` method.
 
-For streaming, objects that implement Readable will be streamed automatically. 
-You may look at 2 server option that might interfere : 
-- [@@net_read_timeout](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout) : Query must be received totally sent before reaching this timeout (default to 30s)
-- [@@max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) : Maximum data size send to server. 
-  
+The Connector automatically streams objects that implement Readable.  In these cases, check the values on the following server system variables, as they may interfere:
 
-Example :  
+- [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout): The server must receive the query in full from the Connector before timing out.  The default value for this system variable is 30 seconds.
+- [`max_allowed_packet`](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet): Using this system variable you can control the maximum amount of data the Connector can send to the server.
+
+
 ```js
-    //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
-    connection.query(
-      "INSERT INTO someTable VALUES (?, ?, ?)",
-      [1, Buffer.from("c327a97374", "hex"), "mariadb"],
-      (err, result) => {
-        if (err) throw err;
-        console.log(result);
-        //log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
-      }
-    );
+// Sends INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
+connection.query(
+  "INSERT INTO someTable VALUES (?, ?, ?)",
+  [1, Buffer.from("c327a97374", "hex"), "mariadb"],
+  (err, result) => {
+	if (err) throw err;
+	console.log(result);
+	//log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
+  }
+);
 ```
 
+You can also issue the same query using Streaming.
 
-Example streaming: 
 ```javascript
 const https = require("https");
 https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
@@ -149,51 +162,49 @@ https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-s
 )
 ```
 
-### Query result
+#### Query Results
 
-There is 2 different kind of results depending on queries. 
-For insert/delete/update commands, results is a JSON object with the following properties: 
+Queries issued from the Connector return two different kinds of results: a JSON object and an array, depending on the type of query you issue.  Queries that write to the database, such as `INSERT`, `DELETE` and `UPDATE` commands return a JSON object with the following properties:
 
-* affectedRows: number of affected rows
-* insertId: last auto increment insert id
-* warningStatus: indicating if query ended with warning. 
+* `affectedRows`: Indicates the number of rows affected by the query.
+* `insertId`: Shows the last auto-increment value from an `INSERT`.
+* `warningStatus`: Indicates whether the query ended with a warning.
 
 ```js
-    connection.query(
-      "CREATE TABLE animals (" +
-        "id MEDIUMINT NOT NULL AUTO_INCREMENT," +
-        "name VARCHAR(30) NOT NULL," +
-        "PRIMARY KEY (id))",
-      err => {
-        connection.query("INSERT INTO animals(name) value (?)", ["sea lions"], (err, res) => {
-          if (err) throw err;
-          console.log(res);
-          //log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
-        });
-      }
-    );
+connection.query(
+  "CREATE TABLE animals (" +
+	"id MEDIUMINT NOT NULL AUTO_INCREMENT," +
+	"name VARCHAR(30) NOT NULL," +
+	"PRIMARY KEY (id))",
+  err => {
+	connection.query("INSERT INTO animals(name) value (?)", ["sea lions"], (err, res) => {
+	  if (err) throw err;
+	  console.log(res);
+	  //log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
+	});
+  }
+);
 ```
 
-#### Result-set array
+##### Result-set array
 
-For result-set, an array representing the data of each rows. Data results format can differ according to options nestTables and rowsAsArray.
-default return an array containing a json object of each row.
+Queries issued from the Connector return two different kinds of results: a JSON object and an array, depending on the type of query you issue.  When the query returns multiple rows, the Connector returns an array, representing the data for each row in the array.  It also returns a `meta` object, containing query metadata.
 
-Examples :
+You can formt the data results using the `nestTables` and `rowsAsArray` options.  By default, it returns a JSON object for each row.
+
 ```javascript
-    connection.query('select * from animals', (err, res, meta) => {
-      console.log(res); 
-      // [ 
-      //    { id: 1, name: 'sea lions' }, 
-      //    { id: 2, name: 'bird' }, 
-      //    meta: [ ... ]
-      // ]  
-    });
+connection.query('select * from animals', (err, res, meta) => {
+  console.log(res); 
+  // [ 
+  //    { id: 1, name: 'sea lions' }, 
+  //    { id: 2, name: 'bird' }, 
+  //    meta: [ ... ]
+  // ]  
+});
 ```
 
-### Streaming
+#### Streaming
 
-example : 
 ```javascript
 connection.query("SELECT * FROM mysql.user")
       .on("error", err => {
@@ -210,28 +221,25 @@ connection.query("SELECT * FROM mysql.user")
       });
 ```
 
-## `beginTransaction([callback])`
+### `beginTransaction([callback])`
 
-> * `callback`: *function* callback function with argument [Error](../README.me#error) if any error.
+> * `callback`: *function* Callback function with argument [Error](../README.me#error) if any error.
 
-Begin a new transaction.
+Begins a new transaction.
 
 ## `commit([callback])`
 
 > * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
 
-Commit current transaction, if there is any active.
-(Driver does know current transaction state: if no transaction is active, no commands will be send to database) 
+Commits the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  When there isn't an active transaction, this method sends no commands to the server.
 
 
-## `rollback([callback])`
+### `rollback([callback])`
 
-> * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
-Rollback current transaction, if there is any active.
-(Driver does know current transaction state: if no transaction is active, no commands will be send to database) 
+Rolls back the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  Where there isn't an active transaction, this method sends no commands to the server.
 
-Example : 
 ```javascript
 conn.beginTransaction(err => {
   if (err) {
@@ -262,15 +270,13 @@ conn.beginTransaction(err => {
 });
 ```
  
-## `changeUser(options[, callback])`
+### `changeUser(options[, callback])`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
 > * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
 
-This permit to resets the connection and re-authenticates with the given credentials. 
-This is equivalent of creating a new connection with a new user, reusing open socket. 
+Resets the connection and re-authenticates with the given credentials.  This is the equivalent of creating a new connection with a new user, reusing the existing open socket.
 
-Example : 
 ```javascript
 conn.changeUser({user: 'changeUser', password: 'mypassword'}, err => {
   if (err) {
@@ -281,13 +287,12 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'}, err => {
 });
 ```
 
-## `ping([callback])`
+### `ping([callback])`
 
-> * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
-Send to database a packet containing one byte to check that the connection is active.
+Sends a one byte packet to the server to check that the connection is still active.
 
-Example : 
 ```javascript
 conn.ping(err => {
   if (err) {
@@ -298,13 +303,12 @@ conn.ping(err => {
 })
 ```
 
-## `end([callback])`
+### `end([callback])`
 
-> * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
-Gracefully end the connection. Connector will wait for current query, then close connection. 
+Closes the connection gracefully.  That is, the Connector waits for current queries to finish their execution then closes the connection.
 
-Example : 
 ```javascript
 conn.end(err => {
   //handle error
