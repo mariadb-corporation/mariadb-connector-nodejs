@@ -304,28 +304,20 @@ mariadb.createConnection({
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **charset** | 
-Protocol character set used with the server.  It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4_UNICODE_CI| 
-| **dateStrings** | 
-Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
+| **charset** | Protocol character set used with the server.  It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4_UNICODE_CI| 
+| **dateStrings** | Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
 | **debug** |  Logs all exchanges with the server.  Displays in hexa.|*boolean* |false| 
-| **foundRows** | 
-When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
-| **multipleStatements** | 
-Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
+| **foundRows** | When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
+| **multipleStatements** | Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
 | **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
-| **permitLocalInfile** |
-Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to executing a query on the client gives you access to files on the client.  |*boolean* |false|
+| **permitLocalInfile** | Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to executing a query on the client gives you access to files on the client.  |*boolean* |false|
 | **timezone** | Forces use of the indicated timezone, rather than the current Node.js timezone.  Possible values are `Z` for UTC, `local` or `±HH:MM` format |*string* |
 | **nestTables** | Presents result-sets by table to avoid results with colliding fields.  See the `query()` description for more information. |*boolean* |false|
-| **pipelining** | 
-Sends queries one by one without waiting on the results of the previous entry.  For more information, see [Pipelining](/documentation/pipelining.md) |*boolean* |true|
+| **pipelining** | Sends queries one by one without waiting on the results of the previous entry.  For more information, see [Pipelining](/documentation/pipelining.md) |*boolean* |true|
 | **trace** | Adds the stack trace at the time of query creation to the error stack trace, making it easier to identify the  part of the code that issued the query.  Note: This feature is disabled by default due to the performance cost of stack creation.  Only turn it on when you need to debug issues.  |*boolean* |false|
 | **typeCast** | Allows you to cast result types.  |*function* |
-| **connectAttributes** | 
-Sends information, (client name, version, operating system, Node.js version, and so on) to the [Performance Schema](https://mariadb.com/kb/en/library/performance-schema-session_connect_attrs-table/). When enabled, the Connector sends JSON attributes in addition to the defaults.  |*boolean/json* |false|
-| **metaAsArray** | 
-Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property. |*boolean* |false|
+| **connectAttributes** | Sends information, (client name, version, operating system, Node.js version, and so on) to the [Performance Schema](https://mariadb.com/kb/en/library/performance-schema-session_connect_attrs-table/). When enabled, the Connector sends JSON attributes in addition to the defaults.  |*boolean/json* |false|
+| **metaAsArray** | Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property. |*boolean* |false|
 
 ## F.A.Q.
 

@@ -244,7 +244,7 @@ For instance, on Unix a connection might look like this:
 
 ```javascript
 const mariadb = require('mariadb');
-mariadb.createConnection({socketPath: '/tmp/mysql.sock'})
+mariadb.createConnection({ socketPath: '/tmp/mysql.sock', user: 'root' })
     .then(conn => { ... })
     .catch(err => { ... });
 ```
@@ -253,7 +253,7 @@ It has a similar syntax on Windows:
 
 ```javascript
 const mariadb = require('mariadb');
-mariadb.createConnection({socketPath: '\\\\.\\pipe\\MySQL'})
+mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' })
     .then(conn => { ... })
     .catch(err => { ... });
 ```
@@ -409,7 +409,7 @@ connection
 Using this option causes the Connector to format rows in the result-set  as arrays, rather than JSON objects.  Doing so allows you to save memory and avoid having the Connector parse [column metadata](#column-metadata) completely.  It is the fastest row format, (by 5-10%), with a local database.
 
 Default format : `{ id: 1, name: 'sea lions' }`
-with option `"rowsAsArray" : [ 1, 'sea lions' ]`
+with option `rowsAsArray` : `[ 1, 'sea lions' ]`
 
 ```javascript
 connection.query({ rowsAsArray: true, sql: 'select * from animals' })
