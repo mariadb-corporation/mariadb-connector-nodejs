@@ -87,7 +87,9 @@ describe("Pool", () => {
   });
 
   it("pool query timeout", function(done) {
+    this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
+    const initTime = new Date().getTime();
     pool.query("SELECT SLEEP(2)").then(() => {
       pool.end();
     });
@@ -96,8 +98,32 @@ describe("Pool", () => {
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.errno, 45028);
       assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-      done();
     });
+    pool.query("SELECT 2").catch(err => {
+      assert(err.message.includes("retrieve connection from pool timeout"));
+      assert.equal(err.sqlState, "HY000");
+      assert.equal(err.errno, 45028);
+      assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
+      const elapse = new Date().getTime() - initTime;
+      assert.isOk(
+        elapse >= 500 && elapse < 550,
+        "elapse time was " + elapse + " but must be just after 500"
+      );
+    });
+    setTimeout(() => {
+      pool.query("SELECT 3").catch(err => {
+        assert(err.message.includes("retrieve connection from pool timeout"));
+        assert.equal(err.sqlState, "HY000");
+        assert.equal(err.errno, 45028);
+        assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
+        const elapse = new Date().getTime() - initTime;
+        assert.isOk(
+          elapse >= 700 && elapse < 750,
+          "elapse time was " + elapse + " but must be just after 700"
+        );
+        done();
+      });
+    }, 200);
   });
 
   it("pool grow", function(done) {
@@ -108,7 +134,7 @@ describe("Pool", () => {
       assert.equal(pool.activeConnections(), 0);
       assert.equal(pool.totalConnections(), 10);
       assert.equal(pool.idleConnections(), 10);
-      assert.equal(pool.connectionRequests(), 0);
+      assert.equal(pool.taskQueueSize(), 0);
 
       for (let i = 0; i < 10000; i++) {
         pool
@@ -118,11 +144,11 @@ describe("Pool", () => {
           })
           .catch(done);
       }
-      process.nextTick(() => {
+      setImmediate(() => {
         assert.equal(pool.activeConnections(), 10);
         assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 0);
-        assert.equal(pool.connectionRequests(), 9990);
+        assert.equal(pool.taskQueueSize(), 9990);
 
         setTimeout(() => {
           pool.end();
@@ -130,7 +156,7 @@ describe("Pool", () => {
           assert.equal(pool.activeConnections(), 0);
           assert.equal(pool.totalConnections(), 0);
           assert.equal(pool.idleConnections(), 0);
-          assert.equal(pool.connectionRequests(), 0);
+          assert.equal(pool.taskQueueSize(), 0);
           done();
         }, 5000);
       });
@@ -144,7 +170,7 @@ describe("Pool", () => {
       assert.equal(pool.activeConnections(), 0);
       assert.equal(pool.totalConnections(), 2);
       assert.equal(pool.idleConnections(), 2);
-      assert.equal(pool.connectionRequests(), 0);
+      assert.equal(pool.taskQueueSize(), 0);
 
       pool
         .getConnection()
@@ -152,19 +178,19 @@ describe("Pool", () => {
           assert.equal(pool.activeConnections(), 1);
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
-          assert.equal(pool.connectionRequests(), 0);
+          assert.equal(pool.taskQueueSize(), 0);
 
           conn.query("KILL CONNECTION_ID()").catch(err => {
             assert.equal(err.sqlState, 70100);
             assert.equal(pool.activeConnections(), 1);
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 1);
-            assert.equal(pool.connectionRequests(), 0);
+            assert.equal(pool.taskQueueSize(), 0);
             conn.end().then(() => {
               assert.equal(pool.activeConnections(), 0);
               assert.equal(pool.totalConnections(), 1);
               assert.equal(pool.idleConnections(), 1);
-              assert.equal(pool.connectionRequests(), 0);
+              assert.equal(pool.taskQueueSize(), 0);
               pool.end();
               done();
             });
@@ -181,24 +207,37 @@ describe("Pool", () => {
       assert.equal(pool.activeConnections(), 0);
       assert.equal(pool.totalConnections(), 2);
       assert.equal(pool.idleConnections(), 2);
-      assert.equal(pool.connectionRequests(), 0);
+      assert.equal(pool.taskQueueSize(), 0);
 
       pool.query("KILL CONNECTION_ID()").catch(err => {
         assert.equal(err.sqlState, 70100);
-        setTimeout(() => {
-          assert.equal(pool.activeConnections(), 0);
-          assert.equal(pool.totalConnections(), 1);
-          assert.equal(pool.idleConnections(), 1);
-          assert.equal(pool.connectionRequests(), 0);
-        }, 1);
-        setTimeout(() => {
-          assert.equal(pool.activeConnections(), 0);
+        setImmediate(() => {
+          //waiting for rollback to end
+          assert.equal(pool.activeConnections(), 1);
           assert.equal(pool.totalConnections(), 2);
-          assert.equal(pool.idleConnections(), 2);
-          assert.equal(pool.connectionRequests(), 0);
-          pool.end();
-          done();
-        }, 500);
+          assert.equal(pool.idleConnections(), 1);
+          assert.equal(pool.taskQueueSize(), 0);
+
+          pool.query("do 1");
+          pool.query("do 1").then(() => {
+            setImmediate(() => {
+              //waiting for rollback to end
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 1);
+              assert.equal(pool.idleConnections(), 1);
+              assert.equal(pool.taskQueueSize(), 0);
+              setTimeout(() => {
+                //connection recreated
+                assert.equal(pool.activeConnections(), 0);
+                assert.equal(pool.totalConnections(), 2);
+                assert.equal(pool.idleConnections(), 2);
+                assert.equal(pool.taskQueueSize(), 0);
+                pool.end();
+                done();
+              }, 250);
+            });
+          });
+        });
       });
     }, 500);
   });
