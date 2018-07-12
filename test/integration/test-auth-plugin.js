@@ -136,6 +136,7 @@ describe("authentication plugin", () => {
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
     shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
+    shareConn.query("FLUSH PRIVILEGES");
 
     //password is unix password "myPwd"
     base
