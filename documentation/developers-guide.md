@@ -52,6 +52,42 @@ The advantage of CI tools over running tests locally is that it launches tests f
 In order to do that, go to [Travis CI](https://travis-ci.org), connect your GitHub account and active your fork of the MariaDB Connector repository.  Once this is done, Travis runs tests against every push you make to your repository on GitHub. 
 
 
+#### Coverage test
+
+To ensure coverage of new code is well tested, you can run coverage tests.
+
+```
+npm install nyc -g 
+nyc npm test
+```
+
+results will be : 
+
+```
+  ... will run tests
+  
+  263 passing (50s)
+  9 pending
+
+-------------------------------------------------|----------|----------|----------|----------|-------------------|
+File                                             |  % Stmts | % Branch |  % Funcs |  % Lines | Uncovered Line #s |
+-------------------------------------------------|----------|----------|----------|----------|-------------------|
+All files                                        |    95.71 |    84.26 |    90.38 |    95.88 |                   |
+ mariadb-connector-nodejs                        |      100 |      100 |      100 |      100 |                   |
+  callback.js                                    |      100 |      100 |      100 |      100 |                   |
+  promise.js                                     |      100 |      100 |      100 |      100 |                   |
+ mariadb-connector-nodejs/lib                    |    93.82 |    82.38 |    88.33 |    93.92 |                   |
+  connection-callback.js                         |      100 |    96.97 |      100 |      100 |                77 |
+  connection.js                                  |    94.13 |    79.33 |    90.28 |    94.13 |... 42,644,645,663 |
+...                                              |          |          |          |          |                   | 
+ mariadb-connector-nodejs/lib/misc               |      100 |    97.91 |      100 |      100 |                   |
+  connection-information.js                      |      100 |      100 |      100 |      100 |                   |
+  errors.js                                      |      100 |    81.82 |      100 |      100 |        9,11,13,22 |
+  parse.js                                       |      100 |      100 |      100 |      100 |                   |
+  utils.js                                       |      100 |      100 |      100 |      100 |                   |
+-------------------------------------------------|----------|----------|----------|----------|-------------------|
+
+
 ### Submitting Pull Requests
 
 When you feel your patch is ready, has the corrections and changes that you want done, you can submit a pull request to the project by clicking the **Pull request** button GitHub.
