@@ -218,22 +218,21 @@ describe("Pool", () => {
           assert.equal(pool.idleConnections(), 1);
           assert.equal(pool.taskQueueSize(), 0);
 
-          pool.query("do 1");
-          pool.query("do 1").then(() => {
-            assert.equal(pool.activeConnections(), 1);
-            assert.equal(pool.totalConnections(), 1);
-            assert.equal(pool.idleConnections(), 0);
-            assert.equal(pool.taskQueueSize(), 0);
-            setTimeout(() => {
-              //connection recreated
-              assert.equal(pool.activeConnections(), 0);
-              assert.equal(pool.totalConnections(), 2);
-              assert.equal(pool.idleConnections(), 2);
-              assert.equal(pool.taskQueueSize(), 0);
-              pool.end();
-              done();
-            }, 250);
-          });
+          setTimeout(() => {
+
+            pool.query("do 1");
+            pool.query("do 1").then(() => {
+              setTimeout(() => {
+                //connection recreated
+                assert.equal(pool.activeConnections(), 0);
+                assert.equal(pool.totalConnections(), 2);
+                assert.equal(pool.idleConnections(), 2);
+                assert.equal(pool.taskQueueSize(), 0);
+                pool.end();
+                done();
+              }, 250);
+            });
+          }, 250);
         });
       });
     }, 500);

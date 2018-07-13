@@ -59,7 +59,7 @@ function Bench() {
   config.charsetNumber = 224;
   config.trace = false;
 
-  const poolConfig = Object.assign({connectionLimit: 10},config);
+  const poolConfig = Object.assign({ connectionLimit: 10 }, config);
   // config.debug = true;
   // if (!mariasql && process.platform === "win32") {
   //   config.socketPath = "\\\\.\\pipe\\MySQL";
@@ -336,7 +336,16 @@ Bench.prototype.fill = function(val, length, right) {
 
 Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, usePool, conn) {
   const self = this;
-  const addTest = getAddTest(self, this.suite, fct, this.minSamples, title, displaySql, onComplete, usePool);
+  const addTest = getAddTest(
+    self,
+    this.suite,
+    fct,
+    this.minSamples,
+    title,
+    displaySql,
+    onComplete,
+    usePool
+  );
 
   if (conn) {
     addTest(conn, conn.desc);
