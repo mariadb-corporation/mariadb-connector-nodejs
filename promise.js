@@ -8,9 +8,8 @@ let PoolOptions = require("./lib/config/pool-options");
 
 module.exports.createConnection = function createConnection(opts) {
   try {
-    let options = new ConnOptions(opts);
-    const conn = new Connection(options);
-    return conn.connect();
+    const options = new ConnOptions(opts);
+    return new Connection(options).connect();
   } catch (err) {
     return Promise.reject(err);
   }
