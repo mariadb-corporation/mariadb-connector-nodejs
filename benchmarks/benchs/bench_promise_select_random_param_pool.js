@@ -1,12 +1,13 @@
 const assert = require("assert");
 
-module.exports.title = "select number using promise and POOL";
-module.exports.displaySql = "select 10000000";
+module.exports.title = "select random number using promise and pool";
+module.exports.displaySql = "select ?";
 module.exports.promise = true;
 module.exports.pool = true;
 module.exports.benchFct = function(pool, deferred) {
+  const rand = "" + Math.floor(Math.random() * 50000000);
   pool
-    .query("select ?", [1])
+    .query("select ? as t", [rand])
     .then(rows => {
       // assert.equal(rand, rows[0].t);
       deferred.resolve();
