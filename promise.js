@@ -1,12 +1,12 @@
 "use strict";
 
-let Connection = require("./lib/connection.js");
-let ConnOptions = require("./lib/config/connection-options.js");
+let Connection = require("./lib/connection");
+let ConnOptions = require("./lib/config/connection-options");
 
 module.exports.createConnection = function createConnection(opts) {
   try {
-    let connOptions = new ConnOptions(opts);
-    const conn = new Connection(connOptions);
+    const options = new ConnOptions(opts);
+    const conn = new Connection(options);
     return conn.connect();
   } catch (err) {
     return Promise.reject(err);

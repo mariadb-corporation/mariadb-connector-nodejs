@@ -335,10 +335,15 @@ describe("ssl", function() {
       })
       .catch(err => {
         assert(
-          err.message.includes(
-            "Hostname/IP doesn't match certificate's altnames: \"IP: 127.0.0.1 is not in the cert's list"
-          )
+          err.message.includes("Hostname/IP doesn't match certificate's altnames") ||
+            err.message.includes("Hostname/IP does not match certificate's altnames"),
+          "error was : " + err.message
         );
+        assert(
+          err.message.includes("IP: 127.0.0.1 is not in the cert's list"),
+          "error was : " + err.message
+        );
+
         done();
       });
   });

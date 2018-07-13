@@ -10,10 +10,6 @@ environment:
   MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
   matrix:
-    - DB: '10.2.14'
-      nodejs_version: "6"
-      MEM: "21"
-      SKIP_LEAK: "1"
 
     - DB: '10.2.14'
       MEM: "21"
