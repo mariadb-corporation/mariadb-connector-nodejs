@@ -89,7 +89,7 @@ describe("Pool", () => {
   it("pool query timeout", function(done) {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
-    const initTime = new Date().getTime();
+    const initTime = Date.now();
     pool.query("SELECT SLEEP(2)").then(() => {
       pool.end();
     });
@@ -104,7 +104,7 @@ describe("Pool", () => {
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.errno, 45028);
       assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-      const elapse = new Date().getTime() - initTime;
+      const elapse = Date.now() - initTime;
       assert.isOk(
         elapse >= 500 && elapse < 550,
         "elapse time was " + elapse + " but must be just after 500"
@@ -116,7 +116,7 @@ describe("Pool", () => {
         assert.equal(err.sqlState, "HY000");
         assert.equal(err.errno, 45028);
         assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-        const elapse = new Date().getTime() - initTime;
+        const elapse = Date.now() - initTime;
         assert.isOk(
           elapse >= 700 && elapse < 750,
           "elapse time was " + elapse + " but must be just after 700"
