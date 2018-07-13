@@ -147,6 +147,12 @@ describe("authentication plugin", () => {
       .then(() => {
         done();
       })
-      .catch(done);
+      .catch(err => {
+        if (err.errno === 1045) {
+          done();
+        } else {
+          done(err);
+        }
+      });
   });
 });
