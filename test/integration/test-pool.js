@@ -88,30 +88,46 @@ describe("Pool", () => {
 
   it("pool query timeout", function(done) {
     this.timeout(5000);
-    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
+    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500, debug: true });
     const initTime = Date.now();
     pool.query("SELECT SLEEP(2)").then(() => {
+      console.log("pool.ending");
       pool.end();
     });
-    pool.query("SELECT 1").catch(err => {
-      assert(err.message.includes("retrieve connection from pool timeout"));
-      assert.equal(err.sqlState, "HY000");
-      assert.equal(err.errno, 45028);
-      assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-    });
-    pool.query("SELECT 2").catch(err => {
-      assert(err.message.includes("retrieve connection from pool timeout"));
-      assert.equal(err.sqlState, "HY000");
-      assert.equal(err.errno, 45028);
-      assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
-      const elapse = Date.now() - initTime;
-      assert.isOk(
-        elapse >= 500 && elapse < 550,
-        "elapse time was " + elapse + " but must be just after 500"
-      );
-    });
+    pool.query("SELECT 1")
+      .then(() => {
+        done(new Error("must have thrown error 1 !"));
+      })
+      .catch(err => {
+        console.log("select 1 err : " + err);
+        assert(err.message.includes("retrieve connection from pool timeout"));
+        assert.equal(err.sqlState, "HY000");
+        assert.equal(err.errno, 45028);
+        assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
+      });
+    pool.query("SELECT 2")
+      .then(() => {
+        done(new Error("must have thrown error 2 !"));
+      })
+      .catch(err => {
+        console.log("select 2 err : " + err);
+        assert(err.message.includes("retrieve connection from pool timeout"));
+        assert.equal(err.sqlState, "HY000");
+        assert.equal(err.errno, 45028);
+        assert.equal(err.code, "ER_GET_CONNECTION_TIMEOUT");
+        const elapse = Date.now() - initTime;
+        assert.isOk(
+          elapse >= 500 && elapse < 550,
+          "elapse time was " + elapse + " but must be just after 500"
+        );
+      });
     setTimeout(() => {
-      pool.query("SELECT 3").catch(err => {
+      pool.query("SELECT 3")
+        .then(() => {
+          done(new Error("must have thrown error 3 !"));
+        })
+        .catch(err => {
+          console.log("select 3 err : " + err);
         assert(err.message.includes("retrieve connection from pool timeout"));
         assert.equal(err.sqlState, "HY000");
         assert.equal(err.errno, 45028);
