@@ -145,7 +145,7 @@ describe("Pool callback", () => {
         assert.equal(pool.activeConnections(), 10);
         assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 0);
-        assert.equal(pool.taskQueueSize(), 9990);
+        assert.isOk(pool.taskQueueSize() > 9950);
 
         setTimeout(() => {
           pool.end();

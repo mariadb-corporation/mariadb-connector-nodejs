@@ -90,9 +90,14 @@ describe("Pool", () => {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
     const initTime = Date.now();
-    pool.query("SELECT SLEEP(2)").then(() => {
-      pool.end();
-    });
+    pool.query("SELECT SLEEP(2)")
+      .then(() => {
+        pool.end();
+      })
+      .catch(() => {
+        pool.end();
+      });
+
     pool
       .query("SELECT 1")
       .then(() => {
