@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mariadb/mariadb-connector-nodejs.git"
+    "url": "git+https://github.com/MariaDB/mariadb-connector-nodejs.git"
   },
   "keywords": [
     "mariadb",
@@ -60,5 +60,5 @@
   "bugs": {
     "url": "https://jira.mariadb.org/projects/CONJS/"
   },
-  "homepage": "https://github.com/mariadb/mariadb-connector-nodejs#readme"
+  "homepage": "https://github.com/MariaDB/mariadb-connector-nodejs#readme"
 }
