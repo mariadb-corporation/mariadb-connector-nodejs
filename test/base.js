@@ -50,3 +50,8 @@ module.exports.createCallbackConnection = function createConnection(opts) {
   let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return baseCallback.createConnection(connOptionTemp);
 };
+
+module.exports.createPoolCallback = opts => {
+  const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
+  return baseCallback.createPool(poolOptionTemp);
+};
