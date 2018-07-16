@@ -99,5 +99,5 @@ script:
   - if [ -n "$BENCH" ] ; then npm install microtime; fi
   - if [ -n "$BENCH" ] ; then npm run benchmark; fi
 after_success:
-  - if [ -n "$BENCH" ] npm i nyc -g
-  - if [ -n "$BENCH" ] npm run coveralls
+  - if [ -n "$BENCH" ] ; then npm i nyc -g; fi
+  - if [ -n "$BENCH" ] ; then npm run coveralls; fi
