@@ -40,7 +40,7 @@ describe("results-set streaming", () => {
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
       })
-      .on("columns", meta => {
+      .on("fields", meta => {
         assert.equal(meta.length, 1);
         metaReceived = true;
       })
@@ -67,7 +67,7 @@ describe("results-set streaming", () => {
           .on("error", err => {
             done(new Error("must not have thrown any error !"));
           })
-          .on("columns", meta => {
+          .on("fields", meta => {
             assert.equal(meta.length, 1);
             metaReceived = true;
           })
@@ -92,7 +92,7 @@ describe("results-set streaming", () => {
       .on("error", err => {
         done(new Error("must not have thrown any error !"));
       })
-      .on("columns", meta => {
+      .on("fields", meta => {
         assert.equal(meta.length, 1);
         metaReceived = true;
       })

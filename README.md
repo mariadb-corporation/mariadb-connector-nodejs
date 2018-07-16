@@ -587,7 +587,7 @@ connection.queryStream("SELECT * FROM mysql.user")
       .on("error", err => {
         console.log(err); //if error
       })
-      .on("columns", meta => {
+      .on("fields", meta => {
         console.log(meta); // [ ...]
       })
       .on("data", row => {
