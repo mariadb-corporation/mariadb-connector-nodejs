@@ -321,6 +321,8 @@ The pool reuses connection intensively, so this validation is done only if a con
 If no connection is available, the request for a connection will be put in a queue until connection timeout. 
 When a connection is available (new creation or released to the pool), it will be use to satisfy queued requests in FIFO order.
 
+When a connection is given back to pool, any remaining transaction will be rollback.
+
 #### `pool.getConnection() → Promise`
 
 >

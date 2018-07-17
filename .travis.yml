@@ -54,8 +54,6 @@ matrix:
     - node_js: "node"
       env: DB=mariadb:10.2 BENCH=1
     - node_js: "node"
-      env: DB=mariadb:10.2 BENCH=1 TEST_ZIP=1
-    - node_js: "node"
       env: DB=mariadb:5.5
     - node_js: "node"
       env: DB=mariadb:10.0

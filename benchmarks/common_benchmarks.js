@@ -197,7 +197,7 @@ function Bench() {
 
     // called between running benchmarks
     onCycle: function(event) {
-      pingAll(connList);
+      // pingAll(connList);
       //to avoid mysql2 taking all the server memory
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
