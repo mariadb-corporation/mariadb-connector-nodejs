@@ -188,7 +188,7 @@ describe("Pool", () => {
   });
 
   it("connection fail handling", function(done) {
-    const pool = base.createPool({ connectionLimit: 2 });
+    const pool = base.createPool({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool
       assert.equal(pool.activeConnections(), 0);
@@ -225,7 +225,7 @@ describe("Pool", () => {
   });
 
   it("query fail handling", function(done) {
-    const pool = base.createPool({ connectionLimit: 2 });
+    const pool = base.createPool({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool
       assert.equal(pool.activeConnections(), 0);

@@ -161,7 +161,7 @@ describe("Pool callback", () => {
   });
 
   it("connection fail handling", function(done) {
-    const pool = base.createPoolCallback({ connectionLimit: 2 });
+    const pool = base.createPoolCallback({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool
       assert.equal(pool.activeConnections(), 0);
@@ -199,7 +199,7 @@ describe("Pool callback", () => {
   });
 
   it("query fail handling", function(done) {
-    const pool = base.createPoolCallback({ connectionLimit: 2 });
+    const pool = base.createPoolCallback({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool
       assert.equal(pool.activeConnections(), 0);
