@@ -59,7 +59,7 @@ function Bench() {
   config.charsetNumber = 224;
   config.trace = false;
 
-  const poolConfig = Object.assign({ connectionLimit: 10 }, config);
+  const poolConfig = Object.assign({ connectionLimit: 4 }, config);
   // config.debug = true;
   // if (!mariasql && process.platform === "win32") {
   //   config.socketPath = "\\\\.\\pipe\\MySQL";
@@ -197,7 +197,7 @@ function Bench() {
 
     // called between running benchmarks
     onCycle: function(event) {
-      // pingAll(connList);
+      pingAll(connList);
       //to avoid mysql2 taking all the server memory
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
@@ -412,7 +412,7 @@ const pingAll = function(conns) {
   for (let k = 0; k < keys.length; ++k) {
     conns[keys[k]].drv.ping();
     if (conns[keys[k]].pool) {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 4; i++) {
         conns[keys[k]].pool.getConnection()
           .then(conn => {
             conn.ping()
