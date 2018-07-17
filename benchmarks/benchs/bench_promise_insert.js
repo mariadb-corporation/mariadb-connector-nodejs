@@ -46,26 +46,29 @@ module.exports.benchFct = function(conn, deferred) {
     });
 };
 
-module.exports.initFct = async function(conn) {
-  try {
-    await conn.query("DROP TABLE IF EXISTS testn.perfTestText");
-    await conn.query("INSTALL SONAME 'ha_blackhole'");
-    await conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'");
-  } catch (e) {
-    try {
-      await conn.query("DROP TABLE IF EXISTS testn.perfTestText");
-      await conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'");
-    } catch (e) {
+module.exports.initFct = function(conn) {
+  return Promise.all([
+    conn.query("DROP TABLE IF EXISTS testn.perfTestText"),
+    conn.query("INSTALL SONAME 'ha_blackhole'"),
+    conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
+  ])
+    .catch(err => {
+      return Promise.all([
+        conn.query("DROP TABLE IF EXISTS testn.perfTestText"),
+        conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
+      ])
+    })
+    .catch(e => {
       console.log(e);
       throw e;
-    }
-  }
+    });
+
 };
 
-module.exports.onComplete = async function(conn) {
-  try {
-    await conn.query("TRUNCATE TABLE testn.perfTestText");
-  } catch (e) {
-    //eat
-  }
+module.exports.onComplete = function(conn) {
+  conn.query("TRUNCATE TABLE testn.perfTestText")
+    .catch(e => {
+      console.log(e);
+      throw e;
+    });
 };

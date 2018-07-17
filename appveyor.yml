@@ -13,6 +13,11 @@ environment:
 
     - DB: '10.2.16'
       MEM: "21"
+      nodejs_version: "6"
+      SKIP_LEAK: "1"
+
+    - DB: '10.2.16'
+      MEM: "21"
       nodejs_version: "8"
 
     - DB: '10.2.16'

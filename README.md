@@ -13,7 +13,7 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-MariaDB and MySQL client, 100% JavaScript, compatible with Node.js 7.6+, with the Promise API.
+MariaDB and MySQL client, 100% JavaScript, compatible with Node.js 6+, with the Promise API.
 
 ## Why a New Client?
 

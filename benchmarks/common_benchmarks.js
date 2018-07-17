@@ -221,6 +221,7 @@ function Bench() {
     },
     // called when the suite completes running
     onComplete: function() {
+      console.log("completed");
       bench.end(bench);
     }
   });
@@ -240,7 +241,7 @@ Bench.prototype.end = function(bench) {
   bench.displayReport();
 };
 
-Bench.prototype.endConnection = async function(conn) {
+Bench.prototype.endConnection = function(conn) {
   try {
     //using destroy, because MySQL driver fail when using end() for windows named pipe
     conn.drv.destroy();
@@ -249,12 +250,11 @@ Bench.prototype.endConnection = async function(conn) {
     console.log(err);
   }
   if (conn.pool) {
-    try {
-      await conn.pool.end();
-    } catch (err) {
-      console.log("ending error for pool '" + conn.desc + "'");
-      console.log(err);
-    }
+    conn.pool.end()
+      .catch(err => {
+        console.log("ending error for pool '" + conn.desc + "'");
+        console.log(err);
+      });
   }
 };
 
@@ -411,6 +411,20 @@ const pingAll = function(conns) {
   let keys = Object.keys(conns);
   for (let k = 0; k < keys.length; ++k) {
     conns[keys[k]].drv.ping();
+    if (conns[keys[k]].pool) {
+      for (let i = 0; i < 10; i++) {
+        conns[keys[k]].pool.getConnection()
+          .then(conn => {
+            conn.ping()
+              .then(() => {
+                conn.release();
+              })
+              .catch(err => {
+                conn.release();
+              })
+          })
+      }
+    }
   }
 };
 

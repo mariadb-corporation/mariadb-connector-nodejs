@@ -34,7 +34,7 @@
     "lib/callback.js"
   ],
   "engines": {
-    "node": ">= 7.6"
+    "node": ">= 6.0"
   },
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1+",
