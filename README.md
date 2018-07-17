@@ -96,48 +96,49 @@ Using the ECMAScript, prior to 2017:
 
 ```js
 const mariadb = require('mariadb');
-mariadb.createConnection({host: 'mydb.com', user:'myUser'})
-.then(conn => {
-
-  conn.query("SELECT 1 as val")
-	.then((rows) => {
-	  console.log(rows); //[ {val: 1}, meta: ... ]
-	  return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-	})
-	.then((res) => {
-	  console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
-	  conn.end();
-	})
-	.catch(err => {
-	  //handle error
-	  conn.end();
-	})
-	
-}).catch(err => {
-  //not connected
-});
+const pool = mariadb.createPool({host: 'mydb.com', user:'myUser', connectionLimit: 5});
+pool.getConnection()
+    .then(conn => {
+    
+      conn.query("SELECT 1 as val")
+        .then((rows) => {
+          console.log(rows); //[ {val: 1}, meta: ... ]
+          return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
+        })
+        .then((res) => {
+          console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+          conn.end();
+        })
+        .catch(err => {
+          //handle error
+          conn.end();
+        })
+        
+    }).catch(err => {
+      //not connected
+    });
 ```
 
 Using ECMAScript 2017:
 
 ```js
 const mariadb = require('mariadb');
+const pool = mariadb.createPool({host: 'mydb.com', user:'myUser', connectionLimit: 5});
+
 async function asyncFunction() {
   let conn;
   try {
-	conn = await mariadb.createConnection({host: 'localhost', user: 'root'});
-
+	conn = await pool.getConnection();
 	const rows = await conn.query("SELECT 1 as val");
 	console.log(rows); //[ {val: 1}, meta: ... ]
 	const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
 	console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
 
   } catch (err) {
-	return Promise.reject(err);
+	throw err;
   } finally {
 	if (conn) return conn.end();
   }
-  return Promise.resolve();
 }
 ```
 
@@ -156,38 +157,90 @@ $ npm install mariadb
 ```
 
 
-### API
+## API
 
-**Creating a Connection:**
+**Base API:**
 
-* [`createConnection(options) → Promise`](#createconnectionoptions--promise) : Creates a new connection.
+* [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
+* [`createConnection() → Promise`](#createconnectionoptions--promise) : Creates a new connection.
+
+
+**Pool API:**
+
+* [`pool.getConnection() → Promise`](#pool-createconnectionoptions--promise) : Creates a new connection.
+* [`pool.query(sql[, values]) → Promise`](#pool-querysql-values---promise): Executes a query.
+* [`pool.end() → Promise`](#pool-end--promise): Gracefully closes the connection.
+* `pool.activeConnections() → Number`: Get current active connection number.
+* `pool.totalConnections() → Number`: Get current total connection number.
+* `pool.idleConnections() → Number`: Get current idle connection number.
+* `pool.taskQueueSize() → Number`: Get current stacked request.
+
 
 **Connection API:** 
 
-* [`query(sql[, values]) → Promise`](#querysql-values---promise): Executes a query.
-* [`queryStream(sql[, values]) → Emitter`](#querystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
-* [`beginTransaction() → Promise`](#begintransaction--promise): Begins a transaction.
-* [`commit() → Promise`](#commit--promise): Commits the current transaction, if any.
-* [`rollback() → Promise`](#rollback--promise): Rolls back the current transaction, if any.
-* [`changeUser(options) → Promise`](#changeuseroptions--promise): Changes the current connection user
-* [`ping() → Promise`](#ping--promise): Sends a 1 byte packet to database to validate the connection.
-* [`isValid() → boolean`](#isvalid--boolean): Checks that the connection is active without checking socket state.
-* [`end() → Promise`](#end--promise): Gracefully closes the connection.
-* [`destroy()`](#destroy): Forces the connection to close. 
-* [`pause()`](#pause): Pauses the socket output.
-* [`resume()`](#resume): Resumes the socket output.
-* [`serverVersion()`](#serverversion): Retrieves the current server version.
+* [`connection.query(sql[, values]) → Promise`](#connection-querysql-values---promise): Executes a query.
+* [`connection.queryStream(sql[, values]) → Emitter`](#connection-querystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.beginTransaction() → Promise`](#connection-begintransaction--promise): Begins a transaction.
+* [`connection.commit() → Promise`](#connection-commit--promise): Commits the current transaction, if any.
+* [`connection.rollback() → Promise`](#connection-rollback--promise): Rolls back the current transaction, if any.
+* [`connection.changeUser(options) → Promise`](#connection-changeuseroptions--promise): Changes the current connection user
+* [`connection.ping() → Promise`](#connection-ping--promise): Sends a 1 byte packet to database to validate the connection.
+* [`connection.isValid() → boolean`](#connection-isvalid--boolean): Checks that the connection is active without checking socket state.
+* [`connection.end() → Promise`](#connection-end--promise): Gracefully closes the connection.
+* [`connection.destroy()`](#connection-destroy): Forces the connection to close. 
+* [`connection.pause()`](#connection-pause): Pauses the socket output.
+* [`connection.resume()`](#connection-resume): Resumes the socket output.
+* [`connection.serverVersion()`](#connection-serverversion): Retrieves the current server version.
 * [`events`](#events): Subscribes to connection error events.
+
+
+### Base API
+
+#### `createPool(options) → Pool`
+
+> * `options`: *JSON* [pool options](#pool-options)
+>
+> Returns a [Pool](#pool-api) object,
+
+Creates a new pool.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.getConnection()
+    .then(conn => {
+      console.log("connected ! connection id is " + conn.threadId);
+      conn.end(); //release to pool
+    })
+    .catch(err => {
+      console.log("not connected due to error: " + err);
+    });
+```
+
+##### Pool options
+
+Pool options includes [connection option documentation](#connection-options). 
+
+Specific options for pool are :
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
+| **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
+| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. |*integer*| 500|
+
 
 #### `createConnection(options) → Promise`
 
 > * `options`: *JSON* [connection option documentation](#connection-options)
 >
 > Returns a promise that :
-> * resolves with a [Connection](#connection-object) object,
+> * resolves with a [Connection](#connection-api) object,
 > * raises an [Error](#error).
 
-Creates a new connection.
+Creates a new [Connection](#connection-api) object.
 
 **Example:**
 
@@ -258,7 +311,86 @@ mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' })
     .catch(err => { ... });
 ```
  
-#### `query(sql[, values])` -> `Promise`
+### Pool API
+
+Each time a connection is asked, if the pool contains a connection that is not used, the pool will validate the connection, 
+exchanging an empty MySQL packet with the server to ensure the connection state, then give the connection. 
+The pool reuses connection intensively, so this validation is done only if a connection has not been used for a period 
+(specified by the "minDelayValidation" option with the default value of 500ms).
+
+If no connection is available, the request for a connection will be put in a queue until connection timeout. 
+When a connection is available (new creation or released to the pool), it will be use to satisfy queued requests in FIFO order.
+
+#### `pool.getConnection() → Promise`
+
+>
+> Returns a promise that :
+> * resolves with a [Connection](#connection-api) object,
+> * raises an [Error](#error).
+
+Creates a new [Connection](#connection-api) object.
+Connection must be given back to pool with the connection.end() method.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.getConnection()
+    .then(conn => {
+      console.log("connected ! connection id is " + conn.threadId);
+      conn.end(); //release to pool
+    })
+    .catch(err => {
+      console.log("not connected due to error: " + err);
+    });
+```
+
+#### `pool.query(sql[, values])` -> `Promise`
+
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance,
+>
+>   `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is. 
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
+
+This is a shortcut to get a connection from pool, execute a query and release connection.
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool
+   .query("SELECT NOW()")
+   .then(rows => {
+    console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
+   })
+   .catch(err => {
+    //handle error
+   });
+```
+
+#### `pool.end() → Promise`
+
+>Returns a promise that :
+>  * resolves (no argument)
+>  * rejects with an [Error](#error).
+
+Closes the pool and underlying connections gracefully.
+
+```javascript
+pool.end()
+  .then(() => {
+    //connections have been ended properly
+  })
+  .catch(err => {});
+```
+
+### Connection API
+
+#### `connection.query(sql[, values])` -> `Promise`
 
 > * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance,
 >
@@ -565,7 +697,7 @@ connection
 ```
 
 
-#### `queryStream(sql[, values]) → Emitter`
+#### `connection.queryStream(sql[, values]) → Emitter`
 
 > * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string. 
@@ -598,7 +730,7 @@ connection.queryStream("SELECT * FROM mysql.user")
       });
 ```
 
-#### `beginTransaction() → Promise`
+#### `connection.beginTransaction() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
@@ -606,7 +738,7 @@ connection.queryStream("SELECT * FROM mysql.user")
 
 Begins a new transaction.
 
-#### `commit() → Promise`
+#### `connection.commit() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
@@ -615,7 +747,7 @@ Begins a new transaction.
 Commits the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `commit()` method when there's active no transaction, it ignores the method and sends no commands to MariaDB. 
 
 
-#### `rollback() → Promise`
+#### `connection.rollback() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
@@ -637,7 +769,7 @@ conn.beginTransaction()
   })
 ```
  
-#### `changeUser(options) → Promise`
+#### `connection.changeUser(options) → Promise`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
 >
@@ -657,7 +789,7 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'})
    });
 ```
 
-#### `ping() → Promise`
+#### `connection.ping() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
@@ -675,13 +807,13 @@ conn.ping()
   })
 ```
 
-#### `isValid() → boolean`
+#### `connection.isValid() → boolean`
 
 > Returns a boolean
 
 Indicates the connection state as the Connector knows it.  If it returns false, there is an issue with the connection, such the socket disconnected without the Connector knowing about it.
 
-#### `end() → Promise`
+#### `connection.end() → Promise`
 
 >Returns a promise that :
 >  * resolves (no argument)
@@ -700,7 +832,7 @@ conn.end()
 ```
 
 
-#### `destroy()`
+#### `connection.destroy()`
 
 Closes the connection without waiting for any currently executing queries.  These queries are interrupted.  MariaDB logs the event as an unexpected socket close.
 
@@ -725,16 +857,16 @@ conn.query(
 conn.destroy(); //will immediately close the connection, even if query above would have take a minute
 ```
 
-#### `pause()`
+#### `connection.pause()`
 
 Pauses data reads.
 
-#### `resume()`
+#### `connection.resume()`
 
 Resumes data reads from a pause. 
 
 
-#### `serverVersion()` 
+#### `connection.serverVersion()` 
 
 > Returns a string 
 
