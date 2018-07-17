@@ -71,7 +71,7 @@ For more information, see the [Benchmarks](/documentation/benchmarks.md) page.
 
 The Connector remains in development.  Here's a list of features being developed for future releases:
 
-* Pooling and `PoolCluster`
+* `PoolCluster`
 * MariaDB `ed25519` plugin authentication
 * Query Timeouts
 * Bulk Insertion, (that is, fast batch).
