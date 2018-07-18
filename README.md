@@ -96,7 +96,7 @@ Using the ECMAScript, prior to 2017:
 
 ```js
 const mariadb = require('mariadb');
-const pool = mariadb.createPool({host: 'mydb.com', user:'myUser', connectionLimit: 5});
+const pool = mariadb.createPool({host: 'mydb.com', user:' myUser', connectionLimit: 5});
 pool.getConnection()
     .then(conn => {
     
@@ -123,7 +123,7 @@ Using ECMAScript 2017:
 
 ```js
 const mariadb = require('mariadb');
-const pool = mariadb.createPool({host: 'mydb.com', user:'myUser', connectionLimit: 5});
+const pool = mariadb.createPool({host: 'mydb.com', user: 'myUser', connectionLimit: 5});
 
 async function asyncFunction() {
   let conn;
@@ -157,40 +157,40 @@ $ npm install mariadb
 ```
 
 
-## API
+## Promise API
 
-**Base API:**
+**Base:**
 
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
 * [`createConnection() → Promise`](#createconnectionoptions--promise) : Creates a new connection.
 
 
-**Pool API:**
+**Pool:**
 
-* [`pool.getConnection() → Promise`](#pool-createconnectionoptions--promise) : Creates a new connection.
-* [`pool.query(sql[, values]) → Promise`](#pool-querysql-values---promise): Executes a query.
-* [`pool.end() → Promise`](#pool-end--promise): Gracefully closes the connection.
+* [`pool.getConnection() → Promise`](#poolgetconnection--promise) : Creates a new connection.
+* [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promisee): Executes a query.
+* [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
 * `pool.activeConnections() → Number`: Get current active connection number.
 * `pool.totalConnections() → Number`: Get current total connection number.
 * `pool.idleConnections() → Number`: Get current idle connection number.
 * `pool.taskQueueSize() → Number`: Get current stacked request.
 
 
-**Connection API:** 
+**Connection:** 
 
-* [`connection.query(sql[, values]) → Promise`](#connection-querysql-values---promise): Executes a query.
-* [`connection.queryStream(sql[, values]) → Emitter`](#connection-querystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
-* [`connection.beginTransaction() → Promise`](#connection-begintransaction--promise): Begins a transaction.
-* [`connection.commit() → Promise`](#connection-commit--promise): Commits the current transaction, if any.
-* [`connection.rollback() → Promise`](#connection-rollback--promise): Rolls back the current transaction, if any.
-* [`connection.changeUser(options) → Promise`](#connection-changeuseroptions--promise): Changes the current connection user
-* [`connection.ping() → Promise`](#connection-ping--promise): Sends a 1 byte packet to database to validate the connection.
-* [`connection.isValid() → boolean`](#connection-isvalid--boolean): Checks that the connection is active without checking socket state.
-* [`connection.end() → Promise`](#connection-end--promise): Gracefully closes the connection.
-* [`connection.destroy()`](#connection-destroy): Forces the connection to close. 
-* [`connection.pause()`](#connection-pause): Pauses the socket output.
-* [`connection.resume()`](#connection-resume): Resumes the socket output.
-* [`connection.serverVersion()`](#connection-serverversion): Retrieves the current server version.
+* [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
+* [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
+* [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
+* [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
+* [`connection.changeUser(options) → Promise`](#connectionchangeuseroptions--promise): Changes the current connection user
+* [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to database to validate the connection.
+* [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
+* [`connection.end() → Promise`](#connectionend--promise): Gracefully closes the connection.
+* [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
+* [`connection.pause()`](#connectionpause): Pauses the socket output.
+* [`connection.resume()`](#connectionresume): Resumes the socket output.
+* [`connection.serverVersion()`](#connectionserverversion): Retrieves the current server version.
 * [`events`](#events): Subscribes to connection error events.
 
 
@@ -208,7 +208,7 @@ Creates a new pool.
 
 ```javascript
 const mariadb = require('mariadb');
-const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLimit: 5 });
 pool.getConnection()
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
@@ -221,7 +221,7 @@ pool.getConnection()
 
 ##### Pool options
 
-Pool options includes [connection option documentation](#connection-options). 
+Pool options includes [connection option documentation](#connection-options) that will be used when creating new connections. 
 
 Specific options for pool are :
 
@@ -229,7 +229,7 @@ Specific options for pool are :
 |---:|---|:---:|:---:| 
 | **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
 | **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
-| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. |*integer*| 500|
+| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 
 
 #### `createConnection(options) → Promise`
