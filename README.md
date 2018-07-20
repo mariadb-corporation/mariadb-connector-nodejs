@@ -36,7 +36,7 @@ Using a Readable stream in your application, you can stream `INSERT` statements 
 With Pipelining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
 
 <p align="center">
-    <img src="./documentation/misc.pip.png">
+    <img src="./documentation/misc/pip.png">
 </p>
 
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
