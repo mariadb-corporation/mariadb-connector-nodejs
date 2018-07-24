@@ -1,4 +1,4 @@
-# Connection options 
+# Connection Options 
 
 - [Essential options](#essential-option)
 - [Support for big integer](#support-for-big-integer)
@@ -10,7 +10,7 @@
 - [Other options](#other-options)
 - [F.A.Q.](#faq)
 
-## Essential options 
+## Essential Options 
 
 | option| description| type| default| 
 | ---: | --- | :---: | :---: | 
@@ -128,12 +128,12 @@ A certificate chain is a list of certificates that were issued from the same Cer
 In cases where intermediate or root certificates are not trusted by the Connector, the Connector rejects the connection and issues an error.
 
 
-#### Hostname verification (SNI)
+#### Hostname Verification (SNI)
 
 Certificates can provide hostname verification to the driver.  By default this is done against the certificate's `subjectAlternativeName` DNS name field.
 
 
-### One-way SSL authentication
+### One-way SSL Authentication
 
 When the server certificate is signed using the certificate chain that uses a root CA known in the JavaScript trust store, setting the `ssl` option enables one-way SSL authentication.
 
@@ -190,7 +190,7 @@ mariadb
 ```
 
 
-#### Using specific TLS Protocols or Ciphers
+#### Using Specific TLS Protocols or Ciphers
 
 In situations where you don't like the default TLS protocol or cipher or where you would like to use a specific version, you force he Connector to use the one you want using the `secureProtocol` and `cipher` options.
 
@@ -214,7 +214,7 @@ mariadb
 For more information on what's available, see [possible protocol](https://www.openssl.org/docs/man1.0.2/ssl/ssl.html#DEALING-WITH-PROTOCOL-METHODS) values.
  
  
-### Two-way SSL authentication
+### Two-way SSL Authentication
 
 Mutual SSL authentication or certificate-based mutual authentication refers to two parties authenticating each other by verifying the provided digital certificates.  This allows both parties to be assured of the other's identity.  In order to use mutual authentication, you must set the `REQUIRE X509` option in the `GRANT` statement.  For instance,
 

@@ -86,7 +86,7 @@ The MariaDB Connector is available through the Node.js repositories.  You can in
 $ npm install mariadb
 ```
 
-Using the ECMAScript, prior to 2017:
+Using ECMAScript < 2017:
 
 ```js
 const mariadb = require('mariadb');
@@ -138,9 +138,9 @@ async function asyncFunction() {
 
 ## Documentation
 
-The MariaDB Connector can use different API's on the back-end: Promise and Callback.  The default API is Promise.  Callback is provided for compatibility with the `mysql` and `mysql2` API's.
+The MariaDB Node.js Connector can use different APIs on the back-end: Promise and Callback.  The default API is Promise.  Callback is provided for compatibility with the `mysql` and `mysql2` APIs.
 
-Documentation provided on this page uses the Promise API.  If you would like to develop an application with the Callback API or have an existing application that you want to switch from the MySQL API's to the MariaDB Connector, see the [Callback API](/documentation/callback-api.md) documentation.
+Documentation provided on this page uses the Promise API.  If you would like to develop an application with the Callback API or have an existing application that you want to switch from the MySQL APIs to the MariaDB Connector, see the [Callback API](/documentation/callback-api.md) documentation.
 
 ### Installation
 
