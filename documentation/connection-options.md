@@ -16,7 +16,7 @@
 | ---: | --- | :---: | :---: | 
 | **user** | User to access database |*string* | 
 | **password** | User password |*string* | 
-| **host** | IP address or DNS of database server. *Not used when using option `socketPath`*|*string*| "localhost"|  
+| **host** | IP address or DNS of database server. *Not used when using the `socketPath` option*|*string*| "localhost"|  
 | **port** | Database server port number|*integer*| 3306|
 | **database** | Default database to use when establishing the connection | *string* | 
 | **socketPath** | Permit connecting to the database via Unix domain socket or named pipe, if the server allows it|  *string* |  
@@ -36,8 +36,8 @@ The Connector provides two options to address this issue.
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **bigNumberStrings** | When an integer is not in the safe range, the Connector interprets the value as a string |*boolean* |false| 
-| **supportBigNumbers** | When an integer is not in the safe range, the Connector interprets the value as a [Long](https://www.npmjs.com/package/long) object |*boolean* |false|
+| **bigNumberStrings** | When an integer is not in the safe range, the Connector interprets the value as a string. |*boolean* |false| 
+| **supportBigNumbers** | When an integer is not in the safe range, the Connector interprets the value as a [Long](https://www.npmjs.com/package/long) object. |*boolean* |false|
 
 
 ## SSL
@@ -74,7 +74,7 @@ For more information, see the [MariaDB Server](https://mariadb.com/kb/en/library
 
 Enabling the `ssl` system variable on the server, the Connector uses one-way SSL authentication to connect to the server. Additionally, it's recommended that you also configure your users to connect through SSL.  This ensures that their accounts can only be used with an SSL connection.
 
-For the `GRANT` statements, use the `REQUIRE SSL` option for one-way SSL authentication and the `REQUIRE X509` option for two-way SSL authentication.  For more information, see the [`CREATE USER`](https://mariadb.com/kb/en/library/create-user/) documentation.
+For `GRANT` statements, use the `REQUIRE SSL` option for one-way SSL authentication and the `REQUIRE X509` option for two-way SSL authentication.  For more information, see the [`CREATE USER`](https://mariadb.com/kb/en/library/create-user/) documentation.
 
 
 ```sql
@@ -116,7 +116,7 @@ The Connector uses the Node.js implementation of TLS.  For more information, see
 
 #### Trusted CA
 
-By default, Node.js trusts the well-know root Certificate Authorities (CA), based on Mozilla.  For a complete list, (including the popular and free Let's Encrypt), see the [CA Certificate List](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport).
+By default, Node.js trusts the well-known root Certificate Authorities (CA), based on Mozilla.  For a complete list, (including the popular and free Let's Encrypt), see the [CA Certificate List](https://ccadb-public.secure.force.com/mozilla/IncludedCACertificateReport).
 
 When using a certificate signed with a certificate chain from a root CA known to Node.js, the only configuration you need to do is enable the `ssl` option.
 
@@ -138,7 +138,7 @@ Certificates can provide hostname verification to the driver.  By default this i
 When the server certificate is signed using the certificate chain that uses a root CA known in the JavaScript trust store, setting the `ssl` option enables one-way SSL authentication.
 
 
-For instance, 
+For example, 
 
 ```javascript
 const mariadb = require('mariadb');
@@ -310,7 +310,7 @@ mariadb.createConnection({
 | **foundRows** | When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
 | **multipleStatements** | Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
 | **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
-| **permitLocalInfile** | Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to executing a query on the client gives you access to files on the client.  |*boolean* |false|
+| **permitLocalInfile** | Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to execute a query on the client gives you access to files on the client.  |*boolean* |false|
 | **timezone** | Forces use of the indicated timezone, rather than the current Node.js timezone.  Possible values are `Z` for UTC, `local` or `±HH:MM` format |*string* |
 | **nestTables** | Presents result-sets by table to avoid results with colliding fields.  See the `query()` description for more information. |*boolean* |false|
 | **pipelining** | Sends queries one by one without waiting on the results of the previous entry.  For more information, see [Pipelining](/documentation/pipelining.md) |*boolean* |true|
@@ -323,7 +323,7 @@ mariadb.createConnection({
 
 #### error Hostname/IP doesn't match certificate's altnames
 
-Clients verify certificate SAN (subject alternative names) and CN to ensure that the certificate corresponds to the hostname.  If the certificate's SAN/CN does not correspond to the `host` option, it returns an error like:
+Clients verify certificate SAN (subject alternative names) and CN to ensure that the certificate corresponds to the hostname.  If the certificate's SAN/CN does not correspond to the `host` option, it returns an error such as:
 
 ```
 Hostname/IP doesn't match certificate's altnames: "Host: other.example.com. is not cert's CN: mariadb.example.com"

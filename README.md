@@ -80,7 +80,7 @@ To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/
 
 ## Quick Start
 
-The MariaDB Connector is available through the Node.js repositories.  You can install it using npm.
+The MariaDB Connector is available through the Node.js repositories.  You can install it using npm :
 
 ```
 $ npm install mariadb
