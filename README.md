@@ -164,10 +164,10 @@ $ npm install mariadb
 * [`pool.getConnection() → Promise`](#poolgetconnection--promise) : Creates a new connection.
 * [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promisee): Executes a query.
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
-* `pool.activeConnections() → Number`: Get current active connection number.
-* `pool.totalConnections() → Number`: Get current total connection number.
-* `pool.idleConnections() → Number`: Get current idle connection number.
-* `pool.taskQueueSize() → Number`: Get current stacked request.
+* `pool.activeConnections() → Number`: Gets current active connection number.
+* `pool.totalConnections() → Number`: Gets current total connection number.
+* `pool.idleConnections() → Number`: Gets current idle connection number.
+* `pool.taskQueueSize() → Number`: Gets current stacked request.
 
 
 **Connection:** 
@@ -177,8 +177,8 @@ $ npm install mariadb
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
-* [`connection.changeUser(options) → Promise`](#connectionchangeuseroptions--promise): Changes the current connection user
-* [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to database to validate the connection.
+* [`connection.changeUser(options) → Promise`](#connectionchangeuseroptions--promise): Changes the current connection user.
+* [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to the database to validate the connection.
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
 * [`connection.end() → Promise`](#connectionend--promise): Gracefully closes the connection.
 * [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
@@ -217,7 +217,7 @@ pool.getConnection()
 
 Pool options includes [connection option documentation](#connection-options) that will be used when creating new connections. 
 
-Specific options for pool are :
+Specific options for pools are :
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
@@ -274,7 +274,7 @@ For more information, see the [Connection Options](/documentation/connection-opt
 
 #### Connecting to Local Databases 
 
-When working with a local database, (that is, cases where MariaDB and your Node.js application run on the same host), you can connect to MariaDB through the Unix socket or Windows named pipe for better performance, rather than using the TCP/IP layer.
+When working with a local database (that is, cases where MariaDB and your Node.js application run on the same host), you can connect to MariaDB through the Unix socket or Windows named pipe for better performance, rather than using the TCP/IP layer.
 
 In order to set this up, you need to assign the connection a `socketPath` value.  When this is done, the Connector ignores the `host` and `port` options.
 
@@ -285,7 +285,7 @@ The specific socket path you need to set is defined by the
 SHOW VARIABLES LIKE 'socket';
 ```
 
-It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on Windows.  Additionally, on Windows this feature only works when the server is started with the `--enable-named-pipe` option.
+It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on Windows.  Additionally, on Windows, this feature only works when the server is started with the `--enable-named-pipe` option.
 
 For instance, on Unix a connection might look like this:
 
@@ -313,9 +313,9 @@ The pool reuses connection intensively, so this validation is done only if a con
 (specified by the "minDelayValidation" option with the default value of 500ms).
 
 If no connection is available, the request for a connection will be put in a queue until connection timeout. 
-When a connection is available (new creation or released to the pool), it will be use to satisfy queued requests in FIFO order.
+When a connection is available (new creation or released to the pool), it will be used to satisfy queued requests in FIFO order.
 
-When a connection is given back to pool, any remaining transaction will be rollback.
+When a connection is given back to the pool, any remaining transactions will be rolled back.
 
 #### `pool.getConnection() → Promise`
 
@@ -344,7 +344,7 @@ pool.getConnection()
 
 #### `pool.query(sql[, values])` -> `Promise`
 
-> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is. 
 >
 > Returns a promise that :
@@ -422,11 +422,11 @@ connection
 
 ##### Placeholder
 
-To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified, (that is, `JSON.stringfy`)
+To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringfy`).
 
 When streaming, objects that implement Readable are streamed automatically.  But, there are two server system variables that may interfere:
 
-- [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_write_timeout): The server must receive queries before reaching this timeout, which defaults to 30 seconds.
+- [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout): The server must receive queries before reaching this timeout, which defaults to 30 seconds.
 - [`max_allowed_packet`](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet): This system variable defines the maximum amount of data the Connector can send to the server.
 
 For instance,
@@ -508,7 +508,7 @@ connection.query('select * from animals')
 * [`supportBigNumbers`](#supportBigNumbers)
 * [`bigNumberStrings`](#bigNumberStrings)
 
-Those options can be set on query level, but are usually set at connection level, then will apply to all queries. 
+Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 
 
 ###### `namedPlaceholders`
 
@@ -694,15 +694,15 @@ connection
 > * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string. 
 >
-> Returns an Emitter object that emit different type of event:
-> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will be emit then).
-> * columns : Emits when columns metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
+> Returns an Emitter object that emits different types of events:
+> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
+> * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
 > * data : Emits each time a row is received (parameter is a row). 
 > * end : Emits when the query ends (no parameter). 
 
 When using the `query()` method, documented above, the Connector returns the entire result-set with all its data in a single call.  While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets.  Instead of retrieving all of the data into memory, you can use the `queryStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
 
-Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults at 60 seconds.
+Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults to 30 seconds.
 
 For instance,
 
@@ -736,7 +736,7 @@ Begins a new transaction.
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Commits the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `commit()` method when there's active no transaction, it ignores the method and sends no commands to MariaDB. 
+Commits the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `commit()` method when there's no active transaction, it ignores the method and sends no commands to MariaDB. 
 
 
 #### `connection.rollback() → Promise`
@@ -803,7 +803,7 @@ conn.ping()
 
 > Returns a boolean
 
-Indicates the connection state as the Connector knows it.  If it returns false, there is an issue with the connection, such the socket disconnected without the Connector knowing about it.
+Indicates the connection state as the Connector knows it.  If it returns false, there is an issue with the connection, such as the socket disconnected without the Connector knowing about it.
 
 #### `connection.end() → Promise`
 
@@ -873,7 +873,7 @@ Retrieves the version of the currently connected server.  Throws an error when n
 When the Connector encounters an error, Promise returns an [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object.  In addition to the standard properties, this object has the following properties:
 * `fatal`: A boolean value indicating whether the connection remains valid.
 * `errno`: The error number. 
-* `sqlState`: The SQL state code
+* `sqlState`: The SQL state code.
 * `code`: The error code.
 
 Example on `console.log(error)`: 
@@ -893,7 +893,7 @@ Example on `console.log(error)`:
     code: 'ER_NO_SUCH_TABLE' } }
 ```
 
-Errors contain an error stack, query and parameter values (the length of which is limited to 1,024 characters, by default).  To retrieve the initial stack trace, (shown as `From event...` in the example above), you must have the Connection option `trace` enabled.
+Errors contain an error stack, query and parameter values (the length of which is limited to 1,024 characters, by default).  To retrieve the initial stack trace (shown as `From event...` in the example above), you must have the Connection option `trace` enabled.
 
 For more information on error numbers and SQL state signification, see the [MariaDB Error Code](https://mariadb.com/kb/en/library/mariadb-error-codes/) documentation.
 
