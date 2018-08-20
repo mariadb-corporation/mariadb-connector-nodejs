@@ -30,8 +30,8 @@
   ],
   "files": [
     "lib",
-    "lib/index.js",
-    "lib/callback.js"
+    "promise.js",
+    "callback.js"
   ],
   "engines": {
     "node": ">= 6.0"
