@@ -250,11 +250,10 @@ Bench.prototype.endConnection = function(conn) {
     console.log(err);
   }
   if (conn.pool) {
-    conn.pool.end()
-      .catch(err => {
-        console.log("ending error for pool '" + conn.desc + "'");
-        console.log(err);
-      });
+    conn.pool.end().catch(err => {
+      console.log("ending error for pool '" + conn.desc + "'");
+      console.log(err);
+    });
   }
 };
 
@@ -413,16 +412,16 @@ const pingAll = function(conns) {
     conns[keys[k]].drv.ping();
     if (conns[keys[k]].pool) {
       for (let i = 0; i < 4; i++) {
-        conns[keys[k]].pool.getConnection()
-          .then(conn => {
-            conn.ping()
-              .then(() => {
-                conn.release();
-              })
-              .catch(err => {
-                conn.release();
-              })
-          })
+        conns[keys[k]].pool.getConnection().then(conn => {
+          conn
+            .ping()
+            .then(() => {
+              conn.release();
+            })
+            .catch(err => {
+              conn.release();
+            });
+        });
       }
     }
   }

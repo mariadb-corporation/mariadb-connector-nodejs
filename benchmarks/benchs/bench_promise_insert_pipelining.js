@@ -41,7 +41,6 @@ module.exports.benchFct = function(conn, deferred) {
   }
 };
 
-
 module.exports.initFct = function(conn) {
   return Promise.all([
     conn.query("DROP TABLE IF EXISTS testn.perfTestTextPipe"),
@@ -52,19 +51,17 @@ module.exports.initFct = function(conn) {
       return Promise.all([
         conn.query("DROP TABLE IF EXISTS testn.perfTestTextPipe"),
         conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
-      ])
+      ]);
     })
     .catch(e => {
       console.log(e);
       throw e;
     });
-
 };
 
 module.exports.onComplete = function(conn) {
-  conn.query("TRUNCATE TABLE testn.perfTestTextPipe")
-    .catch(e => {
-      console.log(e);
-      throw e;
-    });
+  conn.query("TRUNCATE TABLE testn.perfTestTextPipe").catch(e => {
+    console.log(e);
+    throw e;
+  });
 };
