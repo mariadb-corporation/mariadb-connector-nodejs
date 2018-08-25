@@ -305,37 +305,54 @@ describe("geometry data type", () => {
   it("Geometry collection format", done => {
     let prefix = "";
     if (!shareConn.isMariaDB() && shareConn.hasMinVersion(8, 0, 0)) prefix = "ST_";
-
-    shareConn.query("CREATE TEMPORARY TABLE gis_geometrycollection (g GEOMETRYCOLLECTION)");
-    shareConn
-      .query(
-        "INSERT INTO gis_geometrycollection VALUES\n" +
-          "    (" +
-          prefix +
-          "GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0), LINESTRING(0 0,10 10))')),\n" +
-          "    (" +
-          prefix +
-          "GeometryFromWKB(" +
-          prefix +
-          "AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9)))))),\n" +
-          "    (" +
-          prefix +
-          "GeomFromText('GeometryCollection()')),\n" +
-          "    (" +
-          prefix +
-          "GeomFromText('GeometryCollection EMPTY'))"
-      )
-      .then(() => {
-        return shareConn.query("SELECT * FROM gis_geometrycollection");
-      })
-      .then(rows => {
-        assert.deepEqual(rows, [
-          { g: [{ x: 0, y: 0 }, [{ x: 0, y: 0 }, { x: 10, y: 10 }]] },
-          { g: [{ x: 44, y: 6 }, [{ x: 3, y: 6 }, { x: 7, y: 9 }]] },
-          { g: [] },
-          { g: [] }
-        ]);
-        done();
+    base
+      .createConnection()
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE gis_geometrycollection (g GEOMETRYCOLLECTION)");
+        conn
+          .query(
+            "INSERT INTO gis_geometrycollection VALUES\n" +
+              "    (" +
+              prefix +
+              "GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0), LINESTRING(0 0,10 10))')),\n" +
+              "    (" +
+              prefix +
+              "GeometryFromWKB(" +
+              prefix +
+              "AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9))))))" +
+              (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)
+                ? ""
+                : ",(" +
+                  prefix +
+                  "GeomFromText('GeometryCollection()')),\n" +
+                  "    (" +
+                  prefix +
+                  "GeomFromText('GeometryCollection EMPTY'))")
+          )
+          .then(() => {
+            return conn.query("SELECT * FROM gis_geometrycollection");
+          })
+          .then(rows => {
+            let expectedValue = [
+              { g: [{ x: 0, y: 0 }, [{ x: 0, y: 0 }, { x: 10, y: 10 }]] },
+              { g: [{ x: 44, y: 6 }, [{ x: 3, y: 6 }, { x: 7, y: 9 }]] },
+              { g: [] },
+              { g: [] }
+            ];
+            if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) {
+              expectedValue = [
+                { g: [{ x: 0, y: 0 }, [{ x: 0, y: 0 }, { x: 10, y: 10 }]] },
+                { g: [{ x: 44, y: 6 }, [{ x: 3, y: 6 }, { x: 7, y: 9 }]] }
+              ];
+            }
+            assert.deepEqual(rows, expectedValue);
+            conn.end();
+            done();
+          })
+          .catch(err => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
