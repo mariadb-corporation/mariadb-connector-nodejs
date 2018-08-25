@@ -251,7 +251,7 @@ Bench.prototype.endConnection = function(conn) {
     console.log(err);
   }
   if (conn.pool) {
-    if (conn.pool.on) conn.pool.on('error', err => {});
+    if (conn.pool.on) conn.pool.on("error", err => {});
     conn.pool.end().catch(err => {
       console.log("ending error for pool '" + conn.desc + "'");
       console.log(err);
