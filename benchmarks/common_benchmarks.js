@@ -36,7 +36,7 @@ try {
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};
-
+  this.ended = false;
   this.driverLen = 2;
 
   this.ready = 0;
@@ -197,7 +197,7 @@ function Bench() {
 
     // called between running benchmarks
     onCycle: function(event) {
-      pingAll(connList);
+      if (!this.ended) pingAll(connList);
       //to avoid mysql2 taking all the server memory
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
@@ -223,6 +223,7 @@ function Bench() {
     onComplete: function() {
       console.log("completed");
       bench.end(bench);
+      this.ended = true;
     }
   });
 }
