@@ -75,7 +75,7 @@ The Connector remains in development.  Here's a list of features being developed
 * MariaDB `ed25519` plugin authentication
 * Query Timeouts
 * Bulk Insertion, (that is, fast batch).
-
+* Sequelize Connector - https://github.com/sequelize/sequelize
 
 ## Contributing 
 
