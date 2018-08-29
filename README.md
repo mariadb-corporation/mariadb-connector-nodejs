@@ -10,6 +10,7 @@
 [![Windows status](https://ci.appveyor.com/api/projects/status/bcg7yy4iy9viq08t/branch/master?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
 [![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
 [![Coverage Status](https://coveralls.io/repos/github/MariaDB/mariadb-connector-nodejs/badge.svg?branch=master)](https://coveralls.io/github/MariaDB/mariadb-connector-nodejs?branch=master)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FMariaDB%2Fmariadb-connector-nodejs.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FMariaDB%2Fmariadb-connector-nodejs?ref=badge_shield)
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
@@ -931,3 +932,7 @@ conn.on('error', err => {
 })
 .catch(done);
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FMariaDB%2Fmariadb-connector-nodejs.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FMariaDB%2Fmariadb-connector-nodejs?ref=badge_large)
