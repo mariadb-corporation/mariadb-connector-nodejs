@@ -47,5 +47,4 @@ describe("packet", () => {
 
     assert.equal(packet.pos, 534);
   });
-
 });
