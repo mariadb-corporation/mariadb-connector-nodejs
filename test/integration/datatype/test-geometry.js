@@ -49,7 +49,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Point Insert", function (done) {
+  it("Point Insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -136,7 +136,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("LineString insert", function (done) {
+  it("LineString insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -234,7 +234,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Polygon insert", function (done) {
+  it("Polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -335,7 +335,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("MultiPoint insert", function (done) {
+  it("MultiPoint insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -426,7 +426,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-line insert", function (done) {
+  it("Multi-line insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -540,7 +540,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-polygon insert", function (done) {
+  it("Multi-polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -755,7 +755,7 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Geometry collection insert", function (done) {
+  it("Geometry collection insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
 
