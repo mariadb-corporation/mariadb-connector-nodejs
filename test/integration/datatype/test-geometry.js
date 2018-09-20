@@ -5,6 +5,8 @@ const { assert } = require("chai");
 
 describe("geometry data type", () => {
   it("Point format", done => {
+    //MySQL 5.5 doesn't have ST_PointFromText function
+    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_point  (g POINT)");
     shareConn
       .query(
@@ -99,6 +101,9 @@ describe("geometry data type", () => {
   });
 
   it("LineString format", done => {
+    //MySQL 5.5 doesn't have ST_LineFromText function
+    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_line  (g LINESTRING)");
     shareConn
       .query(
@@ -137,7 +142,6 @@ describe("geometry data type", () => {
   });
 
   it("LineString insert", function(done) {
-    //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)");
@@ -194,6 +198,9 @@ describe("geometry data type", () => {
   });
 
   it("Polygon format", done => {
+    //MySQL 5.5 doesn't have ST_PolygonFromText function
+    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_polygon (g POLYGON)");
     shareConn
       .query(
