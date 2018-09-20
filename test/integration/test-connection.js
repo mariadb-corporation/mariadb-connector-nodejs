@@ -587,7 +587,7 @@ describe("connection", () => {
 
   it("changing database", function(done) {
     let currDb = Conf.baseConfig.database;
-    assert.equal(currDb, shareConn.getInfo().database);
+    assert.equal(currDb, shareConn.info.database);
     shareConn
       .query("CREATE DATABASE changedb")
       .then(() => {
@@ -599,7 +599,7 @@ describe("connection", () => {
           (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7))
         ) {
           //ok packet contain meta change
-          assert.equal(shareConn.getInfo().database, "changedb");
+          assert.equal(shareConn.info.database, "changedb");
         }
         shareConn.query("use " + currDb);
         shareConn.query("DROP DATABASE changedb");

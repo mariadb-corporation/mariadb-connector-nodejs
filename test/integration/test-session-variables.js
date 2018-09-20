@@ -39,8 +39,7 @@ describe("session variables", () => {
   it("with multiple session variables", function(done) {
     base
       .createConnection({
-        sessionVariables: { wait_timeout: 10000, interactive_timeout: 2540 },
-        debug: true
+        sessionVariables: { wait_timeout: 10000, interactive_timeout: 2540 }
       })
       .then(conn => {
         conn
@@ -57,7 +56,7 @@ describe("session variables", () => {
 
   it("error handling", function(done) {
     base
-      .createConnection({ sessionVariables: { wait_timeout: "String value" }, debug: true })
+      .createConnection({ sessionVariables: { wait_timeout: "String value" } })
       .then(conn => {
         conn.on("error", err => {
           assert(err.message.includes("Error setting session variable"));
