@@ -45,7 +45,7 @@ describe("streaming", () => {
       .then(() => {
         const https = require("https");
         https.get(
-          "https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
+          "https://node.green/",
           readableStream => {
             shareConn
               .query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream])

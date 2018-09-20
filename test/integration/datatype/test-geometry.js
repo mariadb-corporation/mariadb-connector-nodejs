@@ -4,9 +4,9 @@ const base = require("../../base.js");
 const { assert } = require("chai");
 
 describe("geometry data type", () => {
-  it("Point format", done => {
+  it("Point format", function(done) {
     //MySQL 5.5 doesn't have ST_PointFromText function
-    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_point  (g POINT)");
     shareConn
       .query(
@@ -100,9 +100,9 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("LineString format", done => {
+  it("LineString format", function(done) {
     //MySQL 5.5 doesn't have ST_LineFromText function
-    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_line  (g LINESTRING)");
     shareConn
@@ -197,9 +197,9 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Polygon format", done => {
+  it("Polygon format", function(done) {
     //MySQL 5.5 doesn't have ST_PolygonFromText function
-    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_polygon (g POLYGON)");
     shareConn
