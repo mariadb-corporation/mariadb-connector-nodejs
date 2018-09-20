@@ -20,13 +20,13 @@ describe("datetime", () => {
 
   before(done => {
     //MySQL 5.5 doesn't permit datetime(6)
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) {
       done();
     } else {
       shareConn.query("CREATE TABLE table_date (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))");
       shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [date, date2, date3]);
       shareConn.query("INSERT INTO table_date VALUES (?, ?, ?)", [null, null, null]).then(() => {
-        if (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7)) {
+        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7)) {
           done();
         } else {
           shareConn
@@ -57,7 +57,7 @@ describe("datetime", () => {
 
   it("date text", function(done) {
     const date = new Date("1999-01-31 12:13:14");
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
     shareConn
       .query("select CAST(? as datetime) d", [date])
       .then(res => {
@@ -72,7 +72,7 @@ describe("datetime", () => {
   });
 
   it("date text from row", function(done) {
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
     shareConn
       .query("select * from table_date")
       .then(rows => {
@@ -84,7 +84,7 @@ describe("datetime", () => {
         assert.isNull(rows[1].t1);
         assert.isNull(rows[1].t2);
 
-        if (shareConn.isMariaDB() || !shareConn.hasMinVersion(5, 7)) {
+        if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7)) {
           assert.isNull(rows[2].t0);
           assert.isNull(rows[2].t1);
           assert.isNull(rows[2].t2);
@@ -96,7 +96,7 @@ describe("datetime", () => {
   });
 
   it("date text as string", function(done) {
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
 
     base
       .createConnection({
@@ -116,7 +116,7 @@ describe("datetime", () => {
             assert.isNull(rows[1].t1);
             assert.isNull(rows[1].t2);
 
-            if (shareConn.isMariaDB() || !shareConn.hasMinVersion(5, 7)) {
+            if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7)) {
               assert.equal(rows[2].t0, "0000-00-00");
               assert.equal(rows[2].t1, "0000-00-00 00:00:00.000");
               assert.equal(rows[2].t2, "0000-00-00 00:00:00.000000");
@@ -130,7 +130,7 @@ describe("datetime", () => {
   });
 
   it("query option : date text as string", function(done) {
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
     shareConn
       .query({ dateStrings: true, sql: "select * from table_date" })
       .then(rows => {
@@ -143,7 +143,7 @@ describe("datetime", () => {
         assert.isNull(rows[1].t1);
         assert.isNull(rows[1].t2);
 
-        if (shareConn.isMariaDB() || !shareConn.hasMinVersion(5, 7)) {
+        if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7)) {
           assert.equal(rows[2].t0, "0000-00-00");
           assert.equal(rows[2].t1, "0000-00-00 00:00:00.000");
           assert.equal(rows[2].t2, "0000-00-00 00:00:00.000000");

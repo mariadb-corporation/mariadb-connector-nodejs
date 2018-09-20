@@ -35,7 +35,7 @@ describe("Connection meta", function() {
   });
 
   it("isMariaDB", () => {
-    const isMariadb = shareConn.isMariaDB();
+    const isMariadb = shareConn.info.isMariaDB();
     if (process.env.DB) {
       if (process.env.DB === "build") {
         assert(isMariadb);
@@ -52,7 +52,7 @@ describe("Connection meta", function() {
   it("isMariaDB before connect error", done => {
     const conn = base.createCallbackConnection();
     try {
-      conn.isMariaDB();
+      conn.info.isMariaDB();
       done(new Error("Must have thrown exception"));
     } catch (err) {
       assert(
@@ -63,10 +63,10 @@ describe("Connection meta", function() {
     }
   });
 
-  it("hasMinVersion before connect error", done => {
+  it("info.hasMinVersion before connect error", done => {
     const conn = base.createCallbackConnection();
     try {
-      conn.hasMinVersion();
+      conn.info.hasMinVersion();
       done(new Error("Must have thrown exception"));
     } catch (err) {
       assert(err.message.includes("cannot know if server version until connection is established"));
@@ -75,19 +75,19 @@ describe("Connection meta", function() {
     }
   });
 
-  it("hasMinVersion", () => {
+  it("info.hasMinVersion", () => {
     try {
-      shareConn.hasMinVersion();
+      shareConn.info.hasMinVersion();
       throw new Error("Must have thrown exception");
     } catch (err) {
       assert(err.message.includes("a major version must be set"));
     }
 
-    assert(shareConn.hasMinVersion(3));
-    assert(shareConn.hasMinVersion(3, 4));
-    assert(shareConn.hasMinVersion(3, 4, 10));
-    assert(!shareConn.hasMinVersion(13));
-    assert(!shareConn.hasMinVersion(13, 5));
-    assert(!shareConn.hasMinVersion(13, 5, 20));
+    assert(shareConn.info.hasMinVersion(3));
+    assert(shareConn.info.hasMinVersion(3, 4));
+    assert(shareConn.info.hasMinVersion(3, 4, 10));
+    assert(!shareConn.info.hasMinVersion(13));
+    assert(!shareConn.info.hasMinVersion(13, 5));
+    assert(!shareConn.info.hasMinVersion(13, 5, 20));
   });
 });

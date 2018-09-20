@@ -110,12 +110,12 @@ describe("mapping", () => {
         "t27 VARBINARY(10) NULL)"
     );
     shareConn.query("INSERT INTO nullMappingTable values ()");
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       done();
     } else {
       //MySQL 5.6 delete YEAR(2) type
-      if (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 6)) {
+      if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)) {
         initValue[23] = 2018;
         nullValue[23] = 1999;
       }
@@ -145,7 +145,7 @@ describe("mapping", () => {
             "t21 TIMESTAMP(0) null default  '2001-01-01 00:00:00'," +
             "t22 TIMESTAMP  null, " +
             "t23 TIME(6) default '22:11:00.560001'," +
-            (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 6)
+            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)
               ? "t24 YEAR(4) default 99,"
               : "t24 YEAR(2) default 99,") +
             "t25 YEAR(4) default 2011," +
@@ -174,7 +174,7 @@ describe("mapping", () => {
   });
 
   it("query mapping field", function(done) {
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 6)) {
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();
     }

@@ -429,8 +429,8 @@ describe("connection", () => {
 
   it("changing session state", function(done) {
     if (
-      (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 2)) ||
-      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 4))
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4))
     ) {
       //session tracking not implemented
       this.skip();
@@ -440,8 +440,8 @@ describe("connection", () => {
       .createConnection()
       .then(conn => {
         if (
-          (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 3, 1)) ||
-          (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 2))
+          (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 3, 1)) ||
+          (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 2))
         ) {
           //mariadb session tracking default value was empty before 10.3.1
           conn.query(
@@ -587,7 +587,7 @@ describe("connection", () => {
 
   it("changing database", function(done) {
     let currDb = Conf.baseConfig.database;
-    assert.equal(currDb, shareConn.getInfo().database);
+    assert.equal(currDb, shareConn.info.database);
     shareConn
       .query("CREATE DATABASE changedb")
       .then(() => {
@@ -595,11 +595,11 @@ describe("connection", () => {
       })
       .then(() => {
         if (
-          (shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2)) ||
-          (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7))
+          (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
+          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))
         ) {
           //ok packet contain meta change
-          assert.equal(shareConn.getInfo().database, "changedb");
+          assert.equal(shareConn.info.database, "changedb");
         }
         shareConn.query("use " + currDb);
         shareConn.query("DROP DATABASE changedb");

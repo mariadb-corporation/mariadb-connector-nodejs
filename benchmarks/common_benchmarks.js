@@ -36,7 +36,6 @@ try {
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};
-
   this.driverLen = 2;
 
   this.ready = 0;
@@ -192,12 +191,14 @@ function Bench() {
           bench.initFcts[i].call(this, bench.CONN.MARIADB.drv);
         }
       }
+      this.currentNb = 0;
       console.log("initializing test data done");
     },
 
     // called between running benchmarks
     onCycle: function(event) {
-      pingAll(connList);
+      this.currentNb++;
+      if (this.currentNb < this.length) pingAll(connList);
       //to avoid mysql2 taking all the server memory
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
@@ -250,11 +251,11 @@ Bench.prototype.endConnection = function(conn) {
     console.log(err);
   }
   if (conn.pool) {
-    conn.pool.end()
-      .catch(err => {
-        console.log("ending error for pool '" + conn.desc + "'");
-        console.log(err);
-      });
+    if (conn.pool.on) conn.pool.on("error", err => {});
+    conn.pool.end().catch(err => {
+      console.log("ending error for pool '" + conn.desc + "'");
+      console.log(err);
+    });
   }
 };
 
@@ -413,16 +414,16 @@ const pingAll = function(conns) {
     conns[keys[k]].drv.ping();
     if (conns[keys[k]].pool) {
       for (let i = 0; i < 4; i++) {
-        conns[keys[k]].pool.getConnection()
-          .then(conn => {
-            conn.ping()
-              .then(() => {
-                conn.release();
-              })
-              .catch(err => {
-                conn.release();
-              })
-          })
+        conns[keys[k]].pool.getConnection().then(conn => {
+          conn
+            .ping()
+            .then(() => {
+              conn.release();
+            })
+            .catch(err => {
+              conn.release();
+            });
+        });
       }
     }
   }

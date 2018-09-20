@@ -39,6 +39,25 @@ describe("basic query", () => {
       .catch(done);
   });
 
+  it("permitSetMultiParamEntries set", done => {
+    const jsonValue = { id: 1, val: "test" };
+    base
+      .createConnection({ permitSetMultiParamEntries: true })
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE setTable(id int, val varchar(128))");
+        conn.query("INSERT INTO setTable SET ?", jsonValue);
+        conn
+          .query("select * from setTable")
+          .then(res => {
+            assert.deepEqual(res[0], jsonValue);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it("query with escape values", function(done) {
     base
       .createConnection()

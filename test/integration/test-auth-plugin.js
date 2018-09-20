@@ -7,7 +7,7 @@ const Conf = require("../conf");
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
     const self = this;
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 22)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
     shareConn
       .query("INSTALL SONAME 'auth_ed25519'")
       .then(
@@ -61,7 +61,7 @@ describe("authentication plugin", () => {
 
   it("name pipe authentication plugin", function(done) {
     if (process.platform !== "win32") this.skip();
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 11)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
     const windowsUser = process.env.USERNAME;
@@ -99,7 +99,7 @@ describe("authentication plugin", () => {
 
   it("unix socket authentication plugin", function(done) {
     if (process.platform === "win32") this.skip();
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1, 11)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
       this.skip();
@@ -130,7 +130,7 @@ describe("authentication plugin", () => {
   it("dialog authentication plugin", function(done) {
     //pam is set using .travis/entrypoint/pam.sh
     if (!process.env.TRAVIS) this.skip();
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch(err => {});
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});

@@ -12,7 +12,7 @@ Install the mariadb Connector using npm
 $ npm install mariadb
 ```
 
-You can then uses the Connector in your application code with the Callback API.  Fir instance,
+You can then uses the Connector in your application code with the Callback API.  For instance,
 
 ```js
   const mariadb = require('mariadb/callback');

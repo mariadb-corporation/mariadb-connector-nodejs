@@ -56,19 +56,17 @@ module.exports.initFct = function(conn) {
       return Promise.all([
         conn.query("DROP TABLE IF EXISTS testn.perfTestText"),
         conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
-      ])
+      ]);
     })
     .catch(e => {
       console.log(e);
       throw e;
     });
-
 };
 
 module.exports.onComplete = function(conn) {
-  conn.query("TRUNCATE TABLE testn.perfTestText")
-    .catch(e => {
-      console.log(e);
-      throw e;
-    });
+  conn.query("TRUNCATE TABLE testn.perfTestText").catch(e => {
+    console.log(e);
+    throw e;
+  });
 };
