@@ -51,7 +51,7 @@ describe("geometry data type", () => {
 
   it("Point Insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_point_insert  (g POINT)");
     shareConn
@@ -138,7 +138,7 @@ describe("geometry data type", () => {
 
   it("LineString insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)");
     shareConn
@@ -236,7 +236,7 @@ describe("geometry data type", () => {
 
   it("Polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_polygon_insert (g POLYGON)");
     shareConn
@@ -298,7 +298,8 @@ describe("geometry data type", () => {
   });
 
   it("MultiPoint format", function(done) {
-    //ST_MultiPointFromText alias doesn't exist before 10.1.4
+    //ST_MultiPointFromText alias doesn't exist before 10.1.4 / 5.7.6
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_point (g MULTIPOINT)");
@@ -340,7 +341,7 @@ describe("geometry data type", () => {
 
   it("MultiPoint insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_point_insert (g MULTIPOINT)");
     shareConn
@@ -392,7 +393,8 @@ describe("geometry data type", () => {
   });
 
   it("Multi-line String format", function(done) {
-    //ST_MultiLineStringFromText alias doesn't exist before 10.1.4
+    //ST_MultiLineStringFromText alias doesn't exist before 10.1.4 / 5.7.6
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_line (g MULTILINESTRING)");
@@ -434,7 +436,7 @@ describe("geometry data type", () => {
 
   it("Multi-line insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_line_insert (g MULTILINESTRING)");
     shareConn
@@ -497,7 +499,8 @@ describe("geometry data type", () => {
   });
 
   it("Multi-polygon format", function(done) {
-    //ST_MultiPolygonFromText alias doesn't exist before 10.1.4
+    //ST_MultiPolygonFromText alias doesn't exist before 10.1.4 / 5.7.6
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon (g MULTIPOLYGON)");
@@ -551,7 +554,7 @@ describe("geometry data type", () => {
 
   it("Multi-polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon_insert (g MULTIPOLYGON)");
     shareConn
@@ -656,7 +659,8 @@ describe("geometry data type", () => {
   });
 
   it("Geometry collection format", function(done) {
-    //ST_GeomCollFromText alias doesn't exist before 10.1.4
+    //ST_GeomCollFromText alias doesn't exist before 10.1.4 / 5.7.6
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
 
     base
