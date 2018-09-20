@@ -51,7 +51,7 @@ describe("geometry data type", () => {
 
   it("Point Insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_point_insert  (g POINT)");
     shareConn
@@ -138,7 +138,7 @@ describe("geometry data type", () => {
 
   it("LineString insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)");
     shareConn
@@ -236,7 +236,7 @@ describe("geometry data type", () => {
 
   it("Polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_polygon_insert (g POLYGON)");
     shareConn
@@ -297,7 +297,10 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("MultiPoint format", done => {
+  it("MultiPoint format", function(done) {
+    //ST_MultiPointFromText alias doesn't exist before 10.1.4
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_point (g MULTIPOINT)");
     shareConn
       .query(
@@ -337,7 +340,7 @@ describe("geometry data type", () => {
 
   it("MultiPoint insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_point_insert (g MULTIPOINT)");
     shareConn
@@ -388,7 +391,10 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-line String format", done => {
+  it("Multi-line String format", function(done) {
+    //ST_MultiLineStringFromText alias doesn't exist before 10.1.4
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_line (g MULTILINESTRING)");
     shareConn
       .query(
@@ -428,7 +434,7 @@ describe("geometry data type", () => {
 
   it("Multi-line insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_line_insert (g MULTILINESTRING)");
     shareConn
@@ -490,7 +496,10 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-polygon format", done => {
+  it("Multi-polygon format", function(done) {
+    //ST_MultiPolygonFromText alias doesn't exist before 10.1.4
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon (g MULTIPOLYGON)");
     shareConn
       .query(
@@ -542,7 +551,7 @@ describe("geometry data type", () => {
 
   it("Multi-polygon insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon_insert (g MULTIPOLYGON)");
     shareConn
@@ -646,7 +655,10 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Geometry collection format", done => {
+  it("Geometry collection format", function(done) {
+    //ST_GeomCollFromText alias doesn't exist before 10.1.4
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+
     base
       .createConnection()
       .then(conn => {
@@ -656,7 +668,7 @@ describe("geometry data type", () => {
             "INSERT INTO gis_geometrycollection VALUES\n" +
               "    (ST_GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0), LINESTRING(0 0,10 10))')),\n" +
               "    (ST_GeometryFromWKB(ST_AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9))))))" +
-              (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)
+              (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)
                 ? ""
                 : ",(ST_GeomFromText('GeometryCollection()')),\n" +
                   "    (ST_GeomFromText('GeometryCollection EMPTY'))")
@@ -709,7 +721,7 @@ describe("geometry data type", () => {
                 }
               }
             ];
-            if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) {
+            if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) {
               expectedValue = [
                 {
                   g: {
@@ -757,7 +769,7 @@ describe("geometry data type", () => {
 
   it("Geometry collection insert", function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     base
       .createConnection()

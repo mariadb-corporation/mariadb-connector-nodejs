@@ -24,7 +24,7 @@ describe("change user", () => {
   });
 
   it("basic change user using callback", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -49,7 +49,7 @@ describe("change user", () => {
   });
 
   it("wrong charset", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then(conn => {
       conn
         .changeUser({ user: "ChangeUser", password: "mypassword", charset: "wrong" })
@@ -65,7 +65,7 @@ describe("change user", () => {
   });
 
   it("basic change user using callback no function", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
@@ -81,7 +81,7 @@ describe("change user", () => {
   });
 
   it("basic change user using promise", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     const baseConf = Conf.baseConfig;
 
     let initialUser;
@@ -126,7 +126,7 @@ describe("change user", () => {
   });
 
   it("change user with collation", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
       .then(conn => {
@@ -152,7 +152,7 @@ describe("change user", () => {
   });
 
   it("MySQL change user disabled", function(done) {
-    if (shareConn.isMariaDB()) this.skip();
+    if (shareConn.info.isMariaDB()) this.skip();
     shareConn
       .changeUser({ user: "ChangeUser" })
       .then(() => {
@@ -165,7 +165,7 @@ describe("change user", () => {
   });
 
   it("autocommit state after changing user", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
       .then(conn => {

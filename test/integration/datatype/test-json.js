@@ -7,8 +7,8 @@ describe("json", () => {
   it("insert json format", function(done) {
     //server permit JSON format
     if (
-      (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||
-      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 8))
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 8))
     ) {
       this.skip();
     }
@@ -30,7 +30,7 @@ describe("json", () => {
     shareConn
       .query("SELECT * FROM `" + tableName + "`")
       .then(rows => {
-        if (shareConn.isMariaDB()) {
+        if (shareConn.info.isMariaDB()) {
           const val1 = JSON.parse(rows[0].val1);
           const val2 = JSON.parse(rows[1].val1);
           assert.equal(val1.id, 2);
@@ -51,8 +51,8 @@ describe("json", () => {
   it("select json format", function(done) {
     //server permit JSON format
     if (
-      (shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 7)) ||
-      (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 8))
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 8))
     ) {
       this.skip();
     }
@@ -75,7 +75,7 @@ describe("json", () => {
     shareConn
       .query("SELECT * FROM `test-json-return-type`")
       .then(rows => {
-        if (shareConn.isMariaDB()) {
+        if (shareConn.info.isMariaDB()) {
           assert.equal(rows[0].val1, jsonString);
         } else {
           assert.equal(rows[0].val1.id, 2);

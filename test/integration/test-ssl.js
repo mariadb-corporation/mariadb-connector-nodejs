@@ -23,16 +23,16 @@ describe("ssl", function() {
     shareConn
       .query(
         "CREATE USER 'sslTestUser'@'%'" +
-          ((shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 0)) ||
-          (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7, 0))
+          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
             ? " REQUIRE SSL"
             : "")
       )
       .then(() => {
         return shareConn.query(
           "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
-            ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
               ? " REQUIRE SSL"
               : "")
         );
@@ -40,8 +40,8 @@ describe("ssl", function() {
       .then(() => {
         return shareConn.query(
           "CREATE USER 'X509testUser'@'%'" +
-            ((shareConn.isMariaDB() && shareConn.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.isMariaDB() && shareConn.hasMinVersion(5, 7, 0))
+            ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
               ? " REQUIRE X509"
               : "")
         );
@@ -49,14 +49,14 @@ describe("ssl", function() {
       .then(() => {
         return shareConn.query(
           "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
-            ((shareConn.isMariaDB() && !shareConn.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 0))
+            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
               ? " REQUIRE X509"
               : "")
         );
       })
       .then(() => {
-        if (!shareConn.isMariaDB() && shareConn.hasMinVersion(8)) {
+        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
           return shareConn.query(
             "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
           );
@@ -184,7 +184,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 working", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_1_method" }
@@ -199,7 +199,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 with permit cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     base
       .createConnection({
         ssl: {
@@ -219,7 +219,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 no common cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     base
       .createConnection({
         ssl: {
@@ -239,7 +239,7 @@ describe("ssl", function() {
 
   it("TLSv1.1 wrong cipher", function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     base
       .createConnection({
         ssl: {
@@ -262,7 +262,7 @@ describe("ssl", function() {
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
     const isWin = process.platform === "win32";
-    if (isWin || !shareConn.isMariaDB()) this.skip();
+    if (isWin || !shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection({
@@ -281,7 +281,7 @@ describe("ssl", function() {
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
     const isWin = process.platform === "win32";
-    if (isWin || !shareConn.isMariaDB()) this.skip();
+    if (isWin || !shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection({
@@ -303,7 +303,7 @@ describe("ssl", function() {
   it("CA provided ignoring name verification", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
     base
@@ -325,7 +325,7 @@ describe("ssl", function() {
   it("CA name verification error", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== "localhost") this.skip();
 
     base
@@ -351,16 +351,16 @@ describe("ssl", function() {
   it("CA provided with matching cn", function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.isMariaDB() && !shareConn.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
 
     base
       .createConnection({ host: "mariadb.example.com", ssl: { ca: ca } })
       .then(conn => {
         const isWin = process.platform === "win32";
         let expectedProtocol = "TLSv1.2";
-        if (shareConn.isMariaDB()) {
+        if (shareConn.info.isMariaDB()) {
           if (isWin) expectedProtocol = "TLSv1.1";
-        } else if (!shareConn.hasMinVersion(8, 0, 0)) {
+        } else if (!shareConn.info.hasMinVersion(8, 0, 0)) {
           expectedProtocol = "TLSv1.1";
         }
         checkProtocol(conn, expectedProtocol);
@@ -446,7 +446,7 @@ describe("ssl", function() {
   });
 
   it("ssl change user", function(done) {
-    if (!shareConn.isMariaDB()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     if (!sslEnable) this.skip();
     let currUser;
     let conn;

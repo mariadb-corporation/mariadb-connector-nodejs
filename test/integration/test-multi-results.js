@@ -221,7 +221,7 @@ describe("multi-results", () => {
 
   it("multiple result type with multiple rows", function(done) {
     //using sequence engine
-    if (!shareConn.isMariaDB() || !shareConn.hasMinVersion(10, 1)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1)) this.skip();
     conn
       .query("select * from seq_1_to_2; DO 1;select * from seq_2_to_3")
       .then(rows => {

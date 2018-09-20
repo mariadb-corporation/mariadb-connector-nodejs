@@ -50,7 +50,7 @@ describe("Compression", function() {
 
   it("multiple packet result (multiple rows)", function(done) {
     //using sequence engine
-    if (!conn.isMariaDB() || !conn.hasMinVersion(10, 1)) this.skip();
+    if (!conn.info.isMariaDB() || !conn.info.hasMinVersion(10, 1)) this.skip();
     conn
       .query("select 1; DO 1;select 2")
       .then(rows => {

@@ -74,7 +74,7 @@ describe("pipelining", () => {
       })
       .then(time => {
         pipelineDiff = time;
-        if (shareConn.hasMinVersion(10, 2, 0)) {
+        if (shareConn.info.hasMinVersion(10, 2, 0)) {
           //before 10.1, speed is sometime nearly equivalent using pipelining or not
           //remove speed test then to avoid random error in CIs
           if (
