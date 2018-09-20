@@ -45,7 +45,7 @@ describe("streaming", () => {
       .then(() => {
         const https = require("https");
         https.get(
-          "https://node.green/",
+          "https://downloads.mariadb.com/Connectors/java/connector-java-2.3.0/mariadb-java-client-2.3.0.jar",
           readableStream => {
             shareConn
               .query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream])
