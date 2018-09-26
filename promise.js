@@ -2,9 +2,11 @@
 
 let Connection = require("./lib/connection");
 let Pool = require("./lib/pool");
+let PoolCluster = require("./lib/pool-cluster");
 
 let ConnOptions = require("./lib/config/connection-options");
 let PoolOptions = require("./lib/config/pool-options");
+let PoolClusterOptions = require("./lib/config/pool-cluster-options");
 
 module.exports.createConnection = function createConnection(opts) {
   try {
@@ -22,6 +24,8 @@ module.exports.createPool = function createPool(opts) {
   return pool;
 };
 
-// exports.createPoolCluster = function createPoolCluster(config) {
-//   //TODO
-// };
+
+module.exports.createPoolCluster = function createPoolCluster(opts) {
+  const options = new PoolClusterOptions(opts);
+  return new PoolCluster(options);
+};
