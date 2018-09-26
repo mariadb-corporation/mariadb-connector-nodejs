@@ -320,6 +320,8 @@ mariadb.createConnection({
 | **metaAsArray** | Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property. |*boolean* |false|
 | **permitSetMultiParamEntries** | Compatibility option to permit setting multiple value by a JSON object to replace one question mark. key values will replace the question mark with format like `key1`=val,`key2`='val2'. Since it doesn't respect the usual prepared statement format that one value is for one question mark, this can lead to incomprehension, even if badly use to possible injection.|*boolean* |false|
 | **sessionVariables** | Permit to set session variables when connecting. Example: sessionVariables:{'idle_transaction_timeout':10000}|*json* |
+| **initSql** | When a connection is established, permit to execute commands before using connection|*string|array* |
+
 
 
 ## F.A.Q.
