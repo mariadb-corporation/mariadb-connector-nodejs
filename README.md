@@ -122,9 +122,9 @@ async function asyncFunction() {
 ## Documentation
 
 The MariaDB Node.js Connector can use different APIs on the back-end: Promise and Callback.  
-The default API is [Promise API](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/documentation/promise-api.md).  
+The default API is [Promise API](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/promise-api.md).  
 
-[Callback API](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/documentation/callback-api.md) is provided for compatibility with the `mysql` and `mysql2` APIs.
+[Callback API](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) is provided for compatibility with the `mysql` and `mysql2` APIs.
   
 ## Road Map 
 
