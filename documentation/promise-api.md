@@ -2,6 +2,7 @@
 # Documentation
 
 There are two different connection implementation: one, the default, uses Promise and the other uses Callback, allowing for compatibility with the mysql and mysql2 API's.  
+
 The documentation provided on this page is the promise API (default).  
 If you want information on the Callback API, see the  [CALLBACK API](./callback-api.md). 
 
@@ -87,7 +88,7 @@ const mariadb = require('mariadb');
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
 
 
-## Base API
+# Base API
 
 ## `createConnection(options) → Promise`
 
@@ -904,7 +905,7 @@ remove and end pool(s) configured in cluster.
 
 ## `poolCluster.end() → Promise`
 
->Returns a promise that :
+> Returns a promise that :
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
@@ -918,13 +919,14 @@ poolCluster.end()
   .catch(err => {});
 ```
 
-getConnection = (pattern, selector)
+
 
 ## `poolCluster.getConnection(pattern, selector) → Promise`
 
 > * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
 > * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
->
+> 
+> Returns a promise that :
 > * resolves with a [Connection](#connection-api) object,
 > * raises an [Error](#error).
 
@@ -947,6 +949,7 @@ cluster.getConnection("slave*")
 > * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
 > * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
 >
+> Returns :
 > * resolves with a [filtered pool cluster](#filteredpoolcluster) object,
 > * raises an [Error](#error).
 
