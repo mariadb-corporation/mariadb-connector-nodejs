@@ -1,12 +1,12 @@
 "use strict";
 
-let Connection = require("./lib/connection");
-let Pool = require("./lib/pool");
-let PoolCluster = require("./lib/pool-cluster");
+const Connection = require("./lib/connection");
+const Pool = require("./lib/pool");
+const PoolCluster = require("./lib/pool-cluster");
 
-let ConnOptions = require("./lib/config/connection-options");
-let PoolOptions = require("./lib/config/pool-options");
-let PoolClusterOptions = require("./lib/config/pool-cluster-options");
+const ConnOptions = require("./lib/config/connection-options");
+const PoolOptions = require("./lib/config/pool-options");
+const PoolClusterOptions = require("./lib/config/pool-cluster-options");
 
 module.exports.createConnection = function createConnection(opts) {
   try {

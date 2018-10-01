@@ -1,9 +1,12 @@
 "use strict";
 
-let ConnectionCallback = require("./lib/connection-callback");
-let ConnOptions = require("./lib/config/connection-options");
-let PoolCallback = require("./lib/pool-callback");
-let PoolOptions = require("./lib/config/pool-options");
+const ConnectionCallback = require("./lib/connection-callback");
+const PoolClusterCallback = require("./lib/pool-cluster-callback");
+const PoolCallback = require("./lib/pool-callback");
+
+const ConnOptions = require("./lib/config/connection-options");
+const PoolOptions = require("./lib/config/pool-options");
+const PoolClusterOptions = require("./lib/config/pool-cluster-options");
 
 module.exports.createConnection = function createConnection(opts) {
   return new ConnectionCallback(new ConnOptions(opts));
@@ -15,6 +18,7 @@ exports.createPool = function createPool(opts) {
   pool.activatePool();
   return pool;};
 
-// exports.createPoolCluster = function createPoolCluster(config) {
-//   //TODO
-// };
+exports.createPoolCluster = function createPoolCluster(opts) {
+  const options = new PoolClusterOptions(opts);
+  return new PoolClusterCallback(options);
+};

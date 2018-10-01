@@ -11,7 +11,7 @@
   "scripts": {
     "test": "npm run test:lint && npm run test:prettier && npm run test:base",
     "test:base": "mocha \"test/**/*.js\" ",
-    "test:lint": "eslint '{lib,test}/**/*.js'",
+    "test:lint": "eslint \"{lib,test}/**/*.js\" ",
     "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{lib,test,benchmarks}/**/*.js\"",
     "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "benchmark": "node ./benchmarks/benchmarks.js",
