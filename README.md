@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://mariadb.org/">
+  <a href="http://mariadb.com/">
     <img src="https://mariadb.com/themes/custom/mariadb/logo.svg">
   </a>
 </p>
