@@ -44,14 +44,16 @@ const mariadb = require('mariadb/callback');
 This initializes the constant `mariadb`, which is set to use the Callback API rather than the default Promise API.
 
 
-## Callback API
+# Callback API
 
 The Connector with the Callback API is similar to the one using Promise, but with a few differences.
 
 
-**Create Connection:**
+**Base:**
 
 * [`createConnection(options) → Connection`](#createconnectionoptions--connection): Creates a connection to a MariaDB Server.
+* [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
+* [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
 
 
 **Connection:**
@@ -65,7 +67,9 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`end([callback])`](#end-callback): Gracefully closes the connection.
 
 
-### `createConnection(options) → Connection`
+# Base API
+
+## `createConnection(options) → Connection`
 
 > * `options`: *JSON* Uses the same options as Promise API. For a complete list, see [option documentation](/documentation/connection-options.md).
 >
@@ -73,7 +77,7 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 
 Creates a new connection.
 
-The difference between this method and the same with the Promise API is that this method returns a `Connection` object, rather than a Prromise that resolves to a `Connection` object.
+The difference between this method and the same with the Promise API is that this method returns a `Connection` object, rather than a Promise that resolves to a `Connection` object.
 
 ```javascript
 const mariadb = require('mariadb/callback');
@@ -89,8 +93,143 @@ conn.connect(err => {
   }
 });
 ```
+
+### Connection options
+
+Essential options list:
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`user`** | User to access database. |*string* | 
+| **`password`** | User password. |*string* | 
+| **`host`** | IP address or DNS of the database server. *Not used when using option `socketPath`*. |*string*| "localhost"|
+| **`port`** | Database server port number. *Not used when using option `socketPath`*|*integer*| 3306|
+| **`ssl`** | Enables TLS support. For more information, see the [`ssl` option](/documentation/connection-options.md#ssl) documentation. |*mixed*|
+| **`database`** | Default database to use when establishing the connection. | *string* | 
+| **`socketPath`** | Permits connections to the database through the Unix domain socket or named pipe. |  *string* | 
+| **`compress`** | Compresses the exchange with the database through gzip.  This permits better performance when the database is not in the same location.  |*boolean*| false|
+| **`connectTimeout`** | Sets the connection timeout in milliseconds. |*integer* | 10 000|
+| **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
+| **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
+
+For more information, see the [Connection Options](/documentation/connection-options.md) documentation. 
+
+### Connecting to Local Databases 
+
+When working with a local database (that is, cases where MariaDB and your Node.js application run on the same host), you can connect to MariaDB through the Unix socket or Windows named pipe for better performance, rather than using the TCP/IP layer.
+
+In order to set this up, you need to assign the connection a `socketPath` value.  When this is done, the Connector ignores the `host` and `port` options.
+
+The specific socket path you need to set is defined by the 
+[`socket`](https://mariadb.com/kb/en/library/server-system-variables/#socket) server system variable.  If you don't know it off hand, you can retrieve it from the server.
+
+```sql
+SHOW VARIABLES LIKE 'socket';
+```
+
+It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on Windows.  Additionally, on Windows, this feature only works when the server is started with the `--enable-named-pipe` option.
+
+For instance, on Unix a connection might look like this:
+
+```javascript
+const mariadb = require('mariadb');
+const conn = mariadb.createConnection({ socketPath: '/tmp/mysql.sock', user: 'root' });
+conn.connect(err => {
+  //do something with connection
+  conn.end();
+});
+
+```
+
+It has a similar syntax on Windows: 
+
+```javascript
+const mariadb = require('mariadb');
+const conn = mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' });
+```
+
+
+### `createPool(options) → Pool`
+
+> * `options`: *JSON* [pool options](#pool-options)
+>
+> Returns a [Pool](#pool-api) object,
+
+Creates a new pool.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLimit: 5 });
+pool.getConnection((err, conn) => {
+  if (err) {
+    console.log("not connected due to error: " + err);
+  } else {
+    console.log("connected ! connection id is " + conn.threadId);
+    conn.end(); //release to pool
+  }
+});
+```
+
+#### Pool options
+
+Pool options includes [connection option documentation](#connection-options) that will be used when creating new connections. 
+
+Specific options for pools are :
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
+| **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
+| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
+
+
+### `createClusterPool(options) → PoolCluster`
+
+> * `options`: *JSON* [poolCluster options](#poolCluster-options)
+>
+> Returns a [PoolCluster](#poolCluster-api) object,
+
+Creates a new pool cluster. Cluster handle multiple pools, giving high availability / distributing load (using round robin / random / ordered ).
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+
+const cluster = mariadb.createPoolCluster();
+cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+
+//getting a connection from slave1 or slave2 using round-robin
+cluster.getConnection(/^slave*$, "RR", (err, conn) => {
+  conn.query("SELECT 1", (err, rows) => {
+     conn.end();
+     return row[0]["@node"];
+  });
+});
+```
+
  
-### `query(sql[, values][, callback])` -> `Emitter`
+#### PoolCluster options
+
+Pool cluster options includes [pool option documentation](#pool-options) that will be used when creating new pools. 
+
+Specific options for pool cluster are :
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. |*integer* | 5 |
+| **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 0|
+| **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
+
+
+# Connection API
+ 
+## `query(sql[, values][, callback])` -> `Emitter`
 
 > * `sql`: *string | JSON* An SQL string value or JSON object to supersede default connections options.  If  aJSON object, it must have an `"sql"` property.  For example: `{dateStrings:true, sql:'SELECT NOW()'}`
 > * `values`: *array | object* Placeholder values. Usually an array, but in cases of just one placeholder, it can be given as is. 
@@ -125,7 +264,7 @@ connection.query({dateStrings:true, sql:'SELECT now()'}, (err, rows, meta) => {
 });
 ```
 
-#### Placeholder
+### Placeholder
 
 To avoid SQL Injection attacks, queries permit the use of a question mark as a placeholder.  The Connector escapes values according to their type.  You can use any native JavaScript type, Buffer, Readable or any object with a `toSqlString` method in these values.  All other objects are stringified using the `JSON.stringify` method.
 
@@ -162,7 +301,7 @@ https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-s
 )
 ```
 
-#### Query Results
+### Query Results
 
 Queries issued from the Connector return two different kinds of results: a JSON object and an array, depending on the type of query you issue.  Queries that write to the database, such as `INSERT`, `DELETE` and `UPDATE` commands return a JSON object with the following properties:
 
@@ -186,7 +325,7 @@ connection.query(
 );
 ```
 
-##### Result-set array
+#### Result-set array
 
 Queries issued from the Connector return two different kinds of results: a JSON object and an array, depending on the type of query you issue.  When the query returns multiple rows, the Connector returns an array, representing the data for each row in the array.  It also returns a `meta` object, containing query metadata.
 
@@ -203,7 +342,7 @@ connection.query('select * from animals', (err, res, meta) => {
 });
 ```
 
-#### Streaming
+### Streaming
 
 ```javascript
 connection.query("SELECT * FROM mysql.user")
@@ -221,7 +360,7 @@ connection.query("SELECT * FROM mysql.user")
       });
 ```
 
-### `beginTransaction([callback])`
+## `beginTransaction([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me#error) if any error.
 
@@ -234,7 +373,7 @@ Begins a new transaction.
 Commits the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  When there isn't an active transaction, this method sends no commands to the server.
 
 
-### `rollback([callback])`
+## `rollback([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -270,7 +409,7 @@ conn.beginTransaction(err => {
 });
 ```
  
-### `changeUser(options[, callback])`
+## `changeUser(options[, callback])`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
 > * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
@@ -287,7 +426,7 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'}, err => {
 });
 ```
 
-### `ping([callback])`
+## `ping([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -303,7 +442,7 @@ conn.ping(err => {
 })
 ```
 
-### `end([callback])`
+## `end([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -314,3 +453,183 @@ conn.end(err => {
   //handle error
 })
 ```
+
+
+# Pool API
+
+Each time a connection is asked, if the pool contains a connection that is not used, the pool will validate the connection, 
+exchanging an empty MySQL packet with the server to ensure the connection state, then give the connection. 
+The pool reuses connection intensively, so this validation is done only if a connection has not been used for a period 
+(specified by the "minDelayValidation" option with the default value of 500ms).
+
+If no connection is available, the request for a connection will be put in a queue until connection timeout. 
+When a connection is available (new creation or released to the pool), it will be used to satisfy queued requests in FIFO order.
+
+When a connection is given back to the pool, any remaining transactions will be rolled back.
+
+## `pool.getConnection(callback)`
+
+>
+> * `callback`: *function* Callback function with arguments ([Error](#error), [Connection](#connection-api)).
+
+Creates a new [Connection](#connection-api) object.
+Connection must be given back to pool with the connection.end() method.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.getConnection((err, conn => {
+  if (err) {
+    console.log("not connected due to error: " + err);
+  } else {
+    console.log("connected ! connection id is " + conn.threadId);
+    conn.end(); //release to pool
+  }
+})
+```
+
+## `pool.query(sql[, values][, callback])`
+
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is. 
+> * `callback`: *function* Callback function with arguments (error, results, metadata).
+
+This is a shortcut to get a connection from pool, execute a query and release connection.
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.query("SELECT NOW()", (err, results, metadata) => {
+  if (err) {
+    //handle error
+  } else {
+    console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
+  }
+});
+```
+
+## `pool.end([callback])`
+
+> * `callback`: *function* Callback function with argument ([Error](#error)).
+
+Closes the pool and underlying connections gracefully.
+
+```javascript
+pool.end(err => {
+  if (err) {
+    //handle error
+    console.log(err);
+  } else {
+    //connections have been ended properly    
+  }
+});
+```
+
+# Pool cluster API
+
+Cluster handle multiple pools according to patterns and handle failover / distributed load (round robin / random / ordered ).
+
+## `poolCluster.add(id, config)`
+
+> * `id`: *string* node identifier. example : 'master'
+> * `config`: *JSON* [pool options](#pool-options) to create pool. 
+>
+
+Add a new Pool to cluster.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const cluster = mariadb.createPoolCluster();
+cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+```
+
+## `poolCluster.remove(pattern)``
+
+> * `pattern`: *string* regex pattern to select pools. Example, `"slave*"`
+>
+remove and end pool(s) configured in cluster.
+
+
+## `poolCluster.end([callback])`
+
+> * `callback`: *function* Callback function with argument ([Error](#error)).
+
+Closes the pool cluster and underlying pools.
+
+```javascript
+poolCluster(err => {
+  if (err) {
+    //handle error
+    console.log(err);
+  } else {
+    //pools have been ended properly    
+  }
+});
+```
+
+
+## `poolCluster.getConnection([pattern, ][selector, ]callback)`
+
+> * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
+> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
+> * `callback`: *function* Callback function with arguments ([Error](#error), [Connection](#connection-api)).
+> 
+
+Creates a new [Connection](#connection-api) object.
+Connection must be given back to pool with the connection.end() method.
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const cluster = mariadb.createPoolCluster();
+cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+cluster.getConnection("slave*", (err, conn) => {
+  //use connection and handle possible error
+})
+```
+
+## `poolCluster.of(pattern, selector) → FilteredPoolCluster`
+
+> * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
+> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
+>
+> Returns :
+> * resolves with a [filtered pool cluster](#filteredpoolcluster) object,
+> * raises an [Error](#error).
+
+Creates a new [filtered pool cluster](#filteredpoolcluster) object that is a subset of cluster.
+
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+
+const cluster = mariadb.createPoolCluster();
+cluster.add("master-north", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("master-south", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1-north", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2-north", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1-south", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+
+const masterCluster = cluster.of('master*');
+const northSlaves = cluster.of(/^slave?-north/, 'RANDOM');
+northSlaves.getConnection((err, conn) => {
+    //use that connection
+});
+```
+
+### `filtered pool cluster`
+
+* `filteredPoolCluster.getConnection(callback)` : Creates a new connection from pools that corresponds to pattern .
+* `filteredPoolCluster.query(sql[, values][, callback])` : this is a shortcut to get a connection from pools that corresponds to pattern, execute a query and release connection.
+
