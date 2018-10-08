@@ -130,7 +130,6 @@ The default API is [Promise API](https://github.com/MariaDB/mariadb-connector-no
 
 The Connector remains in development.  Here's a list of features being developed for future releases:
 
-* `PoolCluster`
 * MariaDB `ed25519` plugin authentication
 * Query Timeouts
 * Bulk Insertion, (that is, fast batch).
