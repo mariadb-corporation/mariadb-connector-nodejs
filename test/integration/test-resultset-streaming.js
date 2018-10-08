@@ -6,6 +6,7 @@ const { Writable } = require("stream");
 
 describe("results-set streaming", () => {
   before(function(done) {
+    this.timeout(10000);
     shareConn
       .query("CREATE TABLE testStreamResult (v int)")
       .then(() => {
