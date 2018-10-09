@@ -11,6 +11,8 @@ addons:
 before_script:
   # Disable services enabled by default
   - sudo /etc/init.d/mysql stop
+before_install:
+  - chmod +x .travis/script.sh
 
 install:
   # generate SSL certificates
@@ -54,6 +56,8 @@ matrix:
     - node_js: "node"
       env: DB=mariadb:10.2 BENCH=1
     - node_js: "node"
+      env: DB=mariadb:10.2 MAXSCALE_VERSION=2.2.9
+    - node_js: "node"
       env: DB=mariadb:5.5
     - node_js: "node"
       env: DB=mariadb:10.0
@@ -78,26 +82,8 @@ notifications:
   email: false
 
 script:
-  - if [ "$DB" = "build" ] ; then .travis/build/build.sh; fi
-  - if [ "$DB" = "build" ] ; then docker build -t build:latest --label build .travis/build/; fi
-  - docker-compose -f .travis/docker-compose.yml up -d
-  - npm install coveralls
-  - npm install
-  - if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
-  - node .travis/wait-for-docker-up.js
-  - docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
-  - sleep 1
-  - docker-compose -f .travis/docker-compose.yml stop db
-  - sleep 1
-  - docker-compose -f .travis/docker-compose.yml up -d
-  - docker-compose -f .travis/docker-compose.yml logs db
-  - node --version
-  - node .travis/wait-for-docker-up.js
-  - if [ -n "$LINT" ] ; then npm run test:lint; fi
-  - if [ -z "$BENCH$LINT" ] ; then npm run test:base; fi
-  - if [ -n "$BENCH" ] ; then npm install promise-mysql mysql2; fi
-  - if [ -n "$BENCH" ] ; then npm install microtime; fi
-  - if [ -n "$BENCH" ] ; then npm run benchmark; fi
+  - .travis/script.sh
+
 after_success:
   - if [ -z "$BENCH" ] ; then npm i nyc -g; fi
   - if [ -z "$BENCH" ] ; then npm run coveralls; fi
