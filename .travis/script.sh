@@ -26,6 +26,10 @@ else
   docker-compose -f .travis/docker-compose.yml up -d
 fi
 
+pwd
+cd ..
+pwd
+
 npm install coveralls
 npm install
 if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
