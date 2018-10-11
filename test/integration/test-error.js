@@ -4,6 +4,15 @@ const base = require("../base.js");
 const { assert } = require("chai");
 
 describe("Error", () => {
+  after(done => {
+    shareConn
+    .query("SELECT 1")
+    .then(row => {
+      done();
+    })
+    .catch(done);
+  });
+
   it("query error with trace", function(done) {
     base
       .createConnection({ trace: true })
@@ -14,10 +23,10 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err.stack.includes("test-error.js"));
-            assert(err != null);
-            assert(err.message.includes("You have an error in your SQL syntax"));
-            assert(err.message.includes("sql: wrong query - parameters:[]"));
+            assert.isTrue(err.stack.includes("test-error.js"));
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
             assert.equal(err.errno, 1064);
             assert.equal(err.sqlState, 42000);
             assert.equal(err.code, "ER_PARSE_ERROR");
@@ -35,10 +44,10 @@ describe("Error", () => {
         if (!err) {
           done(new Error("must have thrown error !"));
         } else {
-          assert(err.stack.includes("test-error.js"));
-          assert(err != null);
-          assert(err.message.includes("You have an error in your SQL syntax"));
-          assert(err.message.includes("sql: wrong query - parameters:[]"));
+          assert.isTrue(err.stack.includes("test-error.js"));
+          assert.isTrue(err != null);
+          assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+          assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
           assert.equal(err.errno, 1064);
           assert.equal(err.sqlState, 42000);
           assert.equal(err.code, "ER_PARSE_ERROR");
@@ -59,8 +68,8 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err.message.includes("You have an error in your SQL syntax"));
-            assert(err.message.includes("sql: wrong quer..."));
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(err.message.includes("sql: wrong quer..."));
             assert.equal(err.errno, 1064);
             assert.equal(err.sqlState, 42000);
             assert.equal(err.code, "ER_PARSE_ERROR");
@@ -81,8 +90,8 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err.message.includes("You have an error in your SQL syntax"));
-            assert(
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(
               err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
             );
             assert.equal(err.errno, 1064);
@@ -124,8 +133,8 @@ describe("Error", () => {
         done(new Error("must have thrown error !"));
       })
       .catch(err => {
-        assert(err.message.includes("You have an error in your SQL syntax"));
-        assert(
+        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+        assert.isTrue(
           err.message.includes(
             "sql: wrong query ?, ?, ?, ?, ?, ?, ? - " +
               "parameters:[addon-bla,true,123,456.5,'long parameter that must be truncated'," +
@@ -152,8 +161,8 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err.message.includes("You have an error in your SQL syntax"));
-            assert(
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(
               err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
             );
             assert.equal(err.errno, 1064);
@@ -176,10 +185,10 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(!err.stack.includes("test-error.js"));
-            assert(err != null);
-            assert(err.message.includes("You have an error in your SQL syntax"));
-            assert(err.message.includes("sql: wrong query - parameters:[]"));
+            assert.isTrue(!err.stack.includes("test-error.js"));
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+            assert.isTrue(err.message.includes("sql: wrong query - parameters:[]"));
             assert.equal(err.errno, 1064);
             assert.equal(err.sqlState, 42000);
             assert.equal(err.code, "ER_PARSE_ERROR");
@@ -203,10 +212,10 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err != null);
-            assert(err.message.includes("Cannot execute new commands: connection closed"));
-            assert(err.message.includes("sql: DO 1 - parameters:[]"));
-            assert(err.fatal);
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            assert.isTrue(err.message.includes("sql: DO 1 - parameters:[]"));
+            assert.isTrue(err.fatal);
             assert.equal(err.sqlState, "08S01");
             assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
             conn
@@ -215,10 +224,12 @@ describe("Error", () => {
                 done(new Error("must have thrown error !"));
               })
               .catch(err => {
-                assert(err != null);
-                assert(err.message.includes("Cannot execute new commands: connection closed"));
-                assert(err.message.includes("sql: DO 1 - parameters:[]"));
-                assert(err.fatal);
+                assert.isTrue(err != null);
+                assert.isTrue(
+                  err.message.includes("Cannot execute new commands: connection closed")
+                );
+                assert.isTrue(err.message.includes("sql: DO 1 - parameters:[]"));
+                assert.isTrue(err.fatal);
                 assert.equal(err.sqlState, "08S01");
                 assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
                 done();
@@ -241,10 +252,10 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err != null);
-            assert(err.message.includes("Cannot execute new commands: connection closed"));
-            assert(err.message.includes("sql: START TRANSACTION - parameters:[]"));
-            assert(err.fatal);
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
+            assert.isTrue(err.message.includes("sql: START TRANSACTION - parameters:[]"));
+            assert.isTrue(err.fatal);
             assert.equal(err.sqlState, "08S01");
             assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
             done();
@@ -254,6 +265,8 @@ describe("Error", () => {
   });
 
   it("server close connection without warning", function(done) {
+    //removed for maxscale, since wait_timeout will be set to other connections
+    if (process.env.MAXSCALE_VERSION) this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
@@ -261,7 +274,7 @@ describe("Error", () => {
       .then(conn => {
         conn.query("set @@wait_timeout = 1");
         conn.on("error", err => {
-          assert(err.message.includes("socket has unexpectedly been closed"));
+          assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
           assert.equal(err.sqlState, "08S01");
           assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
           connectionErr = true;
@@ -273,10 +286,10 @@ describe("Error", () => {
               done(new Error("must have thrown error !"));
             })
             .catch(err => {
-              assert(err.message.includes("Cannot execute new commands: connection closed"));
+              assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
               assert.equal(err.sqlState, "08S01");
               assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
-              assert(connectionErr);
+              assert.isTrue(connectionErr);
               done();
             });
         }, 2000);
@@ -286,7 +299,7 @@ describe("Error", () => {
 
   it("server close connection - no connection error event", function(done) {
     this.timeout(20000);
-
+    if (process.env.MAXSCALE_VERSION) this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners("uncaughtException").pop();
     process.removeListener("uncaughtException", originalException);
@@ -297,7 +310,10 @@ describe("Error", () => {
 
       process.nextTick(function() {
         process.listeners("uncaughtException").push(originalException);
-        assert(recordedError.message.includes("socket has unexpectedly been closed"));
+        assert.isTrue(
+          recordedError.message.includes("socket has unexpectedly been closed") ||
+            recordedError.message.includes("Connection killed by MaxScale")
+        );
         done();
       });
     });
@@ -313,7 +329,7 @@ describe("Error", () => {
               done(new Error("must have thrown error !"));
             })
             .catch(err => {
-              assert(err.message.includes("Cannot execute new commands: connection closed"));
+              assert.isTrue(err.message.includes("Cannot execute new commands: connection closed"));
               assert.equal(err.sqlState, "08S01");
               assert.equal(err.code, "ER_CMD_CONNECTION_CLOSED");
             });
@@ -323,6 +339,7 @@ describe("Error", () => {
   });
 
   it("server close connection during query", function(done) {
+    // if (process.env.MAXSCALE_VERSION) this.skip();
     this.timeout(20000);
     base
       .createConnection()
@@ -334,9 +351,14 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert(err.message.includes("socket has unexpectedly been closed"));
-            assert.equal(err.sqlState, "08S01");
-            assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
+            if (process.env.MAXSCALE_VERSION) {
+              assert.isTrue(err.message.includes("Lost connection to backend server"));
+              assert.equal(err.sqlState, "HY000");
+            } else {
+              assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+              assert.equal(err.sqlState, "08S01");
+              assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
+            }
             done();
           });
         setTimeout(function() {
@@ -347,6 +369,7 @@ describe("Error", () => {
   });
 
   it("end connection query error", function(done) {
+    // if (process.env.MAXSCALE_VERSION) this.skip();
     base
       .createConnection()
       .then(conn => {
@@ -358,12 +381,15 @@ describe("Error", () => {
             done(new Error("must have thrown error !"));
           })
           .catch(err => {
-            assert.ok(err.message.includes("close forced"));
+            assert.isTrue(
+              err.message.includes("close forced") ||
+                err.message.includes("socket has unexpectedly been closed")
+            );
             done();
           });
-        setTimeout(
-          conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error("close forced"))
-        );
+        setTimeout(() => {
+          conn.__tests.getSocket().destroy(new Error("close forced"));
+        }, 100);
       })
       .catch(done);
   });
@@ -373,8 +399,8 @@ describe("Error", () => {
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, "42S02");
       assert.equal(err.code, "ER_NO_SUCH_TABLE");
-      assert(!err.fatal);
-      assert(
+      assert.isTrue(!err.fatal);
+      assert.isTrue(
         err.message.includes(
           "sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]"
         )
@@ -408,7 +434,7 @@ describe("Error", () => {
       assert.equal(err.errno, 45017);
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.code, "ER_PARAMETER_UNDEFINED");
-      assert(!err.fatal);
+      assert.isTrue(!err.fatal);
       assert.ok(
         err.message.includes(
           "Parameter at position 2 is undefined\n" +
@@ -439,7 +465,7 @@ describe("Error", () => {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.code, "ER_MISSING_PARAMETER");
-      assert(!err.fatal);
+      assert.isTrue(!err.fatal);
       assert.ok(
         err.message.includes(
           "Parameter at position 3 is not set\n" +
@@ -468,7 +494,7 @@ describe("Error", () => {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.code, "ER_MISSING_PARAMETER");
-      assert(!err.fatal);
+      assert.isTrue(!err.fatal);
       assert.ok(
         err.message.includes(
           "Parameter at position 3 is not set\n" +
@@ -503,7 +529,7 @@ describe("Error", () => {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.code, "ER_MISSING_PARAMETER");
-      assert(!err.fatal);
+      assert.isTrue(!err.fatal);
       assert.ok(
         err.message.includes(
           "Parameter at position 1 is not set\n" +

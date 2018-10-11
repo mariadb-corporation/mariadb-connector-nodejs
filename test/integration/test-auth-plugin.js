@@ -6,6 +6,7 @@ const Conf = require("../conf");
 
 describe("authentication plugin", () => {
   it("ed25519 authentication plugin", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
     shareConn
@@ -129,7 +130,7 @@ describe("authentication plugin", () => {
 
   it("dialog authentication plugin", function(done) {
     //pam is set using .travis/entrypoint/pam.sh
-    if (!process.env.TRAVIS || !process.end.MAXSCALE_VERSION) this.skip();
+    if (!process.env.TRAVIS || process.env.MAXSCALE_VERSION) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);

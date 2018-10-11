@@ -188,6 +188,7 @@ describe("Pool", () => {
   });
 
   it("connection fail handling", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     const pool = base.createPool({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool
@@ -225,6 +226,7 @@ describe("Pool", () => {
   });
 
   it("query fail handling", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     const pool = base.createPool({ connectionLimit: 2, minDelayValidation: 200 });
     setTimeout(() => {
       //check available connections in pool

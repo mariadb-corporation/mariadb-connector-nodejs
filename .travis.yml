@@ -28,7 +28,6 @@ install:
   - export TEST_SSL_CLIENT_KEY_FILE=$SSLCERT/client.key
   - export TEST_SSL_CLIENT_CERT_FILE=$SSLCERT/client.crt
   - export TEST_SSL_CLIENT_KEYSTORE_FILE=$SSLCERT/client-keystore.p12
-  - export ENTRYPOINT=$PROJ_PATH/.travis/entrypoint
 
 env:
   global:
@@ -44,19 +43,19 @@ matrix:
     - node_js: "node"
       env: DB=build
     - node_js: "6"
-      env: DB=mariadb:10.2 SKIP_LEAK=1
+      env: DB=mariadb:10.3 SKIP_LEAK=1
     - node_js: "8"
-      env: DB=mariadb:10.2
+      env: DB=mariadb:10.3
     - node_js: "node"
-      env: DB=mariadb:10.2
+      env: DB=mariadb:10.3
     - node_js: "node"
-      env: DB=mariadb:10.2 TEST_LONG=1
+      env: DB=mariadb:10.3 TEST_LONG=1
     - node_js: "node"
-      env: DB=mariadb:10.2 LINT=1
+      env: DB=mariadb:10.3 LINT=1
     - node_js: "node"
-      env: DB=mariadb:10.2 BENCH=1
+      env: DB=mariadb:10.3 BENCH=1
     - node_js: "node"
-      env: DB=mariadb:10.2 MAXSCALE_VERSION=2.2.9
+      env: DB=mariadb:10.3 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2
     - node_js: "node"
       env: DB=mariadb:5.5
     - node_js: "node"
@@ -64,7 +63,7 @@ matrix:
     - node_js: "node"
       env: DB=mariadb:10.1
     - node_js: "node"
-      env: DB=mariadb:10.3
+      env: DB=mariadb:10.2
     - node_js: "node"
       env: DB=mysql:5.5
     - node_js: "node"
@@ -76,12 +75,14 @@ matrix:
 
 cache:
   directories:
-  - node_modules
+    - node_modules
 
 notifications:
   email: false
 
 script:
+  - npm install coveralls
+  - npm install
   - .travis/script.sh
 
 after_success:

@@ -16,22 +16,15 @@ if [ -n "$MAXSCALE_VERSION" ] ; then
   ###################################################################################################################
   # launch Maxscale with one server
   ###################################################################################################################
-  export TEST_PORT=4007
-  export TEST_USER=bob
-  export TEXT_DATABASE=test2
   export COMPOSE_FILE=.travis/maxscale-compose.yml
+  export ENTRYPOINT=$PROJ_PATH/.travis/sql
   docker-compose -f ${COMPOSE_FILE} build
   docker-compose -f ${COMPOSE_FILE} up -d
 else
+  export ENTRYPOINT=$PROJ_PATH/.travis/entrypoint
   docker-compose -f .travis/docker-compose.yml up -d
 fi
 
-pwd
-cd ..
-pwd
-
-npm install coveralls
-npm install
 if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
 
 node .travis/wait-for-docker-up.js

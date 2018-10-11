@@ -23,7 +23,10 @@ function Proxy(args) {
   };
 
   this.start = () => {
+    const sockets = [];
     server = net.createServer(socket => {
+      let ended = false;
+      sockets.push(socket);
       if (stop) {
         process.nextTick(socket.destroy.bind(socket));
       } else {
@@ -41,8 +44,21 @@ function Proxy(args) {
         });
 
         remoteSocket.on("end", function() {
-          if (log) console.log("<< remote end");
-          socket.end();
+          if (log) console.log("<< remote end (" + ended + ")");
+          if (!ended) socket.end();
+          ended = true;
+        });
+
+        remoteSocket.on("error", function(err) {
+          if (log) console.log("<< remote error (" + ended + ")");
+          if (!ended) socket.destroy(err);
+          ended = true;
+        });
+
+        socket.on("error", function(err) {
+          if (log) console.log(">> socket error (" + ended + ")");
+          if (!ended) remoteSocket.destroy(err);
+          ended = true;
         });
 
         socket.on("data", function(msg) {
@@ -53,13 +69,21 @@ function Proxy(args) {
         });
 
         socket.on("end", () => {
-          if (log) console.log(">> localsocket end");
-          remoteSocket.end();
+          if (log) console.log(">> localsocket end (" + ended + ")");
+          if (!ended) remoteSocket.end();
+          ended = true;
         });
       }
     });
     server.on("error", err => {
+      if (log) console.log("proxy server error : " + err);
       throw err;
+    });
+    server.on("close", () => {
+      if (log) console.log("closing proxy server");
+      sockets.forEach(socket => {
+        if (socket) socket.end();
+      });
     });
     server.listen(LOCAL_PORT);
     if (log) console.log("TCP server accepting connection on port: " + LOCAL_PORT);

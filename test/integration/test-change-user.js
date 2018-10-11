@@ -81,6 +81,7 @@ describe("change user", () => {
   });
 
   it("basic change user using promise", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const baseConf = Conf.baseConfig;
 

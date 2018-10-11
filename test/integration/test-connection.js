@@ -417,7 +417,7 @@ describe("connection", () => {
       });
   });
 
-  it("connection timeout error (wrong url)", done => {
+  it("connection timeout error (wrong url)", function(done) {
     const initTime = Date.now();
     base.createConnection({ host: "www.google.fr", connectTimeout: 1000 }).catch(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
@@ -430,7 +430,8 @@ describe("connection", () => {
   it("changing session state", function(done) {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
-      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4))
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
+      process.env.MAXSCALE_VERSION
     ) {
       //session tracking not implemented
       this.skip();
@@ -595,8 +596,9 @@ describe("connection", () => {
       })
       .then(() => {
         if (
-          (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))
+          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
+            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
+          !process.env.MAXSCALE_VERSION
         ) {
           //ok packet contain meta change
           assert.equal(shareConn.info.database, "changedb");

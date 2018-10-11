@@ -74,11 +74,13 @@ describe("debug", () => {
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
-              const rangeWithEOF = compress ? [470, 500] : [670, 710];
+              if (process.env.MAXSCALE_VERSION) compress = false;
+              const rangeWithEOF = compress ? [470, 688 ] : [670, 710];
               const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
               if (
-                (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
-                (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))
+                  ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
+                (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
+                !process.env.MAXSCALE_VERSION
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -147,7 +149,8 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  const range = [1790, 2900];
+                  let range = [1790, 2900];
+                  if (process.env.MAXSCALE_VERSION) range = [4800, 5000];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +
