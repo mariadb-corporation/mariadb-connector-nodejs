@@ -24,43 +24,43 @@ describe("ssl", function() {
 
     shareConn
       .query(
-          "CREATE USER 'sslTestUser'@'%'" +
+        "CREATE USER 'sslTestUser'@'%'" +
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
           (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-              ? " REQUIRE SSL"
-              : "")
+            ? " REQUIRE SSL"
+            : "")
       )
       .then(() => {
         return shareConn.query(
-            "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
             ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-                ? " REQUIRE SSL"
-                : "")
+              ? " REQUIRE SSL"
+              : "")
         );
       })
       .then(() => {
         return shareConn.query(
-            "CREATE USER 'X509testUser'@'%'" +
+          "CREATE USER 'X509testUser'@'%'" +
             ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-                ? " REQUIRE X509"
-                : "")
+              ? " REQUIRE X509"
+              : "")
         );
       })
       .then(() => {
         return shareConn.query(
-            "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
+          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
             ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-                ? " REQUIRE X509"
-                : "")
+              ? " REQUIRE X509"
+              : "")
         );
       })
       .then(() => {
         if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
           return shareConn.query(
-              "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
+            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
           );
         }
         return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')");
@@ -75,15 +75,15 @@ describe("ssl", function() {
         } else {
           //ssl is not enable on database, skipping test.
           shareConn
-          .query("SHOW VARIABLES LIKE '%ssl%'")
-          .then(rows => {
-            // console.log("ssl is not enable on database, skipping test :");
-            // for (let i = 0; i < rows.length; i++) {
-            //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
-            // }
-            done();
-          })
-          .catch(done);
+            .query("SHOW VARIABLES LIKE '%ssl%'")
+            .then(rows => {
+              // console.log("ssl is not enable on database, skipping test :");
+              // for (let i = 0; i < rows.length; i++) {
+              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
+              // }
+              done();
+            })
+            .catch(done);
         }
       })
       .catch(done);

@@ -75,11 +75,11 @@ describe("debug", () => {
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
               if (process.env.MAXSCALE_VERSION) compress = false;
-              const rangeWithEOF = compress ? [470, 688 ] : [670, 710];
+              const rangeWithEOF = compress ? [470, 688] : [670, 710];
               const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
               if (
-                  ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
-                (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
+                ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
+                  (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
                 !process.env.MAXSCALE_VERSION
               ) {
                 assert(

@@ -6,11 +6,11 @@ const { assert } = require("chai");
 describe("Error", () => {
   after(done => {
     shareConn
-    .query("SELECT 1")
-    .then(row => {
-      done();
-    })
-    .catch(done);
+      .query("SELECT 1")
+      .then(row => {
+        done();
+      })
+      .catch(done);
   });
 
   it("query error with trace", function(done) {
