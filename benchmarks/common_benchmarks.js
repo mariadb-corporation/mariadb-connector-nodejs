@@ -394,7 +394,7 @@ const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onC
     suite.add({
       name: title + " - " + name,
       fn: function(deferred) {
-        fct.call(self, usePool ? conn.pool : conn.drv, deferred);
+        fct.call(self, usePool ? conn.pool : conn.drv, deferred, conn);
       },
       onComplete: () => {
         if (onComplete) onComplete.call(self, usePool ? conn.pool : conn.drv);

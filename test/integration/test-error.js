@@ -136,9 +136,7 @@ describe("Error", () => {
         assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
         assert.isTrue(
           err.message.includes(
-            "sql: wrong query ?, ?, ?, ?, ?, ?, ? - " +
-              "parameters:[addon-bla,true,123,456.5,'long parameter that must be truncated'," +
-              '{"bla":4,"blou":"t"},{}]'
+            'wrong query ?, ?, ?, ?, ?, ?, ? - parameters:[addon-bla,true,123,456.5,\'long parameter that must be truncated\',{"bla":4,"blou":"t"},{}]'
           )
         );
         assert.equal(err.errno, 1064);
