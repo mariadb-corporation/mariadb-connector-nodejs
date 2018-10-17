@@ -87,16 +87,16 @@ describe("batch", () => {
         .createConnection({ trace: true })
         .then(conn => {
           conn
-            .batch("INSERT INTO test.parse values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
+            .batch("INSERT INTO parse values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
             .then(() => {
               done(new Error("must have thrown error !"));
             })
             .catch(err => {
               assert.isTrue(err != null);
-              assert.isTrue(err.message.includes("Table 'test.parse' doesn't exist"));
+              assert.isTrue(err.message.includes(" doesn't exist"));
               assert.isTrue(
                 err.message.includes(
-                  "INSERT INTO test.parse values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
+                  "INSERT INTO parse values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
                 )
               );
               assert.equal(err.errno, 1146);
@@ -299,7 +299,7 @@ describe("batch", () => {
         .createConnection()
         .then(conn => {
           conn
-            .batch("INSERT INTO test.parse values (1, ?, 2, ?, ?, 3)", [
+            .batch("INSERT INTO parse values (1, ?, 2, ?, ?, 3)", [
               [1, stream1, 99],
               [2, stream2, 98]
             ])
@@ -308,10 +308,10 @@ describe("batch", () => {
             })
             .catch(err => {
               assert.isTrue(err != null);
-              assert.isTrue(err.message.includes("Table 'test.parse' doesn't exist"));
+              assert.isTrue(err.message.includes(" doesn't exist"));
               assert.isTrue(
                 err.message.includes(
-                  "sql: INSERT INTO test.parse values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]"
+                  "sql: INSERT INTO parse values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]"
                 )
               );
               assert.equal(err.errno, 1146);
@@ -454,7 +454,7 @@ describe("batch", () => {
         .createConnection({ namedPlaceholders: true })
         .then(conn => {
           conn
-            .batch("INSERT INTO test.parse values (1, :param_1, 2, :param_2, 3)", [
+            .batch("INSERT INTO parse values (1, :param_1, 2, :param_2, 3)", [
               { param_1: 1, param_2: "john" },
               { param_1: 2, param_2: "jack" }
             ])
@@ -463,10 +463,10 @@ describe("batch", () => {
             })
             .catch(err => {
               assert.isTrue(err != null);
-              assert.isTrue(err.message.includes("Table 'test.parse' doesn't exist"));
+              assert.isTrue(err.message.includes(" doesn't exist"));
               assert.isTrue(
                 err.message.includes(
-                  "sql: INSERT INTO test.parse values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
+                  "sql: INSERT INTO parse values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
                 )
               );
               assert.equal(err.errno, 1146);
@@ -646,7 +646,7 @@ describe("batch", () => {
         .createConnection({ namedPlaceholders: true })
         .then(conn => {
           conn
-            .batch("INSERT INTO test.parse values (1, :id1, 2, :id3, :id7, 3)", [
+            .batch("INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3)", [
               { id1: 1, id3: stream1, id4: 99, id5: 6 },
               { id1: 2, id3: stream2, id4: 98 }
             ])
@@ -655,10 +655,10 @@ describe("batch", () => {
             })
             .catch(err => {
               assert.isTrue(err != null);
-              assert.isTrue(err.message.includes("Table 'test.parse' doesn't exist"));
+              assert.isTrue(err.message.includes(" doesn't exist"));
               assert.isTrue(
                 err.message.includes(
-                  "sql: INSERT INTO test.parse values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
+                  "sql: INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
                 )
               );
               assert.equal(err.errno, 1146);
