@@ -18,22 +18,41 @@ let sqlTable =
   ", PRIMARY KEY (id))";
 sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
-module.exports.title = "100 * insert 100 characters using promise";
+module.exports.title =
+  "100 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
 module.exports.displaySql = "INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)";
 const iterations = 100;
 module.exports.promise = true;
-module.exports.benchFct = function(conn, deferred) {
+module.exports.benchFct = function(conn, deferred, connType) {
   const params = [randomString(100)];
-  let ended = 0;
-  for (let i = 0; i < iterations; i++) {
+  // console.log(connType.desc);
+  if (!connType.desc.includes("mariadb")) {
+    //other driver doesn't have bulk method
+    let ended = 0;
+    for (let i = 0; i < iterations; i++) {
+      conn
+        .query(sqlInsert, params)
+        .then(rows => {
+          // let val = Array.isArray(rows) ? rows[0] : rows;
+          // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
+          if (++ended === iterations) {
+            deferred.resolve();
+          }
+        })
+        .catch(err => {
+          throw err;
+        });
+    }
+  } else {
+    //use batch capability
+    const totalParams = new Array(iterations);
+    for (let i = 0; i < iterations; i++) {
+      totalParams[i] = params;
+    }
     conn
-      .query(sqlInsert, params)
+      .batch(sqlInsert, totalParams)
       .then(rows => {
-        // let val = Array.isArray(rows) ? rows[0] : rows;
-        // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-        if (++ended === iterations) {
-          deferred.resolve();
-        }
+        deferred.resolve();
       })
       .catch(err => {
         throw err;

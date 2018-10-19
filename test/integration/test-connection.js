@@ -364,7 +364,10 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert(err.message.includes("socket timeout"), err.message);
+        assert(
+          err.message.includes("socket timeout") || err.message.includes("Connection timeout"),
+          err.message
+        );
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45026);
         assert.equal(err.code, "ER_SOCKET_TIMEOUT");

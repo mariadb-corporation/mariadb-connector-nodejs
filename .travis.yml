@@ -81,8 +81,8 @@ notifications:
   email: false
 
 script:
-  - npm install coveralls
   - npm install
+  - npm install coveralls
   - .travis/script.sh
 
 after_success:

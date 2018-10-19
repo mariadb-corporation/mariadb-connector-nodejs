@@ -64,6 +64,7 @@ const mariadb = require('mariadb');
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values---promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
@@ -81,6 +82,7 @@ const mariadb = require('mariadb');
 
 * [`pool.getConnection() → Promise`](#poolgetconnection--promise) : Creates a new connection.
 * [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promisee): Executes a query.
+* [`pool.batch(sql, values) → Promise`](#poolbatchsql-values---promisee): Executes a batch
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
@@ -577,6 +579,55 @@ Query times and result handlers take the same amount of time, but you may want t
 For instance,
 
 ```javascript
+connection.query(
+  "CREATE TEMPORARY TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
+);
+connection
+  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]])
+  .then(res => {
+    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+
+    assert.equal(res.affectedRows, 2);
+    connection
+      .query("select * from `parse`")
+      .then(res => {
+        /*
+        res = [ 
+            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+            meta: ...
+          }
+        */ 
+      })
+      .catch(done);
+  });
+```
+
+
+## `connection.batch(sql, values) → Emitter`
+
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* Array of parameter (array of array or array of object if using named placeholders). 
+>
+> Returns an Emitter object that emits different types of events:
+> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
+> * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
+> * data : Emits each time a row is received (parameter is a row). 
+> * end : Emits when the query ends (no parameter). 
+
+For insert queries, rewrite query to execute in a single query.
+example:
+insert into ab (i) values (?) with first batch values = 1, second = 2 will be rewritten
+insert into ab (i) values (1), (2). 
+
+If query cannot be rewriten will execute a query for each values.
+
+result difference compared to execute multiple single query insert is that only first generated insert id will be returned. 
+
+For instance,
+
+```javascript
 connection.queryStream("SELECT * FROM mysql.user")
       .on("error", err => {
         console.log(err); //if error
@@ -856,6 +907,45 @@ pool
    .catch(err => {
     //handle error
    });
+```
+
+## `pool.batch(sql, values)` -> `Promise`
+
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* array of Placeholder values. Usually an array of array, but in cases of only one placeholder per value, it can be given as a single array. 
+>
+> Returns a promise that :
+> * resolves with a JSON object.
+> * rejects with an [Error](#error).
+
+This is a shortcut to get a connection from pool, execute a query and release connection.
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.query(
+  "CREATE TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
+);
+pool
+  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]])
+  .then(res => {
+    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+
+    assert.equal(res.affectedRows, 2);
+    pool
+      .query("select * from `parse`")
+      .then(res => {
+        /*
+        res = [ 
+            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+            meta: ...
+          }
+        */ 
+      })
+      .catch(done);
+  });
 ```
 
 ## `pool.end() → Promise`

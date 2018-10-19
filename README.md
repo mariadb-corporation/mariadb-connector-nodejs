@@ -41,7 +41,13 @@ With Pipelining, the Connector sends commands without waiting for server results
 
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
 
-For more information, see the [Pipelining](/documentation/piplining.md) documentation.
+For more information, see the [Pipelining](/documentation/pipelining.md) documentation.
+ 
+### Bulk insert
+
+Some use cases require a large amount of data to be inserted into a database table. By using batch processing, these queries can be sent to the database in one call, thus improving performance.
+
+For more information, see the [Batch](/documentation/batch.md) documentation.
 
 
 ## Benchmarks
