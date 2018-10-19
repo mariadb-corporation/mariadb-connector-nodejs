@@ -64,6 +64,7 @@ const mariadb = require('mariadb');
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values---promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
@@ -573,6 +574,55 @@ connection
 When using the `query()` method, documented above, the Connector returns the entire result-set with all its data in a single call.  While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets.  Instead of retrieving all of the data into memory, you can use the `queryStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
 
 Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults to 30 seconds.
+
+For instance,
+
+```javascript
+connection.query(
+  "CREATE TEMPORARY TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
+);
+connection
+  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]])
+  .then(res => {
+    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+
+    assert.equal(res.affectedRows, 2);
+    connection
+      .query("select * from `parse`")
+      .then(res => {
+        /*
+        res = [ 
+            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+            meta: ...
+          }
+        */ 
+      })
+      .catch(done);
+  });
+```
+
+
+## `connection.batch(sql, values) → Emitter`
+
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* Array of parameter (array of array or array of object if using named placeholders). 
+>
+> Returns an Emitter object that emits different types of events:
+> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
+> * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
+> * data : Emits each time a row is received (parameter is a row). 
+> * end : Emits when the query ends (no parameter). 
+
+For insert queries, rewrite query to execute in a single query.
+example:
+insert into ab (i) values (?) with first batch values = 1, second = 2 will be rewritten
+insert into ab (i) values (1), (2). 
+
+If query cannot be rewriten will execute a query for each values.
+
+result difference compared to execute multiple single query insert is that only first generated insert id will be returned. 
 
 For instance,
 
