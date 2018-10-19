@@ -82,6 +82,7 @@ const mariadb = require('mariadb');
 
 * [`pool.getConnection() → Promise`](#poolgetconnection--promise) : Creates a new connection.
 * [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promisee): Executes a query.
+* [`pool.batch(sql, values) → Promise`](#poolbatchsql-values---promisee): Executes a batch
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
@@ -906,6 +907,45 @@ pool
    .catch(err => {
     //handle error
    });
+```
+
+## `pool.batch(sql, values)` -> `Promise`
+
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* array of Placeholder values. Usually an array of array, but in cases of only one placeholder per value, it can be given as a single array. 
+>
+> Returns a promise that :
+> * resolves with a JSON object.
+> * rejects with an [Error](#error).
+
+This is a shortcut to get a connection from pool, execute a query and release connection.
+
+```javascript
+const mariadb = require('mariadb');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.query(
+  "CREATE TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
+);
+pool
+  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]])
+  .then(res => {
+    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+
+    assert.equal(res.affectedRows, 2);
+    pool
+      .query("select * from `parse`")
+      .then(res => {
+        /*
+        res = [ 
+            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+            meta: ...
+          }
+        */ 
+      })
+      .catch(done);
+  });
 ```
 
 ## `pool.end() → Promise`
