@@ -57,7 +57,7 @@ const mariadb = require('mariadb');
 
 * [`createConnection(options) → Promise`](#createconnectionoptions--promise) : Creates a new connection.
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
-* [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
+* [`createPoolCluster(options) → PoolCluster`](#createclusterpooloptions--poolcluster) : Creates a new pool cluster.
 
 
 **Connection:** 
@@ -70,6 +70,7 @@ const mariadb = require('mariadb');
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
 * [`connection.changeUser(options) → Promise`](#connectionchangeuseroptions--promise): Changes the current connection user.
 * [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to the database to validate the connection.
+* [`connection.reset() → Promise`](#connectionreset--promise): reset current connection state.
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
 * [`connection.end() → Promise`](#connectionend--promise): Gracefully closes the connection.
 * [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
@@ -719,6 +720,22 @@ conn.ping()
     //connection is closed
   })
 ```
+
+## `connection.reset() → Promise`
+
+>Returns a promise that :
+>  * resolves (no argument)
+>  * rejects with an [Error](#error).
+
+reset the connection. Reset will:
+
+   * rollback any open transaction
+   * reset transaction isolation level
+   * reset session variables
+   * delete user variables
+   * remove temporary tables
+   * remove all PREPARE statement
+   
 
 ## `connection.isValid() → boolean`
 
