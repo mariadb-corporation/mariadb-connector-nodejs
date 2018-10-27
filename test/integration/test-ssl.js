@@ -255,7 +255,7 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert(err.message.includes("no ciphers available"));
+        assert(err.message.includes("no ciphers available") || err.message.includes("no cipher match"));
         done();
       });
   });
