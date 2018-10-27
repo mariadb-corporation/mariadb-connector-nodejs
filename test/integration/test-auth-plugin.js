@@ -150,7 +150,7 @@ describe("authentication plugin", () => {
         done();
       })
       .catch(err => {
-        if (err.errno === 1045) {
+        if (err.errno === 1045 || err.errno === 1044) {
           done();
         } else {
           done(err);
