@@ -25,7 +25,17 @@ describe("reset connection", () => {
             conn.end();
             done();
           })
-          .catch(done);
+          .catch(err => {
+            if (
+              (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
+              (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
+            ) {
+              done(err);
+            } else {
+              conn.end();
+              done();
+            }
+          });
       })
       .catch(done);
   });
@@ -50,7 +60,12 @@ describe("reset connection", () => {
             done(new Error("temporary table must not exist !"));
           })
           .catch(err => {
-            assert.equal(err.errno, 1146);
+            if (
+              (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
+              (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
+            ) {
+              assert.equal(err.errno, 1146);
+            }
             conn.end();
             done();
           });

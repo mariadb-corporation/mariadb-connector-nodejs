@@ -210,10 +210,6 @@ describe("Pool callback", () => {
       pool.query("KILL CONNECTION_ID()", err => {
         assert.equal(err.sqlState, 70100);
         setImmediate(() => {
-          //waiting for rollback to end
-          assert.equal(pool.activeConnections(), 1);
-          assert.equal(pool.totalConnections(), 2);
-          assert.equal(pool.idleConnections(), 1);
           assert.equal(pool.taskQueueSize(), 0);
 
           setTimeout(() => {

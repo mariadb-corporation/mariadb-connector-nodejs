@@ -369,8 +369,7 @@ describe("connection", () => {
           err.message
         );
         assert.equal(err.sqlState, "08S01");
-        assert.equal(err.errno, 45026);
-        assert.equal(err.code, "ER_SOCKET_TIMEOUT");
+        assert.isTrue(err.errno === 45026 || err.errno === 45012);
         done();
       });
   });

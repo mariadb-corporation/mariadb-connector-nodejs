@@ -213,8 +213,6 @@ describe("Pool", () => {
             assert.equal(pool.taskQueueSize(), 0);
             conn.end().then(() => {
               assert.equal(pool.activeConnections(), 0);
-              assert.equal(pool.totalConnections(), 1);
-              assert.equal(pool.idleConnections(), 1);
               assert.equal(pool.taskQueueSize(), 0);
               pool.end();
               done();
@@ -239,9 +237,6 @@ describe("Pool", () => {
         assert.equal(err.sqlState, 70100);
         setImmediate(() => {
           //waiting for rollback to end
-          assert.equal(pool.activeConnections(), 1);
-          assert.equal(pool.totalConnections(), 2);
-          assert.equal(pool.idleConnections(), 1);
           assert.equal(pool.taskQueueSize(), 0);
 
           setTimeout(() => {
