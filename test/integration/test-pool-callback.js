@@ -187,8 +187,6 @@ describe("Pool callback", () => {
             assert.equal(pool.taskQueueSize(), 0);
             conn.end(() => {
               assert.equal(pool.activeConnections(), 0);
-              assert.equal(pool.totalConnections(), 1);
-              assert.equal(pool.idleConnections(), 1);
               assert.equal(pool.taskQueueSize(), 0);
               pool.end();
               done();
