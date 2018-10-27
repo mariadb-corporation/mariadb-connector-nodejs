@@ -57,14 +57,14 @@ const mariadb = require('mariadb');
 
 * [`createConnection(options) → Promise`](#createconnectionoptions--promise) : Creates a new connection.
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
-* [`createPoolCluster(options) → PoolCluster`](#createclusterpooloptions--poolcluster) : Creates a new pool cluster.
+* [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
 
 
 **Connection:** 
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
-* [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values---promise): fast batch processing.
+* [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values--promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
@@ -82,13 +82,23 @@ const mariadb = require('mariadb');
 **Pool:**
 
 * [`pool.getConnection() → Promise`](#poolgetconnection--promise) : Creates a new connection.
-* [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promisee): Executes a query.
-* [`pool.batch(sql, values) → Promise`](#poolbatchsql-values---promisee): Executes a batch
+* [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promise): Executes a query.
+* [`pool.batch(sql, values) → Promise`](#poolbatchsql-values---promise): Executes a batch
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
+
+
+**PoolCluster**
+
+* [`poolCluster.add(id, config)`](#poolclusteraddid-config) : add a pool to cluster.
+* [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
+* [`poolCluster.remove(pattern)`](#poolclusterremovepattern) : remove and end pool according to pattern.
+* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
+* [`poolCluster.getConnection(pattern, selector) → Promise`](#poolclustergetconnectionpattern-selector--promise) : return a connection from cluster.
+* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
 
 
 # Base API
@@ -208,7 +218,7 @@ Specific options for pools are :
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 
 
-### `createClusterPool(options) → PoolCluster`
+### `createPoolCluster(options) → PoolCluster`
 
 > * `options`: *JSON* [poolCluster options](#poolCluster-options)
 >
@@ -257,7 +267,7 @@ Specific options for pool cluster are :
 
 # Connection API
 
-## `connection.query(sql[, values])` -> `Promise`
+## `connection.query(sql[, values]) -> Promise`
 
 > * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is. 
@@ -606,23 +616,21 @@ connection
 ```
 
 
-## `connection.batch(sql, values) → Emitter`
+## `connection.batch(sql, values) → Promise`
 
 > * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array* Array of parameter (array of array or array of object if using named placeholders). 
 >
-> Returns an Emitter object that emits different types of events:
-> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
-> * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
-> * data : Emits each time a row is received (parameter is a row). 
-> * end : Emits when the query ends (no parameter). 
+> Returns a promise that :
+> * resolves with a JSON object.
+> * rejects with an [Error](#error).
 
 For insert queries, rewrite query to execute in a single query.
 example:
 insert into ab (i) values (?) with first batch values = 1, second = 2 will be rewritten
 insert into ab (i) values (1), (2). 
 
-If query cannot be rewriten will execute a query for each values.
+If query cannot be re-writen will execute a query for each values.
 
 result difference compared to execute multiple single query insert is that only first generated insert id will be returned. 
 
@@ -926,7 +934,7 @@ pool
    });
 ```
 
-## `pool.batch(sql, values)` -> `Promise`
+## `pool.batch(sql, values) -> Promise`
 
 > * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
 > * `values`: *array* array of Placeholder values. Usually an array of array, but in cases of only one placeholder per value, it can be given as a single array. 
@@ -1003,7 +1011,7 @@ cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 })
 cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 ```
 
-## `poolCluster.remove(pattern)``
+## `poolCluster.remove(pattern)`
 
 > * `pattern`: *string* regex pattern to select pools. Example, `"slave*"`
 >

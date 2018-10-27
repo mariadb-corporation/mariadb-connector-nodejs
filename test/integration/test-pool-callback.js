@@ -353,4 +353,40 @@ describe("Pool callback", () => {
       }
     });
   });
+
+  it("pool batch", function(done) {
+    const pool = base.createPoolCallback({ connectionLimit: 1, resetAfterUse: false });
+    pool.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)");
+    pool.batch(
+      "INSERT INTO `parse` values (1, ?, 2, ?, 3)",
+      [[1, "john"], [2, "jack"]],
+      (err, res) => {
+        if (err) {
+          done(err);
+        } else {
+          assert.equal(res.affectedRows, 2);
+          pool.query("select * from `parse`", (err2, res2) => {
+            assert.deepEqual(res2, [
+              {
+                id: 1,
+                id2: 1,
+                id3: 2,
+                t: "john",
+                id4: 3
+              },
+              {
+                id: 1,
+                id2: 2,
+                id3: 2,
+                t: "jack",
+                id4: 3
+              }
+            ]);
+            pool.end();
+            done();
+          });
+        }
+      }
+    );
+  });
 });

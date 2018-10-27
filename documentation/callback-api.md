@@ -185,7 +185,7 @@ Specific options for pools are :
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 
 
-### `createClusterPool(options) → PoolCluster`
+### `createPoolCluster(options) → PoolCluster`
 
 > * `options`: *JSON* [poolCluster options](#poolCluster-options)
 >

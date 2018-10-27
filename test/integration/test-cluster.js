@@ -27,7 +27,8 @@ describe("cluster", () => {
       const poolCluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
       poolCluster.add("node1", connOption1);
@@ -116,7 +117,8 @@ describe("cluster", () => {
             "node4",
             Object.assign({}, Conf.baseConfig, {
               initSql: "set @node='node4'",
-              connectionLimit: 1
+              connectionLimit: 1,
+              resetAfterUse: false
             })
           );
           testTimes(poolCluster).then(nodes => {
@@ -193,18 +195,21 @@ describe("cluster", () => {
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node2'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node3'",
         user: "wrong_user",
         connectTimeout: 100,
         acquireTimeout: 200,
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
       poolCluster.add("node1", connOption1);
@@ -234,18 +239,21 @@ describe("cluster", () => {
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node2'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node3'",
         user: "wrong_user",
         connectTimeout: 100,
         acquireTimeout: 200,
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
       poolCluster.add("node1", connOption1);
@@ -495,7 +503,8 @@ describe("cluster", () => {
             "node4",
             Object.assign({}, Conf.baseConfig, {
               initSql: "set @node='node4'",
-              connectionLimit: 1
+              connectionLimit: 1,
+              resetAfterUse: false
             })
           );
           testTimesCallback(poolCluster, (err, nodes) => {
@@ -573,18 +582,21 @@ describe("cluster", () => {
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node2'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node3'",
         user: "wrong_user",
         connectTimeout: 100,
         acquireTimeout: 200,
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
       poolCluster.add("node1", connOption1);
@@ -614,18 +626,21 @@ describe("cluster", () => {
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node2'",
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node3'",
         user: "wrong_user",
         connectTimeout: 100,
         acquireTimeout: 200,
-        connectionLimit: 1
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
       poolCluster.add("node1", connOption1);
@@ -787,15 +802,18 @@ describe("cluster", () => {
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node2'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
     const connOption3 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node3'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
 
     poolCluster.add("node1", connOption1);
@@ -809,15 +827,18 @@ describe("cluster", () => {
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node2'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
     const connOption3 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node3'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
 
     poolCluster.add("node1", connOption1);
@@ -831,12 +852,14 @@ describe("cluster", () => {
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       proxyPort: 4000,
-      host: Conf.baseConfig.host
+      host: Conf.baseConfig.host,
+      resetAfterUse: false
     });
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node2'",
@@ -845,12 +868,14 @@ describe("cluster", () => {
       connectTimeout: 100,
       socketTimeout: 100,
       acquireTimeout: 200,
-      port: 4000
+      port: 4000,
+      resetAfterUse: false
     });
 
     const connOption3 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node3'",
-      connectionLimit: 1
+      connectionLimit: 1,
+      resetAfterUse: false
     });
 
     poolCluster.add("node1", connOption1);

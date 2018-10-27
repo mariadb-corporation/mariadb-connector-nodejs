@@ -14,14 +14,14 @@ describe("reset connection", () => {
             return conn.query("select @youhou");
           })
           .then(rows => {
-            assert.deepEqual(rows, [{"@youhou": 'test'}]);
+            assert.deepEqual(rows, [{ "@youhou": "test" }]);
             return conn.reset();
           })
           .then(() => {
             return conn.query("select @youhou");
           })
           .then(rows => {
-            assert.deepEqual(rows, [{"@youhou": null}]);
+            assert.deepEqual(rows, [{ "@youhou": null }]);
             conn.end();
             done();
           })
@@ -30,32 +30,31 @@ describe("reset connection", () => {
       .catch(done);
   });
 
-
   it("reset temporary tables", function(done) {
     base
-    .createConnection()
-    .then(conn => {
-      conn
-      .query("CREATE TEMPORARY TABLE ttt(t varchar(128))")
-      .then(() => {
-        return conn.query("select * from ttt");
+      .createConnection()
+      .then(conn => {
+        conn
+          .query("CREATE TEMPORARY TABLE ttt(t varchar(128))")
+          .then(() => {
+            return conn.query("select * from ttt");
+          })
+          .then(rows => {
+            assert.deepEqual(rows, []);
+            return conn.reset();
+          })
+          .then(() => {
+            return conn.query("select * from ttt");
+          })
+          .then(rows => {
+            done(new Error("temporary table must not exist !"));
+          })
+          .catch(err => {
+            assert.equal(err.errno, 1146);
+            conn.end();
+            done();
+          });
       })
-      .then(rows => {
-        assert.deepEqual(rows, []);
-        return conn.reset();
-      })
-      .then(() => {
-        return conn.query("select * from ttt");
-      })
-      .then(rows => {
-        done(new Error("temporary table must not exist !"));
-      })
-      .catch(err => {
-        assert.equal(err.errno, 1146);
-        conn.end();
-        done();
-      });
-    })
-    .catch(done);
+      .catch(done);
   });
 });
