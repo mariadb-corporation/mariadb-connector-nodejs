@@ -387,7 +387,7 @@ describe("Error", () => {
           });
         setTimeout(() => {
           conn.__tests.getSocket().destroy(new Error("close forced"));
-        }, 100);
+        }, 5);
       })
       .catch(done);
   });
