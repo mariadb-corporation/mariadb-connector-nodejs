@@ -27,6 +27,34 @@
 | **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)|*integer* | 4196304|
 
 
+### JSON or String configuration
+
+Options can be set as a JSON Object, or a using a String. 
+
+String format is :
+
+`mariadb://[<user>[:<password>]@]<host>[:<port>]/[<db>[?<opt1>=<value1>[&<optx>=<valuex>]]]`
+
+example:
+```javascript
+const mariadb = require('mariadb');
+//passing argument as JSON object
+mariadb.createConnection({ 
+    user: 'root', 
+    password: 'pass', 
+    port: 3307,
+    database: 'db',
+    metaAsArray: false,
+    ssl: true,
+    dateStrings: true  
+  });
+
+//passing argument as String
+mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true');
+```
+
+
+
 ## Big Integer Support 
 
 Integers in JavaScript use IEEE-754 representation.  This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  However, MariaDB does support larger integers. 

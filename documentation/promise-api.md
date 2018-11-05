@@ -105,7 +105,7 @@ const mariadb = require('mariadb');
 
 ## `createConnection(options) → Promise`
 
-> * `options`: *JSON* [connection option documentation](#connection-options)
+> * `options`: *JSON/String* [connection option documentation](#connection-options)
 >
 > Returns a promise that :
 > * resolves with a [Connection](#connection-api) object,
@@ -184,7 +184,7 @@ mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' })
 
 ### `createPool(options) → Pool`
 
-> * `options`: *JSON* [pool options](#pool-options)
+> * `options`: *JSON/String* [pool options](#pool-options)
 >
 > Returns a [Pool](#pool-api) object,
 

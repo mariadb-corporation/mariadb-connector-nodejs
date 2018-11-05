@@ -71,7 +71,7 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 
 ## `createConnection(options) → Connection`
 
-> * `options`: *JSON* Uses the same options as Promise API. For a complete list, see [option documentation](/documentation/connection-options.md).
+> * `options`: *JSON/String* Uses the same options as Promise API. For a complete list, see [option documentation](/documentation/connection-options.md).
 >
 >Returns a Connection object
 
@@ -151,7 +151,7 @@ const conn = mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 
 
 ### `createPool(options) → Pool`
 
-> * `options`: *JSON* [pool options](#pool-options)
+> * `options`: *JSON/string* [pool options](#pool-options)
 >
 > Returns a [Pool](#pool-api) object,
 
