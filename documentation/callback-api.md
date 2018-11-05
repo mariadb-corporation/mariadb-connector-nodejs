@@ -16,7 +16,7 @@ You can then uses the Connector in your application code with the Callback API. 
 
 ```js
   const mariadb = require('mariadb/callback');
-  const conn = mariadb.createConnection({host: 'mydb.com', user:'myUser'});
+  const conn = mariadb.createConnection({host: 'mydb.com', user:'myUser', password: 'myPwd'});
   conn.query("SELECT 1 as val", (err, rows) => {
       console.log(rows); //[ {val: 1}, meta: ... ]
       conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"], (err, res) => {
@@ -83,7 +83,8 @@ The difference between this method and the same with the Promise API is that thi
 const mariadb = require('mariadb/callback');
 const conn = mariadb.createConnection({
       host: 'mydb.com', 
-      user:'myUser'
+      user:'myUser',
+      password: 'myPwd'
     });
 conn.connect(err => {
   if (err) {

@@ -20,7 +20,7 @@ You can then uses the Connector in your application code with the Promise API.  
 ```js
   const mariadb = require('mariadb');
 
-  mariadb.createConnection({host: 'mydb.com', user: 'myUser'})
+  mariadb.createConnection({host: 'mydb.com', user: 'myUser', password: 'myPwd'})
     .then(conn => {
       conn.query("select 1", [2])
         .then(rows => {
@@ -119,7 +119,8 @@ Creates a new [Connection](#connection-api) object.
 const mariadb = require('mariadb');
 mariadb.createConnection({
       host: 'mydb.com', 
-      user:'myUser'
+      user:'myUser',
+      password: 'myPwd'
     })
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
@@ -846,7 +847,7 @@ Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs
 
 ```javascript
 const mariadb = require('mariadb');
-mariadb.createConnection({user: 'root', host: 'localhost', socketTimeout: 100})
+mariadb.createConnection({user: 'root', password: 'myPwd', host: 'localhost', socketTimeout: 100})
 .then(conn => {
 conn.on('error', err => {
   //will be executed after 100ms due to inactivity, socket has closed. 
