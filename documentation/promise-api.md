@@ -637,19 +637,15 @@ result difference compared to execute multiple single query insert is that only 
 For instance,
 
 ```javascript
-connection.queryStream("SELECT * FROM mysql.user")
-      .on("error", err => {
-        console.log(err); //if error
-      })
-      .on("fields", meta => {
-        console.log(meta); // [ ...]
-      })
-      .on("data", row => {
-        console.log(row);
-      })
-      .on("end", () => {
-        //ended
-      });
+  connection.query(
+    "CREATE TEMPORARY TABLE batchExample(id int, id2 int, id3 int, t varchar(128), id4 int)"
+  );
+  connection
+    .batch("INSERT INTO `batchExample` values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
+    .then(res => {
+      console.log(res.affectedRows); // 2
+    });
+
 ```
 
 ## `connection.beginTransaction() → Promise`
