@@ -22,33 +22,37 @@ environment:
 
     - DB: '10.2.16'
       MEM: "21"
-      nodejs_version: "9"
+      nodejs_version: "10"
 
     - DB: '10.2.16'
-      nodejs_version: "9"
+      MEM: "21"
+      nodejs_version: "11"
+
+    - DB: '10.2.16'
+      nodejs_version: "10"
       MEM: "21"
       TEST_ZIP: 1
 
     - DB: '10.2.16'
-      nodejs_version: "9"
+      nodejs_version: "10"
       MEM: "21"
       BENCH: "1"
 
     - DB: '10.3.8'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
     - DB: '10.1.34'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
     - DB: '10.0.35'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
     - DB: '5.5.60'
       MEM: "5"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
 cache:
   - node_modules
