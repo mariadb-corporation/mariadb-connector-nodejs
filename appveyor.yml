@@ -9,6 +9,7 @@ environment:
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
   MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
+  TEST_LOG_PACKETS: true
   matrix:
 
     - DB: '10.2.16'
