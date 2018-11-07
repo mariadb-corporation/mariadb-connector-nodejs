@@ -350,7 +350,8 @@ describe("Pool callback", () => {
 
   it("pool batch", function(done) {
     const pool = base.createPoolCallback({ connectionLimit: 1, resetAfterUse: false });
-    pool.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)");
+    pool.query("DROP TABLE IF EXISTS parse");
+    pool.query("CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)");
     pool.batch(
       "INSERT INTO `parse` values (1, ?, 2, ?, 3)",
       [[1, "john"], [2, "jack"]],
@@ -376,6 +377,7 @@ describe("Pool callback", () => {
                 id4: 3
               }
             ]);
+            pool.query("DROP TABLE parse");
             pool.end();
             done();
           });

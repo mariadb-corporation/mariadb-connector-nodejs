@@ -47,10 +47,13 @@ describe("batch", () => {
       .createConnection({ compress: useCompression })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int)"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
+          .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", [
+            [1, "john", new Date("2001-12-31 23:59:58")],
+            [2, "jack", new Date("2020-12-31 23:59:59")]
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
@@ -62,6 +65,7 @@ describe("batch", () => {
                     id2: 1,
                     id3: 2,
                     t: "john",
+                    d: new Date("2001-12-31 23:59:58"),
                     id4: 3
                   },
                   {
@@ -69,6 +73,7 @@ describe("batch", () => {
                     id2: 2,
                     id3: 2,
                     t: "jack",
+                    d: new Date("2020-12-31 23:59:59"),
                     id4: 3
                   }
                 ]);
@@ -452,25 +457,25 @@ describe("batch", () => {
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWith16mMaxAllowedPacket(useCompression, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWith4mMaxAllowedPacket(useCompression, done);
     });
 
     it("16M+ error batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchError(useCompression, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, done);
     });
 
@@ -484,13 +489,13 @@ describe("batch", () => {
 
     it("16M+ batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWithStreams(useCompression, done);
     });
 
     it("16M+ error batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchErrorWithStreams(useCompression, done);
     });
   });
@@ -512,25 +517,25 @@ describe("batch", () => {
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWith16mMaxAllowedPacket(useCompression, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWith4mMaxAllowedPacket(useCompression, done);
     });
 
     it("16M+ error batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchError(useCompression, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, done);
     });
 
@@ -544,13 +549,13 @@ describe("batch", () => {
 
     it("16M+ batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchWithStreams(useCompression, done);
     });
 
     it("16M+ error batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       bigBatchErrorWithStreams(useCompression, done);
     });
   });
@@ -661,7 +666,7 @@ describe("batch", () => {
 
     it("16M+ batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       base
         .createConnection({ namedPlaceholders: true })
         .then(conn => {
@@ -706,7 +711,7 @@ describe("batch", () => {
 
     it("16M+ single insert batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       base
         .createConnection({ namedPlaceholders: true })
         .then(conn => {
@@ -822,7 +827,7 @@ describe("batch", () => {
 
     it("16M+ batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(120000);
+      this.timeout(240000);
       const values = [];
       for (let i = 0; i < 1000000; i++) {
         if (i % 100000 === 0)
