@@ -19,14 +19,14 @@ let sqlTable =
 sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
 module.exports.title =
-  "100 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
+  "1000 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
 module.exports.displaySql = "INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)";
-const iterations = 100;
+const iterations = 1000;
 module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred, connType) {
   const params = [randomString(100)];
   // console.log(connType.desc);
-  if (!connType.desc.includes("mariadb")) {
+  if (!connType.desc.includes("mariadb2")) {
     //other driver doesn't have bulk method
     let ended = 0;
     for (let i = 0; i < iterations; i++) {

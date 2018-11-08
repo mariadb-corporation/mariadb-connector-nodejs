@@ -42,9 +42,9 @@ describe("batch", () => {
     fs.unlink(bigFileName, err => {});
   });
 
-  const simpleBatch = (useCompression, done) => {
+  const simpleBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int)"
@@ -80,15 +80,17 @@ describe("batch", () => {
                 conn.end();
                 done();
               })
-              .catch(done);
+              .catch(err => {
+                done(err);
+              });
           });
       })
       .catch(done);
   };
 
-  const simpleBatchErrorMsg = (compression, done) => {
+  const simpleBatchErrorMsg = (compression, useBulk, done) => {
     base
-      .createConnection({ trace: true })
+      .createConnection({ trace: true, bulk: useBulk })
       .then(conn => {
         conn
           .batch("INSERT INTO parse values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
@@ -113,35 +115,58 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const nonRewritableBatch = (useCompression, done) => {
+  const nonRewritableBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
-        conn.batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]]).then(res => {
-          assert.deepEqual(res, [
-            [
-              {
-                id: 1,
-                t: "john"
-              }
-            ],
-            [
-              {
-                id: 2,
-                t: "jack"
-              }
-            ]
-          ]);
-          conn.end();
-          done();
-        });
+        conn
+          .batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]])
+          .then(res => {
+            conn.end();
+            if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              done(new Error("Must have thrown an exception"));
+            } else {
+              assert.deepEqual(res, [
+                [
+                  {
+                    id: 1,
+                    t: "john"
+                  }
+                ],
+                [
+                  {
+                    id: 2,
+                    t: "jack"
+                  }
+                ]
+              ]);
+              done();
+            }
+          })
+          .catch(err => {
+            conn.end();
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              assert.isTrue(
+                err.message.includes(
+                  "This command is not supported in the prepared statement protocol yet"
+                )
+              );
+              done();
+            } else {
+              done(err);
+            }
+          });
       })
       .catch(done);
   };
 
-  const bigBatchWith16mMaxAllowedPacket = (useCompression, done) => {
+  const bigBatchWith16mMaxAllowedPacket = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression, maxAllowedPacket: 16 * 1024 * 1024 })
+      .createConnection({
+        compress: useCompression,
+        maxAllowedPacket: 16 * 1024 * 1024,
+        bulk: useBulk
+      })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
@@ -181,9 +206,9 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const bigBatchWith4mMaxAllowedPacket = (useCompression, done) => {
+  const bigBatchWith4mMaxAllowedPacket = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
@@ -223,9 +248,9 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const bigBatchError = (useCompression, done) => {
+  const bigBatchError = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
@@ -253,46 +278,49 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const singleBigInsertWithoutMaxAllowedPacket = (useCompression, done) => {
+  const singleBigInsertWithoutMaxAllowedPacket = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int)");
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", [[1, bigBuf], [2, "john"]])
           .then(res => {
             assert.equal(res.affectedRows, 2);
-            conn.query("select * from `parse`").then(rows => {
-              assert.deepEqual(rows, [
-                {
-                  id: 1,
-                  id2: 1,
-                  id3: 2,
-                  t: bigBuf.toString(),
-                  id4: 3
-                },
-                {
-                  id: 1,
-                  id2: 2,
-                  id3: 2,
-                  t: "john",
-                  id4: 3
-                }
-              ]);
-              conn.end();
-              done();
-            });
+            conn
+              .query("select * from `parse`")
+              .then(rows => {
+                assert.deepEqual(rows, [
+                  {
+                    id: 1,
+                    id2: 1,
+                    id3: 2,
+                    t: bigBuf.toString(),
+                    id4: 3
+                  },
+                  {
+                    id: 1,
+                    id2: 2,
+                    id3: 2,
+                    t: "john",
+                    id4: 3
+                  }
+                ]);
+                conn.end();
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
       .catch(done);
   };
 
-  const batchWithStream = (useCompression, done) => {
+  const batchWithStream = (useCompression, useBulk, done) => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
@@ -332,11 +360,11 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const batchErrorWithStream = (useCompression, done) => {
+  const batchErrorWithStream = (useCompression, useBulk, done) => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn
           .batch("INSERT INTO parse values (1, ?, 2, ?, ?, 3)", [
@@ -364,7 +392,7 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const bigBatchWithStreams = (useCompression, done) => {
+  const bigBatchWithStreams = (useCompression, useBulk, done) => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
@@ -372,7 +400,7 @@ describe("batch", () => {
     }
 
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
@@ -409,7 +437,7 @@ describe("batch", () => {
       .catch(done);
   };
 
-  const bigBatchErrorWithStreams = (useCompression, done) => {
+  const bigBatchErrorWithStreams = (useCompression, useBulk, done) => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
@@ -417,7 +445,7 @@ describe("batch", () => {
     }
 
     base
-      .createConnection({ compress: useCompression })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
@@ -441,208 +469,89 @@ describe("batch", () => {
       .catch(done);
   };
 
-  describe("standard question mark", () => {
-    const useCompression = false;
-    it("simple batch", done => {
-      simpleBatch(useCompression, done);
-    });
+  const simpleNamedPlaceHolders = (useBulk, done) => {
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+        );
+        conn
+          .batch("INSERT INTO `parse` values (1, :param_1, 2, :param_2, 3)", [
+            { param_1: 1, param_2: "john" },
+            { param_1: 2, param_2: "jack" }
+          ])
+          .then(res => {
+            assert.equal(res.affectedRows, 2);
+            conn
+              .query("select * from `parse`")
+              .then(res => {
+                assert.deepEqual(res, [
+                  {
+                    id: 1,
+                    id2: 1,
+                    id3: 2,
+                    t: "john",
+                    id4: 3
+                  },
+                  {
+                    id: 1,
+                    id2: 2,
+                    id3: 2,
+                    t: "jack",
+                    id4: 3
+                  }
+                ]);
+                conn.end();
+                done();
+              })
+              .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
+  };
 
-    it("simple batch error message ", done => {
-      simpleBatchErrorMsg(useCompression, done);
-    });
-
-    it("non rewritable batch", done => {
-      nonRewritableBatch(useCompression, done);
-    });
-
-    it("16M+ batch with 16M max_allowed_packet", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchWith16mMaxAllowedPacket(useCompression, done);
-    });
-
-    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
-      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
-      bigBatchWith4mMaxAllowedPacket(useCompression, done);
-    });
-
-    it("16M+ error batch", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchError(useCompression, done);
-    });
-
-    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      singleBigInsertWithoutMaxAllowedPacket(useCompression, done);
-    });
-
-    it("batch with streams", done => {
-      batchWithStream(useCompression, done);
-    });
-
-    it("batch error with streams", done => {
-      batchErrorWithStream(useCompression, done);
-    });
-
-    it("16M+ batch with streams", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchWithStreams(useCompression, done);
-    });
-
-    it("16M+ error batch with streams", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchErrorWithStreams(useCompression, done);
-    });
-  });
-
-  describe("standard question mark and compress", () => {
-    const useCompression = true;
-
-    it("simple batch", done => {
-      simpleBatch(useCompression, done);
-    });
-
-    it("simple batch error message ", done => {
-      simpleBatchErrorMsg(useCompression, done);
-    });
-
-    it("non rewritable batch", done => {
-      nonRewritableBatch(useCompression, done);
-    });
-
-    it("16M+ batch with 16M max_allowed_packet", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchWith16mMaxAllowedPacket(useCompression, done);
-    });
-
-    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
-      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
-      bigBatchWith4mMaxAllowedPacket(useCompression, done);
-    });
-
-    it("16M+ error batch", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchError(useCompression, done);
-    });
-
-    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      singleBigInsertWithoutMaxAllowedPacket(useCompression, done);
-    });
-
-    it("batch with streams", done => {
-      batchWithStream(useCompression, done);
-    });
-
-    it("batch error with streams", done => {
-      batchErrorWithStream(useCompression, done);
-    });
-
-    it("16M+ batch with streams", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchWithStreams(useCompression, done);
-    });
-
-    it("16M+ error batch with streams", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      bigBatchErrorWithStreams(useCompression, done);
-    });
-  });
-
-  describe("named parameter", () => {
-    it("simple batch", done => {
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn.query(
-            "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
-          );
-          conn
-            .batch("INSERT INTO `parse` values (1, :param_1, 2, :param_2, 3)", [
-              { param_1: 1, param_2: "john" },
-              { param_1: 2, param_2: "jack" }
-            ])
-            .then(res => {
-              assert.equal(res.affectedRows, 2);
-              conn
-                .query("select * from `parse`")
-                .then(res => {
-                  assert.deepEqual(res, [
-                    {
-                      id: 1,
-                      id2: 1,
-                      id3: 2,
-                      t: "john",
-                      id4: 3
-                    },
-                    {
-                      id: 1,
-                      id2: 2,
-                      id3: 2,
-                      t: "jack",
-                      id4: 3
-                    }
-                  ]);
-                  conn.end();
-                  done();
-                })
-                .catch(done);
-            });
-        })
-        .catch(done);
-    });
-
-    it("simple batch error", done => {
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn
-            .batch("INSERT INTO parse values (1, :param_1, 2, :param_2, 3)", [
-              { param_1: 1, param_2: "john" },
-              { param_1: 2, param_2: "jack" }
-            ])
-            .then(() => {
-              done(new Error("must have thrown error !"));
-            })
-            .catch(err => {
-              assert.isTrue(err != null);
-              assert.isTrue(err.message.includes(" doesn't exist"));
-              assert.isTrue(
-                err.message.includes(
-                  "sql: INSERT INTO parse values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
-                )
-              );
-              assert.equal(err.errno, 1146);
-              assert.equal(err.sqlState, "42S02");
-              assert.equal(err.code, "ER_NO_SUCH_TABLE");
-              conn.end();
-              done();
-            });
-        })
-        .catch(done);
-    });
-
-    it("non rewritable batch", done => {
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn
-            .batch("SELECT :id2 as id, :id1 as t", [
-              { id2: 1, id1: "john" },
-              { id1: "jack", id2: 2 }
-            ])
-            .then(res => {
+  const simpleNamedPlaceHoldersErr = (useBulk, done) => {
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn
+          .batch("INSERT INTO parse values (1, :param_1, 2, :param_2, 3)", [
+            { param_1: 1, param_2: "john" },
+            { param_1: 2, param_2: "jack" }
+          ])
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes(" doesn't exist"));
+            assert.isTrue(
+              err.message.includes(
+                "sql: INSERT INTO parse values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
+              )
+            );
+            assert.equal(err.errno, 1146);
+            assert.equal(err.sqlState, "42S02");
+            assert.equal(err.code, "ER_NO_SUCH_TABLE");
+            conn.end();
+            done();
+          });
+      })
+      .catch(done);
+  };
+  const nonRewritableHoldersErr = (useBulk, done) => {
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn
+          .batch("SELECT :id2 as id, :id1 as t", [{ id2: 1, id1: "john" }, { id1: "jack", id2: 2 }])
+          .then(res => {
+            conn.end();
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              done(new Error("Must have thrown an exception"));
+            } else {
               assert.deepEqual(res, [
                 [
                   {
@@ -657,220 +566,543 @@ describe("batch", () => {
                   }
                 ]
               ]);
-              conn.end();
               done();
-            });
-        })
-        .catch(done);
-    });
+            }
+          })
+          .catch(err => {
+            conn.end();
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              assert.isTrue(
+                err.message.includes(
+                  "This command is not supported in the prepared statement protocol yet"
+                )
+              );
+              done();
+            } else {
+              done(err);
+            }
+          });
+      })
+      .catch(done);
+  };
 
-    it("16M+ batch", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn.query(
-            "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
-          );
-          const values = [];
-          for (let i = 0; i < 1000000; i++) {
-            values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz" });
-          }
-          conn
-            .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, 3)", values)
-            .then(res => {
-              assert.equal(res.affectedRows, 1000000);
+  const more16MNamedPlaceHolders = function(useBulk, done) {
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+        );
+        const values = [];
+        for (let i = 0; i < 1000000; i++) {
+          values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz" });
+        }
+        conn
+          .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, 3)", values)
+          .then(res => {
+            assert.equal(res.affectedRows, 1000000);
 
-              let currRow = 0;
-              conn
-                .queryStream("select * from `parse`")
-                .on("error", err => {
-                  done(new Error("must not have thrown any error !"));
-                })
-                .on("data", row => {
-                  assert.deepEqual(row, {
-                    id: 1,
-                    id2: currRow,
-                    id3: 2,
-                    t: "abcdefghijkflmnopqrtuvwxyz",
-                    id4: 3
-                  });
-                  currRow++;
-                })
-                .on("end", () => {
-                  assert.equal(1000000, currRow);
-                  conn.end();
-                  done();
+            let currRow = 0;
+            conn
+              .queryStream("select * from `parse`")
+              .on("error", err => {
+                done(new Error("must not have thrown any error !"));
+              })
+              .on("data", row => {
+                assert.deepEqual(row, {
+                  id: 1,
+                  id2: currRow,
+                  id3: 2,
+                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  id4: 3
                 });
-            })
-            .catch(done);
-        })
-        .catch(done);
-    });
-
-    it("16M+ single insert batch", function(done) {
-      if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int)");
-          conn
-            .batch("INSERT INTO `parse` values (1, :id, 2, :id2, 3)", [
-              { id: 1, id2: bigBuf },
-              { id: 2, id2: "john" }
-            ])
-            .then(res => {
-              assert.equal(res.affectedRows, 2);
-              conn.query("select * from `parse`").then(rows => {
-                assert.deepEqual(rows, [
-                  {
-                    id: 1,
-                    id2: 1,
-                    id3: 2,
-                    t: bigBuf.toString(),
-                    id4: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 2,
-                    id3: 2,
-                    t: "john",
-                    id4: 3
-                  }
-                ]);
+                currRow++;
+              })
+              .on("end", () => {
+                assert.equal(1000000, currRow);
                 conn.end();
                 done();
               });
-            })
-            .catch(done);
-        })
-        .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
+  };
+
+  const more16MSingleNamedPlaceHolders = function(useBulk, done) {
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int)");
+        conn
+          .batch("INSERT INTO `parse` values (1, :id, 2, :id2, 3)", [
+            { id: 1, id2: bigBuf },
+            { id: 2, id2: "john" }
+          ])
+          .then(res => {
+            assert.equal(res.affectedRows, 2);
+            conn.query("select * from `parse`").then(rows => {
+              assert.deepEqual(rows, [
+                {
+                  id: 1,
+                  id2: 1,
+                  id3: 2,
+                  t: bigBuf.toString(),
+                  id4: 3
+                },
+                {
+                  id: 1,
+                  id2: 2,
+                  id3: 2,
+                  t: "john",
+                  id4: 3
+                }
+              ]);
+              conn.end();
+              done();
+            });
+          })
+          .catch(done);
+      })
+      .catch(done);
+  };
+
+  const streamNamedPlaceHolders = (useBulk, done) => {
+    const stream1 = fs.createReadStream(fileName);
+    const stream2 = fs.createReadStream(fileName);
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+        );
+        conn
+          .batch("INSERT INTO `parse` values (1, :id1, 2, :id3, :id7, 3)", [
+            { id1: 1, id3: stream1, id4: 99, id5: 6 },
+            { id1: 2, id3: stream2, id4: 98 }
+          ])
+          .then(res => {
+            assert.equal(res.affectedRows, 2);
+            conn.query("select * from `parse`").then(res => {
+              assert.deepEqual(res, [
+                {
+                  id: 1,
+                  id2: 1,
+                  id3: 2,
+                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  id4: null,
+                  id5: 3
+                },
+                {
+                  id: 1,
+                  id2: 2,
+                  id3: 2,
+                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  id4: null,
+                  id5: 3
+                }
+              ]);
+              conn.end();
+              done();
+            });
+          })
+          .catch(done);
+      })
+      .catch(done);
+  };
+
+  const streamErrorNamedPlaceHolders = (useBulk, done) => {
+    const stream1 = fs.createReadStream(fileName);
+    const stream2 = fs.createReadStream(fileName);
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn
+          .batch("INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3)", [
+            { id1: 1, id3: stream1, id4: 99, id5: 6 },
+            { id1: 2, id3: stream2, id4: 98 }
+          ])
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err != null);
+            assert.isTrue(err.message.includes(" doesn't exist"));
+            assert.isTrue(
+              err.message.includes(
+                "sql: INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
+              )
+            );
+            assert.equal(err.errno, 1146);
+            assert.equal(err.sqlState, "42S02");
+            assert.equal(err.code, "ER_NO_SUCH_TABLE");
+            conn.end();
+            done();
+          });
+      })
+      .catch(done);
+  };
+
+  const stream16MNamedPlaceHolders = function(useBulk, done) {
+    const values = [];
+    for (let i = 0; i < 1000000; i++) {
+      if (i % 100000 === 0) values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
+      else values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz", id3: i * 2 });
+    }
+
+    base
+      .createConnection({ namedPlaceholders: true, bulk: useBulk })
+      .then(conn => {
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+        );
+        conn
+          .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, :id3, 3)", values)
+          .then(res => {
+            assert.equal(res.affectedRows, 1000000);
+            let currRow = 0;
+            conn
+              .queryStream("select * from `parse`")
+              .on("error", err => {
+                done(new Error("must not have thrown any error !"));
+              })
+              .on("data", row => {
+                assert.deepEqual(row, {
+                  id: 1,
+                  id2: currRow,
+                  id3: 2,
+                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  id4: currRow * 2,
+                  id5: 3
+                });
+                currRow++;
+              })
+              .on("end", () => {
+                assert.equal(1000000, currRow);
+                conn.end();
+                done();
+              });
+          })
+          .catch(done);
+      })
+      .catch(done);
+  };
+
+  describe("standard question mark using bulk", () => {
+    const useCompression = false;
+    it("simple batch", done => {
+      simpleBatch(useCompression, true, done);
+    });
+
+    it("simple batch error message ", done => {
+      simpleBatchErrorMsg(useCompression, true, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableBatch(useCompression, true, done);
+    });
+
+    it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWith16mMaxAllowedPacket(useCompression, true, done);
+    });
+
+    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
+      this.timeout(240000);
+      bigBatchWith4mMaxAllowedPacket(useCompression, true, done);
+    });
+
+    it("16M+ error batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchError(useCompression, true, done);
+    });
+
+    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
     });
 
     it("batch with streams", done => {
-      const stream1 = fs.createReadStream(fileName);
-      const stream2 = fs.createReadStream(fileName);
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn.query(
-            "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
-          );
-          conn
-            .batch("INSERT INTO `parse` values (1, :id1, 2, :id3, :id7, 3)", [
-              { id1: 1, id3: stream1, id4: 99, id5: 6 },
-              { id1: 2, id3: stream2, id4: 98 }
-            ])
-            .then(res => {
-              assert.equal(res.affectedRows, 2);
-              conn.query("select * from `parse`").then(res => {
-                assert.deepEqual(res, [
-                  {
-                    id: 1,
-                    id2: 1,
-                    id3: 2,
-                    t: "abcdefghijkflmnopqrtuvwxyz",
-                    id4: null,
-                    id5: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 2,
-                    id3: 2,
-                    t: "abcdefghijkflmnopqrtuvwxyz",
-                    id4: null,
-                    id5: 3
-                  }
-                ]);
-                conn.end();
-                done();
-              });
-            })
-            .catch(done);
-        })
-        .catch(done);
+      batchWithStream(useCompression, true, done);
     });
 
     it("batch error with streams", done => {
-      const stream1 = fs.createReadStream(fileName);
-      const stream2 = fs.createReadStream(fileName);
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn
-            .batch("INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3)", [
-              { id1: 1, id3: stream1, id4: 99, id5: 6 },
-              { id1: 2, id3: stream2, id4: 98 }
-            ])
-            .then(() => {
-              done(new Error("must have thrown error !"));
-            })
-            .catch(err => {
-              assert.isTrue(err != null);
-              assert.isTrue(err.message.includes(" doesn't exist"));
-              assert.isTrue(
-                err.message.includes(
-                  "sql: INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
-                )
-              );
-              assert.equal(err.errno, 1146);
-              assert.equal(err.sqlState, "42S02");
-              assert.equal(err.code, "ER_NO_SUCH_TABLE");
-              conn.end();
-              done();
-            });
-        })
-        .catch(done);
+      batchErrorWithStream(useCompression, true, done);
     });
 
     it("16M+ batch with streams", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(240000);
-      const values = [];
-      for (let i = 0; i < 1000000; i++) {
-        if (i % 100000 === 0)
-          values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
-        else values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz", id3: i * 2 });
-      }
+      bigBatchWithStreams(useCompression, true, done);
+    });
 
-      base
-        .createConnection({ namedPlaceholders: true })
-        .then(conn => {
-          conn.query(
-            "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
-          );
-          conn
-            .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, :id3, 3)", values)
-            .then(res => {
-              assert.equal(res.affectedRows, 1000000);
-              let currRow = 0;
-              conn
-                .queryStream("select * from `parse`")
-                .on("error", err => {
-                  done(new Error("must not have thrown any error !"));
-                })
-                .on("data", row => {
-                  assert.deepEqual(row, {
-                    id: 1,
-                    id2: currRow,
-                    id3: 2,
-                    t: "abcdefghijkflmnopqrtuvwxyz",
-                    id4: currRow * 2,
-                    id5: 3
-                  });
-                  currRow++;
-                })
-                .on("end", () => {
-                  assert.equal(1000000, currRow);
-                  conn.end();
-                  done();
-                });
-            })
-            .catch(done);
-        })
-        .catch(done);
+    it("16M+ error batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchErrorWithStreams(useCompression, true, done);
+    });
+  });
+
+  describe("standard question mark and compress with bulk", () => {
+    const useCompression = true;
+
+    it("simple batch", done => {
+      simpleBatch(useCompression, true, done);
+    });
+
+    it("simple batch error message ", done => {
+      simpleBatchErrorMsg(useCompression, true, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableBatch(useCompression, true, done);
+    });
+
+    it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWith16mMaxAllowedPacket(useCompression, true, done);
+    });
+
+    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
+      this.timeout(240000);
+      bigBatchWith4mMaxAllowedPacket(useCompression, true, done);
+    });
+
+    it("16M+ error batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchError(useCompression, true, done);
+    });
+
+    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
+    });
+
+    it("batch with streams", done => {
+      batchWithStream(useCompression, true, done);
+    });
+
+    it("batch error with streams", done => {
+      batchErrorWithStream(useCompression, true, done);
+    });
+
+    it("16M+ batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWithStreams(useCompression, true, done);
+    });
+
+    it("16M+ error batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchErrorWithStreams(useCompression, true, done);
+    });
+  });
+
+  describe("standard question mark using bulk", () => {
+    const useCompression = false;
+    it("simple batch", done => {
+      simpleBatch(useCompression, false, done);
+    });
+
+    it("simple batch error message ", done => {
+      simpleBatchErrorMsg(useCompression, false, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableBatch(useCompression, false, done);
+    });
+
+    it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWith16mMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
+      this.timeout(240000);
+      bigBatchWith4mMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("16M+ error batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchError(useCompression, false, done);
+    });
+
+    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("batch with streams", done => {
+      batchWithStream(useCompression, false, done);
+    });
+
+    it("batch error with streams", done => {
+      batchErrorWithStream(useCompression, false, done);
+    });
+
+    it("16M+ batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWithStreams(useCompression, false, done);
+    });
+
+    it("16M+ error batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchErrorWithStreams(useCompression, false, done);
+    });
+  });
+
+  describe("standard question mark and compress with bulk", () => {
+    const useCompression = true;
+
+    it("simple batch", done => {
+      simpleBatch(useCompression, false, done);
+    });
+
+    it("simple batch error message ", done => {
+      simpleBatchErrorMsg(useCompression, false, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableBatch(useCompression, false, done);
+    });
+
+    it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWith16mMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
+      this.timeout(240000);
+      bigBatchWith4mMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("16M+ error batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchError(useCompression, false, done);
+    });
+
+    it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
+    });
+
+    it("batch with streams", done => {
+      batchWithStream(useCompression, false, done);
+    });
+
+    it("batch error with streams", done => {
+      batchErrorWithStream(useCompression, false, done);
+    });
+
+    it("16M+ batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchWithStreams(useCompression, false, done);
+    });
+
+    it("16M+ error batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      bigBatchErrorWithStreams(useCompression, false, done);
+    });
+  });
+
+  describe("named parameter with bulk", () => {
+    it("simple batch", done => {
+      simpleNamedPlaceHolders(true, done);
+    });
+
+    it("simple batch error", done => {
+      simpleNamedPlaceHoldersErr(true, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableHoldersErr(true, done);
+    });
+
+    it("16M+ batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      more16MNamedPlaceHolders(true, done);
+    });
+
+    it("16M+ single insert batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      more16MSingleNamedPlaceHolders(true, done);
+    });
+
+    it("batch with streams", done => {
+      streamNamedPlaceHolders(true, done);
+    });
+
+    it("batch error with streams", done => {
+      streamErrorNamedPlaceHolders(true, done);
+    });
+
+    it("16M+ batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      stream16MNamedPlaceHolders(true, done);
+    });
+  });
+
+  describe("named parameter with rewrite", () => {
+    it("simple batch", done => {
+      simpleNamedPlaceHolders(false, done);
+    });
+
+    it("simple batch error", done => {
+      simpleNamedPlaceHoldersErr(false, done);
+    });
+
+    it("non rewritable batch", done => {
+      nonRewritableHoldersErr(false, done);
+    });
+
+    it("16M+ batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      more16MNamedPlaceHolders(false, done);
+    });
+
+    it("16M+ single insert batch", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      more16MSingleNamedPlaceHolders(false, done);
+    });
+
+    it("batch with streams", done => {
+      streamNamedPlaceHolders(false, done);
+    });
+
+    it("batch error with streams", done => {
+      streamErrorNamedPlaceHolders(false, done);
+    });
+
+    it("16M+ batch with streams", function(done) {
+      if (maxAllowedSize <= testSize) this.skip();
+      this.timeout(240000);
+      stream16MNamedPlaceHolders(false, done);
     });
   });
 });

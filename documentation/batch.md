@@ -1,6 +1,7 @@
 # Batching
 
 Batch processing groups multiple queries into one unit and passes it in a single network trip to a database.
+There is different implementation according to server type and version. 
 
 ## Using Batching
 

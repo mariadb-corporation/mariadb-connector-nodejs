@@ -591,29 +591,19 @@ Query times and result handlers take the same amount of time, but you may want t
 For instance,
 
 ```javascript
-connection.query(
-  "CREATE TEMPORARY TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
-);
-connection
-  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
-    [[1, "john"], [2, "jack"]])
-  .then(res => {
-    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
-
-    assert.equal(res.affectedRows, 2);
-    connection
-      .query("select * from `parse`")
-      .then(res => {
-        /*
-        res = [ 
-            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
-            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
-            meta: ...
-          }
-        */ 
+connection.queryStream("SELECT * FROM mysql.user")
+      .on("error", err => {
+        console.log(err); //if error
       })
-      .catch(done);
-  });
+      .on("fields", meta => {
+        console.log(meta); // [ ...]
+      })
+      .on("data", row => {
+        console.log(row);
+      })
+      .on("end", () => {
+        //ended
+      });
 ```
 
 
@@ -626,7 +616,10 @@ connection
 > * resolves with a JSON object.
 > * rejects with an [Error](#error).
 
-For insert queries, rewrite query to execute in a single query.
+Implementation depend of server type and version. 
+for MariaDB server version 10.2.7+, implementation use dedicated bulk protocol. 
+
+For other, insert queries will be rewritten for optimization.
 example:
 insert into ab (i) values (?) with first batch values = 1, second = 2 will be rewritten
 insert into ab (i) values (1), (2). 
