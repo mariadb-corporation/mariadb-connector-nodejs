@@ -26,7 +26,7 @@ module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred, connType) {
   const params = [randomString(100)];
   // console.log(connType.desc);
-  if (!connType.desc.includes("mariadb2")) {
+  if (!connType.desc.includes("mariadb")) {
     //other driver doesn't have bulk method
     let ended = 0;
     for (let i = 0; i < iterations; i++) {
