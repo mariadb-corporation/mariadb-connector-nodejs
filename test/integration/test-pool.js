@@ -374,7 +374,8 @@ describe("Pool", () => {
               pool.end();
               done();
             });
-        });
+        })
+        .catch(done);
     });
   });
 

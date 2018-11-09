@@ -44,20 +44,20 @@ describe("batch", () => {
 
   const simpleBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, debug:true })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
+          "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", [
+          .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, 3)", [
             [1, "john", new Date("2001-12-31 23:59:58")],
             [2, "jack", new Date("2020-12-31 23:59:59")]
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
-              .query("select * from `parse`")
+              .query("select * from `simpleBatch`")
               .then(res => {
                 assert.deepEqual(res, [
                   {
@@ -77,6 +77,7 @@ describe("batch", () => {
                     id4: 3
                   }
                 ]);
+                conn.query("DROP TABLE simpleBatch");
                 conn.end();
                 done();
               })
@@ -93,7 +94,10 @@ describe("batch", () => {
       .createConnection({ trace: true, bulk: useBulk })
       .then(conn => {
         conn
-          .batch("INSERT INTO parse values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
+          .batch("INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)", [
+            [1, "john"],
+            [2, "jack"]
+          ])
           .then(() => {
             done(new Error("must have thrown error !"));
           })
@@ -102,7 +106,7 @@ describe("batch", () => {
             assert.isTrue(err.message.includes(" doesn't exist"));
             assert.isTrue(
               err.message.includes(
-                "INSERT INTO parse values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
+                "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
               )
             );
             assert.equal(err.errno, 1146);
@@ -117,12 +121,11 @@ describe("batch", () => {
 
   const nonRewritableBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, debug: useBulk  })
       .then(conn => {
         conn
           .batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]])
           .then(res => {
-            conn.end();
             if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               done(new Error("Must have thrown an exception"));
             } else {
@@ -142,6 +145,7 @@ describe("batch", () => {
               ]);
               done();
             }
+            conn.end();
           })
           .catch(err => {
             conn.end();
@@ -169,22 +173,23 @@ describe("batch", () => {
         bulk: useBulk
       })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket");
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
+          "CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
           values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", values)
+          .batch("INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)", values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
           })
           .catch(done);
         let currRow = 0;
         conn
-          .queryStream("select * from `parse`")
+          .queryStream("select * from `bigBatchWith16mMaxAllowedPacket`")
           .on("error", err => {
             done(new Error("must not have thrown any error !"));
           })
@@ -200,6 +205,7 @@ describe("batch", () => {
           })
           .on("end", () => {
             assert.equal(1000000, currRow);
+            conn.query("DROP TABLE bigBatchWith16mMaxAllowedPacket");
             conn.end();
             done();
           });
@@ -212,21 +218,21 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
+          "CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
           values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", values)
+          .batch("INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)", values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
           })
           .catch(done);
         let currRow = 0;
         conn
-          .queryStream("select * from `parse`")
+          .queryStream("select * from `bigBatchWith4mMaxAllowedPacket`")
           .on("error", err => {
             done(new Error("must not have thrown any error !"));
           })
@@ -242,6 +248,7 @@ describe("batch", () => {
           })
           .on("end", () => {
             assert.equal(1000000, currRow);
+            conn.query("DROP TABLE bigBatchWith4mMaxAllowedPacket");
             conn.end();
             done();
           });
@@ -253,15 +260,12 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
-        conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
-        );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
           values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
-          .batch("INSERT INTO `padddrse` values (1, ?, 2, ?, 3)", values)
+          .batch("INSERT INTO `bigBatchError` values (1, ?, 2, ?, 3)", values)
           .then(res => {
             done(new Error("must have thrown error !"));
           })
@@ -284,14 +288,17 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
+          "CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", [[1, bigBuf], [2, "john"]])
+          .batch("INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)", [
+            [1, bigBuf],
+            [2, "john"]
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
-              .query("select * from `parse`")
+              .query("select * from `singleBigInsertWithoutMaxAllowedPacket`")
               .then(rows => {
                 assert.deepEqual(rows, [
                   {
@@ -309,6 +316,7 @@ describe("batch", () => {
                     id4: 3
                   }
                 ]);
+                conn.query("DROP TABLE singleBigInsertWithoutMaxAllowedPacket");
                 conn.end();
                 done();
               })
@@ -326,16 +334,16 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
+          "CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", [
+          .batch("INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)", [
             [1, stream1, 99],
             [2, stream2, 98]
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
-            conn.query("select * from `parse`").then(res => {
+            conn.query("select * from `batchWithStream`").then(res => {
               assert.deepEqual(res, [
                 {
                   id: 1,
@@ -354,6 +362,7 @@ describe("batch", () => {
                   id5: 3
                 }
               ]);
+              conn.query("DROP TABLE batchWithStream");
               conn.end();
               done();
             });
@@ -370,7 +379,7 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn
-          .batch("INSERT INTO parse values (1, ?, 2, ?, ?, 3)", [
+          .batch("INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)", [
             [1, stream1, 99],
             [2, stream2, 98]
           ])
@@ -382,7 +391,7 @@ describe("batch", () => {
             assert.isTrue(err.message.includes(" doesn't exist"));
             assert.isTrue(
               err.message.includes(
-                "sql: INSERT INTO parse values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]"
+                "sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]"
               )
             );
             assert.equal(err.errno, 1146);
@@ -406,15 +415,15 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
+          "CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", values)
+          .batch("INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)", values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
             let currRow = 0;
             conn
-              .queryStream("select * from `parse`")
+              .queryStream("select * from `bigBatchWithStreams`")
               .on("error", err => {
                 done(new Error("must not have thrown any error !"));
               })
@@ -431,6 +440,7 @@ describe("batch", () => {
               })
               .on("end", () => {
                 assert.equal(1000000, currRow);
+                conn.query("DROP TABLE bigBatchWithStreams");
                 conn.end();
                 done();
               });
@@ -450,11 +460,8 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
-        conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
-        );
         conn
-          .batch("INSERT INTO `padrse` values (1, ?, 2, ?, ?, 3)", values)
+          .batch("INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)", values)
           .then(res => {
             done(new Error("must have thrown error !"));
           })
@@ -477,17 +484,17 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
+          "CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, :param_1, 2, :param_2, 3)", [
+          .batch("INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)", [
             { param_1: 1, param_2: "john" },
             { param_1: 2, param_2: "jack" }
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
-              .query("select * from `parse`")
+              .query("select * from `simpleNamedPlaceHolders`")
               .then(res => {
                 assert.deepEqual(res, [
                   {
@@ -505,6 +512,7 @@ describe("batch", () => {
                     id4: 3
                   }
                 ]);
+                conn.query("DROP TABLE simpleNamedPlaceHolders");
                 conn.end();
                 done();
               })
@@ -520,7 +528,7 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn
-          .batch("INSERT INTO parse values (1, :param_1, 2, :param_2, 3)", [
+          .batch("INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)", [
             { param_1: 1, param_2: "john" },
             { param_1: 2, param_2: "jack" }
           ])
@@ -532,7 +540,7 @@ describe("batch", () => {
             assert.isTrue(err.message.includes(" doesn't exist"));
             assert.isTrue(
               err.message.includes(
-                "sql: INSERT INTO parse values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
+                "sql: INSERT INTO blabla values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
               )
             );
             assert.equal(err.errno, 1146);
@@ -594,20 +602,20 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
+          "CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
           values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz🤘💪" });
         }
         conn
-          .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, 3)", values)
+          .batch("INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)", values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
 
             let currRow = 0;
             conn
-              .queryStream("select * from `parse`")
+              .queryStream("select * from `more16MNamedPlaceHolders`")
               .on("error", err => {
                 done(new Error("must not have thrown any error !"));
               })
@@ -623,6 +631,7 @@ describe("batch", () => {
               })
               .on("end", () => {
                 assert.equal(1000000, currRow);
+                conn.query("DROP TABLE more16MNamedPlaceHolders");
                 conn.end();
                 done();
               });
@@ -637,17 +646,17 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
+          "CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, :id, 2, :id2, 3)", [
+          .batch("INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)", [
             { id: 1, id2: bigBuf },
             { id: 2, id2: "john" }
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
-              .query("select * from `parse`")
+              .query("select * from `more16MSingleNamedPlaceHolders`")
               .then(rows => {
                 assert.deepEqual(rows, [
                   {
@@ -665,6 +674,7 @@ describe("batch", () => {
                     id4: 3
                   }
                 ]);
+                conn.query("DROP TABLE more16MSingleNamedPlaceHolders");
                 conn.end();
                 done();
               })
@@ -682,16 +692,16 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
+          "CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, :id1, 2, :id3, :id7, 3)", [
+          .batch("INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)", [
             { id1: 1, id3: stream1, id4: 99, id5: 6 },
             { id1: 2, id3: stream2, id4: 98 }
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
-            conn.query("select * from `parse`").then(res => {
+            conn.query("select * from `streamNamedPlaceHolders`").then(res => {
               assert.deepEqual(res, [
                 {
                   id: 1,
@@ -710,6 +720,7 @@ describe("batch", () => {
                   id5: 3
                 }
               ]);
+              conn.query("DROP TABLE streamNamedPlaceHolders");
               conn.end();
               done();
             });
@@ -726,7 +737,7 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn
-          .batch("INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3)", [
+          .batch("INSERT INTO blabla values (1, :id1, 2, :id3, :id7, 3)", [
             { id1: 1, id3: stream1, id4: 99, id5: 6 },
             { id1: 2, id3: stream2, id4: 98 }
           ])
@@ -738,7 +749,7 @@ describe("batch", () => {
             assert.isTrue(err.message.includes(" doesn't exist"));
             assert.isTrue(
               err.message.includes(
-                "sql: INSERT INTO parse values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
+                "sql: INSERT INTO blabla values (1, :id1, 2, :id3, :id7, 3) - parameters:[{'id1':1,'id3':[object Object],'id4':99,'id5':6},{'id1':2,'id3':[object Object],'id4':98}]"
               )
             );
             assert.equal(err.errno, 1146);
@@ -762,19 +773,23 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
+          "CREATE TABLE stream16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, :id3, 3)", values)
+          .batch(
+            "INSERT INTO `stream16MNamedPlaceHolders` values (1, :id1, 2, :id2, :id3, 3)",
+            values
+          )
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
             let currRow = 0;
             conn
-              .queryStream("select * from `parse`")
+              .queryStream("select * from `stream16MNamedPlaceHolders`")
               .on("error", err => {
                 done(new Error("must not have thrown any error !"));
               })
               .on("data", row => {
+                if (currRow % 10000 === 0) console.log(currRow);
                 assert.deepEqual(row, {
                   id: 1,
                   id2: currRow,
@@ -787,6 +802,7 @@ describe("batch", () => {
               })
               .on("end", () => {
                 assert.equal(1000000, currRow);
+                conn.query("DROP TABLE stream16MNamedPlaceHolders");
                 conn.end();
                 done();
               });
