@@ -149,7 +149,7 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  let range = [1790, 2900];
+                  let range = [1350, 2400];
                   if (process.env.MAXSCALE_VERSION) range = [4800, 5000];
                   assert(
                     data.length > range[0] && data.length < range[1],

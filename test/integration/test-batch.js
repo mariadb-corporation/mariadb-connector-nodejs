@@ -149,7 +149,8 @@ describe("batch", () => {
               assert.isTrue(
                 err.message.includes(
                   "This command is not supported in the prepared statement protocol yet"
-                ), err.message
+                ),
+                err.message
               );
               done();
             } else {
@@ -282,7 +283,9 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4");
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
+        );
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", [[1, bigBuf], [2, "john"]])
           .then(res => {
@@ -320,7 +323,7 @@ describe("batch", () => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
-      .createConnection({ compress: useCompression, bulk: useBulk, debug:true })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
@@ -633,7 +636,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4");
+        conn.query(
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
+        );
         conn
           .batch("INSERT INTO `parse` values (1, :id, 2, :id2, 3)", [
             { id: 1, id2: bigBuf },
@@ -641,28 +646,29 @@ describe("batch", () => {
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
-            conn.query("select * from `parse`")
-            .then(rows => {
-              assert.deepEqual(rows, [
-                {
-                  id: 1,
-                  id2: 1,
-                  id3: 2,
-                  t: bigBuf.toString(),
-                  id4: 3
-                },
-                {
-                  id: 1,
-                  id2: 2,
-                  id3: 2,
-                  t: "john",
-                  id4: 3
-                }
-              ]);
-              conn.end();
-              done();
-            })
-            .catch(done);
+            conn
+              .query("select * from `parse`")
+              .then(rows => {
+                assert.deepEqual(rows, [
+                  {
+                    id: 1,
+                    id2: 1,
+                    id3: 2,
+                    t: bigBuf.toString(),
+                    id4: 3
+                  },
+                  {
+                    id: 1,
+                    id2: 2,
+                    id3: 2,
+                    t: "john",
+                    id4: 3
+                  }
+                ]);
+                conn.end();
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
