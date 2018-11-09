@@ -25,7 +25,7 @@ describe("batch", () => {
             bigBuf[i] = 97 + (i % 10);
           }
         }
-        const buf = Buffer.from("abcdefghijkflmnopqrtuvwxyz");
+        const buf = Buffer.from("abcdefghijkflmnopqrtuvwxyz🤘💪");
         fs.writeFile(fileName, buf, "utf8", function(err) {
           if (err) {
             done(err);
@@ -47,7 +47,7 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", [
@@ -149,7 +149,7 @@ describe("batch", () => {
               assert.isTrue(
                 err.message.includes(
                   "This command is not supported in the prepared statement protocol yet"
-                )
+                ), err.message
               );
               done();
             } else {
@@ -169,11 +169,11 @@ describe("batch", () => {
       })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, "abcdefghijkflmnopqrtuvwxyz"]);
+          values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", values)
@@ -192,7 +192,7 @@ describe("batch", () => {
               id: 1,
               id2: currRow,
               id3: 2,
-              t: "abcdefghijkflmnopqrtuvwxyz",
+              t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
               id4: 3
             });
             currRow++;
@@ -211,11 +211,11 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, "abcdefghijkflmnopqrtuvwxyz"]);
+          values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", values)
@@ -234,7 +234,7 @@ describe("batch", () => {
               id: 1,
               id2: currRow,
               id3: 2,
-              t: "abcdefghijkflmnopqrtuvwxyz",
+              t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
               id4: 3
             });
             currRow++;
@@ -253,11 +253,11 @@ describe("batch", () => {
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, "abcdefghijkflmnopqrtuvwxyz"]);
+          values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
         }
         conn
           .batch("INSERT INTO `padddrse` values (1, ?, 2, ?, 3)", values)
@@ -282,7 +282,7 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int)");
+        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4");
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", [[1, bigBuf], [2, "john"]])
           .then(res => {
@@ -320,10 +320,10 @@ describe("batch", () => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, debug:true })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", [
@@ -338,7 +338,7 @@ describe("batch", () => {
                   id: 1,
                   id2: 1,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: 99,
                   id5: 3
                 },
@@ -346,7 +346,7 @@ describe("batch", () => {
                   id: 1,
                   id2: 2,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: 98,
                   id5: 3
                 }
@@ -396,14 +396,14 @@ describe("batch", () => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, "abcdefghijkflmnopqrtuvwxyz", i * 2]);
+      else values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪", i * 2]);
     }
 
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, ?, 2, ?, ?, 3)", values)
@@ -420,7 +420,7 @@ describe("batch", () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: currRow * 2,
                   id5: 3
                 });
@@ -441,14 +441,14 @@ describe("batch", () => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, "abcdefghijkflmnopqrtuvwxyz", i * 2]);
+      else values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪", i * 2]);
     }
 
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `padrse` values (1, ?, 2, ?, ?, 3)", values)
@@ -474,7 +474,7 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, :param_1, 2, :param_2, 3)", [
@@ -591,11 +591,11 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz" });
+          values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz🤘💪" });
         }
         conn
           .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, 3)", values)
@@ -613,7 +613,7 @@ describe("batch", () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: 3
                 });
                 currRow++;
@@ -633,7 +633,7 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int)");
+        conn.query("CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4");
         conn
           .batch("INSERT INTO `parse` values (1, :id, 2, :id2, 3)", [
             { id: 1, id2: bigBuf },
@@ -641,7 +641,8 @@ describe("batch", () => {
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
-            conn.query("select * from `parse`").then(rows => {
+            conn.query("select * from `parse`")
+            .then(rows => {
               assert.deepEqual(rows, [
                 {
                   id: 1,
@@ -660,7 +661,8 @@ describe("batch", () => {
               ]);
               conn.end();
               done();
-            });
+            })
+            .catch(done);
           })
           .catch(done);
       })
@@ -674,7 +676,7 @@ describe("batch", () => {
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, :id1, 2, :id3, :id7, 3)", [
@@ -689,7 +691,7 @@ describe("batch", () => {
                   id: 1,
                   id2: 1,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: null,
                   id5: 3
                 },
@@ -697,7 +699,7 @@ describe("batch", () => {
                   id: 1,
                   id2: 2,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: null,
                   id5: 3
                 }
@@ -747,14 +749,14 @@ describe("batch", () => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
-      else values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz", id3: i * 2 });
+      else values.push({ id1: i, id2: "abcdefghijkflmnopqrtuvwxyz🤘💪", id3: i * 2 });
     }
 
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
         conn.query(
-          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int)"
+          "CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `parse` values (1, :id1, 2, :id2, :id3, 3)", values)
@@ -771,7 +773,7 @@ describe("batch", () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: "abcdefghijkflmnopqrtuvwxyz",
+                  t: "abcdefghijkflmnopqrtuvwxyz🤘💪",
                   id4: currRow * 2,
                   id5: 3
                 });
@@ -907,7 +909,7 @@ describe("batch", () => {
     });
   });
 
-  describe("standard question mark using bulk", () => {
+  describe("standard question mark using rewrite", () => {
     const useCompression = false;
     it("simple batch", done => {
       simpleBatch(useCompression, false, done);

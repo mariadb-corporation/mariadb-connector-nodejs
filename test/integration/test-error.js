@@ -133,7 +133,7 @@ describe("Error", () => {
         done(new Error("must have thrown error !"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("You have an error in your SQL syntax"));
+        assert.isTrue(err.message.includes("You have an error in your SQL syntax"), err.message);
         assert.isTrue(
           err.message.includes(
             'wrong query ?, ?, ?, ?, ?, ?, ? - parameters:[addon-bla,true,123,456.5,\'long parameter that must be truncated\',{"bla":4,"blou":"t"},{}]'
