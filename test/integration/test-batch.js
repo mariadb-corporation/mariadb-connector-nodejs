@@ -51,6 +51,7 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS simpleBatch");
         conn.query(
           "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
         );
@@ -82,14 +83,20 @@ describe("batch", () => {
                     id4: 3
                   }
                 ]);
-                conn.query("DROP TABLE simpleBatch");
-                conn.end();
-                done();
               })
               .catch(err => {
                 done(err);
               });
           });
+        conn
+          .query("select 1")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "1": 1 }]);
+            conn.query("DROP TABLE simpleBatch");
+            conn.end();
+            done();
+          })
+          .catch(done);
       })
       .catch(done);
   };
@@ -232,6 +239,7 @@ describe("batch", () => {
         setTimeout(() => {
           if (!finished) console.log(conn.info.getLastPackets());
         }, 200000);
+        conn.query("DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket");
         conn.query(
           "CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
@@ -308,6 +316,7 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS singleBigInsertWithoutMaxAllowedPacket");
         conn.query(
           "CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
         );
@@ -358,7 +367,7 @@ describe("batch", () => {
         setTimeout(() => {
           if (!finished) console.log(conn.info.getLastPackets());
         }, 1500);
-
+        conn.query("DROP TABLE IF EXISTS batchWithStream");
         conn.query(
           "CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -444,6 +453,7 @@ describe("batch", () => {
         setTimeout(() => {
           if (!finished) console.log(conn.info.getLastPackets());
         }, 200000);
+        conn.query("DROP TABLE IF EXISTS bigBatchWithStreams");
         conn.query(
           "CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -489,7 +499,7 @@ describe("batch", () => {
     }
 
     base
-      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true})
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
         conn
           .batch("INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)", values)
@@ -514,6 +524,7 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS simpleNamedPlaceHolders");
         conn.query(
           "CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
@@ -632,6 +643,7 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS more16MNamedPlaceHolders");
         conn.query(
           "CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
@@ -676,6 +688,7 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS more16MSingleNamedPlaceHolders");
         conn.query(
           "CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
         );
@@ -722,6 +735,7 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        conn.query("DROP TABLE IF EXISTS streamNamedPlaceHolders");
         conn.query(
           "CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -807,6 +821,7 @@ describe("batch", () => {
         setTimeout(() => {
           if (!finished) console.log(conn.info.getLastPackets());
         }, 200000);
+        conn.query("DROP TABLE IF EXISTS stream16MNamedPlaceHolders");
         conn.query(
           "CREATE TABLE stream16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );

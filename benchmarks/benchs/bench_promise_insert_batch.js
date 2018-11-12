@@ -19,9 +19,9 @@ let sqlTable =
 sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
 module.exports.title =
-  "1000 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
+  "100 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
 module.exports.displaySql = "INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)";
-const iterations = 1000;
+const iterations = 100;
 module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred, connType) {
   const params = [randomString(100)];
