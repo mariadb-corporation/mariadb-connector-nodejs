@@ -57,11 +57,19 @@ describe("debug", () => {
         conn
           .query("SELECT 1")
           .then(() => {
-            conn.debug(true);
+            if (compress) {
+              conn.debugCompress(true);
+            } else {
+              conn.debug(true);
+            }
             return conn.query("SELECT 2");
           })
           .then(() => {
-            conn.debug(false);
+            if (compress) {
+              conn.debugCompress(false);
+            } else {
+              conn.debug(false);
+            }
             return conn.query("SELECT 3");
           })
           .then(() => {
@@ -135,7 +143,7 @@ describe("debug", () => {
 
     process.stdout.write = process.stderr.write = access.write.bind(access);
     base
-      .createConnection({ compress: true, debug: true })
+      .createConnection({ compress: true, debugCompress: true })
       .then(conn => {
         conn
           .query("SELECT ?", buf)
@@ -149,8 +157,7 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  let range = [1350, 2400];
-                  if (process.env.MAXSCALE_VERSION) range = [4800, 5000];
+                  let range = [920, 2400];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +
