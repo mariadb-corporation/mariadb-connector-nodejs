@@ -350,10 +350,10 @@ describe("Error", () => {
           })
           .catch(err => {
             if (process.env.MAXSCALE_VERSION) {
-              assert.isTrue(err.message.includes("Lost connection to backend server"));
+              assert.isTrue(err.message.includes("Lost connection to backend server"), err.message);
               assert.equal(err.sqlState, "HY000");
             } else {
-              assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+              assert.isTrue(err.message.includes("socket has unexpectedly been closed"), err.message);
               assert.equal(err.sqlState, "08S01");
               assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
             }

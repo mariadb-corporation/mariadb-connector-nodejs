@@ -37,6 +37,11 @@ describe("batch", () => {
       .catch(done);
   });
 
+  beforeEach(function() {
+    //just to ensure shared connection is not closed by server due to inactivity
+    shareConn.ping();
+  });
+
   after(function() {
     fs.unlink(fileName, err => {});
     fs.unlink(bigFileName, err => {});
@@ -44,7 +49,7 @@ describe("batch", () => {
 
   const simpleBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression, bulk: useBulk, debug:true })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn.query(
           "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
@@ -121,7 +126,7 @@ describe("batch", () => {
 
   const nonRewritableBatch = (useCompression, useBulk, done) => {
     base
-      .createConnection({ compress: useCompression, bulk: useBulk, debug: useBulk  })
+      .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         conn
           .batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]])
@@ -166,13 +171,18 @@ describe("batch", () => {
   };
 
   const bigBatchWith16mMaxAllowedPacket = (useCompression, useBulk, done) => {
+    let finished = false;
     base
       .createConnection({
         compress: useCompression,
         maxAllowedPacket: 16 * 1024 * 1024,
-        bulk: useBulk
+        bulk: useBulk,
+        logPackets: true
       })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query("DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket");
         conn.query(
           "CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
@@ -206,6 +216,7 @@ describe("batch", () => {
           .on("end", () => {
             assert.equal(1000000, currRow);
             conn.query("DROP TABLE bigBatchWith16mMaxAllowedPacket");
+            finished = true;
             conn.end();
             done();
           });
@@ -214,9 +225,13 @@ describe("batch", () => {
   };
 
   const bigBatchWith4mMaxAllowedPacket = (useCompression, useBulk, done) => {
+    let finished = false;
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query(
           "CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
         );
@@ -249,6 +264,7 @@ describe("batch", () => {
           .on("end", () => {
             assert.equal(1000000, currRow);
             conn.query("DROP TABLE bigBatchWith4mMaxAllowedPacket");
+            finished = true;
             conn.end();
             done();
           });
@@ -257,9 +273,13 @@ describe("batch", () => {
   };
 
   const bigBatchError = (useCompression, useBulk, done) => {
+    let finished = false;
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 200000);
         const values = [];
         for (let i = 0; i < 1000000; i++) {
           values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪"]);
@@ -274,6 +294,7 @@ describe("batch", () => {
               .query("select 1")
               .then(rows => {
                 assert.deepEqual(rows, [{ "1": 1 }]);
+                finished = true;
                 conn.end();
                 done();
               })
@@ -328,11 +349,16 @@ describe("batch", () => {
   };
 
   const batchWithStream = (useCompression, useBulk, done) => {
+    let finished = false;
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 1500);
+
         conn.query(
           "CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -363,6 +389,7 @@ describe("batch", () => {
                 }
               ]);
               conn.query("DROP TABLE batchWithStream");
+              finished = true;
               conn.end();
               done();
             });
@@ -410,10 +437,13 @@ describe("batch", () => {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
       else values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪", i * 2]);
     }
-
+    let finished = false;
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query(
           "CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -441,6 +471,7 @@ describe("batch", () => {
               .on("end", () => {
                 assert.equal(1000000, currRow);
                 conn.query("DROP TABLE bigBatchWithStreams");
+                finished = true;
                 conn.end();
                 done();
               });
@@ -458,7 +489,7 @@ describe("batch", () => {
     }
 
     base
-      .createConnection({ compress: useCompression, bulk: useBulk })
+      .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true})
       .then(conn => {
         conn
           .batch("INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)", values)
@@ -763,6 +794,7 @@ describe("batch", () => {
   };
 
   const stream16MNamedPlaceHolders = function(useBulk, done) {
+    let finished = false;
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
@@ -772,6 +804,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        setTimeout(() => {
+          if (!finished) console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query(
           "CREATE TABLE stream16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
         );
@@ -789,7 +824,6 @@ describe("batch", () => {
                 done(new Error("must not have thrown any error !"));
               })
               .on("data", row => {
-                if (currRow % 10000 === 0) console.log(currRow);
                 assert.deepEqual(row, {
                   id: 1,
                   id2: currRow,
@@ -803,6 +837,7 @@ describe("batch", () => {
               .on("end", () => {
                 assert.equal(1000000, currRow);
                 conn.query("DROP TABLE stream16MNamedPlaceHolders");
+                finished = true;
                 conn.end();
                 done();
               });
@@ -990,7 +1025,7 @@ describe("batch", () => {
     });
   });
 
-  describe("standard question mark and compress with bulk", () => {
+  describe("standard question mark and compress with rewrite", () => {
     const useCompression = true;
 
     it("simple batch", done => {
