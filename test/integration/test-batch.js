@@ -53,12 +53,28 @@ describe("batch", () => {
       .then(conn => {
         conn.query("DROP TABLE IF EXISTS simpleBatch");
         conn.query(
-          "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, id4 int) CHARSET utf8mb4"
+          "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, g POINT, id4 int) CHARSET utf8mb4"
         );
         conn
-          .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, 3)", [
-            [1, "john", new Date("2001-12-31 23:59:58")],
-            [2, "jack", new Date("2020-12-31 23:59:59")]
+          .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, 3)", [
+            [
+              1,
+              "john",
+              new Date("2001-12-31 23:59:58"),
+              {
+                type: "Point",
+                coordinates: [10, 10]
+              }
+            ],
+            [
+              2,
+              "jack",
+              new Date("2020-12-31 23:59:59"),
+              {
+                type: "Point",
+                coordinates: [10, 20]
+              }
+            ]
           ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
@@ -72,6 +88,10 @@ describe("batch", () => {
                     id3: 2,
                     t: "john",
                     d: new Date("2001-12-31 23:59:58"),
+                    g: {
+                      type: "Point",
+                      coordinates: [10, 10]
+                    },
                     id4: 3
                   },
                   {
@@ -80,9 +100,20 @@ describe("batch", () => {
                     id3: 2,
                     t: "jack",
                     d: new Date("2020-12-31 23:59:59"),
+                    g: {
+                      type: "Point",
+                      coordinates: [10, 20]
+                    },
                     id4: 3
                   }
                 ]);
+                conn
+                  .query("DROP TABLE simpleBatch")
+                  .then(res => {
+                    conn.end();
+                    done();
+                  })
+                  .catch(done);
               })
               .catch(err => {
                 done(err);
@@ -92,9 +123,6 @@ describe("batch", () => {
           .query("select 1")
           .then(rows => {
             assert.deepEqual(rows, [{ "1": 1 }]);
-            conn.query("DROP TABLE simpleBatch");
-            conn.end();
-            done();
           })
           .catch(done);
       })
