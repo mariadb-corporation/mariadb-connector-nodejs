@@ -51,6 +51,10 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
+
         conn.query("DROP TABLE IF EXISTS simpleBatch");
         conn.query(
           "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, g POINT, id4 int) CHARSET utf8mb4"
@@ -110,6 +114,7 @@ describe("batch", () => {
                 conn
                   .query("DROP TABLE simpleBatch")
                   .then(res => {
+                    clearTimeout(timeout);
                     conn.end();
                     done();
                   })
@@ -133,6 +138,9 @@ describe("batch", () => {
     base
       .createConnection({ trace: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)", [
             [1, "john"],
@@ -153,6 +161,7 @@ describe("batch", () => {
             assert.equal(err.sqlState, "42S02");
             assert.equal(err.code, "ER_NO_SUCH_TABLE");
             conn.end();
+            clearTimeout(timeout);
             done();
           });
       })
@@ -163,6 +172,9 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]])
           .then(res => {
@@ -196,6 +208,7 @@ describe("batch", () => {
                 ),
                 err.message
               );
+              clearTimeout(timeout);
               done();
             } else {
               done(err);
@@ -206,7 +219,6 @@ describe("batch", () => {
   };
 
   const bigBatchWith16mMaxAllowedPacket = (useCompression, useBulk, done) => {
-    let finished = false;
     base
       .createConnection({
         compress: useCompression,
@@ -215,8 +227,8 @@ describe("batch", () => {
         logPackets: true
       })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
         }, 200000);
         conn.query("DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket");
         conn.query(
@@ -250,22 +262,25 @@ describe("batch", () => {
           })
           .on("end", () => {
             assert.equal(1000000, currRow);
-            conn.query("DROP TABLE bigBatchWith16mMaxAllowedPacket");
-            finished = true;
-            conn.end();
-            done();
+            conn
+              .query("DROP TABLE bigBatchWith16mMaxAllowedPacket")
+              .then(res => {
+                clearTimeout(timeout);
+                conn.end();
+                done();
+              })
+              .catch(done);
           });
       })
       .catch(done);
   };
 
   const bigBatchWith4mMaxAllowedPacket = (useCompression, useBulk, done) => {
-    let finished = false;
     base
       .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
         }, 200000);
         conn.query("DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket");
         conn.query(
@@ -300,7 +315,7 @@ describe("batch", () => {
           .on("end", () => {
             assert.equal(1000000, currRow);
             conn.query("DROP TABLE bigBatchWith4mMaxAllowedPacket");
-            finished = true;
+            clearTimeout(timeout);
             conn.end();
             done();
           });
@@ -309,12 +324,11 @@ describe("batch", () => {
   };
 
   const bigBatchError = (useCompression, useBulk, done) => {
-    let finished = false;
     base
       .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
         }, 200000);
         const values = [];
         for (let i = 0; i < 1000000; i++) {
@@ -330,7 +344,7 @@ describe("batch", () => {
               .query("select 1")
               .then(rows => {
                 assert.deepEqual(rows, [{ "1": 1 }]);
-                finished = true;
+                clearTimeout(timeout);
                 conn.end();
                 done();
               })
@@ -344,6 +358,9 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn.query("DROP TABLE IF EXISTS singleBigInsertWithoutMaxAllowedPacket");
         conn.query(
           "CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
@@ -375,6 +392,7 @@ describe("batch", () => {
                   }
                 ]);
                 conn.query("DROP TABLE singleBigInsertWithoutMaxAllowedPacket");
+                clearTimeout(timeout);
                 conn.end();
                 done();
               })
@@ -386,15 +404,14 @@ describe("batch", () => {
   };
 
   const batchWithStream = (useCompression, useBulk, done) => {
-    let finished = false;
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     base
       .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
-        }, 1500);
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn.query("DROP TABLE IF EXISTS batchWithStream");
         conn.query(
           "CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
@@ -426,7 +443,7 @@ describe("batch", () => {
                 }
               ]);
               conn.query("DROP TABLE batchWithStream");
-              finished = true;
+              clearTimeout(timeout);
               conn.end();
               done();
             });
@@ -442,6 +459,9 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)", [
             [1, stream1, 99],
@@ -461,6 +481,7 @@ describe("batch", () => {
             assert.equal(err.errno, 1146);
             assert.equal(err.sqlState, "42S02");
             assert.equal(err.code, "ER_NO_SUCH_TABLE");
+            clearTimeout(timeout);
             conn.end();
             done();
           });
@@ -474,12 +495,11 @@ describe("batch", () => {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
       else values.push([i, "abcdefghijkflmnopqrtuvwxyz🤘💪", i * 2]);
     }
-    let finished = false;
     base
       .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
         }, 200000);
         conn.query("DROP TABLE IF EXISTS bigBatchWithStreams");
         conn.query(
@@ -509,7 +529,7 @@ describe("batch", () => {
               .on("end", () => {
                 assert.equal(1000000, currRow);
                 conn.query("DROP TABLE bigBatchWithStreams");
-                finished = true;
+                clearTimeout(timeout);
                 conn.end();
                 done();
               });
@@ -529,6 +549,9 @@ describe("batch", () => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk, logPackets: true })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 200000);
         conn
           .batch("INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)", values)
           .then(res => {
@@ -540,6 +563,7 @@ describe("batch", () => {
               .then(rows => {
                 assert.deepEqual(rows, [{ "1": 1 }]);
                 conn.end();
+                clearTimeout(timeout);
                 done();
               })
               .catch(done);
@@ -552,6 +576,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn.query("DROP TABLE IF EXISTS simpleNamedPlaceHolders");
         conn.query(
           "CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
@@ -584,6 +611,7 @@ describe("batch", () => {
                 ]);
                 conn.query("DROP TABLE simpleNamedPlaceHolders");
                 conn.end();
+                clearTimeout(timeout);
                 done();
               })
               .catch(done);
@@ -597,6 +625,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)", [
             { param_1: 1, param_2: "john" },
@@ -616,16 +647,21 @@ describe("batch", () => {
             assert.equal(err.errno, 1146);
             assert.equal(err.sqlState, "42S02");
             assert.equal(err.code, "ER_NO_SUCH_TABLE");
+            clearTimeout(timeout);
             conn.end();
             done();
           });
       })
       .catch(done);
   };
+
   const nonRewritableHoldersErr = (useBulk, done) => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("SELECT :id2 as id, :id1 as t", [{ id2: 1, id1: "john" }, { id1: "jack", id2: 2 }])
           .then(res => {
@@ -647,6 +683,7 @@ describe("batch", () => {
                   }
                 ]
               ]);
+              clearTimeout(timeout);
               done();
             }
           })
@@ -658,6 +695,7 @@ describe("batch", () => {
                   "This command is not supported in the prepared statement protocol yet"
                 )
               );
+              clearTimeout(timeout);
               done();
             } else {
               done(err);
@@ -671,6 +709,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query("DROP TABLE IF EXISTS more16MNamedPlaceHolders");
         conn.query(
           "CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4"
@@ -703,6 +744,7 @@ describe("batch", () => {
               .on("end", () => {
                 assert.equal(1000000, currRow);
                 conn.query("DROP TABLE more16MNamedPlaceHolders");
+                clearTimeout(timeout);
                 conn.end();
                 done();
               });
@@ -716,6 +758,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 200000);
         conn.query("DROP TABLE IF EXISTS more16MSingleNamedPlaceHolders");
         conn.query(
           "CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4"
@@ -747,6 +792,7 @@ describe("batch", () => {
                   }
                 ]);
                 conn.query("DROP TABLE more16MSingleNamedPlaceHolders");
+                clearTimeout(timeout);
                 conn.end();
                 done();
               })
@@ -763,6 +809,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn.query("DROP TABLE IF EXISTS streamNamedPlaceHolders");
         conn.query(
           "CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4"
@@ -794,6 +843,7 @@ describe("batch", () => {
                 }
               ]);
               conn.query("DROP TABLE streamNamedPlaceHolders");
+              clearTimeout(timeout);
               conn.end();
               done();
             });
@@ -809,6 +859,9 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
         conn
           .batch("INSERT INTO blabla values (1, :id1, 2, :id3, :id7, 3)", [
             { id1: 1, id3: stream1, id4: 99, id5: 6 },
@@ -828,6 +881,7 @@ describe("batch", () => {
             assert.equal(err.errno, 1146);
             assert.equal(err.sqlState, "42S02");
             assert.equal(err.code, "ER_NO_SUCH_TABLE");
+            clearTimeout(timeout);
             conn.end();
             done();
           });
@@ -836,7 +890,6 @@ describe("batch", () => {
   };
 
   const stream16MNamedPlaceHolders = function(useBulk, done) {
-    let finished = false;
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
@@ -846,8 +899,8 @@ describe("batch", () => {
     base
       .createConnection({ namedPlaceholders: true, bulk: useBulk })
       .then(conn => {
-        setTimeout(() => {
-          if (!finished) console.log(conn.info.getLastPackets());
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
         }, 200000);
         conn.query("DROP TABLE IF EXISTS stream16MNamedPlaceHolders");
         conn.query(
@@ -880,7 +933,7 @@ describe("batch", () => {
               .on("end", () => {
                 assert.equal(1000000, currRow);
                 conn.query("DROP TABLE stream16MNamedPlaceHolders");
-                finished = true;
+                clearTimeout(timeout);
                 conn.end();
                 done();
               });
@@ -892,15 +945,18 @@ describe("batch", () => {
 
   describe("standard question mark using bulk", () => {
     const useCompression = false;
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleBatch(useCompression, true, done);
     });
 
-    it("simple batch error message ", done => {
+    it("simple batch error message ", function(done) {
+      this.timeout(30000);
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
 
@@ -928,11 +984,13 @@ describe("batch", () => {
       singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       batchErrorWithStream(useCompression, true, done);
     });
 
@@ -952,15 +1010,18 @@ describe("batch", () => {
   describe("standard question mark and compress with bulk", () => {
     const useCompression = true;
 
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleBatch(useCompression, true, done);
     });
 
-    it("simple batch error message ", done => {
+    it("simple batch error message ", function(done) {
+      this.timeout(30000);
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
 
@@ -988,11 +1049,13 @@ describe("batch", () => {
       singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       batchErrorWithStream(useCompression, true, done);
     });
 
@@ -1011,15 +1074,18 @@ describe("batch", () => {
 
   describe("standard question mark using rewrite", () => {
     const useCompression = false;
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleBatch(useCompression, false, done);
     });
 
-    it("simple batch error message ", done => {
+    it("simple batch error message ", function(done) {
+      this.timeout(30000);
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableBatch(useCompression, false, done);
     });
 
@@ -1047,11 +1113,13 @@ describe("batch", () => {
       singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       batchErrorWithStream(useCompression, false, done);
     });
 
@@ -1071,15 +1139,18 @@ describe("batch", () => {
   describe("standard question mark and compress with rewrite", () => {
     const useCompression = true;
 
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleBatch(useCompression, false, done);
     });
 
-    it("simple batch error message ", done => {
+    it("simple batch error message ", function(done) {
+      this.timeout(30000);
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableBatch(useCompression, false, done);
     });
 
@@ -1107,11 +1178,13 @@ describe("batch", () => {
       singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       batchErrorWithStream(useCompression, false, done);
     });
 
@@ -1129,15 +1202,18 @@ describe("batch", () => {
   });
 
   describe("named parameter with bulk", () => {
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleNamedPlaceHolders(true, done);
     });
 
-    it("simple batch error", done => {
+    it("simple batch error", function(done) {
+      this.timeout(30000);
       simpleNamedPlaceHoldersErr(true, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableHoldersErr(true, done);
     });
 
@@ -1153,11 +1229,13 @@ describe("batch", () => {
       more16MSingleNamedPlaceHolders(true, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       streamNamedPlaceHolders(true, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       streamErrorNamedPlaceHolders(true, done);
     });
 
@@ -1169,15 +1247,18 @@ describe("batch", () => {
   });
 
   describe("named parameter with rewrite", () => {
-    it("simple batch", done => {
+    it("simple batch", function(done) {
+      this.timeout(30000);
       simpleNamedPlaceHolders(false, done);
     });
 
-    it("simple batch error", done => {
+    it("simple batch error", function(done) {
+      this.timeout(30000);
       simpleNamedPlaceHoldersErr(false, done);
     });
 
-    it("non rewritable batch", done => {
+    it("non rewritable batch", function(done) {
+      this.timeout(30000);
       nonRewritableHoldersErr(false, done);
     });
 
@@ -1193,11 +1274,13 @@ describe("batch", () => {
       more16MSingleNamedPlaceHolders(false, done);
     });
 
-    it("batch with streams", done => {
+    it("batch with streams", function(done) {
+      this.timeout(30000);
       streamNamedPlaceHolders(false, done);
     });
 
-    it("batch error with streams", done => {
+    it("batch error with streams", function(done) {
+      this.timeout(30000);
       streamErrorNamedPlaceHolders(false, done);
     });
 

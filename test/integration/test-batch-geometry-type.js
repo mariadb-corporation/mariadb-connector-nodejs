@@ -9,6 +9,8 @@ const path = require("path");
 
 describe("batch geometry type", () => {
   it("Point format", function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
+
     shareConn.query("CREATE TEMPORARY TABLE gis_point_batch  (g POINT)");
     shareConn
       .batch("INSERT INTO gis_point_batch VALUES (?)", [
@@ -90,6 +92,7 @@ describe("batch geometry type", () => {
   });
 
   it("LineString insert", function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_line_batch (g LINESTRING)");
     shareConn
       .batch("INSERT INTO gis_line_batch VALUES (?)", [
@@ -121,35 +124,59 @@ describe("batch geometry type", () => {
         return shareConn.query("SELECT * FROM gis_line_batch");
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: "LineString",
-              coordinates: [[0, 0], [0, 10], [10, 0]]
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "LineString",
+                coordinates: [[0, 0], [0, 10], [10, 0]]
+              }
+            },
+            {
+              g: {
+                type: "LineString",
+                coordinates: [[0, 10]]
+              }
+            },
+            {
+              g: {
+                type: "LineString",
+                coordinates: []
+              }
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "LineString",
-              coordinates: [[0, 10]]
+          ]);
+        } else {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "LineString",
+                coordinates: [[0, 0], [0, 10], [10, 0]]
+              }
+            },
+            {
+              g: {
+                type: "LineString",
+                coordinates: [[0, 10]]
+              }
+            },
+            {
+              g: null
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "LineString",
-              coordinates: []
-            }
-          },
-          {
-            g: null
-          }
-        ]);
+          ]);
+        }
         done();
       })
       .catch(done);
   });
 
   it("Polygon insert", function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_polygon_batch (g POLYGON)");
     shareConn
       .batch("INSERT INTO gis_polygon_batch VALUES (?)", [
@@ -179,38 +206,65 @@ describe("batch geometry type", () => {
         return shareConn.query("SELECT * FROM gis_polygon_batch");
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: "Polygon",
-              coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "Polygon",
+                coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
+              }
+            },
+            {
+              g: {
+                type: "Polygon",
+                coordinates: [
+                  [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
+                  [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
+                ]
+              }
+            },
+            {
+              g: {
+                type: "Polygon",
+                coordinates: []
+              }
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "Polygon",
-              coordinates: [
-                [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
-                [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
-              ]
+          ]);
+        } else {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "Polygon",
+                coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
+              }
+            },
+            {
+              g: {
+                type: "Polygon",
+                coordinates: [
+                  [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
+                  [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
+                ]
+              }
+            },
+            {
+              g: null
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "Polygon",
-              coordinates: []
-            }
-          },
-          {
-            g: null
-          }
-        ]);
+          ]);
+        }
         done();
       })
       .catch(done);
   });
 
   it("MultiPoint insert", function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_point_batch (g MULTIPOINT)");
     shareConn
       .batch("INSERT INTO gis_multi_point_batch VALUES (?)", [
@@ -223,38 +277,62 @@ describe("batch geometry type", () => {
         return shareConn.query("SELECT * FROM gis_multi_point_batch");
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: "MultiPoint",
-              coordinates: [[30, 30], [10, 10], [10, 20], [20, 20]]
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: [[30, 30], [10, 10], [10, 20], [20, 20]]
+              }
+            },
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: [[10, 0]]
+              }
+            },
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: []
+              }
+            },
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: []
+              }
             }
-          },
-          {
-            g: {
-              type: "MultiPoint",
-              coordinates: [[10, 0]]
+          ]);
+        } else {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: [[30, 30], [10, 10], [10, 20], [20, 20]]
+              }
+            },
+            {
+              g: {
+                type: "MultiPoint",
+                coordinates: [[10, 0]]
+              }
+            },
+            {
+              g: null
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "MultiPoint",
-              coordinates: []
-            }
-          },
-          {
-            g: {
-              type: "MultiPoint",
-              coordinates: []
-            }
-          }
-        ]);
+          ]);
+        }
         done();
       })
       .catch(done);
   });
 
   it("Multi-line insert", function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_line_batch (g MULTILINESTRING)");
     shareConn
       .batch("INSERT INTO gis_multi_line_batch VALUES (?)", [
@@ -273,45 +351,70 @@ describe("batch geometry type", () => {
         return shareConn.query("SELECT * FROM gis_multi_line_batch");
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: "MultiLineString",
-              coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+              }
+            },
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: [[[10, 48], [10, 21], [10, 0]]]
+              }
+            },
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: [[]]
+              }
+            },
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: []
+              }
+            },
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: []
+              }
             }
-          },
-          {
-            g: {
-              type: "MultiLineString",
-              coordinates: [[[10, 48], [10, 21], [10, 0]]]
+          ]);
+        } else {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+              }
+            },
+            {
+              g: {
+                type: "MultiLineString",
+                coordinates: [[[10, 48], [10, 21], [10, 0]]]
+              }
+            },
+            {
+              g: null
+            },
+            {
+              g: null
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "MultiLineString",
-              coordinates: [[]]
-            }
-          },
-          {
-            g: {
-              type: "MultiLineString",
-              coordinates: []
-            }
-          },
-          {
-            g: {
-              type: "MultiLineString",
-              coordinates: []
-            }
-          }
-        ]);
+          ]);
+        }
         done();
       })
       .catch(done);
   });
 
   it("Multi-polygon insert", function(done) {
-    //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon_batch (g MULTIPOLYGON)");
@@ -368,63 +471,102 @@ describe("batch geometry type", () => {
         return shareConn.query("SELECT * FROM gis_multi_polygon_batch");
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: [
-                [
-                  [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
-                  [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
-                ],
-                [[[59, 18], [67, 18], [67, 13], [59, 13], [59, 18]]]
-              ]
-            }
-          },
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: [
-                [
-                  [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
-                  [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [
+                  [
+                    [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+                    [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+                  ],
+                  [[[59, 18], [67, 18], [67, 13], [59, 13], [59, 18]]]
                 ]
-              ]
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [
+                  [
+                    [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+                    [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+                  ]
+                ]
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [[[]]]
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [[]]
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: []
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: []
+              }
             }
-          },
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: [[[]]]
+          ]);
+        } else {
+          assert.deepEqual(rows, [
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [
+                  [
+                    [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+                    [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+                  ],
+                  [[[59, 18], [67, 18], [67, 13], [59, 13], [59, 18]]]
+                ]
+              }
+            },
+            {
+              g: {
+                type: "MultiPolygon",
+                coordinates: [
+                  [
+                    [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+                    [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+                  ]
+                ]
+              }
+            },
+            {
+              g: null
+            },
+            {
+              g: null
+            },
+            {
+              g: null
+            },
+            {
+              g: null
             }
-          },
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: [[]]
-            }
-          },
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: []
-            }
-          },
-          {
-            g: {
-              type: "MultiPolygon",
-              coordinates: []
-            }
-          }
-        ]);
+          ]);
+        }
         done();
       })
       .catch(done);
   });
 
   it("Geometry collection insert", function(done) {
-    //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection()

@@ -48,6 +48,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -64,6 +65,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -82,6 +84,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -100,6 +103,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -119,6 +123,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -138,6 +143,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -157,6 +163,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -176,6 +183,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );
@@ -208,6 +216,7 @@ describe("test PacketInputStream data", () => {
     let pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );

@@ -57,7 +57,7 @@ describe("debug", () => {
         conn
           .query("SELECT 1")
           .then(() => {
-            if (compress) {
+            if (compress && process.env.MAXSCALE_VERSION == undefined) {
               conn.debugCompress(true);
             } else {
               conn.debug(true);
@@ -65,7 +65,7 @@ describe("debug", () => {
             return conn.query("SELECT 2");
           })
           .then(() => {
-            if (compress) {
+            if (compress && process.env.MAXSCALE_VERSION == undefined) {
               conn.debugCompress(false);
             } else {
               conn.debug(false);
@@ -83,7 +83,7 @@ describe("debug", () => {
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
               if (process.env.MAXSCALE_VERSION) compress = false;
-              const rangeWithEOF = compress ? [470, 688] : [670, 710];
+              const rangeWithEOF = compress ? [470, 688] : [670, 730];
               const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
@@ -134,6 +134,7 @@ describe("debug", () => {
   }
 
   it("select big request (compressed data) debug", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     const fileName = path.join(os.tmpdir(), "tmp.txt");
     initialStdOut = process.stdout.write;
     initialStdErr = process.stderr.write;
