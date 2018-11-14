@@ -24,6 +24,36 @@ describe("Pool", () => {
     });
   });
 
+  it("ensure commit", function(done) {
+    shareConn.query("DROP TABLE IF EXISTS ensureCommit");
+    shareConn.query("CREATE TABLE ensureCommit(firstName varchar(32))");
+    shareConn.query("INSERT INTO ensureCommit values ('john')");
+    const pool = base.createPool({ connectionLimit: 1 });
+    pool.getConnection()
+    .then(conn =>{
+      conn.beginTransaction()
+      .then(() =>{
+        return conn.query("UPDATE ensureCommit SET firstName='Tom'")
+      })
+      .then(()=>{
+        return conn.commit();
+      })
+      .then(()=>{
+        conn.end();
+        return shareConn.query("SELECT * FROM ensureCommit");
+      })
+      .then((res)=>{
+        assert.deepEqual(res, [{firstName:'Tom'}]);
+        done();
+      })
+      .catch(err=>{
+        conn.rollback();
+        done(err);
+      })
+    });
+  });
+
+
   it("pool wrong query", function(done) {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
