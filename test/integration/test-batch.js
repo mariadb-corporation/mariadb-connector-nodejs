@@ -15,19 +15,19 @@ describe("batch", () => {
   let maxAllowedSize, bigBuf, timezoneParam;
 
   before(function(done) {
-    const hourOffset = Math.round(-1 * new Date().getTimezoneOffset() / 60);
+    const hourOffset = Math.round((-1 * new Date().getTimezoneOffset()) / 60);
 
     if (hourOffset < 0) {
       if (hourOffset <= -10) {
         timezoneParam = hourOffset + ":00";
       } else {
-        timezoneParam = "-0" +Math.abs(hourOffset) + ":00";
+        timezoneParam = "-0" + Math.abs(hourOffset) + ":00";
       }
     } else {
       if (hourOffset >= 10) {
-        timezoneParam = "+" +Math.abs(hourOffset) + ":00";
+        timezoneParam = "+" + Math.abs(hourOffset) + ":00";
       } else {
-        timezoneParam = "+0" +Math.abs(hourOffset) + ":00";
+        timezoneParam = "+0" + Math.abs(hourOffset) + ":00";
       }
     }
 
@@ -64,7 +64,6 @@ describe("batch", () => {
   });
 
   const simpleBatch = (useCompression, useBulk, timezone, done) => {
-
     base
       .createConnection({ compress: useCompression, bulk: useBulk, timezone: timezone })
       .then(conn => {
@@ -74,12 +73,12 @@ describe("batch", () => {
 
         conn.query("DROP TABLE IF EXISTS simpleBatch");
         conn.query(
-          "CREATE TABLE simpleBatch(id int, id2 int, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4"
+          "CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4"
         );
         conn
           .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)", [
             [
-              1,
+              true,
               "john😎🌶",
               new Date("2001-12-31 23:59:58"),
               new Date("2018-01-01 12:30:20.456789"),
@@ -89,7 +88,7 @@ describe("batch", () => {
               }
             ],
             [
-              2,
+              false,
               "jackमस्",
               new Date("2020-12-31 23:59:59"),
               new Date("2018-01-21 11:30:20.123456"),
@@ -99,14 +98,14 @@ describe("batch", () => {
               }
             ],
             [
-                true,
-                "bobпривет",
-                new Date("2020-12-31 23:59:59"),
-                new Date("2018-01-21 11:30:20.123456"),
-                {
-                  type: "Point",
-                  coordinates: [20, 20]
-                }
+              0,
+              "bobпривет",
+              new Date("2020-12-31 23:59:59"),
+              new Date("2018-01-21 11:30:20.123456"),
+              {
+                type: "Point",
+                coordinates: [20, 20]
+              }
             ]
           ])
           .then(res => {
@@ -130,7 +129,7 @@ describe("batch", () => {
                   },
                   {
                     id: 1,
-                    id2: 2,
+                    id2: 0,
                     id3: 2,
                     t: "jackमस्",
                     d: new Date("2020-12-31 23:59:59"),
@@ -143,7 +142,7 @@ describe("batch", () => {
                   },
                   {
                     id: 1,
-                    id2: 1,
+                    id2: 0,
                     id3: 2,
                     t: "bobпривет",
                     d: new Date("2020-12-31 23:59:59"),
@@ -179,53 +178,44 @@ describe("batch", () => {
   };
 
   const simpleBatchEncodingCP1251 = (useCompression, useBulk, timezone, done) => {
-
     base
-    .createConnection({ compress: useCompression, bulk: useBulk, charset: "CP1251_GENERAL_CI" })
-    .then(conn => {
-      const timeout = setTimeout(() => {
-        console.log(conn.info.getLastPackets());
-      }, 25000);
+      .createConnection({ compress: useCompression, bulk: useBulk, charset: "CP1251_GENERAL_CI" })
+      .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
 
-      conn.query("DROP TABLE IF EXISTS simpleBatchCP1251");
-      conn.query(
-          "CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4"
-      );
-      conn
-      .batch("INSERT INTO `simpleBatchCP1251` values (?, ?)", [
-        ["john",2],
-        ["©°", 3]
-      ])
-      .then(res => {
-        assert.equal(res.affectedRows, 2);
+        conn.query("DROP TABLE IF EXISTS simpleBatchCP1251");
+        conn.query("CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4");
         conn
-        .query("select * from `simpleBatchCP1251`")
-        .then(res => {
-          assert.deepEqual(res, [
-            { id: 2, t: "john" },
-            { id: 3, t: "©°" }
-          ]);
-          conn
-          .query("DROP TABLE simpleBatchCP1251")
+          .batch("INSERT INTO `simpleBatchCP1251` values (?, ?)", [["john", 2], ["©°", 3]])
           .then(res => {
-            clearTimeout(timeout);
-            conn.end();
-            done();
+            assert.equal(res.affectedRows, 2);
+            conn
+              .query("select * from `simpleBatchCP1251`")
+              .then(res => {
+                assert.deepEqual(res, [{ id: 2, t: "john" }, { id: 3, t: "©°" }]);
+                conn
+                  .query("DROP TABLE simpleBatchCP1251")
+                  .then(res => {
+                    clearTimeout(timeout);
+                    conn.end();
+                    done();
+                  })
+                  .catch(done);
+              })
+              .catch(err => {
+                done(err);
+              });
+          });
+        conn
+          .query("select 2")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "2": 2 }]);
           })
           .catch(done);
-        })
-        .catch(err => {
-          done(err);
-        });
-      });
-      conn
-      .query("select 2")
-      .then(rows => {
-        assert.deepEqual(rows, [{ "2": 2 }]);
       })
       .catch(done);
-    })
-    .catch(done);
   };
 
   const simpleBatchErrorMsg = (compression, useBulk, done) => {
@@ -1041,11 +1031,13 @@ describe("batch", () => {
     const useCompression = false;
     it("simple batch, local date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, "local", done);
     });
 
     it("simple batch offset date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
@@ -1116,11 +1108,13 @@ describe("batch", () => {
 
     it("simple batch, local date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, "local", done);
     });
 
     it("simple batch offset date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
@@ -1186,11 +1180,13 @@ describe("batch", () => {
 
     it("simple batch, local date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, "local", done);
     });
 
     it("simple batch offset date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 
@@ -1254,14 +1250,15 @@ describe("batch", () => {
   describe("standard question mark and compress with rewrite", () => {
     const useCompression = true;
 
-
     it("simple batch, local date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, "local", done);
     });
 
     it("simple batch offset date", function(done) {
       this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 

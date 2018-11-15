@@ -86,19 +86,19 @@ describe("connection option", () => {
 
   it("timezone -1h", function(done) {
     base
-    .createConnection({ timezone: "-01:00" })
-    .then(conn => {
-      conn.query("SET SESSION time_zone = '-01:00'");
-      conn
-      .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00+0100")])
-      .then(res => {
-        assert.deepEqual(res[0].tt, 946681200);
-        conn.end();
-        done();
+      .createConnection({ timezone: "-01:00" })
+      .then(conn => {
+        conn.query("SET SESSION time_zone = '-01:00'");
+        conn
+          .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00+0100")])
+          .then(res => {
+            assert.deepEqual(res[0].tt, 946681200);
+            conn.end();
+            done();
+          })
+          .catch(done);
       })
       .catch(done);
-    })
-    .catch(done);
   });
 
   it("wrong timezone format", function(done) {
