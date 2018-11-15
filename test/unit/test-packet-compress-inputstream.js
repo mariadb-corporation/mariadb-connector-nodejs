@@ -113,6 +113,7 @@ describe("test compress PacketInputStream data", () => {
     const pis = new PacketInputStream(
       unexpectedPacket,
       queue,
+      null,
       new ConnOptions(Conf.baseConfig),
       info
     );

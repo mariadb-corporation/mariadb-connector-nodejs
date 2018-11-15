@@ -24,6 +24,35 @@
 | **connectTimeout** | Connection timeout in milliseconds |*integer* | 10 000|
 | **socketTimeout** | Socket timeout in milliseconds after the connection is established |*integer* | 0|
 | **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations.|*boolean* | false|
+| **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)|*integer* | 4196304|
+
+
+### JSON or String configuration
+
+Options can be set as a JSON Object, or a using a String. 
+
+String format is :
+
+`mariadb://[<user>[:<password>]@]<host>[:<port>]/[<db>[?<opt1>=<value1>[&<optx>=<valuex>]]]`
+
+example:
+```javascript
+const mariadb = require('mariadb');
+//passing argument as JSON object
+mariadb.createConnection({ 
+    user: 'root', 
+    password: 'pass', 
+    port: 3307,
+    database: 'db',
+    metaAsArray: false,
+    ssl: true,
+    dateStrings: true  
+  });
+
+//passing argument as String
+mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true');
+```
+
 
 
 ## Big Integer Support 
@@ -320,6 +349,8 @@ mariadb.createConnection({
 | **metaAsArray** | Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property. |*boolean* |false|
 | **permitSetMultiParamEntries** | Compatibility option to permit setting multiple value by a JSON object to replace one question mark. key values will replace the question mark with format like `key1`=val,`key2`='val2'. Since it doesn't respect the usual prepared statement format that one value is for one question mark, this can lead to incomprehension, even if badly use to possible injection.|*boolean* |false|
 | **sessionVariables** | Permit to set session variables when connecting. Example: sessionVariables:{'idle_transaction_timeout':10000}|*json* |
+| **initSql** | When a connection is established, permit to execute commands before using connection|*string|array* |
+
 
 
 ## F.A.Q.

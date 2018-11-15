@@ -20,7 +20,7 @@ sqlInsert = "INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)";
 
 module.exports.title = "100 * insert 100 characters using promise";
 module.exports.displaySql = "INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)";
-const iterations = 10;
+const iterations = 100;
 module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred) {
   const params = [randomString(100)];

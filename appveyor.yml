@@ -9,46 +9,51 @@ environment:
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
   MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
+  TEST_LOG_PACKETS: true
   matrix:
 
-    - DB: '10.2.16'
+    - DB: '10.2.18'
       MEM: "21"
       nodejs_version: "6"
       SKIP_LEAK: "1"
 
-    - DB: '10.2.16'
+    - DB: '10.2.18'
       MEM: "21"
       nodejs_version: "8"
 
-    - DB: '10.2.16'
+    - DB: '10.2.18'
       MEM: "21"
-      nodejs_version: "9"
+      nodejs_version: "10"
 
-    - DB: '10.2.16'
-      nodejs_version: "9"
+    - DB: '10.2.18'
+      MEM: "21"
+      nodejs_version: "11"
+
+    - DB: '10.2.18'
+      nodejs_version: "10"
       MEM: "21"
       TEST_ZIP: 1
 
-    - DB: '10.2.16'
-      nodejs_version: "9"
+    - DB: '10.2.18'
+      nodejs_version: "10"
       MEM: "21"
       BENCH: "1"
 
-    - DB: '10.3.8'
+    - DB: '10.3.10'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
-    - DB: '10.1.34'
+    - DB: '10.1.37'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
-    - DB: '10.0.35'
+    - DB: '10.0.37'
       MEM: "21"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
-    - DB: '5.5.60'
+    - DB: '5.5.62'
       MEM: "5"
-      nodejs_version: "8"
+      nodejs_version: "10"
 
 cache:
   - node_modules

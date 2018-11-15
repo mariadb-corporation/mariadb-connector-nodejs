@@ -14,7 +14,7 @@ describe("Big query", function() {
         maxAllowedSize = row[0].t;
         if (testSize < maxAllowedSize) {
           buf = Buffer.alloc(testSize);
-          for (let i = 0; i < buf.length; i++) {
+          for (let i = 0; i < testSize; i++) {
             buf[i] = 97 + (i % 10);
           }
         }

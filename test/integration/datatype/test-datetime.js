@@ -41,7 +41,7 @@ describe("datetime", () => {
     }
   });
 
-  it("standard date", done => {
+  it("standard date", function(done) {
     //using distant server, time might be different
     if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();

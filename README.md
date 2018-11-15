@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="http://mariadb.org/">
-    <img src="https://mariadb.com/themes/custom/mariadb/logo.svg">
+  <a href="http://mariadb.com/">
+    <img src="https://mariadb.com/kb/static/images/logo-2018-black.png">
   </a>
 </p>
 
@@ -42,6 +42,12 @@ With Pipelining, the Connector sends commands without waiting for server results
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
 
 For more information, see the [Pipelining](/documentation/pipelining.md) documentation.
+ 
+### Bulk insert
+
+Some use cases require a large amount of data to be inserted into a database table. By using batch processing, these queries can be sent to the database in one call, thus improving performance.
+
+For more information, see the [Batch](/documentation/batch.md) documentation.
 
 
 ## Benchmarks
@@ -130,10 +136,10 @@ The default API is [Promise API](https://github.com/MariaDB/mariadb-connector-no
 
 The Connector remains in development.  Here's a list of features being developed for future releases:
 
-* `PoolCluster`
 * MariaDB `ed25519` plugin authentication
 * Query Timeouts
 * Bulk Insertion, (that is, fast batch).
+* [Sequelize](https://github.com/sequelize/sequelize) integration  
 
 
 ## Contributing 

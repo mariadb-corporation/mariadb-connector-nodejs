@@ -57,11 +57,19 @@ describe("debug", () => {
         conn
           .query("SELECT 1")
           .then(() => {
-            conn.debug(true);
+            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+              conn.debugCompress(true);
+            } else {
+              conn.debug(true);
+            }
             return conn.query("SELECT 2");
           })
           .then(() => {
-            conn.debug(false);
+            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+              conn.debugCompress(false);
+            } else {
+              conn.debug(false);
+            }
             return conn.query("SELECT 3");
           })
           .then(() => {
@@ -74,11 +82,13 @@ describe("debug", () => {
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
               const serverVersion = conn.serverVersion();
-              const rangeWithEOF = compress ? [470, 500] : [670, 710];
-              const rangeWithoutEOF = compress ? [470, 500] : [570, 595];
+              if (process.env.MAXSCALE_VERSION) compress = false;
+              const rangeWithEOF = compress ? [470, 688] : [670, 730];
+              const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
               if (
-                (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
-                (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))
+                ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
+                  (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
+                !process.env.MAXSCALE_VERSION
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -124,6 +134,7 @@ describe("debug", () => {
   }
 
   it("select big request (compressed data) debug", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     const fileName = path.join(os.tmpdir(), "tmp.txt");
     initialStdOut = process.stdout.write;
     initialStdErr = process.stderr.write;
@@ -133,7 +144,7 @@ describe("debug", () => {
 
     process.stdout.write = process.stderr.write = access.write.bind(access);
     base
-      .createConnection({ compress: true, debug: true })
+      .createConnection({ compress: true, debugCompress: true })
       .then(conn => {
         conn
           .query("SELECT ?", buf)
@@ -147,7 +158,7 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  const range = [1790, 2900];
+                  let range = [920, 2400];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +

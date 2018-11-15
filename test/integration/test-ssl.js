@@ -10,6 +10,8 @@ describe("ssl", function() {
   let sslEnable = false;
 
   before(function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
+
     if (process.env.TEST_SSL_CA_FILE) {
       const caFileName = process.env.TEST_SSL_CA_FILE;
       ca = [fs.readFileSync(caFileName, "utf8")];
@@ -75,10 +77,10 @@ describe("ssl", function() {
           shareConn
             .query("SHOW VARIABLES LIKE '%ssl%'")
             .then(rows => {
-              console.log("ssl is not enable on database, skipping test :");
-              for (let i = 0; i < rows.length; i++) {
-                console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
-              }
+              // console.log("ssl is not enable on database, skipping test :");
+              // for (let i = 0; i < rows.length; i++) {
+              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
+              // }
               done();
             })
             .catch(done);
@@ -88,6 +90,7 @@ describe("ssl", function() {
   });
 
   after(function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     shareConn
       .query("DROP USER 'sslTestUser'@'%'")
       .then(() => {
@@ -252,7 +255,9 @@ describe("ssl", function() {
         done(new Error("Must have thrown an exception !"));
       })
       .catch(err => {
-        assert(err.message.includes("no ciphers available") || err.message.includes("no cipher match"));
+        assert(
+          err.message.includes("no ciphers available") || err.message.includes("no cipher match")
+        );
         done();
       });
   });
