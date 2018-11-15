@@ -31,7 +31,7 @@ connection.query("INSERT INTO BASKET(customerId) values (?)", [1], (err, res) =>
 });
 ```
 
-### performance comparison  
+### Performance comparison  
 
 Some benchmark to do some 100 inserts with one parameter of 100 characters :
 (benchmark source - see [standard insert](../benchmarks/benchs/bench_promise_insert_pipelining.js) and [batch insert](../benchmarks/benchs/bench_promise_insert_batch.js) )
@@ -39,7 +39,7 @@ Some benchmark to do some 100 inserts with one parameter of 100 characters :
     <img src="./misc/batch-bench.png">
 </p>
 
-### configuration
+### Configuration
 
 There is one thing to pay attention : MySQL / MariaDB servers have a global option [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) that limit the maximum packet exchange size. 
 If connector send more data than these limit, socket will be immediately dropped.  
