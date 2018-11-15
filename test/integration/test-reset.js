@@ -49,22 +49,20 @@ describe("reset connection", () => {
   });
 
   it("reset temporary tables", function(done) {
-    //remove test for MariaDB 10.2.18 ( see https://jira.mariadb.org/browse/MDEV-17731)
-    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10,2,18) && !shareConn.info.hasMinVersion(10,2,19)) this.skip();
     base
       .createConnection()
       .then(conn => {
         conn
-          .query("CREATE TEMPORARY TABLE ttt(t varchar(128))")
+          .query("CREATE TEMPORARY TABLE resetTemporaryTable(t varchar(128))")
           .then(() => {
-            return conn.query("select * from ttt");
+            return conn.query("select * from resetTemporaryTable");
           })
           .then(rows => {
             assert.deepEqual(rows, []);
             return conn.reset();
           })
           .then(() => {
-            return conn.query("select * from ttt");
+            return conn.query("select * from resetTemporaryTable");
           })
           .then(rows => {
             done(new Error("temporary table must not exist !"));
