@@ -9,7 +9,7 @@ const PacketOutputStream = require("../../../lib/io/packet-output-stream");
 
 const MAX_BUFFER_SIZE = 16777219;
 
-describe("packet", () => {
+describe("bulk packet", () => {
   const baseOpts = Conf.baseConfig;
   const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
 

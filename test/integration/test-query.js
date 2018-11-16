@@ -131,6 +131,8 @@ describe("basic query", () => {
   });
 
   it("query warning", function(done) {
+    //mysql 8 force truncation as error, even with SQL_MODE disable it.
+    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8,0,0)) this.skip();
     base
     .createConnection()
     .then(conn => {
