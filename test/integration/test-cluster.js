@@ -5,9 +5,33 @@ const Conf = require("../conf");
 const basePromise = require("../../promise");
 const baseCallback = require("../../callback");
 const Proxy = require("../tools/proxy");
+const base = require("../base.js");
 
-describe("cluster", () => {
-  describe("promise", () => {
+const { assert } = require("chai");
+
+describe("cluster", function() {
+  before(function(done) {
+    shareConn
+      .query("DROP TABLE IF EXISTS clusterInsert")
+      .then(() => {
+        return shareConn.query("CREATE TABLE clusterInsert(id int, nam varchar(256))");
+      })
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
+  beforeEach(function(done) {
+    shareConn
+      .query("TRUNCATE TABLE clusterInsert")
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
+  describe("promise", function() {
     it("no node", function(done) {
       const poolCluster = basePromise.createPoolCluster();
       poolCluster
@@ -313,6 +337,97 @@ describe("cluster", () => {
     });
 
     describe("filtered cluster", () => {
+      it("server close connection during query", function(done) {
+        if (process.env.MAXSCALE_VERSION) this.skip();
+        this.timeout(10000);
+        const poolCluster = basePromise.createPoolCluster({});
+
+        const connOption1 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node1'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false
+        });
+        const connOption2 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node2'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false
+        });
+        const connOption3 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node3'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false
+        });
+
+        poolCluster.add("node1", connOption1);
+        poolCluster.add("node2", connOption2);
+        poolCluster.add("node3", connOption3);
+
+        const filteredCluster = poolCluster.of(/^node[12]/);
+        filteredCluster
+          .query("KILL CONNECTION_ID()")
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.equal(err.sqlState, "70100");
+            poolCluster.end();
+            done();
+          });
+      });
+
+      it("socket close connection during query", function(done) {
+        if (process.env.MAXSCALE_VERSION) this.skip();
+        if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
+        this.timeout(10000);
+        const poolCluster = basePromise.createPoolCluster({});
+
+        const connOption1 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node1'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false,
+          acquireTimeout: 10
+        });
+        const connOption2 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node2'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false,
+          acquireTimeout: 10
+        });
+        const connOption3 = Object.assign({}, Conf.baseConfig, {
+          initSql: ["set @node='node3'", "SET @@wait_timeout=2"],
+          connectionLimit: 1,
+          resetAfterUse: false,
+          acquireTimeout: 10
+        });
+
+        poolCluster.add("node1", connOption1);
+        poolCluster.add("node2", connOption2);
+        poolCluster.add("node3", connOption3);
+
+        const filteredCluster = poolCluster.of(/^node2/);
+        filteredCluster
+          .query(
+            "SET STATEMENT max_statement_time=1 FOR select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2"
+          )
+          .catch(err => {
+            //dismiss error
+          });
+        filteredCluster
+          .query("SELECT 1")
+          .then(() => {
+            done(new Error("must have thrown error !"));
+          })
+          .catch(err => {
+            assert.isTrue(
+              err.message.includes(
+                "No Connection available for '/^node2/'. Last connection error was: retrieve connection from pool timeout"
+              )
+            );
+            poolCluster.end();
+            done();
+          });
+      });
+
       it("get filtered", function(done) {
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/);
@@ -955,13 +1070,20 @@ describe("cluster", () => {
       });
     }
   };
+
   const getConnectionAndCheck = (cluster, pattern) => {
+    let nodeName;
     return cluster.getConnection(pattern).then(conn => {
       return conn
         .query("SELECT @node")
         .then(row => {
+          nodeName = row[0]["@node"];
+          return conn.batch("INSERT INTO clusterInsert VALUES (?,?)", [[1, "TOM"], [2, "JERRY"]]);
+        })
+        .then(res => {
+          assert.equal(res.affectedRows, 2);
           conn.end();
-          return row[0]["@node"];
+          return nodeName;
         })
         .catch(err => {
           console.log(err);
