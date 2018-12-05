@@ -1035,6 +1035,44 @@ describe("batch", () => {
       simpleBatch(useCompression, true, "local", done);
     });
 
+    it("batch without parameter", function(done) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base
+      .createConnection({ compress: useCompression, bulk: true})
+      .then(conn => {
+        conn
+        .batch("INSERT INTO `blabla` values (?)")
+        .then(res => {
+          conn.end();
+          done(new Error("expect an error !"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Batch must have values set"));
+          conn.end();
+          done();
+        });
+      });
+    });
+
+    it("batch with erroneous parameter", function(done) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base
+      .createConnection({ compress: useCompression, bulk: true})
+      .then(conn => {
+        conn
+        .batch("INSERT INTO `blabla` values (?)", [[1, 2], [1, undefined]])
+        .then(res => {
+          conn.end();
+          done(new Error("expect an error !"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Parameter at position 2 is undefined for values 1"));
+          conn.end();
+          done();
+        });
+      });
+    });
+
     it("simple batch offset date", function(done) {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -1182,6 +1220,63 @@ describe("batch", () => {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, "local", done);
+    });
+
+    it("batch without parameter", function(done) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base
+      .createConnection({ compress: useCompression, bulk: false})
+      .then(conn => {
+        conn
+        .batch("INSERT INTO `blabla` values (?)")
+        .then(res => {
+          conn.end();
+          done(new Error("expect an error !"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Batch must have values set"));
+          conn.end();
+          done();
+        });
+      });
+    });
+
+    it("batch with erroneous parameter", function(done) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base
+      .createConnection({ compress: useCompression, bulk: true})
+      .then(conn => {
+        conn
+        .batch("INSERT INTO `blabla` values (?,?)", [[1, 2], [1]])
+        .then(res => {
+          conn.end();
+          done(new Error("expect an error !"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Parameter at position 2 is not set for values 1"));
+          conn.end();
+          done();
+        });
+      });
+    });
+
+    it("batch with undefined parameter", function(done) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base
+      .createConnection({ compress: useCompression, bulk: true})
+      .then(conn => {
+        conn
+        .batch("INSERT INTO `blabla` values (?,?)", [[1, 2], [1, undefined]])
+        .then(res => {
+          conn.end();
+          done(new Error("expect an error !"));
+        })
+        .catch(err => {
+          assert.isTrue(err.message.includes("Parameter at position 2 is undefined for values 1"));
+          conn.end();
+          done();
+        });
+      });
     });
 
     it("simple batch offset date", function(done) {

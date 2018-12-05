@@ -518,6 +518,57 @@ describe("cluster", function() {
             done(err);
           });
       });
+
+      it("batch on filtered", function(done) {
+        const poolCluster = get3NodeCluster();
+        const filteredCluster = poolCluster.of(/^node[12]/);
+
+        filteredCluster.query("DROP TABLE IF EXISTS filteredSimpleBatch");
+        filteredCluster.query(
+            "CREATE TABLE filteredSimpleBatch(id int not null primary key auto_increment, val int)"
+        );
+
+        const promises = [];
+        for (let i = 0; i < 60; i++) {
+          promises.push(filteredCluster.batch("INSERT INTO filteredSimpleBatch(val) values (?)", [
+            [1], [2], [3]]));
+        }
+        Promise.all(promises)
+        .then(() => {
+          return filteredCluster.query(
+              "SELECT count(*) as nb FROM filteredSimpleBatch");
+        })
+        .then(res => {
+          expect(res[0].nb).to.equal(180);
+          poolCluster.end();
+          done();
+        })
+        .catch(err => {
+          poolCluster.end();
+          done(err);
+        });
+      });
+
+      it("batch error on filtered", function(done) {
+        const poolCluster = get3NodeCluster();
+        const filteredCluster = poolCluster.of(/^node[12]/);
+
+        filteredCluster.batch("INSERT INTO notExistingTable(val) values (?)", [
+            [1], [2], [3]])
+        .then(res => {
+          poolCluster.end();
+          console.log(res);
+          done(new Error("must have thrown an error !"));
+        })
+        .catch(err => {
+          expect(err.message).to.have.string(
+              "notexistingtable' doesn't exist"
+          );
+          poolCluster.end();
+          done();
+        });
+      });
+
     });
   });
 
