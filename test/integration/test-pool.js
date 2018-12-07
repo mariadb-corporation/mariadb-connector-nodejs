@@ -62,41 +62,38 @@ describe("Pool", () => {
     const pool = base.createPool({ connectionLimit: 1 });
     pool.getConnection().then(conn => {
       conn.end();
-      pool.end()
-      .then(() => {
-        pool.end()
-        .then(()=> {
-          done(new Error("must have thrown an error !"));
-        })
-        .catch(err => {
-          assert.isTrue(err.message.includes("pool is already closed"));
-          done();
-        });
+      pool.end().then(() => {
+        pool
+          .end()
+          .then(() => {
+            done(new Error("must have thrown an error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes("pool is already closed"));
+            done();
+          });
       });
     });
   });
-
 
   it("pool ending during requests", function(done) {
     this.timeout(10000);
     const pool = base.createPool({ connectionLimit: 1 });
     pool.getConnection().then(conn => {
-      conn.end()
-      .then(() => {
-
-        const reflect = p => p.then(v => ({v, status: "resolved" }),
-            e => ({e, status: "rejected" }));
+      conn.end().then(() => {
+        const reflect = p =>
+          p.then(v => ({ v, status: "resolved" }), e => ({ e, status: "rejected" }));
 
         const requests = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 1000; i++) {
           requests.push(pool.query("SELECT " + i));
         }
 
-        setTimeout(pool.end, 20);
+        setTimeout(pool.end, 200);
 
-        Promise.all(requests.map(reflect))
-        .then((results) => {
-          let success = 0, error = 0;
+        Promise.all(requests.map(reflect)).then(results => {
+          let success = 0,
+            error = 0;
           results.forEach(x => {
             if (x.status === "resolved") {
               success++;
@@ -105,8 +102,8 @@ describe("Pool", () => {
             }
           });
 
-          assert.isTrue(error > 0);
-          assert.isTrue(success > 0);
+          assert.isTrue(error > 0, "error: " + error + " success:" + success);
+          assert.isTrue(success > 0, "error: " + error + " success:" + success);
           done();
         });
       });

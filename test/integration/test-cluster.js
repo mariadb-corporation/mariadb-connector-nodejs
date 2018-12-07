@@ -11,11 +11,9 @@ const { assert } = require("chai");
 
 describe("cluster", function() {
   before(() => {
-    return shareConn
-      .query("DROP TABLE IF EXISTS clusterInsert")
-      .then(() => {
-        return shareConn.query("CREATE TABLE clusterInsert(id int, nam varchar(256))");
-      });
+    return shareConn.query("DROP TABLE IF EXISTS clusterInsert").then(() => {
+      return shareConn.query("CREATE TABLE clusterInsert(id int, nam varchar(256))");
+    });
   });
 
   beforeEach(() => {
@@ -839,35 +837,50 @@ describe("cluster", function() {
         const poolCluster = cl.cluster;
         const proxy = cl.proxy;
 
-        testTimesCallback(poolCluster, (err, nodes) => {
-          expect(nodes["node1"]).to.equal(4);
-          expect(nodes["node2"]).to.equal(3);
-          expect(nodes["node3"]).to.equal(3);
+        testTimesCallback(
+          poolCluster,
+          (err, nodes) => {
+            expect(nodes["node1"]).to.equal(4);
+            expect(nodes["node2"]).to.equal(3);
+            expect(nodes["node3"]).to.equal(3);
 
-          proxy.close();
-          //wait for socket to end.
-          setTimeout(() => {
-            testTimesCallback(poolCluster, (err, nodes) => {
-              expect(nodes["node1"]).to.equal(5);
-              expect(nodes["node2"]).to.be.undefined;
-              expect(nodes["node3"]).to.equal(5);
-              proxy.resume();
-              setTimeout(() => {
-                testTimesCallback(poolCluster, (err, nodes) => {
-                  expect(nodes["node1"]).to.equal(3);
-                  expect(nodes["node2"]).to.equal(4);
-                  expect(nodes["node3"]).to.equal(3);
-                  poolCluster.end(() => {
-                    setTimeout(() => {
-                      proxy.close();
-                      done();
-                    }, 100);
-                  });
-                }, /^node*/, 10);
-              }, 550);
-            }, /^node*/, 10);
-          }, 500);
-        }, /^node*/, 10);
+            proxy.close();
+            //wait for socket to end.
+            setTimeout(() => {
+              testTimesCallback(
+                poolCluster,
+                (err, nodes) => {
+                  expect(nodes["node1"]).to.equal(5);
+                  expect(nodes["node2"]).to.be.undefined;
+                  expect(nodes["node3"]).to.equal(5);
+                  proxy.resume();
+                  setTimeout(() => {
+                    testTimesCallback(
+                      poolCluster,
+                      (err, nodes) => {
+                        expect(nodes["node1"]).to.equal(3);
+                        expect(nodes["node2"]).to.equal(4);
+                        expect(nodes["node3"]).to.equal(3);
+                        poolCluster.end(() => {
+                          setTimeout(() => {
+                            proxy.close();
+                            done();
+                          }, 100);
+                        });
+                      },
+                      /^node*/,
+                      10
+                    );
+                  }, 550);
+                },
+                /^node*/,
+                10
+              );
+            }, 500);
+          },
+          /^node*/,
+          10
+        );
       });
     });
 
