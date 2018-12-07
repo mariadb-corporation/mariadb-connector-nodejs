@@ -193,6 +193,12 @@ describe("batch geometry type", () => {
         [
           {
             type: "Polygon",
+            coordinates: [[[0, 0], [50]], [[10, 10], [20, 10]]]
+          }
+        ],
+        [
+          {
+            type: "Polygon",
             coordinates: []
           }
         ],
@@ -224,6 +230,9 @@ describe("batch geometry type", () => {
               }
             },
             {
+              g: null
+            },
+            {
               g: {
                 type: "Polygon",
                 coordinates: []
@@ -249,6 +258,9 @@ describe("batch geometry type", () => {
                   [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
                 ]
               }
+            },
+            {
+              g: null
             },
             {
               g: null
@@ -629,6 +641,11 @@ describe("batch geometry type", () => {
                 type: "GeometryCollection",
                 geometries: []
               }
+            ],
+            [
+              {
+                type: "GeometryCollection"
+              }
             ]
           ])
           .then(() => {
@@ -678,6 +695,12 @@ describe("batch geometry type", () => {
                       coordinates: [10, 20]
                     }
                   ]
+                }
+              },
+              {
+                g: {
+                  type: "GeometryCollection",
+                  geometries: []
                 }
               },
               {

@@ -150,14 +150,15 @@ describe("Pool callback", () => {
 
         setTimeout(() => {
           closed = true;
-          pool.end();
-          if (Conf.baseConfig.host === "localhost") {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 0);
-            assert.equal(pool.idleConnections(), 0);
-            assert.equal(pool.taskQueueSize(), 0);
-          }
-          done();
+          pool.end(() => {
+            if (Conf.baseConfig.host === "localhost") {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 0);
+              assert.equal(pool.idleConnections(), 0);
+              assert.equal(pool.taskQueueSize(), 0);
+            }
+            done();
+          });
         }, 5000);
       });
     }, 8000);
@@ -387,5 +388,18 @@ describe("Pool callback", () => {
         }
       }
     );
+  });
+
+  it("pool batch without parameters", function(done) {
+    const pool = base.createPoolCallback({ connectionLimit: 1, resetAfterUse: false });
+    pool.batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", (err, res) => {
+      pool.end();
+      if (err) {
+        assert.isTrue(err.message.includes("Batch must have values set"));
+        done();
+      } else {
+        done(new Error("must have thrown error"));
+      }
+    });
   });
 });

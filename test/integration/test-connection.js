@@ -41,6 +41,26 @@ describe("connection", () => {
       .catch(done);
   }
 
+  it("connection attributes with encoding not supported by node.js", function(done) {
+    const mediumAttribute = Buffer.alloc(20000, "a").toString();
+    base
+      .createConnection({
+        connectAttributes: { par1: "bouh", par2: mediumAttribute },
+        charset: "BIG5_CHINESE_CI"
+      })
+      .then(conn => {
+        conn
+          .query("SELECT 1")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "1": 1 }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it("multiple connection.connect() with callback", function(done) {
     const conn = base.createCallbackConnection();
     conn.connect(err => {
@@ -51,7 +71,7 @@ describe("connection", () => {
         conn.end(() => {
           conn.connect(err => {
             //normal error
-            assert(err.message.includes("Connection closed"));
+            assert.isTrue(err.message.includes("Connection closed"));
             assert.equal(err.sqlState, "08S01");
             assert.equal(err.code, "ER_CONNECTION_ALREADY_CLOSED");
             done();
@@ -78,7 +98,7 @@ describe("connection", () => {
     const conn = base.createCallbackConnection({ connectTimeout: 200, socketTimeout: 200 });
     conn.connect(err => {
       if (!err) done(new Error("must have throw an error!"));
-      assert(err.message.includes("close forced"));
+      assert.isTrue(err.message.includes("close forced"));
       done();
     });
     process.nextTick(
@@ -90,7 +110,7 @@ describe("connection", () => {
     const conn = base.createCallbackConnection({ connectTimeout: 100 });
     conn.connect(err => {
       if (!err) done(new Error("must have throw an error!"));
-      assert(err.message.includes("Connection timeout"));
+      assert.isTrue(err.message.includes("Connection timeout"));
       done();
     });
     process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket()));
@@ -108,7 +128,7 @@ describe("connection", () => {
         done(new Error("must have thrown error !"));
       })
       .catch(err => {
-        assert(err.message.includes("socket timeout"));
+        assert.isTrue(err.message.includes("socket timeout"));
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45026);
         assert.equal(err.code, "ER_SOCKET_TIMEOUT");
@@ -121,7 +141,7 @@ describe("connection", () => {
     try {
       conn.connect();
     } catch (err) {
-      assert(err.message.includes("missing callback parameter"));
+      assert.isTrue(err.message.includes("missing callback parameter"));
       assert.equal(err.sqlState, "HY000");
       assert.equal(err.errno, 45016);
       assert.equal(err.code, "ER_MISSING_PARAMETER");
@@ -162,7 +182,7 @@ describe("connection", () => {
           done();
         });
         conn.query("KILL " + conn.threadId).catch(err => {
-          assert(err.message.includes("Connection was killed"));
+          assert.isTrue(err.message.includes("Connection was killed"));
           assert.equal(err.sqlState, "70100");
           assert.equal(err.errno, 1927);
         });
@@ -175,7 +195,7 @@ describe("connection", () => {
       .createConnection({ socketTimeout: 100 })
       .then(conn => {
         conn.on("error", err => {
-          assert(err.message.includes("socket timeout"));
+          assert.isTrue(err.message.includes("socket timeout"));
           assert.equal(err.fatal, true);
           assert.equal(err.sqlState, "08S01");
           assert.equal(err.errno, 45026);
@@ -207,7 +227,7 @@ describe("connection", () => {
             done(new Error("must have thrown error"));
           })
           .catch(err => {
-            assert(err.message.includes("Connection closed"));
+            assert.isTrue(err.message.includes("Connection closed"));
             done();
           });
       })
@@ -277,7 +297,7 @@ describe("connection", () => {
 
   it("threadId access compatibility", function(done) {
     assert.isDefined(shareConn.threadId);
-    assert(shareConn.threadId !== -1);
+    assert.isTrue(shareConn.threadId !== -1);
     done();
   });
 
@@ -326,9 +346,9 @@ describe("connection", () => {
         )
         .then(() => done(new Error("expected error !")))
         .catch(err => {
-          assert(err != null);
-          assert(err.message.includes("Connection destroyed, command was killed"));
-          assert(err.fatal);
+          assert.isTrue(err != null);
+          assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
+          assert.isTrue(err.fatal);
           done();
         });
       setTimeout(() => {
@@ -345,8 +365,14 @@ describe("connection", () => {
     });
     conn.connect(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-      assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
-      assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
+      assert.isTrue(
+        Date.now() - initTime >= 999,
+        "expected > 999, but was " + (Date.now() - initTime)
+      );
+      assert.isTrue(
+        Date.now() - initTime < 2000,
+        "expected < 2000, but was " + (Date.now() - initTime)
+      );
       done();
     });
   });
@@ -364,7 +390,7 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert(
+        assert.isTrue(
           err.message.includes("socket timeout") || err.message.includes("Connection timeout"),
           err.message
         );
@@ -386,7 +412,7 @@ describe("connection", () => {
         conn.end();
       })
       .catch(err => {
-        assert(err.message.includes("Connection timeout"));
+        assert.isTrue(err.message.includes("Connection timeout"));
         assert.equal(err.sqlState, "08S01");
         assert.equal(err.errno, 45012);
         assert.equal(err.code, "ER_CONNECTION_TIMEOUT");
@@ -404,6 +430,24 @@ describe("connection", () => {
     done();
   });
 
+  it("connection without database", done => {
+    base
+      .createConnection({
+        database: null
+      })
+      .then(conn => {
+        conn
+          .query("SELECT DATABASE() as a")
+          .then(res => {
+            assert.deepEqual(res, [{ a: null }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it("connection timeout connect (wrong url) with promise", done => {
     const initTime = Date.now();
     base
@@ -413,8 +457,14 @@ describe("connection", () => {
       })
       .catch(err => {
         assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-        assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
-        assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
+        assert.isTrue(
+          Date.now() - initTime >= 999,
+          "expected > 999, but was " + (Date.now() - initTime)
+        );
+        assert.isTrue(
+          Date.now() - initTime < 2000,
+          "expected < 2000, but was " + (Date.now() - initTime)
+        );
         done();
       });
   });
@@ -423,8 +473,14 @@ describe("connection", () => {
     const initTime = Date.now();
     base.createConnection({ host: "www.google.fr", connectTimeout: 1000 }).catch(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
-      assert(Date.now() - initTime >= 999, "expected > 999, but was " + (Date.now() - initTime));
-      assert(Date.now() - initTime < 2000, "expected < 2000, but was " + (Date.now() - initTime));
+      assert.isTrue(
+        Date.now() - initTime >= 999,
+        "expected > 999, but was " + (Date.now() - initTime)
+      );
+      assert.isTrue(
+        Date.now() - initTime < 2000,
+        "expected < 2000, but was " + (Date.now() - initTime)
+      );
       done();
     });
   });
@@ -575,15 +631,15 @@ describe("connection", () => {
     let connOptionTemp = Conf.baseConfig;
     const conn = new Connection(new ConnOptions(connOptionTemp));
 
-    assert(!conn.isValid());
+    assert.isTrue(!conn.isValid());
     conn
       .connect()
       .then(() => {
-        assert(conn.isValid());
+        assert.isTrue(conn.isValid());
         return conn.end();
       })
       .then(() => {
-        assert(!conn.isValid());
+        assert.isTrue(!conn.isValid());
         done();
       });
   });
@@ -625,7 +681,10 @@ describe("connection", () => {
         assert.deepEqual(rows, [{ "1": 1 }]);
         const diff = process.hrtime(startTime);
         //query has take more than 500ms
-        assert(diff[1] > 499000000, " diff[1]:" + diff[1] + " expected to be more than 500000000");
+        assert.isTrue(
+          diff[1] > 499000000,
+          " diff[1]:" + diff[1] + " expected to be more than 500000000"
+        );
         done();
       })
       .catch(done);

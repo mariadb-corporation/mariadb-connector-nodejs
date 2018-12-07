@@ -13,7 +13,9 @@
     "test:base": "mocha \"test/**/*.js\" ",
     "test:lint": "eslint \"{lib,test}/**/*.js\" ",
     "test:prettier": "prettier --print-width 100 --trailing-comma none --write \"{lib,test,benchmarks}/**/*.js\"",
-    "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "npm run coverage:test && npm run coverage:report",
+    "coverage:test": "nyc mocha \"test/**/*.js\"",
+    "coverage:report": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "benchmark": "node ./benchmarks/benchmarks.js",
     "generate": "node ./tools/generate-mariadb.js"
   },
@@ -47,6 +49,7 @@
   "devDependencies": {
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
+    "codecov": "^3.1.0",
     "colors": "^1.3.2",
     "error-stack-parser": "^2.0.1",
     "eslint": "^5.9.0",
@@ -54,7 +57,7 @@
     "eslint-plugin-markdown": "^1.0.0-rc.0",
     "mocha": "^5.2.0",
     "mocha-lcov-reporter": "^1.3.0",
-    "nyc": "^13.0.1",
+    "nyc": "^13.1.0",
     "prettier": "^1.15.3"
   },
   "bugs": {

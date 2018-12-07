@@ -75,6 +75,10 @@ describe("batch", () => {
         conn.query(
           "CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4"
         );
+        const f = {};
+        f.toSqlString = () => {
+          return "blabla";
+        };
         conn
           .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)", [
             [
@@ -88,9 +92,19 @@ describe("batch", () => {
               }
             ],
             [
+              true,
+              f,
+              new Date("2001-12-31 23:59:58"),
+              new Date("2018-01-01 12:30:20.456789"),
+              {
+                type: "Point",
+                coordinates: [10, 10]
+              }
+            ],
+            [
               false,
-              "jackमस्",
-              new Date("2020-12-31 23:59:59"),
+              { name: "jackमस्", val: "tt" },
+              null,
               new Date("2018-01-21 11:30:20.123456"),
               {
                 type: "Point",
@@ -99,7 +113,7 @@ describe("batch", () => {
             ],
             [
               0,
-              "bobпривет",
+              null,
               new Date("2020-12-31 23:59:59"),
               new Date("2018-01-21 11:30:20.123456"),
               {
@@ -109,7 +123,7 @@ describe("batch", () => {
             ]
           ])
           .then(res => {
-            assert.equal(res.affectedRows, 3);
+            assert.equal(res.affectedRows, 4);
             conn
               .query("select * from `simpleBatch`")
               .then(res => {
@@ -129,10 +143,23 @@ describe("batch", () => {
                   },
                   {
                     id: 1,
+                    id2: 1,
+                    id3: 2,
+                    t: "blabla",
+                    d: new Date("2001-12-31 23:59:58"),
+                    d2: new Date("2018-01-01 12:30:20.456789"),
+                    g: {
+                      type: "Point",
+                      coordinates: [10, 10]
+                    },
+                    id4: 3
+                  },
+                  {
+                    id: 1,
                     id2: 0,
                     id3: 2,
-                    t: "jackमस्",
-                    d: new Date("2020-12-31 23:59:59"),
+                    t: '{"name":"jackमस्","val":"tt"}',
+                    d: null,
                     d2: new Date("2018-01-21 11:30:20.123456"),
                     g: {
                       type: "Point",
@@ -144,7 +171,7 @@ describe("batch", () => {
                     id: 1,
                     id2: 0,
                     id3: 2,
-                    t: "bobпривет",
+                    t: null,
                     d: new Date("2020-12-31 23:59:59"),
                     d2: new Date("2018-01-21 11:30:20.123456"),
                     g: {
@@ -248,6 +275,87 @@ describe("batch", () => {
             clearTimeout(timeout);
             done();
           });
+      })
+      .catch(done);
+  };
+
+  const simpleBatchErrorSplit = (useCompression, useBulk, timezone, done) => {
+    base
+      .createConnection({ compress: useCompression, bulk: useBulk, timezone: timezone })
+      .then(conn => {
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 25000);
+
+        conn.query("DROP TABLE IF EXISTS simpleBatch");
+        conn.query(
+          "CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(8), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4"
+        );
+        conn
+          .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)", [
+            [
+              true,
+              "john",
+              new Date("2001-12-31 23:59:58"),
+              new Date("2018-01-01 12:30:20.456789"),
+              {
+                type: "Point",
+                coordinates: [10, 10]
+              }
+            ],
+            [
+              false,
+              "12345678901",
+              null,
+              new Date("2018-01-21 11:30:20.123456"),
+              {
+                type: "Point",
+                coordinates: [10, 20]
+              }
+            ],
+            [
+              0,
+              null,
+              new Date("2020-12-31 23:59:59"),
+              new Date("2018-01-21 11:30:20.123456"),
+              {
+                type: "Point",
+                coordinates: [20, 20]
+              }
+            ]
+          ])
+          .then(res => {
+            conn.end();
+            if (
+              (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+              (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+            ) {
+              //field truncated must have thrown error
+              done(new Error("must have throw error !"));
+            } else {
+              done();
+            }
+          })
+          .catch(err => {
+            assert.isTrue(
+              err.message.includes("Data too long for column 't' at row 2"),
+              err.message
+            );
+            conn
+              .query("DROP TABLE simpleBatch")
+              .then(res => {
+                clearTimeout(timeout);
+                conn.end();
+                done();
+              })
+              .catch(done);
+          });
+        conn
+          .query("select 1")
+          .then(rows => {
+            assert.deepEqual(rows, [{ "1": 1 }]);
+          })
+          .catch(done);
       })
       .catch(done);
   };
@@ -1056,7 +1164,7 @@ describe("batch", () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
         conn
-          .batch("INSERT INTO `blabla` values (?)", [[1, 2], [1, undefined]])
+          .batch("INSERT INTO `blabla` values (?, ?)", [[1, 2], [1, undefined]])
           .then(res => {
             conn.end();
             done(new Error("expect an error !"));
@@ -1087,32 +1195,41 @@ describe("batch", () => {
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
+    it("simple batch error message packet split", function(done) {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      simpleBatchErrorSplit(useCompression, true, "local", done);
+    });
+
     it("non rewritable batch", function(done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith16mMaxAllowedPacket(useCompression, true, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith4mMaxAllowedPacket(useCompression, true, done);
     });
 
     it("16M+ error batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchError(useCompression, true, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
     });
 
@@ -1127,14 +1244,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWithStreams(useCompression, true, done);
     });
 
     it("16M+ error batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchErrorWithStreams(useCompression, true, done);
     });
   });
@@ -1165,26 +1284,29 @@ describe("batch", () => {
     });
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith16mMaxAllowedPacket(useCompression, true, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith4mMaxAllowedPacket(useCompression, true, done);
     });
 
     it("16M+ error batch", function(done) {
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchError(useCompression, true, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
     });
 
@@ -1199,14 +1321,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWithStreams(useCompression, true, done);
     });
 
     it("16M+ error batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchErrorWithStreams(useCompression, true, done);
     });
   });
@@ -1294,26 +1418,30 @@ describe("batch", () => {
     });
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith16mMaxAllowedPacket(useCompression, false, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith4mMaxAllowedPacket(useCompression, false, done);
     });
 
     it("16M+ error batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchError(useCompression, false, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
     });
 
@@ -1328,14 +1456,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWithStreams(useCompression, false, done);
     });
 
     it("16M+ error batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchErrorWithStreams(useCompression, false, done);
     });
   });
@@ -1366,26 +1496,30 @@ describe("batch", () => {
     });
 
     it("16M+ batch with 16M max_allowed_packet", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith16mMaxAllowedPacket(useCompression, false, done);
     });
 
     it("16M+ batch with max_allowed_packet set to 4M", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWith4mMaxAllowedPacket(useCompression, false, done);
     });
 
     it("16M+ error batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchError(useCompression, false, done);
     });
 
     it("16M+ single insert batch with no maxAllowedPacket set", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       singleBigInsertWithoutMaxAllowedPacket(useCompression, false, done);
     });
 
@@ -1400,14 +1534,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchWithStreams(useCompression, false, done);
     });
 
     it("16M+ error batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       bigBatchErrorWithStreams(useCompression, false, done);
     });
   });
@@ -1429,14 +1565,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       more16MNamedPlaceHolders(true, done);
     });
 
     it("16M+ single insert batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       more16MSingleNamedPlaceHolders(true, done);
     });
 
@@ -1451,8 +1589,9 @@ describe("batch", () => {
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       stream16MNamedPlaceHolders(true, done);
     });
   });
@@ -1474,14 +1613,16 @@ describe("batch", () => {
     });
 
     it("16M+ batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       more16MNamedPlaceHolders(false, done);
     });
 
     it("16M+ single insert batch", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       more16MSingleNamedPlaceHolders(false, done);
     });
 
@@ -1491,13 +1632,15 @@ describe("batch", () => {
     });
 
     it("batch error with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       this.timeout(30000);
       streamErrorNamedPlaceHolders(false, done);
     });
 
     it("16M+ batch with streams", function(done) {
+      if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
-      this.timeout(240000);
+      this.timeout(360000);
       stream16MNamedPlaceHolders(false, done);
     });
   });

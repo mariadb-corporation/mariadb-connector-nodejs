@@ -10,25 +10,16 @@ const base = require("../base.js");
 const { assert } = require("chai");
 
 describe("cluster", function() {
-  before(function(done) {
-    shareConn
+  before(() => {
+    return shareConn
       .query("DROP TABLE IF EXISTS clusterInsert")
       .then(() => {
         return shareConn.query("CREATE TABLE clusterInsert(id int, nam varchar(256))");
-      })
-      .then(() => {
-        done();
-      })
-      .catch(done);
+      });
   });
 
-  beforeEach(function(done) {
-    shareConn
-      .query("TRUNCATE TABLE clusterInsert")
-      .then(() => {
-        done();
-      })
-      .catch(done);
+  beforeEach(() => {
+    return shareConn.query("TRUNCATE TABLE clusterInsert");
   });
 
   describe("promise", function() {
@@ -301,7 +292,7 @@ describe("cluster", function() {
     describe("cluster failover", () => {
       it("reusing node after timeout", function(done) {
         this.timeout(20000);
-        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 });
+        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
         const poolCluster = cl.cluster;
         const proxy = cl.proxy;
 
@@ -429,6 +420,7 @@ describe("cluster", function() {
       });
 
       it("get filtered", function(done) {
+        this.timeout(10000);
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/);
         const promises = [];
@@ -458,6 +450,7 @@ describe("cluster", function() {
       });
 
       it("query on filtered", function(done) {
+        this.timeout(10000);
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/);
 
@@ -489,6 +482,7 @@ describe("cluster", function() {
       });
 
       it("query on filtered ORDER", function(done) {
+        this.timeout(10000);
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/, "ORDER");
 
@@ -520,6 +514,7 @@ describe("cluster", function() {
       });
 
       it("batch on filtered", function(done) {
+        this.timeout(10000);
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/);
 
@@ -558,11 +553,12 @@ describe("cluster", function() {
       });
 
       it("batch error on filtered", function(done) {
+        this.timeout(10000);
         const poolCluster = get3NodeCluster();
         const filteredCluster = poolCluster.of(/^node[12]/);
 
         filteredCluster
-          .batch("INSERT INTO notExistingTable(val) values (?)", [[1], [2], [3]])
+          .batch("INSERT INTO notexistingtable(val) values (?)", [[1], [2], [3]])
           .then(res => {
             poolCluster.end();
             console.log(res);
@@ -839,11 +835,11 @@ describe("cluster", function() {
     describe("cluster failover", () => {
       it("reusing node after timeout", function(done) {
         this.timeout(20000);
-        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 });
+        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
         const poolCluster = cl.cluster;
         const proxy = cl.proxy;
 
-        testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+        testTimesCallback(poolCluster, (err, nodes) => {
           expect(nodes["node1"]).to.equal(4);
           expect(nodes["node2"]).to.equal(3);
           expect(nodes["node3"]).to.equal(3);
@@ -851,26 +847,27 @@ describe("cluster", function() {
           proxy.close();
           //wait for socket to end.
           setTimeout(() => {
-            testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+            testTimesCallback(poolCluster, (err, nodes) => {
               expect(nodes["node1"]).to.equal(5);
               expect(nodes["node2"]).to.be.undefined;
               expect(nodes["node3"]).to.equal(5);
               proxy.resume();
               setTimeout(() => {
-                testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+                testTimesCallback(poolCluster, (err, nodes) => {
                   expect(nodes["node1"]).to.equal(3);
                   expect(nodes["node2"]).to.equal(4);
                   expect(nodes["node3"]).to.equal(3);
-                  poolCluster.end();
-                  setTimeout(() => {
-                    proxy.close();
-                    done();
-                  }, 100);
-                });
+                  poolCluster.end(() => {
+                    setTimeout(() => {
+                      proxy.close();
+                      done();
+                    }, 100);
+                  });
+                }, /^node*/, 10);
               }, 550);
-            });
+            }, /^node*/, 10);
           }, 500);
-        });
+        }, /^node*/, 10);
       });
     });
 
@@ -1018,8 +1015,8 @@ describe("cluster", function() {
     return poolCluster;
   };
 
-  const get3NodeClusterWithProxy = opts => {
-    const poolCluster = basePromise.createPoolCluster(opts);
+  const get3NodeClusterWithProxy = (opts, base) => {
+    const poolCluster = base.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",

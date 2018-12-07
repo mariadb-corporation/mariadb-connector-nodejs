@@ -34,6 +34,7 @@ env:
   - TEST_PORT=3305
   - TEST_HOST=mariadb.example.com
   - MUST_USE_TCPIP=1
+  - RUN_LONG_TEST=1
 
 matrix:
   allow_failures:
@@ -84,9 +85,8 @@ notifications:
 
 script:
   - npm install
-  - npm install coveralls
+  - npm i nyc -g
   - .travis/script.sh
 
 after_success:
-  - if [ -z "$BENCH" ] ; then npm i nyc -g; fi
-  - if [ -z "$BENCH" ] ; then npm run coveralls; fi
+  - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
