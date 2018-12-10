@@ -1,12 +1,11 @@
 "use strict";
 
-const Utils = require("../../../lib/misc/utils");
 const { assert } = require("chai");
 const BulkPacket = require("../../../lib/io/bulk-packet");
 const ConnOptions = require("../../../lib/config/connection-options");
 const Conf = require("../../conf");
 const PacketOutputStream = require("../../../lib/io/packet-output-stream");
-
+const ConnectionInformation = require("../../../lib/misc/connection-information");
 const MAX_BUFFER_SIZE = 16777219;
 
 describe("bulk packet", () => {
@@ -27,7 +26,7 @@ describe("bulk packet", () => {
 
   it("datatypeChanged", () => {
     const conOpts = new ConnOptions(baseOpts);
-    const out = new PacketOutputStream(conOpts, null);
+    const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     const packet = new BulkPacket(conOpts, out, [
       true,
       1,
@@ -146,7 +145,7 @@ describe("bulk packet", () => {
 
   it("writeLengthStringAscii", () => {
     const conOpts = new ConnOptions(baseOpts);
-    const out = new PacketOutputStream(conOpts, null);
+    const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let packet = new BulkPacket(conOpts, out, [true]);
 
     let prevPos = packet.pos;
@@ -174,7 +173,7 @@ describe("bulk packet", () => {
 
   it("writeLength", () => {
     const conOpts = new ConnOptions(baseOpts);
-    const out = new PacketOutputStream(conOpts, null);
+    const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     const stream = getStream();
     out.setStream(stream);
     let packet = new BulkPacket(conOpts, out, [true]);
@@ -307,7 +306,7 @@ describe("bulk packet", () => {
 
   it("writeDefaultLengthEncodedString", () => {
     const conOpts = new ConnOptions(baseOpts);
-    let out = new PacketOutputStream(conOpts, null);
+    let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
     let packet = new BulkPacket(conOpts, out, [true]);
@@ -389,7 +388,7 @@ describe("bulk packet", () => {
 
   it("writeBinaryLocalDate", () => {
     const conOpts = new ConnOptions(baseOpts);
-    let out = new PacketOutputStream(conOpts, null);
+    let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
     let packet = new BulkPacket(conOpts, out, [true]);
@@ -443,7 +442,7 @@ describe("bulk packet", () => {
 
   it("writeBinaryTimezoneDate", () => {
     const conOpts = new ConnOptions(Object.assign({}, baseOpts, { timezone: "+07:00" }));
-    let out = new PacketOutputStream(conOpts, null);
+    let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
     let packet = new BulkPacket(conOpts, out, [true]);
