@@ -336,6 +336,17 @@ describe("connection", () => {
       .catch(done);
   });
 
+  it("connection.close alias", function(done) {
+    this.timeout(10000);
+    base
+      .createConnection()
+      .then(conn => {
+        conn.close();
+        done();
+      })
+      .catch(done);
+  });
+
   it("connection.destroy() during query execution", function(done) {
     this.timeout(10000);
     base.createConnection().then(conn => {
