@@ -347,7 +347,8 @@ describe("connection", () => {
         .then(() => done(new Error("expected error !")))
         .catch(err => {
           assert.isTrue(err != null);
-          assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
+          if (!process.env.MAXSCALE_VERSION)
+            assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
           assert.isTrue(err.fatal);
           done();
         });

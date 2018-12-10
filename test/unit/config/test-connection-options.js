@@ -54,10 +54,9 @@ describe("test connection options", () => {
     assert.equal(result.user, "root");
   });
 
-
   it("wrong maxAllowedPacket value", () => {
     try {
-      new ConnOptions({maxAllowedPacket: "abc"});
+      new ConnOptions({ maxAllowedPacket: "abc" });
       return new Error("must have thrown exception");
     } catch (e) {
       assert.isTrue(e.message.includes("maxAllowedPacket must be an integer. was 'abc'"));
