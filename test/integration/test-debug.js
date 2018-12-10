@@ -250,4 +250,20 @@ describe("debug", () => {
       })
       .catch(done);
   }
+
+  it("log debug packets", function(done) {
+    base
+      .createConnection({ logPackets: true })
+      .then(conn => {
+        conn
+          .query("SELECT 1")
+          .then(rows => {
+            assert.isTrue(conn.info.getLastPackets().length > 570);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });

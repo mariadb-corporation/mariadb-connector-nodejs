@@ -92,12 +92,12 @@ describe("parse", () => {
 
     it("Update", () => {
       const res = Parse.searchPlaceholder(
-        "UPDATE MultiTestt4 SET test = :id1 WHERE test = :id2",
+        "UPDATE MultiTestt4 SET test = :id1 #comm :id3\n WHERE s='\\\\' and test = :id2",
         null,
         values
       );
       assert.deepEqual(res, {
-        sql: "UPDATE MultiTestt4 SET test = ? WHERE test = ?",
+        sql: "UPDATE MultiTestt4 SET test = ? #comm :id3\n WHERE s='\\\\' and test = ?",
         values: [[1, 2], [null, 4], [6, 5]]
       });
     });

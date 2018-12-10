@@ -83,7 +83,7 @@ describe("batch", () => {
           .batch("INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)", [
             [
               true,
-              "john😎🌶",
+              "john😎🌶\\\\",
               new Date("2001-12-31 23:59:58"),
               new Date("2018-01-01 12:30:20.456789"),
               {
@@ -132,7 +132,7 @@ describe("batch", () => {
                     id: 1,
                     id2: 1,
                     id3: 2,
-                    t: "john😎🌶",
+                    t: "john😎🌶\\\\",
                     d: new Date("2001-12-31 23:59:58"),
                     d2: new Date("2018-01-01 12:30:20.456789"),
                     g: {
