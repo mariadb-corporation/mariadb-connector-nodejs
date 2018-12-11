@@ -158,7 +158,7 @@ describe("debug", () => {
                   process.stdout.write = initialStdOut;
                   process.stderr.write = initialStdErr;
                   const serverVersion = conn.serverVersion();
-                  let range = [920, 2400];
+                  let range = [820, 2400];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     "wrong data length : " +
@@ -241,13 +241,30 @@ describe("debug", () => {
               );
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
-              access.end();
-              fs.unlinkSync(fileName);
-              done();
+              access.end("", "utf8", () => {
+                fs.unlinkSync(fileName);
+                done();
+              });
             }, 500);
           })
           .catch(done);
       })
       .catch(done);
   }
+
+  it("log debug packets", function(done) {
+    base
+      .createConnection({ logPackets: true })
+      .then(conn => {
+        conn
+          .query("SELECT 1")
+          .then(rows => {
+            assert.isTrue(conn.info.getLastPackets().length > 570);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });

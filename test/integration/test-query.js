@@ -129,4 +129,26 @@ describe("basic query", () => {
       })
       .catch(done);
   });
+
+  it("query warning", function(done) {
+    //mysql 8 force truncation as error, even with SQL_MODE disable it.
+    if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    base
+      .createConnection()
+      .then(conn => {
+        conn.query(
+          "set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'"
+        );
+        conn.query("create TEMPORARY table h (c1 varchar(5))");
+        conn
+          .query("insert into h values ('123456')")
+          .then(res => {
+            assert.equal(res.warningStatus, 1);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });

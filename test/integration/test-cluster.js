@@ -5,9 +5,35 @@ const Conf = require("../conf");
 const basePromise = require("../../promise");
 const baseCallback = require("../../callback");
 const Proxy = require("../tools/proxy");
+const base = require("../base.js");
 
-describe("cluster", () => {
-  describe("promise", () => {
+const { assert } = require("chai");
+
+describe("cluster", function() {
+  before(done => {
+    shareConn
+      .query("DROP TABLE IF EXISTS clusterInsert")
+      .then(() => {
+        shareConn
+          .query("CREATE TABLE clusterInsert(id int, nam varchar(256))")
+          .then(() => {
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  describe("promise", function() {
+    beforeEach(function(done) {
+      shareConn
+        .query("TRUNCATE TABLE clusterInsert")
+        .then(() => {
+          done();
+        })
+        .catch(done);
+    });
+
     it("no node", function(done) {
       const poolCluster = basePromise.createPoolCluster();
       poolCluster
@@ -35,13 +61,34 @@ describe("cluster", () => {
       poolCluster
         .getConnection(/^M*$/)
         .then(() => {
-          done(new Error("must have thrown an error !"));
+          poolCluster.end().then(() => {
+            done(new Error("must have thrown an error !"));
+          });
         })
         .catch(err => {
           expect(err.message).to.have.string("No node found for pattern '/^M*$/'");
-          poolCluster.end();
+          poolCluster.end().then(() => {
+            done();
+          });
+        });
+    });
+
+    it("cluster add error", function(done) {
+      const poolCluster = basePromise.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, { connectionLimit: 1 });
+
+      poolCluster.add("node1", connOption1);
+      try {
+        poolCluster.add("node1", connOption1);
+        poolCluster.end().then(() => {
+          return done(new Error("must have thrown an error"));
+        });
+      } catch (e) {
+        assert.isTrue(e.message.includes("Node identifier 'node1' already exist"));
+        poolCluster.end().then(() => {
           done();
         });
+      }
     });
 
     it("end no configuration", function(done) {
@@ -60,12 +107,14 @@ describe("cluster", () => {
       getConnectionAndCheck(poolCluster, /^node[01]$/)
         .then(res => {
           expect(res).to.equal("node1");
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -75,15 +124,17 @@ describe("cluster", () => {
       poolCluster
         .getConnection(/^node*/)
         .then(() => {
-          poolCluster.end();
-          done(new Error("must have thrown an error"));
+          poolCluster.end().then(() => {
+            done(new Error("must have thrown an error"));
+          });
         })
         .catch(err => {
           expect(err.message).to.equal(
             "Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'"
           );
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         });
     });
 
@@ -95,12 +146,14 @@ describe("cluster", () => {
           expect(nodes["node1"]).to.equal(3);
           expect(nodes["node2"]).to.equal(3);
           expect(nodes["node3"]).to.equal(3);
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -126,13 +179,15 @@ describe("cluster", () => {
             expect(nodes["node2"]).to.be.undefined;
             expect(nodes["node3"]).to.equal(3);
             expect(nodes["node4"]).to.equal(3);
-            poolCluster.end();
-            done();
+            poolCluster.end().then(() => {
+              done();
+            });
           });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -144,12 +199,14 @@ describe("cluster", () => {
           expect(nodes["node1"]).to.equal(9);
           expect(nodes["node2"]).to.be.undefined;
           expect(nodes["node3"]).to.be.undefined;
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -164,12 +221,14 @@ describe("cluster", () => {
           expect(nodes["node2"]).to.be.at.least(5);
           expect(nodes["node3"]).to.be.below(40);
           expect(nodes["node3"]).to.be.at.least(5);
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -181,12 +240,14 @@ describe("cluster", () => {
           expect(nodes["node1"]).to.equal(30);
           expect(nodes["node2"]).to.equal(30);
           expect(nodes["node3"]).to.be.undefined;
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -224,12 +285,14 @@ describe("cluster", () => {
 
           const nodesConf = poolCluster.__tests.getNodes();
           expect(Object.keys(nodesConf)).to.have.length(2);
-          poolCluster.end();
-          done();
+          poolCluster.end().then(() => {
+            done();
+          });
         })
         .catch(err => {
-          poolCluster.end();
-          done(err);
+          poolCluster.end().then(() => {
+            done(err);
+          });
         });
     });
 
@@ -274,139 +337,307 @@ describe("cluster", () => {
       });
     });
 
-    describe("cluster failover", () => {
-      it("reusing node after timeout", function(done) {
-        this.timeout(20000);
-        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 });
-        const poolCluster = cl.cluster;
-        const proxy = cl.proxy;
+    it("reusing node after timeout", function(done) {
+      this.timeout(20000);
+      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
+      const poolCluster = cl.cluster;
+      const proxy = cl.proxy;
 
-        testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
-          expect(nodes["node1"]).to.equal(4);
-          expect(nodes["node2"]).to.equal(3);
-          expect(nodes["node3"]).to.equal(3);
+      testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+        expect(nodes["node1"]).to.equal(4);
+        expect(nodes["node2"]).to.equal(3);
+        expect(nodes["node3"]).to.equal(3);
 
-          proxy.close();
-          //wait for socket to end.
-          setTimeout(() => {
-            testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
-              expect(nodes["node1"]).to.equal(5);
-              expect(nodes["node2"]).to.be.undefined;
-              expect(nodes["node3"]).to.equal(5);
-              proxy.resume();
-              setTimeout(() => {
-                testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
-                  expect(nodes["node1"]).to.equal(3);
-                  expect(nodes["node2"]).to.equal(4);
-                  expect(nodes["node3"]).to.equal(3);
-                  poolCluster.end();
-                  setTimeout(() => {
+        proxy.close();
+        //wait for socket to end.
+        setTimeout(() => {
+          testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+            expect(nodes["node1"]).to.equal(5);
+            expect(nodes["node2"]).to.be.undefined;
+            expect(nodes["node3"]).to.equal(5);
+            proxy.resume();
+            setTimeout(() => {
+              testTimesWithError(poolCluster, /^node*/, 10)
+                .then(nodes => {
+                  expect([3, 4]).to.contain.members([nodes["node1"]]);
+                  expect([3, 4]).to.contain.members([nodes["node2"]]);
+                  expect([3, 4]).to.contain.members([nodes["node3"]]);
+                  poolCluster.end().then(() => {
                     proxy.close();
                     done();
-                  }, 100);
+                  });
+                })
+                .catch(err => {
+                  proxy.close();
+                  done(err);
                 });
-              }, 550);
-            });
-          }, 500);
-        });
+            }, 550);
+          });
+        }, 500);
       });
     });
 
-    describe("filtered cluster", () => {
-      it("get filtered", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/);
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(res => {
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(30);
-            expect(nodes["node2"]).to.equal(30);
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
-            done();
-          })
-          .catch(err => {
-            poolCluster.end();
-            done(err);
-          });
+    it("server close connection during query", function(done) {
+      if (process.env.MAXSCALE_VERSION) this.skip();
+      this.timeout(10000);
+      const poolCluster = basePromise.createPoolCluster({});
+
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node1'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false
+      });
+      const connOption2 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node2'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false
+      });
+      const connOption3 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node3'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false
       });
 
-      it("query on filtered", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/);
+      poolCluster.add("node1", connOption1);
+      poolCluster.add("node2", connOption2);
+      poolCluster.add("node3", connOption3);
 
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(filteredCluster.query("SELECT @node"));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(rows => {
-              const res = rows[0]["@node"];
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(30);
-            expect(nodes["node2"]).to.equal(30);
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+      filteredCluster
+        .query("KILL CONNECTION_ID()")
+        .then(() => {
+          done(new Error("must have thrown error !"));
+        })
+        .catch(err => {
+          assert.equal(err.sqlState, "70100");
+          poolCluster.end().then(() => {
             done();
-          })
-          .catch(err => {
-            poolCluster.end();
-            done(err);
           });
+        });
+    });
+
+    it("socket close connection during query", function(done) {
+      if (process.env.MAXSCALE_VERSION) this.skip();
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
+      this.timeout(10000);
+      const poolCluster = basePromise.createPoolCluster({});
+
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node1'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false,
+        acquireTimeout: 10
+      });
+      const connOption2 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node2'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false,
+        acquireTimeout: 10
+      });
+      const connOption3 = Object.assign({}, Conf.baseConfig, {
+        initSql: ["set @node='node3'", "SET @@wait_timeout=2"],
+        connectionLimit: 1,
+        resetAfterUse: false,
+        acquireTimeout: 10
       });
 
-      it("query on filtered ORDER", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/, "ORDER");
+      poolCluster.add("node1", connOption1);
+      poolCluster.add("node2", connOption2);
+      poolCluster.add("node3", connOption3);
+      let succeed = false;
+      const filteredCluster = poolCluster.of(/^node2/);
+      filteredCluster
+        .query(
+          "SET STATEMENT max_statement_time=1 FOR select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2"
+        )
+        .catch(err => {
+          //dismiss error
+          poolCluster.end().then(() => {
+            if (succeed) done(new Error("must have thrown error !"));
+            else done();
+          });
+        });
+      filteredCluster
+        .query("SELECT 1")
+        .then(() => {
+          succeed = true;
+        })
+        .catch(err => {
+          assert.isTrue(
+            err.message.includes(
+              "No Connection available for '/^node2/'. Last connection error was: retrieve connection from pool timeout"
+            )
+          );
+        });
+    });
 
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(filteredCluster.query("SELECT @node"));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(rows => {
-              const res = rows[0]["@node"];
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(60);
-            expect(nodes["node2"]).to.be.undefined;
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
+    it("get filtered", function(done) {
+      this.timeout(10000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(res => {
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(30);
+          expect(nodes["node2"]).to.equal(30);
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
             done();
-          })
-          .catch(err => {
-            poolCluster.end();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
             done(err);
           });
-      });
+        });
+    });
+
+    it("query on filtered", function(done) {
+      this.timeout(10000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(filteredCluster.query("SELECT @node"));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(rows => {
+            const res = rows[0]["@node"];
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(30);
+          expect(nodes["node2"]).to.equal(30);
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
+            done();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
+            done(err);
+          });
+        });
+    });
+
+    it("query on filtered ORDER", function(done) {
+      this.timeout(10000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/, "ORDER");
+
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(filteredCluster.query("SELECT @node"));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(rows => {
+            const res = rows[0]["@node"];
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(60);
+          expect(nodes["node2"]).to.be.undefined;
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
+            done();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
+            done(err);
+          });
+        });
+    });
+
+    it("batch on filtered", function(done) {
+      this.timeout(10000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+
+      filteredCluster
+        .query("DROP TABLE IF EXISTS filteredSimpleBatch")
+        .then(() => {
+          return filteredCluster.query(
+            "CREATE TABLE filteredSimpleBatch(id int not null primary key auto_increment, val int)"
+          );
+        })
+        .then(() => {
+          const promises = [];
+          for (let i = 0; i < 60; i++) {
+            promises.push(
+              filteredCluster.batch("INSERT INTO filteredSimpleBatch(val) values (?)", [
+                [1],
+                [2],
+                [3]
+              ])
+            );
+          }
+          Promise.all(promises)
+            .then(() => {
+              return filteredCluster.query("SELECT count(*) as nb FROM filteredSimpleBatch");
+            })
+            .then(res => {
+              expect(res[0].nb).to.equal(180);
+              poolCluster.end().then(() => {
+                done();
+              });
+            })
+            .catch(err => {
+              poolCluster.end().then(() => {
+                done(err);
+              });
+            });
+        });
+    });
+
+    it("batch error on filtered", function(done) {
+      this.timeout(10000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+
+      filteredCluster
+        .batch("INSERT INTO notexistingtable(val) values (?)", [[1], [2], [3]])
+        .then(res => {
+          poolCluster.end().then(() => {
+            done(new Error("must have thrown an error !"));
+          });
+        })
+        .catch(err => {
+          expect(err.message).to.have.string("notexistingtable' doesn't exist");
+          poolCluster.end().then(() => {
+            done();
+          });
+        });
     });
   });
 
   describe("callback", () => {
+    beforeEach(function() {
+      return shareConn.query("TRUNCATE TABLE clusterInsert");
+    });
+
     it("no node", function(done) {
       const poolCluster = baseCallback.createPoolCluster();
       poolCluster.getConnection((err, conn) => {
@@ -445,13 +676,14 @@ describe("cluster", () => {
       const poolCluster = get3NodeCallbackCluster();
 
       getConnectionAndCheckCallback(poolCluster, /^node[01]$/, (err, res) => {
-        poolCluster.end();
-        if (err) {
-          done(err);
-        } else {
-          expect(res).to.equal("node1");
-          done();
-        }
+        poolCluster.end(() => {
+          if (err) {
+            done(err);
+          } else {
+            expect(res).to.equal("node1");
+            done();
+          }
+        });
       });
     });
 
@@ -459,15 +691,16 @@ describe("cluster", () => {
       const poolCluster = get3NodeCallbackCluster({ defaultSelector: "WRONG" });
 
       poolCluster.getConnection(/^node*/, (err, conn) => {
-        poolCluster.end();
-        if (err) {
-          expect(err.message).to.equal(
-            "Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'"
-          );
-          done();
-        } else {
-          done(new Error("must have thrown an error"));
-        }
+        poolCluster.end(() => {
+          if (err) {
+            expect(err.message).to.equal(
+              "Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'"
+            );
+            done();
+          } else {
+            done(new Error("must have thrown an error"));
+          }
+        });
       });
     });
 
@@ -475,15 +708,16 @@ describe("cluster", () => {
       const poolCluster = get3NodeCallbackCluster();
 
       testTimesCallback(poolCluster, (err, nodes) => {
-        poolCluster.end();
-        if (err) {
-          done(err);
-        } else {
-          expect(nodes["node1"]).to.equal(3);
-          expect(nodes["node2"]).to.equal(3);
-          expect(nodes["node3"]).to.equal(3);
-          done();
-        }
+        poolCluster.end(() => {
+          if (err) {
+            done(err);
+          } else {
+            expect(nodes["node1"]).to.equal(3);
+            expect(nodes["node2"]).to.equal(3);
+            expect(nodes["node3"]).to.equal(3);
+            done();
+          }
+        });
       });
     });
 
@@ -491,8 +725,9 @@ describe("cluster", () => {
       const poolCluster = get3NodeCallbackCluster();
       testTimesCallback(poolCluster, (err, nodes) => {
         if (err) {
-          poolCluster.end();
-          done(err);
+          poolCluster.end(() => {
+            done(err);
+          });
         } else {
           expect(nodes["node1"]).to.equal(3);
           expect(nodes["node2"]).to.equal(3);
@@ -509,15 +744,17 @@ describe("cluster", () => {
           );
           testTimesCallback(poolCluster, (err, nodes) => {
             if (err) {
-              poolCluster.end();
-              done(err);
+              poolCluster.end(() => {
+                done(err);
+              });
             } else {
               expect(nodes["node1"]).to.equal(3);
               expect(nodes["node2"]).to.be.undefined;
               expect(nodes["node3"]).to.equal(3);
               expect(nodes["node4"]).to.equal(3);
-              poolCluster.end();
-              done();
+              poolCluster.end(() => {
+                done();
+              });
             }
           });
         }
@@ -529,14 +766,16 @@ describe("cluster", () => {
 
       testTimesCallback(poolCluster, (err, nodes) => {
         if (err) {
-          poolCluster.end();
-          done(err);
+          poolCluster.end(() => {
+            done(err);
+          });
         } else {
           expect(nodes["node1"]).to.equal(9);
           expect(nodes["node2"]).to.be.undefined;
           expect(nodes["node3"]).to.be.undefined;
-          poolCluster.end();
-          done();
+          poolCluster.end(() => {
+            done();
+          });
         }
       });
     });
@@ -544,18 +783,19 @@ describe("cluster", () => {
     it("select random pools", function(done) {
       const poolCluster = get3NodeCallbackCluster({ defaultSelector: "RANDOM" });
       const cb = (err, nodes) => {
-        poolCluster.end();
-        if (err) {
-          done(err);
-        } else {
-          expect(nodes["node1"]).to.be.below(40);
-          expect(nodes["node1"]).to.be.at.least(5);
-          expect(nodes["node2"]).to.be.below(40);
-          expect(nodes["node2"]).to.be.at.least(5);
-          expect(nodes["node3"]).to.be.below(40);
-          expect(nodes["node3"]).to.be.at.least(5);
-          done();
-        }
+        poolCluster.end(() => {
+          if (err) {
+            done(err);
+          } else {
+            expect(nodes["node1"]).to.be.below(40);
+            expect(nodes["node1"]).to.be.at.least(5);
+            expect(nodes["node2"]).to.be.below(40);
+            expect(nodes["node2"]).to.be.at.least(5);
+            expect(nodes["node3"]).to.be.below(40);
+            expect(nodes["node3"]).to.be.at.least(5);
+            done();
+          }
+        });
       };
 
       testTimesCallback(poolCluster, cb, /^node*/, 60);
@@ -564,15 +804,16 @@ describe("cluster", () => {
     it("ensure selector filter", function(done) {
       const poolCluster = get3NodeCallbackCluster();
       const cb = (err, nodes) => {
-        poolCluster.end();
-        if (err) {
-          done(err);
-        } else {
-          expect(nodes["node1"]).to.equal(30);
-          expect(nodes["node2"]).to.equal(30);
-          expect(nodes["node3"]).to.be.undefined;
-          done();
-        }
+        poolCluster.end(() => {
+          if (err) {
+            done(err);
+          } else {
+            expect(nodes["node1"]).to.equal(30);
+            expect(nodes["node2"]).to.equal(30);
+            expect(nodes["node3"]).to.be.undefined;
+            done();
+          }
+        });
       };
       testTimesCallback(poolCluster, cb, /^node[12]/, 60);
     });
@@ -604,8 +845,9 @@ describe("cluster", () => {
       poolCluster.add("node3", connOption3);
       const cb = (err, nodes) => {
         if (err) {
-          poolCluster.end();
-          done(err);
+          poolCluster.end(() => {
+            done(err);
+          });
         } else {
           expect(nodes["node1"]).to.equal(10);
           expect(nodes["node2"]).to.equal(10);
@@ -613,8 +855,9 @@ describe("cluster", () => {
 
           const nodesConf = poolCluster.__tests.getNodes();
           expect(Object.keys(nodesConf)).to.have.length(2);
-          poolCluster.end();
-          done();
+          poolCluster.end(() => {
+            done();
+          });
         }
       };
       testTimesCallback(poolCluster, cb, /^node[12]*/, 20);
@@ -649,8 +892,9 @@ describe("cluster", () => {
 
       const cb = (err, nodes) => {
         if (err) {
-          poolCluster.end();
-          done(err);
+          poolCluster.end(() => {
+            done(err);
+          });
         } else {
           expect(nodes["node1"]).to.equal(4);
           expect(nodes["node2"]).to.equal(3);
@@ -665,14 +909,15 @@ describe("cluster", () => {
       testTimesCallback(poolCluster, cb, /^node*/, 10);
     });
 
-    describe("cluster failover", () => {
-      it("reusing node after timeout", function(done) {
-        this.timeout(20000);
-        const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 });
-        const poolCluster = cl.cluster;
-        const proxy = cl.proxy;
+    it("reusing node after timeout", function(done) {
+      this.timeout(20000);
+      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
+      const poolCluster = cl.cluster;
+      const proxy = cl.proxy;
 
-        testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
+      testTimesCallback(
+        poolCluster,
+        (err, nodes) => {
           expect(nodes["node1"]).to.equal(4);
           expect(nodes["node2"]).to.equal(3);
           expect(nodes["node3"]).to.equal(3);
@@ -680,120 +925,136 @@ describe("cluster", () => {
           proxy.close();
           //wait for socket to end.
           setTimeout(() => {
-            testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
-              expect(nodes["node1"]).to.equal(5);
-              expect(nodes["node2"]).to.be.undefined;
-              expect(nodes["node3"]).to.equal(5);
-              proxy.resume();
-              setTimeout(() => {
-                testTimesWithError(poolCluster, /^node*/, 10).then(nodes => {
-                  expect(nodes["node1"]).to.equal(3);
-                  expect(nodes["node2"]).to.equal(4);
-                  expect(nodes["node3"]).to.equal(3);
-                  poolCluster.end();
-                  setTimeout(() => {
-                    proxy.close();
-                    done();
-                  }, 100);
-                });
-              }, 550);
-            });
+            testTimesCallback(
+              poolCluster,
+              (err, nodes) => {
+                expect(nodes["node1"]).to.equal(5);
+                expect(nodes["node2"]).to.be.undefined;
+                expect(nodes["node3"]).to.equal(5);
+                proxy.resume();
+                setTimeout(() => {
+                  testTimesCallback(
+                    poolCluster,
+                    (err, nodes) => {
+                      expect([3, 4]).to.contain.members([nodes["node1"]]);
+                      expect([3, 4]).to.contain.members([nodes["node2"]]);
+                      expect([3, 4]).to.contain.members([nodes["node3"]]);
+                      poolCluster.end(() => {
+                        proxy.close();
+                        done();
+                      });
+                    },
+                    /^node*/,
+                    10
+                  );
+                }, 550);
+              },
+              /^node*/,
+              10
+            );
           }, 500);
-        });
-      });
+        },
+        /^node*/,
+        10
+      );
     });
 
-    describe("filtered cluster", () => {
-      it("get filtered", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/);
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(res => {
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(30);
-            expect(nodes["node2"]).to.equal(30);
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
+    it("get filtered", function(done) {
+      this.timeout(20000);
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(res => {
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(30);
+          expect(nodes["node2"]).to.equal(30);
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
             done();
-          })
-          .catch(err => {
-            poolCluster.end();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
             done(err);
           });
-      });
+        });
+    });
 
-      it("query on filtered", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/);
+    it("query on filtered", function(done) {
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/);
 
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(filteredCluster.query("SELECT @node"));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(rows => {
-              const res = rows[0]["@node"];
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(30);
-            expect(nodes["node2"]).to.equal(30);
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(filteredCluster.query("SELECT @node"));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(rows => {
+            const res = rows[0]["@node"];
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(30);
+          expect(nodes["node2"]).to.equal(30);
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
             done();
-          })
-          .catch(err => {
-            poolCluster.end();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
             done(err);
           });
-      });
+        });
+    });
 
-      it("query on filtered ORDER", function(done) {
-        const poolCluster = get3NodeCluster();
-        const filteredCluster = poolCluster.of(/^node[12]/, "ORDER");
+    it("query on filtered ORDER", function(done) {
+      const poolCluster = get3NodeCluster();
+      const filteredCluster = poolCluster.of(/^node[12]/, "ORDER");
 
-        const promises = [];
-        for (let i = 0; i < 60; i++) {
-          promises.push(filteredCluster.query("SELECT @node"));
-        }
-        Promise.all(promises)
-          .then(results => {
-            const nodes = {};
-            results.forEach(rows => {
-              const res = rows[0]["@node"];
-              if (nodes[res]) {
-                nodes[res]++;
-              } else {
-                nodes[res] = 1;
-              }
-            });
-            expect(nodes["node1"]).to.equal(60);
-            expect(nodes["node2"]).to.be.undefined;
-            expect(nodes["node3"]).to.be.undefined;
-            poolCluster.end();
+      const promises = [];
+      for (let i = 0; i < 60; i++) {
+        promises.push(filteredCluster.query("SELECT @node"));
+      }
+      Promise.all(promises)
+        .then(results => {
+          const nodes = {};
+          results.forEach(rows => {
+            const res = rows[0]["@node"];
+            if (nodes[res]) {
+              nodes[res]++;
+            } else {
+              nodes[res] = 1;
+            }
+          });
+          expect(nodes["node1"]).to.equal(60);
+          expect(nodes["node2"]).to.be.undefined;
+          expect(nodes["node3"]).to.be.undefined;
+          poolCluster.end().then(() => {
             done();
-          })
-          .catch(err => {
-            poolCluster.end();
+          });
+        })
+        .catch(err => {
+          poolCluster.end().then(() => {
             done(err);
           });
-      });
+        });
     });
   });
 
@@ -847,8 +1108,8 @@ describe("cluster", () => {
     return poolCluster;
   };
 
-  const get3NodeClusterWithProxy = opts => {
-    const poolCluster = basePromise.createPoolCluster(opts);
+  const get3NodeClusterWithProxy = (opts, base) => {
+    const poolCluster = base.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
@@ -928,11 +1189,11 @@ describe("cluster", () => {
     });
   };
 
-  const testTimesCallback = (poolCluster, callback, filter, number) => {
+  const testTimesCallback = (poolCluster, cb, filter, number) => {
     const results = [];
     let idx = 0;
-    let cb = callback;
-    for (let i = 0; i < (number ? number : 9); i++) {
+    if (!number) number = 9;
+    for (let i = 0; i < number; i++) {
       getConnectionAndCheckCallback(poolCluster, filter, (err, res) => {
         idx++;
         if (err) {
@@ -948,20 +1209,28 @@ describe("cluster", () => {
             results[res] = 1;
           }
         }
-        if (idx === (number ? number : 9)) {
+        if (idx === number) {
           cb(null, results);
-          cb = null;
         }
       });
     }
   };
+
   const getConnectionAndCheck = (cluster, pattern) => {
+    let nodeName;
     return cluster.getConnection(pattern).then(conn => {
       return conn
         .query("SELECT @node")
         .then(row => {
-          conn.end();
-          return row[0]["@node"];
+          nodeName = row[0]["@node"];
+          return conn.batch("INSERT INTO clusterInsert VALUES (?,?)", [[1, "TOM"], [2, "JERRY"]]);
+        })
+        .then(res => {
+          assert.equal(res.affectedRows, 2);
+          return conn.end();
+        })
+        .then(() => {
+          return nodeName;
         })
         .catch(err => {
           console.log(err);
@@ -977,11 +1246,11 @@ describe("cluster", () => {
       } else {
         conn.query("SELECT @node", (err, row) => {
           if (err) {
-            console.log(err);
             callback(err);
           } else {
-            conn.end();
-            callback(null, row[0]["@node"]);
+            conn.end(() => {
+              callback(null, row[0]["@node"]);
+            });
           }
         });
       }

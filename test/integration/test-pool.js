@@ -27,37 +27,122 @@ describe("Pool", () => {
   it("ensure commit", function(done) {
     shareConn.query("DROP TABLE IF EXISTS ensureCommit");
     shareConn.query("CREATE TABLE ensureCommit(firstName varchar(32))");
-    shareConn.query("INSERT INTO ensureCommit values ('john')")
-    .then(res => {
-      const pool = base.createPool({ connectionLimit: 1 });
-      pool.getConnection()
-      .then(conn =>{
-        conn.beginTransaction()
-        .then(() =>{
-          return conn.query("UPDATE ensureCommit SET firstName='Tom'")
-        })
-        .then(()=>{
-          return conn.commit();
-        })
-        .then(()=>{
-          conn.end();
-          return shareConn.query("SELECT * FROM ensureCommit");
-        })
-        .then((res)=>{
-          assert.deepEqual(res, [{firstName:'Tom'}]);
-          pool.end();
-          done();
-        })
-        .catch(err=>{
-          conn.rollback();
-          done(err);
-        })
-      });
-    })
-    .catch(done);
-
+    shareConn
+      .query("INSERT INTO ensureCommit values ('john')")
+      .then(res => {
+        const pool = base.createPool({ connectionLimit: 1 });
+        pool.getConnection().then(conn => {
+          conn
+            .beginTransaction()
+            .then(() => {
+              return conn.query("UPDATE ensureCommit SET firstName='Tom'");
+            })
+            .then(() => {
+              return conn.commit();
+            })
+            .then(() => {
+              conn.end();
+              return shareConn.query("SELECT * FROM ensureCommit");
+            })
+            .then(res => {
+              assert.deepEqual(res, [{ firstName: "Tom" }]);
+              pool.end();
+              done();
+            })
+            .catch(err => {
+              conn.rollback();
+              done(err);
+            });
+        });
+      })
+      .catch(done);
   });
 
+  it("pool without control after use", function(done) {
+    shareConn.query("DROP TABLE IF EXISTS ensureCommit");
+    shareConn.query("CREATE TABLE ensureCommit(firstName varchar(32))");
+    shareConn
+      .query("INSERT INTO ensureCommit values ('john')")
+      .then(res => {
+        const pool = base.createPool({ connectionLimit: 1, noControlAfterUse: true });
+        pool.getConnection().then(conn => {
+          conn
+            .beginTransaction()
+            .then(() => {
+              return conn.query("UPDATE ensureCommit SET firstName='Tom'");
+            })
+            .then(() => {
+              return conn.commit();
+            })
+            .then(() => {
+              conn.end();
+              return shareConn.query("SELECT * FROM ensureCommit");
+            })
+            .then(res => {
+              assert.deepEqual(res, [{ firstName: "Tom" }]);
+              pool.end();
+              done();
+            })
+            .catch(err => {
+              conn.rollback();
+              done(err);
+            });
+        });
+      })
+      .catch(done);
+  });
+
+  it("double end", function(done) {
+    const pool = base.createPool({ connectionLimit: 1 });
+    pool.getConnection().then(conn => {
+      conn.end();
+      pool.end().then(() => {
+        pool
+          .end()
+          .then(() => {
+            done(new Error("must have thrown an error !"));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes("pool is already closed"));
+            done();
+          });
+      });
+    });
+  });
+
+  it("pool ending during requests", function(done) {
+    this.timeout(10000);
+    const pool = base.createPool({ connectionLimit: 1 });
+    pool.getConnection().then(conn => {
+      conn.end().then(() => {
+        const reflect = p =>
+          p.then(v => ({ v, status: "resolved" }), e => ({ e, status: "rejected" }));
+
+        const requests = [];
+        for (let i = 0; i < 1000; i++) {
+          requests.push(pool.query("SELECT " + i));
+        }
+
+        setTimeout(pool.end, 200);
+
+        Promise.all(requests.map(reflect)).then(results => {
+          let success = 0,
+            error = 0;
+          results.forEach(x => {
+            if (x.status === "resolved") {
+              success++;
+            } else {
+              error++;
+            }
+          });
+
+          assert.isTrue(error > 0, "error: " + error + " success:" + success);
+          assert.isTrue(success > 0, "error: " + error + " success:" + success);
+          done();
+        });
+      });
+    });
+  });
 
   it("pool wrong query", function(done) {
     this.timeout(5000);

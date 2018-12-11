@@ -65,6 +65,7 @@ describe("change user", () => {
   });
 
   it("basic change user using callback no function", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect(err => {

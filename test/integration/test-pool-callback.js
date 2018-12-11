@@ -24,6 +24,25 @@ describe("Pool callback", () => {
     });
   });
 
+  it("create pool with noControlAfterUse", function(done) {
+    this.timeout(5000);
+    const pool = base.createPoolCallback({ connectionLimit: 1, noControlAfterUse: true });
+    const initTime = Date.now();
+    pool.getConnection((err, conn) => {
+      conn.query("SELECT SLEEP(1)", () => {
+        conn.release();
+      });
+    });
+    pool.getConnection((err, conn) => {
+      conn.query("SELECT SLEEP(1)", () => {
+        assert(Date.now() - initTime >= 1999, "expected > 2s, but was " + (Date.now() - initTime));
+        conn.release();
+        pool.end();
+        done();
+      });
+    });
+  });
+
   it("pool wrong query", function(done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
@@ -150,14 +169,15 @@ describe("Pool callback", () => {
 
         setTimeout(() => {
           closed = true;
-          pool.end();
-          if (Conf.baseConfig.host === "localhost") {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 0);
-            assert.equal(pool.idleConnections(), 0);
-            assert.equal(pool.taskQueueSize(), 0);
-          }
-          done();
+          pool.end(() => {
+            if (Conf.baseConfig.host === "localhost") {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 0);
+              assert.equal(pool.idleConnections(), 0);
+              assert.equal(pool.taskQueueSize(), 0);
+            }
+            done();
+          });
         }, 5000);
       });
     }, 8000);
@@ -387,5 +407,18 @@ describe("Pool callback", () => {
         }
       }
     );
+  });
+
+  it("pool batch without parameters", function(done) {
+    const pool = base.createPoolCallback({ connectionLimit: 1, resetAfterUse: false });
+    pool.batch("INSERT INTO `parse` values (1, ?, 2, ?, 3)", (err, res) => {
+      pool.end();
+      if (err) {
+        assert.isTrue(err.message.includes("Batch must have values set"));
+        done();
+      } else {
+        done(new Error("must have thrown error"));
+      }
+    });
   });
 });

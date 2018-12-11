@@ -8,7 +8,7 @@ const launchBenchs = function(path) {
       console.error(err);
       return;
     }
-    let bench = new Bench();
+    const bench = new Bench();
     //launch all benchmarks
     for (let i = 0; i < list.length; i++) {
       console.log("benchmark: ./benchs/" + list[i]);

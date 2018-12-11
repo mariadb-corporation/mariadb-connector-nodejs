@@ -25,7 +25,7 @@ describe("Big query", function() {
 
   it("parameter bigger than 16M packet size", function(done) {
     if (maxAllowedSize <= testSize) this.skip();
-    this.timeout(10000); //can take some time
+    this.timeout(20000); //can take some time
     shareConn.query("CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)");
     shareConn
       .query("insert into bigParameterBigParam(b) values(?)", [buf])

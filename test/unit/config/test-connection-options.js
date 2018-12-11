@@ -54,6 +54,15 @@ describe("test connection options", () => {
     assert.equal(result.user, "root");
   });
 
+  it("wrong maxAllowedPacket value", () => {
+    try {
+      new ConnOptions({ maxAllowedPacket: "abc" });
+      return new Error("must have thrown exception");
+    } catch (e) {
+      assert.isTrue(e.message.includes("maxAllowedPacket must be an integer. was 'abc'"));
+    }
+  });
+
   describe("parsing", () => {
     it("error", () => {
       try {
@@ -128,7 +137,7 @@ describe("test connection options", () => {
 
     it("with options", () => {
       const result = ConnOptions.parse(
-        "mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true"
+        "mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true&charset=latin1_swedish_ci&maxAllowedPacket=1048576&permitSetMultiParamEntries=true"
       );
       assert.deepEqual(result, {
         database: "db",
@@ -138,7 +147,10 @@ describe("test connection options", () => {
         password: "pass",
         port: 3307,
         ssl: true,
-        user: "root"
+        user: "root",
+        charset: "latin1_swedish_ci",
+        maxAllowedPacket: 1048576,
+        permitSetMultiParamEntries: true
       });
     });
   });

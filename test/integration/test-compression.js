@@ -65,7 +65,7 @@ describe("Compression", function() {
 
   it("parameter bigger than 16M packet size", function(done) {
     if (maxAllowedSize <= testSize) this.skip();
-    this.timeout(10000); //can take some time
+    this.timeout(20000); //can take some time
     conn.query("CREATE TEMPORARY TABLE bigParameter (b longblob)");
     conn
       .query("insert into bigParameter(b) values(?)", [buf])
@@ -81,7 +81,7 @@ describe("Compression", function() {
 
   it("multi compression packet size", function(done) {
     if (maxAllowedSize <= testSize) this.skip();
-    this.timeout(10000); //can take some time
+    this.timeout(20000); //can take some time
     conn.query("CREATE TEMPORARY TABLE bigParameter2 (b longblob)");
     conn
       .query("insert into bigParameter2(b) values(?)", [randomBuf])
