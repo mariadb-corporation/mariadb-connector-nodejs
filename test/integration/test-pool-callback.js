@@ -24,6 +24,25 @@ describe("Pool callback", () => {
     });
   });
 
+  it("create pool with noControlAfterUse", function(done) {
+    this.timeout(5000);
+    const pool = base.createPoolCallback({ connectionLimit: 1, noControlAfterUse: true });
+    const initTime = Date.now();
+    pool.getConnection((err, conn) => {
+      conn.query("SELECT SLEEP(1)", () => {
+        conn.release();
+      });
+    });
+    pool.getConnection((err, conn) => {
+      conn.query("SELECT SLEEP(1)", () => {
+        assert(Date.now() - initTime >= 1999, "expected > 2s, but was " + (Date.now() - initTime));
+        conn.release();
+        pool.end();
+        done();
+      });
+    });
+  });
+
   it("pool wrong query", function(done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });

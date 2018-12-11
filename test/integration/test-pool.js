@@ -58,6 +58,40 @@ describe("Pool", () => {
       .catch(done);
   });
 
+  it("pool without control after use", function(done) {
+    shareConn.query("DROP TABLE IF EXISTS ensureCommit");
+    shareConn.query("CREATE TABLE ensureCommit(firstName varchar(32))");
+    shareConn
+      .query("INSERT INTO ensureCommit values ('john')")
+      .then(res => {
+        const pool = base.createPool({ connectionLimit: 1, noControlAfterUse: true });
+        pool.getConnection().then(conn => {
+          conn
+            .beginTransaction()
+            .then(() => {
+              return conn.query("UPDATE ensureCommit SET firstName='Tom'");
+            })
+            .then(() => {
+              return conn.commit();
+            })
+            .then(() => {
+              conn.end();
+              return shareConn.query("SELECT * FROM ensureCommit");
+            })
+            .then(res => {
+              assert.deepEqual(res, [{ firstName: "Tom" }]);
+              pool.end();
+              done();
+            })
+            .catch(err => {
+              conn.rollback();
+              done(err);
+            });
+        });
+      })
+      .catch(done);
+  });
+
   it("double end", function(done) {
     const pool = base.createPool({ connectionLimit: 1 });
     pool.getConnection().then(conn => {
