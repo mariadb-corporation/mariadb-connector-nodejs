@@ -348,7 +348,9 @@ describe("connection", () => {
   });
 
   it("connection.destroy() during query execution", function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     this.timeout(10000);
+
     base.createConnection().then(conn => {
       //launch very long query
       conn
@@ -358,8 +360,7 @@ describe("connection", () => {
         .then(() => done(new Error("expected error !")))
         .catch(err => {
           assert.isTrue(err != null);
-          if (!process.env.MAXSCALE_VERSION)
-            assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
+          assert.isTrue(err.message.includes("Connection destroyed, command was killed"));
           assert.isTrue(err.fatal);
           done();
         });

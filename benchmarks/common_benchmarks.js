@@ -57,6 +57,9 @@ function Bench() {
   const config = conf.baseConfig;
   config.charsetNumber = 224;
   config.trace = false;
+  //To benchmark same pool implementation than mysql/mysql2
+  //standard implementation rollback/reset connection after use
+  config.noControlAfterUse = true;
 
   const poolConfig = Object.assign({ connectionLimit: 4 }, config);
   // config.debug = true;
