@@ -1,3 +1,26 @@
+#### 2.0.2-rc - 11-12-2018 
+
+##### Changes
+
+* new option `noControlAfterUse` permitting to disable reset or rollback when giving back a connection pool. 
+
+##### Correction 
+
+* using option `connectAttributes` value `_server_host` is correctly filled on Performance Schema.
+* batch improvement
+	 * error thrown when no values
+	 * BULK better handling when socket error during process
+	 * Object with toSqlString function parameter support
+	 * null value correction when using BULK
+	 * timezone correction when not using "local" default values
+	 * now support very long parameter (> 16M)
+	 * rewrite support "\\" in parameter
+* `timezone` option parsing correction (correctly handle negative values)	
+* test coverage improvement
+* minor performance improvement
+* pool end() now correctly wait for all connections ending
+
+
 #### 2.0.1-alpha - 15-11-2018 
 
 * [CONJS-52] (Bug) Commit not executed when in transaction and autocommit is enabled
