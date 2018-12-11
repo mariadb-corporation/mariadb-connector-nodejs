@@ -241,9 +241,10 @@ describe("debug", () => {
               );
               process.stdout.write = initialStdOut;
               process.stderr.write = initialStdErr;
-              access.end();
-              fs.unlinkSync(fileName);
-              done();
+              access.end("", "utf8", () => {
+                fs.unlinkSync(fileName);
+                done();
+              });
             }, 500);
           })
           .catch(done);

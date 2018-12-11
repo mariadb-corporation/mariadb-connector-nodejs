@@ -9,7 +9,6 @@ const path = require("path");
 
 describe("batch", () => {
   const fileName = path.join(os.tmpdir(), Math.random() + "tempBatchFile.txt");
-  const bigFileName = path.join(os.tmpdir(), Math.random() + "tempBigBatchFile.txt");
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
 
   let maxAllowedSize, bigBuf, timezoneParam;
@@ -53,14 +52,20 @@ describe("batch", () => {
       .catch(done);
   });
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     //just to ensure shared connection is not closed by server due to inactivity
-    shareConn.ping();
+    shareConn
+      .ping()
+      .then(() => {
+        done();
+      })
+      .catch(done);
   });
 
   after(function() {
-    fs.unlink(fileName, err => {});
-    fs.unlink(bigFileName, err => {});
+    fs.unlink(fileName, err => {
+      console.log(err);
+    });
   });
 
   const simpleBatch = (useCompression, useBulk, timezone, done) => {
@@ -430,6 +435,7 @@ describe("batch", () => {
         conn
           .batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]])
           .then(res => {
+            clearTimeout(timeout);
             if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               done(new Error("Must have thrown an exception"));
             } else {
@@ -453,6 +459,7 @@ describe("batch", () => {
           })
           .catch(err => {
             conn.end();
+            clearTimeout(timeout);
             if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               assert.isTrue(
                 err.message.includes(
@@ -460,7 +467,6 @@ describe("batch", () => {
                 ),
                 err.message
               );
-              clearTimeout(timeout);
               done();
             } else {
               done(err);

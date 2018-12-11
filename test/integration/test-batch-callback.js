@@ -9,7 +9,6 @@ const path = require("path");
 
 describe("batch callback", () => {
   const fileName = path.join(os.tmpdir(), Math.random() + "tempBatchFile.txt");
-  const bigFileName = path.join(os.tmpdir(), Math.random() + "tempBigBatchFile.txt");
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
 
   let maxAllowedSize, bigBuf, timezoneParam;
@@ -53,14 +52,18 @@ describe("batch callback", () => {
       .catch(done);
   });
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     //just to ensure shared connection is not closed by server due to inactivity
-    shareConn.ping();
+    shareConn
+      .ping()
+      .then(() => {
+        done();
+      })
+      .catch(done);
   });
 
   after(function() {
     fs.unlink(fileName, err => {});
-    fs.unlink(bigFileName, err => {});
   });
 
   const simpleBatch = (useCompression, useBulk, timezone, done) => {
@@ -190,8 +193,9 @@ describe("batch callback", () => {
             ]);
             conn.query("DROP TABLE simpleBatch", (err, res) => {
               clearTimeout(timeout);
-              conn.end();
-              done();
+              conn.end(() => {
+                done();
+              });
             });
           });
         }
@@ -225,8 +229,9 @@ describe("batch callback", () => {
         [[1, new Date("2001-12-31 23:59:58")], [2, new Date("2001-12-31 23:59:58")]],
         (err, res) => {
           if (err) {
-            conn.end();
-            return done(err);
+            return conn.end(() => {
+              done(err);
+            });
           }
 
           assert.equal(res.affectedRows, 2);
@@ -245,16 +250,18 @@ describe("batch callback", () => {
             conn.query("DROP TABLE simpleBatchWithOptions", (err, res) => {
               if (err) return done(err);
               clearTimeout(timeout);
-              conn.end();
-              done();
+              conn.end(() => {
+                done();
+              });
             });
           });
         }
       );
       conn.query("select 1", (err, rows) => {
         if (err) {
-          conn.end();
-          return done(err);
+          return conn.end(() => {
+            done(err);
+          });
         }
         assert.deepEqual(rows, [{ "1": 1 }]);
       });
@@ -282,23 +289,26 @@ describe("batch callback", () => {
           assert.equal(res.affectedRows, 2);
           conn.query("select * from `simpleBatchCP1251`", (err, res) => {
             if (err) {
-              conn.end();
-              return done(err);
+              return conn.end(() => {
+                done(err);
+              });
             }
             assert.deepEqual(res, [{ id: 2, t: "john" }, { id: 3, t: "©°" }]);
             conn.query("DROP TABLE simpleBatchCP1251", (err, res) => {
               if (err) return done(err);
               clearTimeout(timeout);
-              conn.end();
-              done();
+              conn.end(() => {
+                done();
+              });
             });
           });
         }
       );
       conn.query("select 2", (err, rows) => {
         if (err) {
-          conn.end();
-          return done(err);
+          return conn.end(() => {
+            done(err);
+          });
         }
         assert.deepEqual(rows, [{ "2": 2 }]);
       });
@@ -317,8 +327,9 @@ describe("batch callback", () => {
         [[1, "john"], [2, "jack"]],
         err => {
           if (!err) {
-            conn.end();
-            done(new Error("must have thrown error !"));
+            return conn.end(() => {
+              done(new Error("must have thrown error !"));
+            });
           }
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes(" doesn't exist"));
@@ -330,9 +341,10 @@ describe("batch callback", () => {
           assert.equal(err.errno, 1146);
           assert.equal(err.sqlState, "42S02");
           assert.equal(err.code, "ER_NO_SUCH_TABLE");
-          conn.end();
           clearTimeout(timeout);
-          done();
+          conn.end(() => {
+            done();
+          });
         }
       );
     });
@@ -396,27 +408,30 @@ describe("batch callback", () => {
             );
             conn.query("DROP TABLE simpleBatch", (err, res) => {
               clearTimeout(timeout);
-              conn.end();
-              done();
+              conn.end(() => {
+                done();
+              });
             });
           } else {
-            conn.end();
-            if (
-              (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-              (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-            ) {
-              //field truncated must have thrown error
-              done(new Error("must have throw error !"));
-            } else {
-              done();
-            }
+            conn.end(() => {
+              if (
+                (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+                (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+              ) {
+                //field truncated must have thrown error
+                done(new Error("must have throw error !"));
+              } else {
+                done();
+              }
+            });
           }
         }
       );
       conn.query("select 1", (err, rows) => {
         if (err) {
-          conn.end();
-          done(err);
+          return conn.end(() => {
+            done(err);
+          });
         }
         assert.deepEqual(rows, [{ "1": 1 }]);
       });
@@ -431,42 +446,42 @@ describe("batch callback", () => {
         console.log(conn.info.getLastPackets());
       }, 25000);
       conn.batch("SELECT ? as id, ? as t", [[1, "john"], [2, "jack"]], (err, res) => {
-        if (err) {
-          conn.end();
-          if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
-            assert.isTrue(
-              err.message.includes(
-                "This command is not supported in the prepared statement protocol yet"
-              ),
-              err.message
-            );
-            clearTimeout(timeout);
-            done();
+        conn.end(() => {
+          clearTimeout(timeout);
+          if (err) {
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              assert.isTrue(
+                err.message.includes(
+                  "This command is not supported in the prepared statement protocol yet"
+                ),
+                err.message
+              );
+              done();
+            } else {
+              done(err);
+            }
           } else {
-            done(err);
+            if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+              done(new Error("Must have thrown an error"));
+            } else {
+              assert.deepEqual(res, [
+                [
+                  {
+                    id: 1,
+                    t: "john"
+                  }
+                ],
+                [
+                  {
+                    id: 2,
+                    t: "jack"
+                  }
+                ]
+              ]);
+              done();
+            }
           }
-        } else {
-          if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
-            done(new Error("Must have thrown an error"));
-          } else {
-            assert.deepEqual(res, [
-              [
-                {
-                  id: 1,
-                  t: "john"
-                }
-              ],
-              [
-                {
-                  id: 2,
-                  t: "jack"
-                }
-              ]
-            ]);
-            done();
-          }
-          conn.end();
-        }
+        });
       });
     });
   };
@@ -488,18 +503,21 @@ describe("batch callback", () => {
       }
       conn.batch("INSERT INTO `bigBatchError` values (1, ?, 2, ?, 3)", values, (err, res) => {
         if (!err) {
-          conn.end();
-          done(new Error("must have thrown error !"));
+          conn.end(() => {
+            done(new Error("must have thrown error !"));
+          });
         } else {
           conn.query("select 1", (err, rows) => {
             if (err) {
-              conn.end();
-              return done(err);
+              return conn.end(() => {
+                done(err);
+              });
             }
             assert.deepEqual(rows, [{ "1": 1 }]);
             clearTimeout(timeout);
-            conn.end();
-            done();
+            return conn.end(() => {
+              done();
+            });
           });
         }
       });
@@ -528,14 +546,16 @@ describe("batch callback", () => {
         [[1, stream1, 99], [2, stream2, 98]],
         (err, res) => {
           if (err) {
-            conn.end();
-            return done(err);
+            return conn.end(() => {
+              done(err);
+            });
           }
           assert.equal(res.affectedRows, 2);
           conn.query("select * from `batchWithStream`", (err, res) => {
             if (err) {
-              conn.end();
-              return done(err);
+              return conn.end(() => {
+                done(err);
+              });
             }
             assert.deepEqual(res, [
               {
@@ -557,8 +577,9 @@ describe("batch callback", () => {
             ]);
             conn.query("DROP TABLE batchWithStream");
             clearTimeout(timeout);
-            conn.end();
-            done();
+            conn.end(() => {
+              done();
+            });
           });
         }
       );
@@ -583,8 +604,9 @@ describe("batch callback", () => {
         [[1, stream1, 99], [2, stream2, 98]],
         err => {
           if (!err) {
-            conn.end();
-            return done(new Error("must have thrown error !"));
+            return conn.end(() => {
+              done(new Error("must have thrown error !"));
+            });
           }
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes(" doesn't exist"));
@@ -597,8 +619,9 @@ describe("batch callback", () => {
           assert.equal(err.sqlState, "42S02");
           assert.equal(err.code, "ER_NO_SUCH_TABLE");
           clearTimeout(timeout);
-          conn.end();
-          done();
+          conn.end(() => {
+            done();
+          });
         }
       );
     });
@@ -624,14 +647,16 @@ describe("batch callback", () => {
         [{ param_1: 1, param_2: "john" }, { param_1: 2, param_2: "jack" }],
         (err, res) => {
           if (err) {
-            conn.end();
-            return done(err);
+            return conn.end(() => {
+              done(err);
+            });
           }
           assert.equal(res.affectedRows, 2);
           conn.query("select * from `simpleNamedPlaceHolders`", (err, res) => {
             if (err) {
-              conn.end();
-              return done(err);
+              return conn.end(() => {
+                done(err);
+              });
             }
             assert.deepEqual(res, [
               {
@@ -649,10 +674,12 @@ describe("batch callback", () => {
                 id4: 3
               }
             ]);
-            conn.query("DROP TABLE simpleNamedPlaceHolders");
-            conn.end();
-            clearTimeout(timeout);
-            done();
+            conn.query("DROP TABLE simpleNamedPlaceHolders", () => {
+              clearTimeout(timeout);
+              return conn.end(() => {
+                done();
+              });
+            });
           });
         }
       );
@@ -675,8 +702,9 @@ describe("batch callback", () => {
         [{ param_1: 1, param_2: "john" }, { param_1: 2, param_2: "jack" }],
         err => {
           if (!err) {
-            conn.end();
-            done(new Error("must have thrown error !"));
+            return conn.end(() => {
+              done(new Error("must have thrown error !"));
+            });
           }
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes(" doesn't exist"));
@@ -689,8 +717,9 @@ describe("batch callback", () => {
           assert.equal(err.sqlState, "42S02");
           assert.equal(err.code, "ER_NO_SUCH_TABLE");
           clearTimeout(timeout);
-          conn.end();
-          done();
+          conn.end(() => {
+            done();
+          });
         }
       );
     });
@@ -803,8 +832,9 @@ describe("batch callback", () => {
             ]);
             conn.query("DROP TABLE streamNamedPlaceHolders");
             clearTimeout(timeout);
-            conn.end();
-            done();
+            conn.end(() => {
+              done();
+            });
           });
         }
       );
