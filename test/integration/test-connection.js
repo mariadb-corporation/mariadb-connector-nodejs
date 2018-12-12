@@ -379,8 +379,8 @@ describe("connection", () => {
     conn.connect(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
-        Date.now() - initTime >= 999,
-        "expected > 999, but was " + (Date.now() - initTime)
+        Date.now() - initTime >= 990,
+        "expected > 990, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
         Date.now() - initTime < 2000,
@@ -471,8 +471,8 @@ describe("connection", () => {
       .catch(err => {
         assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
         assert.isTrue(
-          Date.now() - initTime >= 999,
-          "expected > 999, but was " + (Date.now() - initTime)
+          Date.now() - initTime >= 990,
+          "expected > 990, but was " + (Date.now() - initTime)
         );
         assert.isTrue(
           Date.now() - initTime < 2000,
@@ -487,8 +487,8 @@ describe("connection", () => {
     base.createConnection({ host: "www.google.fr", connectTimeout: 1000 }).catch(err => {
       assert.strictEqual(err.message, "(conn=-1, no: 45012, SQLState: 08S01) Connection timeout");
       assert.isTrue(
-        Date.now() - initTime >= 999,
-        "expected > 999, but was " + (Date.now() - initTime)
+        Date.now() - initTime >= 990,
+        "expected > 990, but was " + (Date.now() - initTime)
       );
       assert.isTrue(
         Date.now() - initTime < 2000,
