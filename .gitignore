@@ -4,3 +4,4 @@ node_modules
 /nodejs_mariadb.iml
 /coverage/
 /.nyc_output/
+package-lock.json
