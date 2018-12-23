@@ -22,8 +22,6 @@ const launchBenchs = function(path) {
 fs.access("./benchs", function(err) {
   if (err) {
     fs.access("./benchmarks/benchs", function(err) {
-      if(err)
-        return;
       launchBenchs("./benchmarks/benchs");
     });
   } else {
