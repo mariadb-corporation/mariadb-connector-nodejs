@@ -15,12 +15,19 @@ describe("Pool", () => {
       });
     });
     pool.getConnection().then(conn => {
-      conn.query("SELECT SLEEP(1)").then(() => {
-        assert(Date.now() - initTime >= 1999, "expected > 2s, but was " + (Date.now() - initTime));
-        conn.release();
-        pool.end();
-        done();
-      });
+      conn
+        .query("SELECT SLEEP(1)")
+        .then(() => {
+          assert(
+            Date.now() - initTime >= 1999,
+            "expected > 2s, but was " + (Date.now() - initTime)
+          );
+          conn.release();
+          return pool.end();
+        })
+        .then(() => {
+          done();
+        });
     });
   });
 
@@ -46,7 +53,9 @@ describe("Pool", () => {
             })
             .then(res => {
               assert.deepEqual(res, [{ firstName: "Tom" }]);
-              pool.end();
+              return pool.end();
+            })
+            .then(() => {
               done();
             })
             .catch(err => {
@@ -80,7 +89,9 @@ describe("Pool", () => {
             })
             .then(res => {
               assert.deepEqual(res, [{ firstName: "Tom" }]);
-              pool.end();
+              return pool.end();
+            })
+            .then(() => {
               done();
             })
             .catch(err => {
@@ -111,7 +122,8 @@ describe("Pool", () => {
   });
 
   it("pool ending during requests", function(done) {
-    this.timeout(10000);
+    this.timeout(20000);
+    const initial = new Date();
     const pool = base.createPool({ connectionLimit: 1 });
     pool.getConnection().then(conn => {
       conn.end().then(() => {
@@ -119,11 +131,25 @@ describe("Pool", () => {
           p.then(v => ({ v, status: "resolved" }), e => ({ e, status: "rejected" }));
 
         const requests = [];
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 10000; i++) {
           requests.push(pool.query("SELECT " + i));
         }
 
         setTimeout(pool.end, 200);
+        const handle = setTimeout(() => {
+          Promise.all(requests.map(reflect)).then(results => {
+            let success = 0,
+              error = 0;
+            results.forEach(x => {
+              if (x.status === "resolved") {
+                success++;
+              } else {
+                error++;
+              }
+            });
+            console.log("error: " + error + " success:" + success);
+          });
+        }, 9500);
 
         Promise.all(requests.map(reflect)).then(results => {
           let success = 0,
@@ -138,6 +164,7 @@ describe("Pool", () => {
 
           assert.isTrue(error > 0, "error: " + error + " success:" + success);
           assert.isTrue(success > 0, "error: " + error + " success:" + success);
+          clearTimeout(handle);
           done();
         });
       });
@@ -156,7 +183,9 @@ describe("Pool", () => {
         assert(err.message.includes(" You have an error in your SQL syntax"));
         assert.equal(err.sqlState, "42000");
         assert.equal(err.code, "ER_PARSE_ERROR");
-        pool.end();
+        return pool.end();
+      })
+      .then(() => {
         done();
       });
   });
@@ -193,11 +222,14 @@ describe("Pool", () => {
     pool
       .query("SELECT SLEEP(1)")
       .then(() => {
-        pool.end();
+        return pool.end();
+      })
+      .then(() => {
         assert.isOk(errorThrown);
         done();
       })
       .catch(done);
+
     pool.getConnection().catch(err => {
       assert(err.message.includes("retrieve connection from pool timeout"));
       assert.equal(err.sqlState, "HY000");
@@ -337,12 +369,17 @@ describe("Pool", () => {
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 1);
             assert.equal(pool.taskQueueSize(), 0);
-            conn.end().then(() => {
-              assert.equal(pool.activeConnections(), 0);
-              assert.equal(pool.taskQueueSize(), 0);
-              pool.end();
-              done();
-            });
+            conn
+              .end()
+              .then(() => {
+                assert.equal(pool.activeConnections(), 0);
+                assert.equal(pool.taskQueueSize(), 0);
+                return pool.end();
+              })
+              .then(() => {
+                done();
+              })
+              .catch(done);
           });
         })
         .catch(done);
@@ -374,8 +411,12 @@ describe("Pool", () => {
                 assert.equal(pool.totalConnections(), 2);
                 assert.equal(pool.idleConnections(), 2);
                 assert.equal(pool.taskQueueSize(), 0);
-                pool.end();
-                done();
+                pool
+                  .end()
+                  .then(() => {
+                    done();
+                  })
+                  .catch(done);
               }, 250);
             });
           }, 250);
@@ -400,13 +441,18 @@ describe("Pool", () => {
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
 
-          conn.end().then(() => {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 2);
-            assert.equal(pool.idleConnections(), 2);
-            pool.end();
-            done();
-          });
+          conn
+            .end()
+            .then(() => {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 2);
+              assert.equal(pool.idleConnections(), 2);
+              return pool.end();
+            })
+            .then(() => {
+              done();
+            })
+            .catch(done);
         })
         .catch(done);
     }, 500);
@@ -428,13 +474,18 @@ describe("Pool", () => {
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
 
-          conn.release().then(() => {
-            assert.equal(pool.activeConnections(), 0);
-            assert.equal(pool.totalConnections(), 2);
-            assert.equal(pool.idleConnections(), 2);
-            pool.end();
-            done();
-          });
+          conn
+            .release()
+            .then(() => {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 2);
+              assert.equal(pool.idleConnections(), 2);
+              return pool.end();
+            })
+            .then(() => {
+              done();
+            })
+            .catch(done);
         })
         .catch(done);
     }, 500);
@@ -461,7 +512,9 @@ describe("Pool", () => {
           assert.equal(pool.activeConnections(), 0);
           assert.equal(pool.totalConnections(), 1);
           assert.equal(pool.idleConnections(), 1);
-          pool.end();
+          return pool.end();
+        })
+        .then(() => {
           done();
         })
         .catch(done);
@@ -496,8 +549,12 @@ describe("Pool", () => {
             })
             .then(res => {
               assert.equal(res.length, 0);
-              conn.end();
-              pool.end();
+              return conn.end();
+            })
+            .then(() => {
+              return pool.end();
+            })
+            .then(() => {
               done();
             });
         })
@@ -531,7 +588,9 @@ describe("Pool", () => {
             id4: 3
           }
         ]);
-        pool.end();
+        return pool.end();
+      })
+      .then(() => {
         done();
       })
       .catch(done);

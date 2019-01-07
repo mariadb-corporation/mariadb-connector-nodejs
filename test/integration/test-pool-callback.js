@@ -18,8 +18,9 @@ describe("Pool callback", () => {
       conn.query("SELECT SLEEP(1)", () => {
         assert(Date.now() - initTime >= 1999, "expected > 2s, but was " + (Date.now() - initTime));
         conn.release();
-        pool.end();
-        done();
+        pool.end(err => {
+          done();
+        });
       });
     });
   });
@@ -37,8 +38,9 @@ describe("Pool callback", () => {
       conn.query("SELECT SLEEP(1)", () => {
         assert(Date.now() - initTime >= 1999, "expected > 2s, but was " + (Date.now() - initTime));
         conn.release();
-        pool.end();
-        done();
+        pool.end(err => {
+          done();
+        });
       });
     });
   });
@@ -50,8 +52,9 @@ describe("Pool callback", () => {
       assert(err.message.includes("You have an error in your SQL syntax"));
       assert.equal(err.sqlState, "42000");
       assert.equal(err.code, "ER_PARSE_ERROR");
-      pool.end();
-      done();
+      pool.end(err => {
+        done();
+      });
     });
   });
 
@@ -88,9 +91,10 @@ describe("Pool callback", () => {
       if (err) {
         done(err);
       } else {
-        pool.end();
-        assert.isOk(errorThrown);
-        done();
+        pool.end(err => {
+          assert.isOk(errorThrown);
+          done();
+        });
       }
     });
     pool.getConnection(err => {
@@ -211,8 +215,9 @@ describe("Pool callback", () => {
             conn.end(() => {
               assert.equal(pool.activeConnections(), 0);
               assert.equal(pool.taskQueueSize(), 0);
-              pool.end();
-              done();
+              pool.end(() => {
+                done();
+              });
             });
           });
         }
@@ -244,8 +249,9 @@ describe("Pool callback", () => {
                 assert.equal(pool.totalConnections(), 2);
                 assert.equal(pool.idleConnections(), 2);
                 assert.equal(pool.taskQueueSize(), 0);
-                pool.end();
-                done();
+                pool.end(() => {
+                  done();
+                });
               }, 250);
             });
           }, 250);
@@ -275,8 +281,9 @@ describe("Pool callback", () => {
             assert.equal(pool.activeConnections(), 0);
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 2);
-            pool.end();
-            done();
+            pool.end(() => {
+              done();
+            });
           });
         }
       });
@@ -304,8 +311,9 @@ describe("Pool callback", () => {
             assert.equal(pool.activeConnections(), 0);
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 2);
-            pool.end();
-            done();
+            pool.end(() => {
+              done();
+            });
           });
         }
       });
@@ -334,8 +342,9 @@ describe("Pool callback", () => {
           assert.equal(pool.activeConnections(), 0);
           assert.equal(pool.totalConnections(), 1);
           assert.equal(pool.idleConnections(), 1);
-          pool.end();
-          done();
+          pool.end(() => {
+            done();
+          });
         }
       });
     }, 500);
@@ -356,9 +365,11 @@ describe("Pool callback", () => {
                     pool.getConnection((err, conn) => {
                       conn.query("SELECT * FROM rollbackTable", (err, res) => {
                         assert.equal(res.length, 0);
-                        conn.end();
-                        pool.end();
-                        done();
+                        conn.end(() => {
+                          pool.end(() => {
+                            done();
+                          });
+                        });
                       });
                     });
                   });
@@ -401,8 +412,9 @@ describe("Pool callback", () => {
               }
             ]);
             pool.query("DROP TABLE parse");
-            pool.end();
-            done();
+            pool.end(() => {
+              done();
+            });
           });
         }
       }

@@ -25,7 +25,9 @@ describe("connection option", () => {
           .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00Z")])
           .then(res => {
             assert.deepEqual(res[0].tt, 946681200);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -42,7 +44,9 @@ describe("connection option", () => {
           .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00Z")])
           .then(res => {
             assert.deepEqual(res[0].tt, 946688400);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -59,7 +63,9 @@ describe("connection option", () => {
           .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00Z")])
           .then(res => {
             assert.deepEqual(res[0].tt, 946688400);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -76,7 +82,9 @@ describe("connection option", () => {
           .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00+0100")])
           .then(res => {
             assert.deepEqual(res[0].tt, 946681200);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -93,7 +101,9 @@ describe("connection option", () => {
           .query("SELECT UNIX_TIMESTAMP(?) tt", [new Date("2000-01-01T00:00:00+0100")])
           .then(res => {
             assert.deepEqual(res[0].tt, 946681200);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -128,7 +138,9 @@ describe("connection option", () => {
               { t1: { a: "bla" }, t2: { b: "bou" } },
               { t1: { a: "bla2" }, t2: { b: "bou" } }
             ]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -148,7 +160,9 @@ describe("connection option", () => {
           .query("SELECT * FROM t1, t2")
           .then(rows => {
             assert.deepEqual(rows, [{ t1_a: "bla", t2_b: "bou" }, { t1_a: "bla2", t2_b: "bou" }]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -168,7 +182,9 @@ describe("connection option", () => {
           .query("SELECT * FROM t1, t2")
           .then(rows => {
             assert.deepEqual(rows, [["bla", "bou"], ["bla2", "bou"]]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -188,7 +204,9 @@ describe("connection option", () => {
           .query({ rowsAsArray: true, sql: "SELECT * FROM t1, t2" })
           .then(rows => {
             assert.deepEqual(rows, [["bla", "bou"], ["bla2", "bou"]]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -211,7 +229,9 @@ describe("connection option", () => {
               { t1: { a: "bla" }, t2: { b: "bou" } },
               { t1: { a: "bla2" }, t2: { b: "bou" } }
             ]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
@@ -231,7 +251,9 @@ describe("connection option", () => {
           .query({ nestTables: "_", sql: "SELECT * FROM t1, t2" })
           .then(rows => {
             assert.deepEqual(rows, [{ t1_a: "bla", t2_b: "bou" }, { t1_a: "bla2", t2_b: "bou" }]);
-            conn.end();
+            return conn.end();
+          })
+          .then(() => {
             done();
           })
           .catch(done);
