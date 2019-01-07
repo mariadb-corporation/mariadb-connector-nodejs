@@ -12,34 +12,34 @@ environment:
   TEST_LOG_PACKETS: true
   matrix:
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       MEM: "21"
       nodejs_version: "6"
       SKIP_LEAK: "1"
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       MEM: "21"
       nodejs_version: "8"
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       MEM: "21"
       nodejs_version: "11"
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       nodejs_version: "10"
       MEM: "21"
       TEST_ZIP: 1
 
-    - DB: '10.2.18'
+    - DB: '10.2.21'
       nodejs_version: "10"
       MEM: "21"
       BENCH: "1"
 
-    - DB: '10.3.10'
+    - DB: '10.3.11'
       MEM: "21"
       nodejs_version: "10"
 
