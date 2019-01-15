@@ -31,6 +31,21 @@ describe("Pool", () => {
     });
   });
 
+  it("create pool with multipleStatement", function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({ connectionLimit: 5, multipleStatements: true });
+    pool.query("select 1; select 2")
+      .then(results => {
+        //select 1 results
+        console.log(results[0]); //{ '1': 1 }
+        //select 2 results
+        console.log(results[1]); //{ '2': 2 }
+      })
+      .catch(err => {
+        //handle error
+      });
+  });
+
   it("ensure commit", function(done) {
     shareConn.query("DROP TABLE IF EXISTS ensureCommit");
     shareConn.query("CREATE TABLE ensureCommit(firstName varchar(32))");
