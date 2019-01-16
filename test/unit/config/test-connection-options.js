@@ -25,8 +25,12 @@ describe("test connection options", () => {
       new ConnOptions({ pipelining: true, permitLocalInfile: true });
       throw new Error("Must have thrown error");
     } catch (e) {
-      assert.isTrue(e.message.includes("enabling options `permitLocalInfile` "
-          + "and `pipelining` is not possible, options are incompatible."));
+      assert.isTrue(
+        e.message.includes(
+          "enabling options `permitLocalInfile` " +
+            "and `pipelining` is not possible, options are incompatible."
+        )
+      );
     }
   });
 
