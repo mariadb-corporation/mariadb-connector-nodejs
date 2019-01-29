@@ -1,17 +1,15 @@
 "use strict";
 
 const base = require("../base.js");
-const Conf = require("../conf");
 const { assert } = require("chai");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const util = require("util");
 
 describe("debug", () => {
   const smallFileName = path.join(os.tmpdir(), "smallLocalInfileDebug.txt");
   let initialStdOut;
-  let initialStdErr;
-  let access;
   let permitLocalInfile = true;
 
   before(done => {
@@ -45,12 +43,11 @@ describe("debug", () => {
   });
 
   function testQueryDebug(compress, done) {
-    const fileName = path.join(os.tmpdir(), "tmp.txt");
-    initialStdOut = process.stdout.write;
-    initialStdErr = process.stderr.write;
-    access = fs.createWriteStream(fileName);
-
-    process.stdout.write = process.stderr.write = access.write.bind(access);
+    initialStdOut = console.log;
+    let data = "";
+    console.log = function() {
+      data += util.format.apply(null, arguments) + "\n";
+    };
     base
       .createConnection({ compress: compress })
       .then(conn => {
@@ -78,9 +75,8 @@ describe("debug", () => {
           .then(() => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
-              const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-              process.stdout.write = initialStdOut;
-              process.stderr.write = initialStdErr;
+              console.log = initialStdOut;
+
               const serverVersion = conn.serverVersion();
               if (process.env.MAXSCALE_VERSION) compress = false;
               const rangeWithEOF = compress ? [470, 688] : [670, 730];
@@ -121,10 +117,6 @@ describe("debug", () => {
                     data
                 );
               }
-              process.stdout.write = initialStdOut;
-              process.stderr.write = initialStdErr;
-              access.end();
-              fs.unlink(fileName, err => {});
               done();
             }, 100);
           })
@@ -135,14 +127,14 @@ describe("debug", () => {
 
   it("select big request (compressed data) debug", function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
-    const fileName = path.join(os.tmpdir(), "tmp.txt");
-    initialStdOut = process.stdout.write;
-    initialStdErr = process.stderr.write;
-    access = fs.createWriteStream(fileName);
+    initialStdOut = console.log;
+    let data = "";
+    console.log = function() {
+      data += util.format.apply(null, arguments) + "\n";
+    };
 
     const buf = Buffer.alloc(5000, "z");
 
-    process.stdout.write = process.stderr.write = access.write.bind(access);
     base
       .createConnection({ compress: true, debugCompress: true })
       .then(conn => {
@@ -154,9 +146,7 @@ describe("debug", () => {
               conn
                 .end()
                 .then(() => {
-                  const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
+                  console.log = initialStdOut;
                   const serverVersion = conn.serverVersion();
                   let range = [820, 2400];
                   assert(
@@ -173,10 +163,6 @@ describe("debug", () => {
                       "\n data :\n" +
                       data
                   );
-                  process.stdout.write = initialStdOut;
-                  process.stderr.write = initialStdErr;
-                  access.end();
-                  fs.unlink(fileName, err => {});
                   done();
                 })
                 .catch(done);
@@ -198,11 +184,12 @@ describe("debug", () => {
   });
 
   function testLocalInfileDebug(compress, done) {
-    const fileName = path.join(os.tmpdir(), "tmp" + compress + ".txt");
-    initialStdOut = process.stdout.write;
-    initialStdErr = process.stderr.write;
-    access = fs.createWriteStream(fileName);
-    process.stdout.write = process.stderr.write = access.write.bind(access);
+    initialStdOut = console.log;
+    let data = "";
+    console.log = function() {
+      data += util.format.apply(null, arguments) + "\n";
+    };
+
     base
       .createConnection({ permitLocalInfile: true, debug: true, compress: compress })
       .then(conn => {
@@ -219,11 +206,9 @@ describe("debug", () => {
           .then(() => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
-              const data = fs.readFileSync(fileName, { encoding: "utf8", flag: "r" });
-              process.stdout.write = initialStdOut;
-              process.stderr.write = initialStdErr;
-              const serverVersion = conn.serverVersion();
+              console.log = initialStdOut;
 
+              const serverVersion = conn.serverVersion();
               const range = [2800, 4090];
               assert(
                 data.length > range[0] && data.length < range[1],
@@ -239,12 +224,7 @@ describe("debug", () => {
                   "\n data :\n" +
                   data
               );
-              process.stdout.write = initialStdOut;
-              process.stderr.write = initialStdErr;
-              access.end("", "utf8", () => {
-                fs.unlinkSync(fileName);
-                done();
-              });
+              done();
             }, 500);
           })
           .catch(done);
