@@ -5,6 +5,73 @@ const { assert } = require("chai");
 const Conf = require("../conf");
 
 describe("Pool", () => {
+  it("pool with wrong authentication", function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({ connectionLimit: 3, user: "wrongAuthentication" });
+    pool
+      .query("SELECT 1")
+      .then(() => {
+        pool.end();
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Access denied"));
+        pool
+          .query("SELECT 3")
+          .then(() => {
+            pool.end();
+            done(new Error("must have thrown error"));
+          })
+          .catch(err => {
+            pool.end();
+            assert.isTrue(err.message.includes("Access denied"));
+            done();
+          });
+      });
+    pool
+      .query("SELECT 2")
+      .then(() => {
+        pool.end();
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Access denied"));
+      });
+  });
+  it("pool with wrong authentication connection", function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({ connectionLimit: 3, user: "wrongAuthentication" });
+    pool
+      .getConnection()
+      .then(() => {
+        pool.end();
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Access denied"));
+        pool
+          .getConnection()
+          .then(() => {
+            pool.end();
+            done(new Error("must have thrown error"));
+          })
+          .catch(err => {
+            pool.end();
+            assert.isTrue(err.message.includes("Access denied"));
+            done();
+          });
+      });
+    pool
+      .getConnection()
+      .then(() => {
+        pool.end();
+        done(new Error("must have thrown error"));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Access denied"));
+      });
+  });
+
   it("create pool", function(done) {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });

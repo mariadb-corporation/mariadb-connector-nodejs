@@ -5,6 +5,56 @@ const { assert } = require("chai");
 const Conf = require("../conf");
 
 describe("Pool callback", () => {
+  it("pool with wrong authentication", function(done) {
+    this.timeout(5000);
+    const pool = base.createPoolCallback({ connectionLimit: 3, user: "wrongAuthentication" });
+    pool.query("SELECT 1", err => {
+      if (!err) {
+        done(new Error("must have thrown error"));
+      } else {
+        pool.query("SELECT 3", err => {
+          pool.end();
+          if (!err) {
+            done(new Error("must have thrown error"));
+          } else {
+            assert.isTrue(err.message.includes("Access denied"));
+            done();
+          }
+        });
+      }
+    });
+    pool.query("SELECT 2", err => {
+      if (!err) {
+        done(new Error("must have thrown error"));
+      }
+    });
+  });
+
+  it("pool with wrong authentication connection", function(done) {
+    this.timeout(5000);
+    const pool = base.createPoolCallback({ connectionLimit: 3, user: "wrongAuthentication" });
+    pool.getConnection(err => {
+      if (!err) {
+        done(new Error("must have thrown error"));
+      } else {
+        pool.getConnection(err => {
+          pool.end();
+          if (!err) {
+            done(new Error("must have thrown error"));
+          } else {
+            assert.isTrue(err.message.includes("Access denied"));
+            done();
+          }
+        });
+      }
+    });
+    pool.getConnection(err => {
+      if (!err) {
+        done(new Error("must have thrown error"));
+      }
+    });
+  });
+
   it("create pool", function(done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
