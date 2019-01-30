@@ -17,7 +17,7 @@ describe("Pool callback", () => {
           if (!err) {
             done(new Error("must have thrown error"));
           } else {
-            assert.isTrue(err.message.includes("Access denied"), err.message);
+            assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
             done();
           }
         });
@@ -42,7 +42,7 @@ describe("Pool callback", () => {
           if (!err) {
             done(new Error("must have thrown error"));
           } else {
-            assert.isTrue(err.message.includes("Access denied"), err.message);
+            assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
             done();
           }
         });
