@@ -590,7 +590,10 @@ When using the `query()` method, documented above, the Connector returns the ent
 
 Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults to 30 seconds.
 
-For instance,
+
+There is 2 differents methods to implement streaming:
+
+* Events
 
 ```javascript
 connection.queryStream("SELECT * FROM mysql.user")
@@ -606,6 +609,32 @@ connection.queryStream("SELECT * FROM mysql.user")
       .on("end", () => {
         //ended
       });
+```
+
+* streams
+
+Note that queryStream produced Object data, so Transform/Writable implementation must be created with [`objectMode`](https://nodejs.org/api/stream.html#stream_object_mode) set to true.<br/>  
+(example use [`stream.pipeline`](https://nodejs.org/api/stream.html#stream_stream_pipeline_streams_callback) only available since Node.js 10)
+
+```javascript
+const stream = require("stream");
+const fs = require("fs");
+
+//...create connection...
+
+const someWriterStream = fs.createWriteStream("./someFile.txt");
+
+const transformStream = new stream.Transform({
+  objectMode: true,
+  transform: function transformer(chunk, encoding, callback) {
+    callback(null, JSON.stringify(chunk));
+  }
+});
+
+const queryStream = connection.queryStream("SELECT * FROM mysql.user");
+
+stream.pipeline(queryStream, transformStream, someWriterStream);
+
 ```
 
 
