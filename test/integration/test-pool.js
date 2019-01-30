@@ -27,7 +27,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Access denied"));
+        assert.isTrue(err.message.includes("Access denied"), err.message);
         pool
           .query("SELECT 3")
           .then(() => {
@@ -36,7 +36,7 @@ describe("Pool", () => {
           })
           .catch(err => {
             pool.end();
-            assert.isTrue(err.message.includes("Access denied"));
+            assert.isTrue(err.message.includes("Access denied"), err.message);
             done();
           });
       });
@@ -47,7 +47,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Access denied"));
+        assert.isTrue(err.message.includes("Access denied"), err.message);
       });
   });
   it("pool with wrong authentication connection", function(done) {
@@ -60,7 +60,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Access denied"));
+        assert.isTrue(err.message.includes("Access denied"), err.message);
         pool
           .getConnection()
           .then(() => {
@@ -69,7 +69,7 @@ describe("Pool", () => {
           })
           .catch(err => {
             pool.end();
-            assert.isTrue(err.message.includes("Access denied"));
+            assert.isTrue(err.message.includes("Access denied"), err.message);
             done();
           });
       });
@@ -80,7 +80,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.message.includes("Access denied"));
+        assert.isTrue(err.message.includes("Access denied"), err.message);
       });
   });
 
@@ -721,7 +721,7 @@ describe("Pool", () => {
         );
 
         stream.pipeline(queryStream, transformStream, someWriterStream, () => {
-          assert.isTrue(received > 0 && received < 10000, "received " + received + " results");
+          assert.isTrue(received >= 0 && received < 10000, "received " + received + " results");
           conn.query("SELECT 1").then(res => {
             conn.end();
             pool.end();
