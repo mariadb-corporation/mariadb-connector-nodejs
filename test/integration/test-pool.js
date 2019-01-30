@@ -3,8 +3,20 @@
 const base = require("../base.js");
 const { assert } = require("chai");
 const Conf = require("../conf");
+const stream = require("stream");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
 describe("Pool", () => {
+  const fileName = path.join(os.tmpdir(), Math.random() + "tempStream.txt");
+
+  after(function() {
+    fs.unlink(fileName, err => {
+      //eat
+    });
+  });
+
   it("pool with wrong authentication", function(done) {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 3, user: "wrongAuthentication" });
@@ -676,6 +688,48 @@ describe("Pool", () => {
       })
       .then(() => {
         done();
+      })
+      .catch(done);
+  });
+
+  it("ensure pipe ending doesn't stall connection", function(done) {
+    //sequence engine only exist in MariaDB
+    if (!shareConn.info.isMariaDB()) this.skip();
+    const ver = process.version.substring(1).split(".");
+    //stream.pipeline doesn't exist before node.js 8
+    if (parseInt(ver[0]) < 10) this.skip();
+
+    this.timeout(10000);
+    const pool = base.createPool({ connectionLimit: 1 });
+
+    pool
+      .getConnection()
+      .then(conn => {
+        const someWriterStream = fs.createWriteStream(fileName);
+
+        let received = 0;
+        const transformStream = new stream.Transform({
+          objectMode: true,
+          transform: function transformer(chunk, encoding, callback) {
+            callback(null, JSON.stringify(chunk));
+            received++;
+          }
+        });
+
+        const queryStream = conn.queryStream(
+          "SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000"
+        );
+
+        stream.pipeline(queryStream, transformStream, someWriterStream, () => {
+          assert.isTrue(received > 0 && received < 10000, "received " + received + " results");
+          conn.query("SELECT 1").then(res => {
+            conn.end();
+            pool.end();
+            done();
+          });
+        });
+
+        setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
       })
       .catch(done);
   });
