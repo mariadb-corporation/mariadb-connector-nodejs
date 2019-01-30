@@ -1,3 +1,11 @@
+#### 2.0.3 - 30-01-2019 
+
+* [CONJS-56] TypeError: Cannot read property 'totalConnections' of undefined
+* [CONJS-59] pool now throw `ER_ACCESS_DENIED_ERROR` in place of basic timeout error
+* [CONJS-60] handling pipe error for stream, avoiding hang in case of pipe error.
+* [CONJS-55] Connector throw an error when using incompatible options
+
+
 #### 2.0.2-rc - 11-12-2018 
 
 ##### Changes

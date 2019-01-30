@@ -32,11 +32,7 @@ function Proxy(args) {
       } else {
         if (log) console.log("  ** START **");
         const remoteSocket = new net.Socket();
-        remoteSocket.connect(
-          REMOTE_PORT,
-          REMOTE_ADDR,
-          function() {}
-        );
+        remoteSocket.connect(REMOTE_PORT, REMOTE_ADDR, function() {});
 
         remoteSocket.on("data", function(data) {
           if (log) console.log("<< ", data.toString());
