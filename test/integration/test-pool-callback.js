@@ -6,7 +6,7 @@ const Conf = require("../conf");
 
 describe("Pool callback", () => {
   it("pool with wrong authentication", function(done) {
-    this.timeout(5000);
+    this.timeout(10000);
     const pool = base.createPoolCallback({ connectionLimit: 3, user: "wrongAuthentication" });
     pool.query("SELECT 1", err => {
       if (!err) {
@@ -31,7 +31,7 @@ describe("Pool callback", () => {
   });
 
   it("pool with wrong authentication connection", function(done) {
-    this.timeout(5000);
+    this.timeout(10000);
     const pool = base.createPoolCallback({ connectionLimit: 3, user: "wrongAuthentication" });
     pool.getConnection(err => {
       if (!err) {

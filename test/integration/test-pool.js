@@ -18,7 +18,7 @@ describe("Pool", () => {
   });
 
   it("pool with wrong authentication", function(done) {
-    this.timeout(5000);
+    this.timeout(10000);
     const pool = base.createPool({ connectionLimit: 3, user: "wrongAuthentication" });
     pool
       .query("SELECT 1")
@@ -52,7 +52,7 @@ describe("Pool", () => {
   });
 
   it("pool with wrong authentication connection", function(done) {
-    this.timeout(5000);
+    this.timeout(10000);
     const pool = base.createPool({ connectionLimit: 3, user: "wrongAuthentication" });
     pool
       .getConnection()
