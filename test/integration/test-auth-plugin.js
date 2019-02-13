@@ -102,7 +102,7 @@ describe("authentication plugin", () => {
     if (process.platform === "win32") this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
-    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
       this.skip();
 
     shareConn
@@ -111,8 +111,8 @@ describe("authentication plugin", () => {
         const unixUser = process.env.USERNAME;
         if (unixUser === "root") this.skip();
 
-        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'");
-        shareConn.query("DROP USER " + unixUser);
+        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch(err => {});
+        shareConn.query("DROP USER IF EXISTS " + unixUser);
         shareConn.query("CREATE USER " + unixUser + " IDENTIFIED VIA unix_socket using 'test'");
         shareConn.query("GRANT ALL on *.* to " + unixUser);
         base

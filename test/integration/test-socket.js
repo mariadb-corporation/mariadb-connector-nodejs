@@ -71,24 +71,30 @@ describe("test socket", () => {
   it("unix socket", function(done) {
     if (process.env.MUST_USE_TCPIP) this.skip();
     if (process.platform === "win32") this.skip();
-    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
+    if (
+      Conf.baseConfig.host &&
+      !(Conf.baseConfig.host === "localhost" || Conf.baseConfig.host === "mariadb.example.com")
+    )
       this.skip();
 
-    shareConn.query("select @@version_compile_os,@@socket soc", (err, res) => {
-      base
-        .createConnection({ socketPath: res[0].soc })
-        .then(conn => {
-          conn
-            .query("DO 1")
-            .then(() => {
-              return conn.end();
-            })
-            .then(() => {
-              done();
-            })
-            .catch(done);
-        })
-        .catch(done);
-    });
+    shareConn
+      .query("select @@version_compile_os,@@socket soc")
+      .then(res => {
+        base
+          .createConnection({ socketPath: res[0].soc })
+          .then(conn => {
+            conn
+              .query("DO 1")
+              .then(() => {
+                return conn.end();
+              })
+              .then(() => {
+                done();
+              })
+              .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
   });
 });

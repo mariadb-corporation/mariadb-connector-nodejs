@@ -272,9 +272,11 @@ describe("Error", () => {
       .then(conn => {
         conn.query("set @@wait_timeout = 1");
         conn.on("error", err => {
-          assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
-          assert.equal(err.sqlState, "08S01");
-          assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
+          if (!err.message.includes("ECONNRESET")) {
+            assert.isTrue(err.message.includes("socket has unexpectedly been closed"));
+            assert.equal(err.sqlState, "08S01");
+            assert.equal(err.code, "ER_SOCKET_UNEXPECTED_CLOSE");
+          }
           connectionErr = true;
         });
         setTimeout(function() {
@@ -310,7 +312,8 @@ describe("Error", () => {
         process.listeners("uncaughtException").push(originalException);
         assert.isTrue(
           recordedError.message.includes("socket has unexpectedly been closed") ||
-            recordedError.message.includes("Connection killed by MaxScale")
+            recordedError.message.includes("Connection killed by MaxScale") ||
+            recordedError.message.includes("ECONNRESET")
         );
         done();
       });
@@ -526,25 +529,24 @@ describe("Error", () => {
   });
 
   it("query no parameter", function(done) {
-    const handleResult = function(err) {
-      assert.equal(err.errno, 45016);
-      assert.equal(err.sqlState, "HY000");
-      assert.equal(err.code, "ER_MISSING_PARAMETER");
-      assert.isTrue(!err.fatal);
-      assert.ok(
-        err.message.includes(
-          "Parameter at position 1 is not set\n" +
-            "sql: INSERT INTO execute_no_parameter values (?, ?, ?) - parameters:[]"
-        )
-      );
-    };
     shareConn.query("CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)");
     shareConn
       .query("INSERT INTO execute_no_parameter values (?, ?, ?)", [])
       .then(() => {
         done(new Error("must have thrown error !"));
       })
-      .catch(handleResult);
+      .catch(err => {
+        assert.equal(err.errno, 45016);
+        assert.equal(err.sqlState, "HY000");
+        assert.equal(err.code, "ER_MISSING_PARAMETER");
+        assert.isTrue(!err.fatal);
+        assert.ok(
+          err.message.includes(
+            "Parameter at position 1 is not set\n" +
+              "sql: INSERT INTO execute_no_parameter values (?, ?, ?) - parameters:[]"
+          )
+        );
+      });
     shareConn
       .query("SELECT 1")
       .then(rows => {
