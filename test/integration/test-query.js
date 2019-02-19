@@ -151,4 +151,37 @@ describe("basic query", () => {
       })
       .catch(done);
   });
+
+  it("255 columns", done => {
+    let table = "CREATE TEMPORARY TABLE myTable(";
+    let insert = "INSERT INTO myTable VALUES (";
+    let expRes = {};
+    for (let i = 0; i < 255; i++) {
+      if (i != 0) {
+        table += ",";
+        insert += ",";
+      }
+      table += "i" + i + " int";
+      insert += i;
+      expRes["i" + i] = i;
+    }
+    table += ")";
+    insert += ")";
+
+    base
+      .createConnection()
+      .then(conn => {
+        conn.query(table);
+        conn.query(insert);
+        conn
+          .query("SELECT * FROM myTable")
+          .then(res => {
+            assert.deepEqual(res[0], expRes);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });
