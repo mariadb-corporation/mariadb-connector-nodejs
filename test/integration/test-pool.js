@@ -27,7 +27,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
         pool
           .query("SELECT 3")
           .then(() => {
@@ -36,7 +36,10 @@ describe("Pool", () => {
           })
           .catch(err => {
             pool.end();
-            assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+            assert.isTrue(
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.message
+            );
             done();
           });
       });
@@ -47,7 +50,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
       });
   });
 
@@ -61,7 +64,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
         pool
           .getConnection()
           .then(() => {
@@ -70,7 +73,10 @@ describe("Pool", () => {
           })
           .catch(err => {
             pool.end();
-            assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+            assert.isTrue(
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.message
+            );
             done();
           });
       });
@@ -81,7 +87,7 @@ describe("Pool", () => {
         done(new Error("must have thrown error"));
       })
       .catch(err => {
-        assert.isTrue(err.errno === 1524 || err.errno === 1045, err.message);
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
       });
   });
 
