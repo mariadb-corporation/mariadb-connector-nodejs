@@ -15,12 +15,12 @@ const launchBenchs = function(path) {
   bench.suiteReady();
 };
 
-fs.access("./benchs", function(err) {
+fs.access("../benchs", function(err) {
   if (err) {
-    fs.access("./benchmarks/benchs", function(err) {
-      launchBenchs("./benchmarks/benchs");
+    fs.access("../benchmarks/benchs", function(err) {
+      launchBenchs("../benchmarks/benchs");
     });
   } else {
-    launchBenchs("./benchs");
+    launchBenchs("../benchs");
   }
 });
