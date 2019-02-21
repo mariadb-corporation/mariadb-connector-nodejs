@@ -94,9 +94,8 @@ const mariadb = require('mariadb');
 **PoolCluster**
 
 * [`poolCluster.add(id, config)`](#poolclusteraddid-config) : add a pool to cluster.
-* [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
 * [`poolCluster.remove(pattern)`](#poolclusterremovepattern) : remove and end pool according to pattern.
-* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
+* [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
 * [`poolCluster.getConnection(pattern, selector) → Promise`](#poolclustergetconnectionpattern-selector--promise) : return a connection from cluster.
 * [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
 
