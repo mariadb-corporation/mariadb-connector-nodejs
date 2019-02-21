@@ -72,7 +72,7 @@ const mariadb = require('mariadb');
 * [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to the database to validate the connection.
 * [`connection.reset() → Promise`](#connectionreset--promise): reset current connection state.
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
-* [`connection.end() → Promise`](#connectionend--promise): Gracefully closes the connection.
+* [`connection.end() → Promise`](#connectionend--promise): Gracefully close the connection.
 * [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
 * [`connection.pause()`](#connectionpause): Pauses the socket output.
 * [`connection.resume()`](#connectionresume): Resumes the socket output.
@@ -1099,10 +1099,10 @@ const mariadb = require('mariadb');
 
 const cluster = mariadb.createPoolCluster();
 cluster.add("master-north", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("master-south", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1-north", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2-north", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1-south", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("master-south", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1-north", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2-north", { host: 'mydb4.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1-south", { host: 'mydb5.com', user: 'myUser', connectionLimit: 5 });
 
 const masterCluster = cluster.of('master*');
 const northSlaves = cluster.of(/^slave?-north/, 'RANDOM');
