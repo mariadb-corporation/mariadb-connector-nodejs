@@ -1,19 +1,19 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
-const { Writable } = require("stream");
+const base = require('../base.js');
+const { assert } = require('chai');
+const { Writable } = require('stream');
 
-describe("results-set streaming", () => {
+describe('results-set streaming', () => {
   before(function(done) {
     this.timeout(10000);
     shareConn
-      .query("CREATE TABLE testStreamResult (v int)")
+      .query('CREATE TABLE testStreamResult (v int)')
       .then(() => {
-        let sql = "INSERT INTO testStreamResult VALUE (?)";
+        let sql = 'INSERT INTO testStreamResult VALUE (?)';
         const params = [0];
         for (let i = 1; i < 10000; i++) {
-          sql += ",(?)";
+          sql += ',(?)';
           params.push(i);
         }
         return shareConn.query(sql, params);
@@ -26,36 +26,36 @@ describe("results-set streaming", () => {
 
   after(function(done) {
     shareConn
-      .query("DROP TABLE testStreamResult")
+      .query('DROP TABLE testStreamResult')
       .then(() => {
         done();
       })
       .catch(done);
   });
 
-  it("Streaming result-set with promise implementation", function(done) {
+  it('Streaming result-set with promise implementation', function(done) {
     let currRow = 0;
     let metaReceived = false;
     shareConn
-      .queryStream("SELECT * FROM testStreamResult")
-      .on("error", err => {
-        done(new Error("must not have thrown any error !"));
+      .queryStream('SELECT * FROM testStreamResult')
+      .on('error', err => {
+        done(new Error('must not have thrown any error !'));
       })
-      .on("fields", meta => {
+      .on('fields', meta => {
         assert.equal(meta.length, 1);
         metaReceived = true;
       })
-      .on("data", row => {
+      .on('data', row => {
         assert.equal(currRow++, row.v);
       })
-      .on("end", () => {
+      .on('end', () => {
         assert.equal(10000, currRow);
         assert.isOk(metaReceived);
         done();
       });
   });
 
-  it("Streaming result-set with callback implementation", function(done) {
+  it('Streaming result-set with callback implementation', function(done) {
     let currRow = 0;
     let metaReceived = false;
     const conn = base.createCallbackConnection();
@@ -63,19 +63,19 @@ describe("results-set streaming", () => {
       if (err) {
         done(err);
       } else {
-        const query = conn.query("SELECT * FROM testStreamResult");
+        const query = conn.query('SELECT * FROM testStreamResult');
         query
-          .on("error", err => {
-            done(new Error("must not have thrown any error !"));
+          .on('error', err => {
+            done(new Error('must not have thrown any error !'));
           })
-          .on("fields", meta => {
+          .on('fields', meta => {
             assert.equal(meta.length, 1);
             metaReceived = true;
           })
-          .on("data", row => {
+          .on('data', row => {
             assert.equal(currRow++, row.v);
           })
-          .on("end", () => {
+          .on('end', () => {
             assert.equal(10000, currRow);
             assert.isOk(metaReceived);
             conn.end();
@@ -85,30 +85,30 @@ describe("results-set streaming", () => {
     });
   });
 
-  it("streaming with option rows as array", function(done) {
+  it('streaming with option rows as array', function(done) {
     let currRow = 0;
     let metaReceived = false;
     shareConn
-      .queryStream({ rowsAsArray: true, sql: "SELECT * FROM testStreamResult" })
-      .on("error", err => {
-        done(new Error("must not have thrown any error !"));
+      .queryStream({ rowsAsArray: true, sql: 'SELECT * FROM testStreamResult' })
+      .on('error', err => {
+        done(new Error('must not have thrown any error !'));
       })
-      .on("fields", meta => {
+      .on('fields', meta => {
         assert.equal(meta.length, 1);
         metaReceived = true;
       })
-      .on("data", row => {
+      .on('data', row => {
         assert(Array.isArray(row));
         assert.deepEqual(row, [currRow++]);
       })
-      .on("end", () => {
+      .on('end', () => {
         assert.equal(10000, currRow);
         assert.isOk(metaReceived);
         done();
       });
   });
 
-  it("Streaming result-set pipe", function(done) {
+  it('Streaming result-set pipe', function(done) {
     let currRow = 0;
     const writableStream = new Writable({
       objectMode: true,
@@ -116,7 +116,7 @@ describe("results-set streaming", () => {
       write: (row, encoding, callback) => {
         assert.equal(currRow++, row.v);
         callback();
-        if (process.versions.node.startsWith("6.") && currRow === 10000) {
+        if (process.versions.node.startsWith('6.') && currRow === 10000) {
           //final was implemented in v8
           done();
         }
@@ -133,14 +133,16 @@ describe("results-set streaming", () => {
       }
     });
 
-    shareConn.queryStream("SELECT * FROM testStreamResult").pipe(writableStream);
+    shareConn
+      .queryStream('SELECT * FROM testStreamResult')
+      .pipe(writableStream);
   });
 
-  it("Streaming error handling", function(done) {
-    shareConn.queryStream("SELECT * FROM UnknownTable").on("error", err => {
+  it('Streaming error handling', function(done) {
+    shareConn.queryStream('SELECT * FROM UnknownTable').on('error', err => {
       assert.equal(err.errno, 1146);
-      assert.equal(err.sqlState, "42S02");
-      assert.equal(err.code, "ER_NO_SUCH_TABLE");
+      assert.equal(err.sqlState, '42S02');
+      assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       done();
     });
   });

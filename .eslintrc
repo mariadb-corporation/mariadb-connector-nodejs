@@ -2,11 +2,12 @@
   "globals": {
     "expect": true
   },
-  "extends": [
-    "prettier"
-  ],
   "plugins": [
     "markdown"
+  ],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 6

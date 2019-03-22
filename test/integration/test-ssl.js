@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
-const fs = require("fs");
-const Conf = require("../conf");
+const base = require('../base.js');
+const { assert } = require('chai');
+const fs = require('fs');
+const Conf = require('../conf');
 
-describe("ssl", function() {
+describe('ssl', function() {
   let ca = null;
   let sslEnable = false;
 
@@ -14,9 +14,9 @@ describe("ssl", function() {
 
     if (process.env.TEST_SSL_CA_FILE) {
       const caFileName = process.env.TEST_SSL_CA_FILE;
-      ca = [fs.readFileSync(caFileName, "utf8")];
+      ca = [fs.readFileSync(caFileName, 'utf8')];
     } else {
-      ca = [fs.readFileSync(__dirname + "/../certificats/server.crt", "utf8")];
+      ca = [fs.readFileSync(__dirname + '/../certificats/server.crt', 'utf8')];
     }
 
     shareConn.query("DROP USER 'sslTestUser'@'%'").catch(err => {});
@@ -25,36 +25,43 @@ describe("ssl", function() {
     shareConn
       .query(
         "CREATE USER 'sslTestUser'@'%'" +
-          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+          ((shareConn.info.isMariaDB() &&
+            shareConn.info.hasMinVersion(10, 2, 0)) ||
           (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-            ? " REQUIRE SSL"
-            : "")
+            ? ' REQUIRE SSL'
+            : '')
       )
       .then(() => {
         return shareConn.query(
           "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? " REQUIRE SSL"
-              : "")
+            ((shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(5, 7, 0))
+              ? ' REQUIRE SSL'
+              : '')
         );
       })
       .then(() => {
         return shareConn.query(
           "CREATE USER 'X509testUser'@'%'" +
-            ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-              ? " REQUIRE X509"
-              : "")
+            ((shareConn.info.isMariaDB() &&
+              shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() &&
+              shareConn.info.hasMinVersion(5, 7, 0))
+              ? ' REQUIRE X509'
+              : '')
         );
       })
       .then(() => {
         return shareConn.query(
           "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? " REQUIRE X509"
-              : "")
+            ((shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(10, 2, 0)) ||
+            (!shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(5, 7, 0))
+              ? ' REQUIRE X509'
+              : '')
         );
       })
       .then(() => {
@@ -63,13 +70,15 @@ describe("ssl", function() {
             "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
           );
         }
-        return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')");
+        return shareConn.query(
+          "SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')"
+        );
       })
       .then(() => {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then(rows => {
-        if (rows[0].Value === "YES") {
+        if (rows[0].Value === 'YES') {
           sslEnable = true;
           done();
         } else {
@@ -102,20 +111,20 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("signed certificate error ", function(done) {
+  it('signed certificate error ', function(done) {
     if (!sslEnable) this.skip();
     base
-      .createConnection({ user: "sslTestUser", password: "myPwd", ssl: true })
+      .createConnection({ user: 'sslTestUser', password: 'myPwd', ssl: true })
       .then(() => {
-        done(new Error("Must have thrown an exception !"));
+        done(new Error('Must have thrown an exception !'));
       })
       .catch(err => {
-        assert(err.message.includes("self signed certificate"));
+        assert(err.message.includes('self signed certificate'));
         done();
       });
   });
 
-  it("signed certificate forcing", function(done) {
+  it('signed certificate forcing', function(done) {
     if (!sslEnable) this.skip();
     base
       .createConnection({ ssl: { rejectUnauthorized: false } })
@@ -126,12 +135,12 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("ensure connection use SSL ", function(done) {
+  it('ensure connection use SSL ', function(done) {
     if (!sslEnable) this.skip();
     base
       .createConnection({
-        user: "sslTestUser",
-        password: "myPwd",
+        user: 'sslTestUser',
+        password: 'myPwd',
         ssl: { rejectUnauthorized: false }
       })
       .then(conn => {
@@ -141,175 +150,184 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("SSLv3 disable", function(done) {
+  it('SSLv3 disable', function(done) {
     if (!sslEnable) this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: "SSLv3_client_method" }
-      })
-      .then(() => {
-        done(new Error("Must have thrown an exception !"));
-      })
-      .catch(err => {
-        assert(err.message.includes("SSLv3 methods disabled"));
-        done();
-      });
-  });
-
-  it("SSLv2 disable", function(done) {
-    if (!sslEnable) this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: "SSLv2_method" }
-      })
-      .then(() => {
-        done(new Error("Must have thrown an exception !"));
-      })
-      .catch(err => {
-        assert(err.message.includes("SSLv2 methods disabled"));
-        done();
-      });
-  });
-
-  it("TLSv1 working", function(done) {
-    if (!sslEnable) this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_method" }
-      })
-      .then(conn => {
-        checkProtocol(conn, "TLSv1");
-        conn.end();
-        done();
-      })
-      .catch(done);
-  });
-
-  it("TLSv1.1 working", function(done) {
-    if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_1_method" }
-      })
-      .then(conn => {
-        checkProtocol(conn, "TLSv1.1");
-        conn.end();
-        done();
-      })
-      .catch(done);
-  });
-
-  it("TLSv1.1 with permit cipher", function(done) {
-    if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     base
       .createConnection({
         ssl: {
           rejectUnauthorized: false,
-          secureProtocol: "TLSv1_1_method",
+          secureProtocol: 'SSLv3_client_method'
+        }
+      })
+      .then(() => {
+        done(new Error('Must have thrown an exception !'));
+      })
+      .catch(err => {
+        assert(err.message.includes('SSLv3 methods disabled'));
+        done();
+      });
+  });
+
+  it('SSLv2 disable', function(done) {
+    if (!sslEnable) this.skip();
+    base
+      .createConnection({
+        ssl: { rejectUnauthorized: false, secureProtocol: 'SSLv2_method' }
+      })
+      .then(() => {
+        done(new Error('Must have thrown an exception !'));
+      })
+      .catch(err => {
+        assert(err.message.includes('SSLv2 methods disabled'));
+        done();
+      });
+  });
+
+  it('TLSv1 working', function(done) {
+    if (!sslEnable) this.skip();
+    base
+      .createConnection({
+        ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
+      })
+      .then(conn => {
+        checkProtocol(conn, 'TLSv1');
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
+  it('TLSv1.1 working', function(done) {
+    if (!sslEnable) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
+    base
+      .createConnection({
+        ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' }
+      })
+      .then(conn => {
+        checkProtocol(conn, 'TLSv1.1');
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
+  it('TLSv1.1 with permit cipher', function(done) {
+    if (!sslEnable) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
+    base
+      .createConnection({
+        ssl: {
+          rejectUnauthorized: false,
+          secureProtocol: 'TLSv1_1_method',
           ciphers:
-            "DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
+            'DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
         }
       })
       .then(conn => {
-        checkProtocol(conn, "TLSv1.1");
+        checkProtocol(conn, 'TLSv1.1');
         conn.end();
         done();
       })
       .catch(done);
   });
 
-  it("TLSv1.1 no common cipher", function(done) {
+  it('TLSv1.1 no common cipher', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
     base
       .createConnection({
         ssl: {
           rejectUnauthorized: false,
-          secureProtocol: "TLSv1_1_method",
-          ciphers: "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
+          secureProtocol: 'TLSv1_1_method',
+          ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
         }
       })
       .then(() => {
-        done(new Error("Must have thrown an exception !"));
+        done(new Error('Must have thrown an exception !'));
       })
       .catch(err => {
-        assert(err.message.includes("no ciphers available"));
+        assert(err.message.includes('no ciphers available'));
         done();
       });
   });
 
-  it("TLSv1.1 wrong cipher", function(done) {
+  it('TLSv1.1 wrong cipher', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
     base
       .createConnection({
         ssl: {
           rejectUnauthorized: false,
-          secureProtocol: "TLSv1_1_method",
-          ciphers: "ECDHE-ECDSA-AES256-STRANGE"
+          secureProtocol: 'TLSv1_1_method',
+          ciphers: 'ECDHE-ECDSA-AES256-STRANGE'
         }
       })
       .then(() => {
-        done(new Error("Must have thrown an exception !"));
+        done(new Error('Must have thrown an exception !'));
       })
       .catch(err => {
         assert(
-          err.message.includes("no ciphers available") || err.message.includes("no cipher match")
+          err.message.includes('no ciphers available') ||
+            err.message.includes('no cipher match')
         );
         done();
       });
   });
 
-  it("TLSv1.2 working", function(done) {
+  it('TLSv1.2 working', function(done) {
     if (!sslEnable) this.skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
-    const isWin = process.platform === "win32";
+    const isWin = process.platform === 'win32';
     if (isWin || !shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: "TLSv1_2_method" }
+        ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_2_method' }
       })
       .then(conn => {
-        checkProtocol(conn, "TLSv1.2");
+        checkProtocol(conn, 'TLSv1.2');
         conn.end();
         done();
       })
       .catch(done);
   });
 
-  it("TLSv1.2 with cipher working", function(done) {
+  it('TLSv1.2 with cipher working', function(done) {
     if (!sslEnable) this.skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
-    const isWin = process.platform === "win32";
+    const isWin = process.platform === 'win32';
     if (isWin || !shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection({
         ssl: {
           rejectUnauthorized: false,
-          secureProtocol: "TLSv1_2_method",
+          secureProtocol: 'TLSv1_2_method',
           ciphers:
-            "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256"
+            'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
         }
       })
       .then(conn => {
-        checkProtocol(conn, "TLSv1.2");
+        checkProtocol(conn, 'TLSv1.2');
         conn.end();
         done();
       })
       .catch(done);
   });
 
-  it("CA provided ignoring name verification", function(done) {
+  it('CA provided ignoring name verification', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
-    if (Conf.baseConfig.host !== "localhost") this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
+    if (Conf.baseConfig.host !== 'localhost') this.skip();
 
     base
       .createConnection({
@@ -327,46 +345,52 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("CA name verification error", function(done) {
+  it('CA name verification error', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
-    if (Conf.baseConfig.host !== "localhost") this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
+    if (Conf.baseConfig.host !== 'localhost') this.skip();
 
     base
-      .createConnection({ host: "127.0.0.1", ssl: { ca: ca } })
+      .createConnection({ host: '127.0.0.1', ssl: { ca: ca } })
       .then(() => {
-        done(new Error("Must have thrown an exception !"));
+        done(new Error('Must have thrown an exception !'));
       })
       .catch(err => {
         assert(
-          err.message.includes("Hostname/IP doesn't match certificate's altnames") ||
-            err.message.includes("Hostname/IP does not match certificate's altnames"),
-          "error was : " + err.message
+          err.message.includes(
+            "Hostname/IP doesn't match certificate's altnames"
+          ) ||
+            err.message.includes(
+              "Hostname/IP does not match certificate's altnames"
+            ),
+          'error was : ' + err.message
         );
         assert(
           err.message.includes("IP: 127.0.0.1 is not in the cert's list"),
-          "error was : " + err.message
+          'error was : ' + err.message
         );
 
         done();
       });
   });
 
-  it("CA provided with matching cn", function(done) {
+  it('CA provided with matching cn', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10))
+      this.skip();
 
     base
-      .createConnection({ host: "mariadb.example.com", ssl: { ca: ca } })
+      .createConnection({ host: 'mariadb.example.com', ssl: { ca: ca } })
       .then(conn => {
-        const isWin = process.platform === "win32";
-        let expectedProtocol = "TLSv1.2";
+        const isWin = process.platform === 'win32';
+        let expectedProtocol = 'TLSv1.2';
         if (shareConn.info.isMariaDB()) {
-          if (isWin) expectedProtocol = "TLSv1.1";
+          if (isWin) expectedProtocol = 'TLSv1.1';
         } else if (!shareConn.info.hasMinVersion(8, 0, 0)) {
-          expectedProtocol = "TLSv1.1";
+          expectedProtocol = 'TLSv1.1';
         }
         checkProtocol(conn, expectedProtocol);
         conn.end();
@@ -375,41 +399,43 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("Mutual authentication without providing client certificate", function(done) {
+  it('Mutual authentication without providing client certificate', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
 
     base
       .createConnection({
-        user: "X509testUser",
+        user: 'X509testUser',
         password: null,
-        host: "mariadb.example.com",
+        host: 'mariadb.example.com',
         ssl: { ca: ca }
       })
       .then(() => {
-        done(new Error("Must have thrown an exception !"));
+        done(new Error('Must have thrown an exception !'));
       })
       .catch(err => {
         done();
       });
   });
 
-  it("Mutual authentication providing client certificate", function(done) {
+  it('Mutual authentication providing client certificate', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
 
     const clientKeyFileName =
-      process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + "/../certificats/client.key";
+      process.env.TEST_SSL_CLIENT_KEY_FILE ||
+      __dirname + '/../certificats/client.key';
     const clientCertFileName =
-      process.env.TEST_SSL_CLIENT_CERT_FILE || __dirname + "/../certificats/client.crt";
-    const clientKey = [fs.readFileSync(clientKeyFileName, "utf8")];
-    const clientCert = [fs.readFileSync(clientCertFileName, "utf8")];
+      process.env.TEST_SSL_CLIENT_CERT_FILE ||
+      __dirname + '/../certificats/client.crt';
+    const clientKey = [fs.readFileSync(clientKeyFileName, 'utf8')];
+    const clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
 
     base
       .createConnection({
-        user: "X509testUser",
+        user: 'X509testUser',
         password: null,
-        host: "mariadb.example.com",
+        host: 'mariadb.example.com',
         ssl: {
           ca: ca,
           cert: clientCert,
@@ -423,24 +449,24 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("Mutual authentication providing client keystore", function(done) {
+  it('Mutual authentication providing client keystore', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
 
     const clientKeystoreFileName =
       process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
-      __dirname + "/../certificats/client-keystore.p12";
+      __dirname + '/../certificats/client-keystore.p12';
     const clientKeystore = fs.readFileSync(clientKeystoreFileName);
 
     base
       .createConnection({
-        user: "X509testUser",
+        user: 'X509testUser',
         password: null,
-        host: "mariadb.example.com",
+        host: 'mariadb.example.com',
         ssl: {
           ca: ca,
           pfx: clientKeystore,
-          passphrase: "kspass"
+          passphrase: 'kspass'
         }
       })
       .then(conn => {
@@ -450,7 +476,7 @@ describe("ssl", function() {
       .catch(done);
   });
 
-  it("ssl change user", function(done) {
+  it('ssl change user', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     if (!sslEnable) this.skip();
     let currUser;
@@ -460,28 +486,30 @@ describe("ssl", function() {
       .then(con => {
         conn = con;
         conn.query("DROP USER IF EXISTS ChangeUser@'%'").catch(err => {});
-        conn.query("FLUSH PRIVILEGES");
+        conn.query('FLUSH PRIVILEGES');
         conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
-        conn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
-        return conn.query("FLUSH PRIVILEGES");
+        conn.query(
+          "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option"
+        );
+        return conn.query('FLUSH PRIVILEGES');
       })
       .then(() => {
         conn
-          .query("SELECT CURRENT_USER")
+          .query('SELECT CURRENT_USER')
           .then(res => {
-            currUser = res[0]["CURRENT_USER"];
+            currUser = res[0]['CURRENT_USER'];
             return conn.changeUser({
-              user: "ChangeUser",
-              password: "mypassword",
-              connectAttributes: { par1: "bouh", par2: "bla" }
+              user: 'ChangeUser',
+              password: 'mypassword',
+              connectAttributes: { par1: 'bouh', par2: 'bla' }
             });
           })
           .then(() => {
-            return conn.query("SELECT CURRENT_USER");
+            return conn.query('SELECT CURRENT_USER');
           })
           .then(res => {
-            const user = res[0]["CURRENT_USER"];
-            assert.equal(user, "ChangeUser@%");
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser@%');
             assert(user !== currUser);
             conn.query("DROP USER ChangeUser@'%'");
             conn.end();
@@ -494,7 +522,7 @@ describe("ssl", function() {
 });
 
 function checkProtocol(conn, protocol) {
-  const ver = process.version.substring(1).split(".");
+  const ver = process.version.substring(1).split('.');
   if (ver[0] > 5 || (ver[0] === 5 && ver[1] === 7)) {
     assert.equal(conn.__tests.getSocket().getProtocol(), protocol);
   }

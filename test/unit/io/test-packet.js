@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
-const Utils = require("../../../lib/misc/utils");
-const { assert } = require("chai");
-const Packet = require("../../../lib/io/packet");
+const Utils = require('../../../lib/misc/utils');
+const { assert } = require('chai');
+const Packet = require('../../../lib/io/packet');
 
-describe("packet", () => {
+describe('packet', () => {
   const head = Buffer.from([0xaa, 0xbb, 0xcc, 0x33]);
   const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
   const longbuf = Buffer.from([
@@ -27,7 +27,7 @@ describe("packet", () => {
     0x10
   ]);
 
-  it("skipping integer", () => {
+  it('skipping integer', () => {
     let packet = new Packet(Buffer.allocUnsafe(1000), 0, 1000);
     packet.buf[0] = 0;
     packet.buf[1] = 10;

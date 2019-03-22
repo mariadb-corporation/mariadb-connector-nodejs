@@ -1,22 +1,22 @@
-"use strict";
+'use strict';
 
-const CompressionInputStream = require("../../lib/io/compression-input-stream");
-const PacketInputStream = require("../../lib/io/packet-input-stream");
-const { assert } = require("chai");
-const Conf = require("../conf");
-const ConnOptions = require("../../lib/config/connection-options");
-const Queue = require("denque");
-const Command = require("../../lib/cmd/command");
-const ConnectionInformation = require("../../lib/misc/connection-information");
-const EventEmitter = require("events");
-const ZLib = require("zlib");
+const CompressionInputStream = require('../../lib/io/compression-input-stream');
+const PacketInputStream = require('../../lib/io/packet-input-stream');
+const { assert } = require('chai');
+const Conf = require('../conf');
+const ConnOptions = require('../../lib/config/connection-options');
+const Queue = require('denque');
+const Command = require('../../lib/cmd/command');
+const ConnectionInformation = require('../../lib/misc/connection-information');
+const EventEmitter = require('events');
+const ZLib = require('zlib');
 
-describe("test compress PacketInputStream data", () => {
+describe('test compress PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
   const info = new ConnectionInformation();
   const unexpectedPacket = packet => {
-    throw new Error("unexpected packet");
+    throw new Error('unexpected packet');
   };
 
   class EmptyCmd extends Command {
@@ -39,24 +39,24 @@ describe("test compress PacketInputStream data", () => {
     }
   });
 
-  it("small complete packet", done => {
+  it('small complete packet', done => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it("small complete packet - 2 separate header packets", done => {
+  it('small complete packet - 2 separate header packets', done => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9]));
     cis.onData(Buffer.from([0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it("small complete packet - 2 other separate header packets", done => {
+  it('small complete packet - 2 other separate header packets', done => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0, 0, 0]));
     cis.onData(Buffer.from([0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it("small complete packet - many separate header packets", done => {
+  it('small complete packet - many separate header packets', done => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0]));
     cis.onData(Buffer.from([0, 0]));
@@ -68,11 +68,14 @@ describe("test compress PacketInputStream data", () => {
     cis.onData(Buffer.from([4, 5]));
   });
 
-  it("big packet multi part data", done => {
+  it('big packet multi part data', done => {
     const cis = createCompressObj(done, buf);
 
     const compressChunk1 = ZLib.deflateSync(
-      Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777211)])
+      Buffer.concat([
+        Buffer.from([0xff, 0xff, 0xff, 0x00]),
+        buf.slice(0, 16777211)
+      ])
     );
     const buf2 = Buffer.concat([
       buf.slice(16777211, 16777215),
@@ -118,7 +121,12 @@ describe("test compress PacketInputStream data", () => {
       info
     );
 
-    const cis = new CompressionInputStream(pis, queue, new ConnOptions(Conf.baseConfig), info);
+    const cis = new CompressionInputStream(
+      pis,
+      queue,
+      new ConnOptions(Conf.baseConfig),
+      info
+    );
     return cis;
   }
 });

@@ -1,86 +1,94 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const assert = require("chai").assert;
+const base = require('../base.js');
+const assert = require('chai').assert;
 
-describe("Connection meta", function() {
-  it("server version", () => {
+describe('Connection meta', function() {
+  it('server version', () => {
     const serverVersion = shareConn.serverVersion();
     if (process.env.DB) {
-      if (process.env.DB === "build") {
+      if (process.env.DB === 'build') {
         //last mariadb build version
-        assert(serverVersion.startsWith("10.3"));
+        assert(serverVersion.startsWith('10.3'));
       } else {
         const version =
-          process.platform === "win32"
+          process.platform === 'win32'
             ? process.env.DB
-            : process.env.DB.substr(process.env.DB.indexOf(":") + 1);
+            : process.env.DB.substr(process.env.DB.indexOf(':') + 1);
         assert(serverVersion.startsWith(version));
       }
     }
   });
 
-  it("server version before connect error", done => {
+  it('server version before connect error', done => {
     const conn = base.createCallbackConnection();
     try {
       conn.serverVersion();
-      done(new Error("Must have thrown exception"));
+      done(new Error('Must have thrown exception'));
     } catch (err) {
       assert(
-        err.message.includes("cannot know if server information until connection is established")
+        err.message.includes(
+          'cannot know if server information until connection is established'
+        )
       );
       conn.connect(conn.end);
       done();
     }
   });
 
-  it("isMariaDB", () => {
+  it('isMariaDB', () => {
     const isMariadb = shareConn.info.isMariaDB();
     if (process.env.DB) {
-      if (process.env.DB === "build") {
+      if (process.env.DB === 'build') {
         assert(isMariadb);
       } else {
         //Appveyor test only mariadb, travis use docker image with DB=mariadb/mysql:version
         assert.equal(
           isMariadb,
-          process.platform === "win32" || process.env.DB.startsWith("mariadb")
+          process.platform === 'win32' || process.env.DB.startsWith('mariadb')
         );
       }
     }
   });
 
-  it("isMariaDB before connect error", done => {
+  it('isMariaDB before connect error', done => {
     const conn = base.createCallbackConnection();
     try {
       conn.info.isMariaDB();
-      done(new Error("Must have thrown exception"));
+      done(new Error('Must have thrown exception'));
     } catch (err) {
       assert(
-        err.message.includes("cannot know if server is MariaDB until connection is established")
+        err.message.includes(
+          'cannot know if server is MariaDB until connection is established'
+        )
       );
       conn.connect(conn.end);
       done();
     }
   });
 
-  it("info.hasMinVersion before connect error", done => {
+  it('info.hasMinVersion before connect error', done => {
     const conn = base.createCallbackConnection();
     try {
       conn.info.hasMinVersion();
-      done(new Error("Must have thrown exception"));
+      done(new Error('Must have thrown exception'));
     } catch (err) {
-      assert(err.message.includes("cannot know if server version until connection is established"));
+      assert(
+        err.message.includes(
+          'cannot know if server version until connection is established'
+        )
+      );
       conn.connect(conn.end);
       done();
     }
   });
 
-  it("info.hasMinVersion", () => {
+  it('info.hasMinVersion', () => {
     try {
       shareConn.info.hasMinVersion();
-      throw new Error("Must have thrown exception");
+      throw new Error('Must have thrown exception');
     } catch (err) {
-      assert(err.message.includes("a major version must be set"));
+      assert(err.message.includes('a major version must be set'));
     }
 
     assert(shareConn.info.hasMinVersion(3));

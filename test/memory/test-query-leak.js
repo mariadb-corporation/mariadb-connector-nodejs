@@ -1,17 +1,17 @@
-"use strict";
+'use strict';
 
-require("../base.js");
+require('../base.js');
 
 let memwatch;
 
 try {
-  memwatch = require("memwatch-next");
+  memwatch = require('memwatch-next');
 } catch (err) {}
 
-const { assert } = require("chai");
+const { assert } = require('chai');
 
-describe("leaks", () => {
-  it("1000 select leaking test", function(done) {
+describe('leaks', () => {
+  it('1000 select leaking test', function(done) {
     if (!memwatch) this.skip();
     this.timeout(20000);
     const hd = new memwatch.HeapDiff();
@@ -22,7 +22,7 @@ describe("leaks", () => {
       .catch(done);
   });
 
-  it("1000 select pipeline leaking test", function(done) {
+  it('1000 select pipeline leaking test', function(done) {
     if (!memwatch) this.skip();
     this.timeout(20000);
 
@@ -40,7 +40,7 @@ describe("leaks", () => {
 
 const queryUsers = queryCount => {
   if (queryCount > 0) {
-    shareConn.query("SELECT * FROM mysql.user").then(rows => {
+    shareConn.query('SELECT * FROM mysql.user').then(rows => {
       return queryUsers(--queryCount);
     });
   }
@@ -52,8 +52,8 @@ const handleDiff = (hd, done) => {
   const errs = [];
   for (let i = 0; i < diff.change.details.length; i++) {
     const obj = diff.change.details[i];
-    if (["Code", "InternalArray"].includes(obj["what"])) continue;
-    if (obj["+"] > obj["-"] + 5) {
+    if (['Code', 'InternalArray'].includes(obj['what'])) continue;
+    if (obj['+'] > obj['-'] + 5) {
       errs.push(obj);
     }
   }
@@ -63,7 +63,7 @@ const handleDiff = (hd, done) => {
       console.log(errs[i]);
     }
 
-    done(new Error("Object is leaking"));
+    done(new Error('Object is leaking'));
   } else {
     done();
   }
@@ -72,7 +72,7 @@ const handleDiff = (hd, done) => {
 const queryPipelineUsers = queryCount => {
   const queries = [];
   for (let i = 0; i < queryCount; i++) {
-    queries.push(shareConn.query("SELECT * FROM mysql.user"));
+    queries.push(shareConn.query('SELECT * FROM mysql.user'));
   }
   return Promise.all(queries)
     .then(() => {

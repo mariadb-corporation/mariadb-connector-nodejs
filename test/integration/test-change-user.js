@@ -1,16 +1,18 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
-const ServerStatus = require("../../lib/const/server-status");
-const Conf = require("../conf");
+const base = require('../base.js');
+const { assert } = require('chai');
+const ServerStatus = require('../../lib/const/server-status');
+const Conf = require('../conf');
 
-describe("change user", () => {
+describe('change user', () => {
   before(done => {
     shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
+    shareConn.query(
+      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option"
+    );
     shareConn
-      .query("FLUSH PRIVILEGES")
+      .query('FLUSH PRIVILEGES')
       .then(() => done())
       .catch(err => done());
   });
@@ -18,26 +20,26 @@ describe("change user", () => {
   after(done => {
     shareConn.query("DROP USER ChangeUser@'%'");
     shareConn
-      .query("FLUSH PRIVILEGES")
+      .query('FLUSH PRIVILEGES')
       .then(() => done())
       .catch(err => done());
   });
 
-  it("basic change user using callback", function(done) {
+  it('basic change user using callback', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
 
-      conn.query("SELECT CURRENT_USER", (err, res) => {
-        const currUser = res[0]["CURRENT_USER"];
-        conn.changeUser({ user: "ChangeUser", password: "mypassword" }, err => {
+      conn.query('SELECT CURRENT_USER', (err, res) => {
+        const currUser = res[0]['CURRENT_USER'];
+        conn.changeUser({ user: 'ChangeUser', password: 'mypassword' }, err => {
           if (err) {
             done(err);
           } else {
-            conn.query("SELECT CURRENT_USER", (err, res) => {
-              const user = res[0]["CURRENT_USER"];
-              assert.equal(user, "ChangeUser@%");
+            conn.query('SELECT CURRENT_USER', (err, res) => {
+              const user = res[0]['CURRENT_USER'];
+              assert.equal(user, 'ChangeUser@%');
               assert(user !== currUser);
               conn.end();
               done();
@@ -48,23 +50,27 @@ describe("change user", () => {
     });
   });
 
-  it("wrong charset", function(done) {
+  it('wrong charset', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then(conn => {
       conn
-        .changeUser({ user: "ChangeUser", password: "mypassword", charset: "wrong" })
+        .changeUser({
+          user: 'ChangeUser',
+          password: 'mypassword',
+          charset: 'wrong'
+        })
         .then(() => {
-          done(new Error("must have thrown error!"));
+          done(new Error('must have thrown error!'));
         })
         .catch(err => {
-          assert(err.message.includes("Unknown charset"));
+          assert(err.message.includes('Unknown charset'));
           conn.end();
           done();
         });
     });
   });
 
-  it("basic change user using callback no function", function(done) {
+  it('basic change user using callback no function', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
@@ -72,8 +78,8 @@ describe("change user", () => {
       if (err) done(err);
       conn.changeUser();
       conn.changeUser(err => {});
-      conn.query("SELECT CURRENT_USER", (err, res) => {
-        conn.changeUser({ user: "ChangeUser", password: "mypassword" });
+      conn.query('SELECT CURRENT_USER', (err, res) => {
+        conn.changeUser({ user: 'ChangeUser', password: 'mypassword' });
         conn.end(() => {
           done();
         });
@@ -81,7 +87,7 @@ describe("change user", () => {
     });
   });
 
-  it("basic change user using promise", function(done) {
+  it('basic change user using promise', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const baseConf = Conf.baseConfig;
@@ -91,21 +97,21 @@ describe("change user", () => {
       .createConnection()
       .then(conn => {
         conn
-          .query("SELECT CURRENT_USER")
+          .query('SELECT CURRENT_USER')
           .then(res => {
-            initialUser = res[0]["CURRENT_USER"];
+            initialUser = res[0]['CURRENT_USER'];
             return conn.changeUser({
-              user: "ChangeUser",
-              password: "mypassword",
-              connectAttributes: { par1: "bouh", par2: "bla" }
+              user: 'ChangeUser',
+              password: 'mypassword',
+              connectAttributes: { par1: 'bouh', par2: 'bla' }
             });
           })
           .then(() => {
-            return conn.query("SELECT CURRENT_USER");
+            return conn.query('SELECT CURRENT_USER');
           })
           .then(res => {
-            const user = res[0]["CURRENT_USER"];
-            assert.equal(user, "ChangeUser@%");
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser@%');
             assert(user !== initialUser);
             return conn.changeUser({
               user: baseConf.user,
@@ -114,10 +120,10 @@ describe("change user", () => {
             });
           })
           .then(() => {
-            return conn.query("SELECT CURRENT_USER");
+            return conn.query('SELECT CURRENT_USER');
           })
           .then(res => {
-            const user = res[0]["CURRENT_USER"];
+            const user = res[0]['CURRENT_USER'];
             assert.equal(user, initialUser);
             conn.end();
             done();
@@ -127,24 +133,24 @@ describe("change user", () => {
       .catch(done);
   });
 
-  it("change user with collation", function(done) {
+  it('change user with collation', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
       .then(conn => {
         conn
           .changeUser({
-            user: "ChangeUser",
-            password: "mypassword",
-            charset: "UTF8_PERSIAN_CI"
+            user: 'ChangeUser',
+            password: 'mypassword',
+            charset: 'UTF8_PERSIAN_CI'
           })
           .then(() => {
-            return conn.query("SELECT CURRENT_USER");
+            return conn.query('SELECT CURRENT_USER');
           })
           .then(res => {
-            const user = res[0]["CURRENT_USER"];
-            assert.equal(user, "ChangeUser@%");
-            assert.equal(conn.__tests.getCollation().name, "UTF8_PERSIAN_CI");
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser@%');
+            assert.equal(conn.__tests.getCollation().name, 'UTF8_PERSIAN_CI');
             conn.end();
             done();
           })
@@ -153,34 +159,37 @@ describe("change user", () => {
       .catch(done);
   });
 
-  it("MySQL change user disabled", function(done) {
+  it('MySQL change user disabled', function(done) {
     if (shareConn.info.isMariaDB()) this.skip();
     shareConn
-      .changeUser({ user: "ChangeUser" })
+      .changeUser({ user: 'ChangeUser' })
       .then(() => {
-        done(new Error("must have thrown an error"));
+        done(new Error('must have thrown an error'));
       })
       .catch(err => {
-        assert(err.message.includes("method changeUser not available"));
+        assert(err.message.includes('method changeUser not available'));
         done();
       });
   });
 
-  it("autocommit state after changing user", function(done) {
+  it('autocommit state after changing user', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
       .then(conn => {
         assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 2);
         conn
-          .query("SET autocommit=1")
+          .query('SET autocommit=1')
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 2);
-            return conn.query("SET autocommit=0");
+            return conn.query('SET autocommit=0');
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
-            return conn.changeUser({ user: "ChangeUser", password: "mypassword" });
+            return conn.changeUser({
+              user: 'ChangeUser',
+              password: 'mypassword'
+            });
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 2);
