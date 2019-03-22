@@ -131,14 +131,18 @@ describe('authentication plugin', () => {
         shareConn.query(
           'CREATE USER ' + unixUser + " IDENTIFIED VIA unix_socket using 'test'"
         );
-        shareConn.query('GRANT ALL on *.* to ' + unixUser);
-        base
-          .createConnection({ user: null, socketPath: res[0].soc })
-          .then(conn => {
-            return conn.end();
-          })
+        shareConn
+          .query('GRANT ALL on *.* to ' + unixUser)
           .then(() => {
-            done();
+            base
+              .createConnection({ user: null, socketPath: res[0].soc })
+              .then(conn => {
+                return conn.end();
+              })
+              .then(() => {
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
