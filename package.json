@@ -3,15 +3,18 @@
   "version": "2.0.3",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
+  "types": "types/index.d.ts",
   "directories": {
-    "src": "src",
+    "lib": "lib",
     "test": "test"
   },
   "private": false,
   "scripts": {
-    "test": "npm run test:lint && npm run test:prettier && npm run test:base",
+    "test": "npm run test:types && npm run test:types-prettier && npm run test:lint && npm run test:prettier && npm run test:base",
     "test:base": "mocha \"test/**/*.js\" ",
     "test:lint": "eslint \"{lib,test}/**/*.js\" ",
+    "test:types": "eslint \"types/*.ts\" ",
+    "test:types-prettier": "prettier --write \"types/*.ts\"",
     "test:prettier": "prettier --write \"{lib,test,benchmarks}/**/*.js\"",
     "coverage": "npm run coverage:test && npm run coverage:report",
     "coverage:test": "nyc mocha \"test/**/*.js\"",
@@ -32,6 +35,7 @@
   ],
   "files": [
     "lib",
+    "types/index.d.js",
     "promise.js",
     "callback.js"
   ],
@@ -46,9 +50,13 @@
     "long": "^4.0.0"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.7",
+    "@types/node": "^11.11.5",
+    "@typescript-eslint/eslint-plugin": "^1.5.0",
+    "@typescript-eslint/parser": "^1.5.0",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
-    "codecov": "^3.1.0",
+    "codecov": "^3.2.0",
     "colors": "^1.3.2",
     "error-stack-parser": "^2.0.1",
     "eslint": "^5.15.3",
@@ -58,7 +66,8 @@
     "mocha": "^6.0.2",
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^13.3.0",
-    "prettier": "^1.15.3"
+    "prettier": "^1.15.3",
+    "typescript": "^3.3.4000"
   },
   "bugs": {
     "url": "https://jira.mariadb.org/projects/CONJS/"
