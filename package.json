@@ -10,7 +10,7 @@
   },
   "private": false,
   "scripts": {
-    "test": "npm run test:types && npm run test:types-prettier && npm run test:lint && npm run test:prettier && npm run test:base",
+    "test": "npm run test:types && npm run test:types-prettier && npm run test:prettier && npm run test:lint && npm run test:base",
     "test:base": "mocha \"test/**/*.js\" ",
     "test:lint": "eslint \"{lib,test}/**/*.js\" ",
     "test:types": "eslint \"types/*.ts\" ",
