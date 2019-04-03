@@ -19,12 +19,17 @@ describe('enum', () => {
       'apple',
       100
     ]);
+    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [
+      2,
+      110
+    ]);
     shareConn
       .query('SELECT * FROM fruits')
       .then(rows => {
         assert.deepEqual(rows, [
           { id: 1, fruit: 'pear', bushels: 20 },
-          { id: 2, fruit: 'apple', bushels: 100 }
+          { id: 2, fruit: 'apple', bushels: 100 },
+          { id: 3, fruit: 'orange', bushels: 110 }
         ]);
         done();
       })
