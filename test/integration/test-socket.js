@@ -13,10 +13,15 @@ describe('test socket', () => {
       Conf.baseConfig.host !== 'mariadb.example.com'
     )
       this.skip();
-
+    const test = this;
     shareConn
-      .query('select @@version_compile_os,@@socket soc')
+      .query(
+        'select @@version_compile_os,@@socket soc, @@named_pipe pipeEnable'
+      )
       .then(res => {
+        if (res[0].pipeEnable === 0) {
+          test.skip();
+        }
         base
           .createConnection({ socketPath: '\\\\.\\pipe\\' + res[0].soc })
           .then(conn => {
