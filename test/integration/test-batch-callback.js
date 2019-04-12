@@ -87,10 +87,13 @@ describe("batch callback", () => {
       f.toSqlString = () => {
         return "blabla";
       };
+      const n = {};
+      n.toSqlValue = n.toString = n.toJSON = () => "1";
       conn.batch(
-        "INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)",
+        "INSERT INTO `simpleBatch` values (?, ?, 2, ?, ?, ?, ?, 3)",
         [
           [
+            n,
             true,
             "john😎🌶\\\\",
             new Date("2001-12-31 23:59:58"),
@@ -101,6 +104,7 @@ describe("batch callback", () => {
             }
           ],
           [
+            n,
             true,
             f,
             new Date("2001-12-31 23:59:58"),
@@ -111,6 +115,7 @@ describe("batch callback", () => {
             }
           ],
           [
+            n,
             false,
             { name: "jackमस्", val: "tt" },
             null,
@@ -121,6 +126,7 @@ describe("batch callback", () => {
             }
           ],
           [
+            n,
             0,
             null,
             new Date("2020-12-31 23:59:59"),
@@ -221,12 +227,14 @@ describe("batch callback", () => {
       f.toSqlString = () => {
         return "blabla";
       };
+      const n = {};
+      n.toSqlValue = n.toString = n.toJSON = () => "1";
       conn.batch(
         {
           sql: "INSERT INTO `simpleBatchWithOptions` values (?, ?)",
           maxAllowedPacket: 1048576
         },
-        [[1, new Date("2001-12-31 23:59:58")], [2, new Date("2001-12-31 23:59:58")]],
+        [[n, new Date("2001-12-31 23:59:58")], [2, new Date("2001-12-31 23:59:58")]],
         (err, res) => {
           if (err) {
             return conn.end(() => {

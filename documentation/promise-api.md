@@ -308,7 +308,7 @@ connection
 
 ### Placeholder
 
-To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringfy`).
+To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSqlString` or `toSqlValue` methods, or objects that can be stringified (that is, `JSON.stringfy`).
 
 When streaming, objects that implement Readable are streamed automatically.  But, there are two server system variables that may interfere:
 

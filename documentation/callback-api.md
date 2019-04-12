@@ -268,7 +268,7 @@ connection.query({dateStrings:true, sql:'SELECT now()'}, (err, rows, meta) => {
 
 ### Placeholder
 
-To avoid SQL Injection attacks, queries permit the use of a question mark as a placeholder.  The Connector escapes values according to their type.  You can use any native JavaScript type, Buffer, Readable or any object with a `toSqlString` method in these values.  All other objects are stringified using the `JSON.stringify` method.
+To avoid SQL Injection attacks, queries permit the use of a question mark as a placeholder.  The Connector escapes values according to their type.  You can use any native JavaScript type, Buffer, Readable or any object with a `toSqlString` or `toSqlValue`  method in these values.  All other objects are stringified using the `JSON.stringify` method.
 
 The Connector automatically streams objects that implement Readable.  In these cases, check the values on the following server system variables, as they may interfere:
 
