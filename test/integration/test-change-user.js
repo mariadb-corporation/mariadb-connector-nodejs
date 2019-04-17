@@ -186,6 +186,12 @@ describe('change user', () => {
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            assert.equal(conn.info.database, Conf.baseConfig.database);
+            return conn.query('USE mysql');
+          })
+          .then(() => {
+            assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            assert.equal(conn.info.database, 'mysql');
             return conn.changeUser({
               user: 'ChangeUser',
               password: 'mypassword'
@@ -193,6 +199,7 @@ describe('change user', () => {
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 2);
+            assert.equal(conn.info.database, Conf.baseConfig.database);
             conn.end();
             done();
           })
