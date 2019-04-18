@@ -74,37 +74,51 @@ describe('authentication plugin', () => {
       this.skip();
     const windowsUser = process.env.USERNAME;
     if (windowsUser === 'root') this.skip();
-    let conn;
 
+    const self = this;
     shareConn
-      .query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'")
-      .then(() => {})
-      .catch(err => {});
-    shareConn
-      .query('DROP USER ' + windowsUser)
-      .then(() => {})
-      .catch(err => {});
-    shareConn
-      .query(
-        'CREATE USER ' + windowsUser + " IDENTIFIED VIA named_pipe using 'test'"
-      )
-      .then(() => {
-        return shareConn.query('GRANT ALL on *.* to ' + windowsUser);
-      })
-      .then(() => {
-        return shareConn.query('select @@version_compile_os,@@socket soc');
-      })
+      .query('SELECT @@named_pipe as pipe')
       .then(res => {
-        return base.createConnection({
-          user: null,
-          socketPath: '\\\\.\\pipe\\' + res[0].soc
-        });
+        if (res[0].pipe) {
+          shareConn
+            .query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'")
+            .then(() => {})
+            .catch(err => {});
+          shareConn
+            .query('DROP USER ' + windowsUser)
+            .then(() => {})
+            .catch(err => {});
+          shareConn
+            .query(
+              'CREATE USER ' +
+                windowsUser +
+                " IDENTIFIED VIA named_pipe using 'test'"
+            )
+            .then(() => {
+              return shareConn.query('GRANT ALL on *.* to ' + windowsUser);
+            })
+            .then(() => {
+              return shareConn.query(
+                'select @@version_compile_os,@@socket soc'
+              );
+            })
+            .then(res => {
+              return base.createConnection({
+                user: null,
+                socketPath: '\\\\.\\pipe\\' + res[0].soc
+              });
+            })
+            .then(conn => {
+              return conn.end();
+            })
+            .then(done)
+            .catch(done);
+        } else {
+          console.log('named pipe not enabled');
+          self.skip();
+        }
       })
-      .then(conn => {
-        return conn.end();
-      })
-      .then(done)
-      .catch(done);
+      .catch(err => {});
   });
 
   it('unix socket authentication plugin', function(done) {
