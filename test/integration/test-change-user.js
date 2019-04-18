@@ -191,7 +191,13 @@ describe('change user', () => {
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
-            assert.equal(conn.info.database, 'mysql');
+            if (
+              shareConn.info.isMariaDB() &&
+              shareConn.info.hasMinVersion(10, 2, 2) &&
+              !process.env.MAXSCALE_VERSION
+            ) {
+              assert.equal(conn.info.database, 'mysql');
+            }
             return conn.changeUser({
               user: 'ChangeUser',
               password: 'mypassword'
