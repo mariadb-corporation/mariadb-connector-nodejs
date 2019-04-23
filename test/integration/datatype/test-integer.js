@@ -128,4 +128,22 @@ describe('integer with big value', () => {
       })
       .catch(done);
   });
+
+  it('using very big number', function(done) {
+    const maxValue = Long.fromString('18446744073709551615', true);
+    base.createConnection({ supportBigNumbers: true }).then(conn => {
+      conn.query('CREATE TEMPORARY TABLE BIG_NUMBER (val BIGINT unsigned)');
+      conn
+        .query('INSERT INTO BIG_NUMBER values (?), (?)', [10, maxValue])
+        .then(() => {
+          return conn.query('SELECT * FROM BIG_NUMBER LIMIT ?', [maxValue]);
+        })
+        .then(res => {
+          assert.deepEqual(res, [{ val: 10 }, { val: maxValue }]);
+          conn.end();
+          done();
+        })
+        .catch(done);
+    });
+  });
 });
