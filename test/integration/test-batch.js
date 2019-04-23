@@ -1370,6 +1370,13 @@ describe('batch', () => {
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
+    it('simple batch offset date Z ', function(done) {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+        this.skip();
+      simpleBatch(useCompression, true, 'Z', done);
+    });
+
     it('simple batch encoding CP1251', function(done) {
       this.timeout(30000);
       simpleBatchEncodingCP1251(useCompression, true, 'local', done);
