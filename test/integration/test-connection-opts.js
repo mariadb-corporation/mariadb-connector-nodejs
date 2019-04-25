@@ -169,6 +169,10 @@ describe('connection option', () => {
   });
 
   it('Server with different tz', function(done) {
+    //MySQL 5.5 doesn't have milliseconds
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      this.skip();
+
     base
       .createConnection({ timezone: 'Etc/GMT+5' })
       .then(conn => {
