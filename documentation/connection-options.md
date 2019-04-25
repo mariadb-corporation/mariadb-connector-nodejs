@@ -340,7 +340,7 @@ mariadb.createConnection({
 | **multipleStatements** | Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
 | **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
 | **permitLocalInfile** | Allows the use of `LOAD DATA INFILE` statements.<br/><br/>Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change the actual file the server loads.  Being able to execute a query on the client gives you access to files on the client.  |*boolean* |false|
-| **timezone** | Forces use of the indicated timezone, rather than the current Node.js timezone.  Possible values are `Z` for UTC, `local` or `±HH:MM` format |*string* |
+| **timezone** | Forces use of the indicated timezone, rather than the current Node.js timezone. This has to be set when database timezone differ from Node.js timezone. Possible values are [IANA time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (ex: 'America/New_York') |*string* |
 | **nestTables** | Presents result-sets by table to avoid results with colliding fields.  See the `query()` description for more information. |*boolean* |false|
 | **pipelining** | Sends queries one by one without waiting on the results of the previous entry.  For more information, see [Pipelining](/documentation/pipelining.md) |*boolean* |true|
 | **trace** | Adds the stack trace at the time of query creation to the error stack trace, making it easier to identify the  part of the code that issued the query.  Note: This feature is disabled by default due to the performance cost of stack creation.  Only turn it on when you need to debug issues.  |*boolean* |false|
@@ -351,7 +351,6 @@ mariadb.createConnection({
 | **sessionVariables** | Permit to set session variables when connecting. Example: sessionVariables:{'idle_transaction_timeout':10000}|*json* |
 | **initSql** | When a connection is established, permit to execute commands before using connection|*string|array* |
 | **bulk** | disabled bulk command in batch|*boolean* |
-
 
 
 ## F.A.Q.

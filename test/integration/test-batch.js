@@ -14,21 +14,7 @@ describe('batch', () => {
   let maxAllowedSize, bigBuf, timezoneParam;
 
   before(function(done) {
-    const hourOffset = Math.round((-1 * new Date().getTimezoneOffset()) / 60);
-
-    if (hourOffset < 0) {
-      if (hourOffset <= -10) {
-        timezoneParam = hourOffset + ':00';
-      } else {
-        timezoneParam = '-0' + Math.abs(hourOffset) + ':00';
-      }
-    } else {
-      if (hourOffset >= 10) {
-        timezoneParam = '+' + Math.abs(hourOffset) + ':00';
-      } else {
-        timezoneParam = '+0' + Math.abs(hourOffset) + ':00';
-      }
-    }
+    timezoneParam = 'America/New_York';
 
     shareConn
       .query('SELECT @@max_allowed_packet as t')
@@ -93,8 +79,8 @@ describe('batch', () => {
             [
               true,
               'john😎🌶\\\\',
-              new Date('2001-12-31 23:59:58'),
-              new Date('2018-01-01 12:30:20.456789'),
+              new Date('2001-12-31 23:59:58+3'),
+              new Date('2018-01-01 12:30:20.456789+3'),
               {
                 type: 'Point',
                 coordinates: [10, 10]
@@ -103,8 +89,8 @@ describe('batch', () => {
             [
               true,
               f,
-              new Date('2001-12-31 23:59:58'),
-              new Date('2018-01-01 12:30:20.456789'),
+              new Date('2001-12-31 23:59:58+3'),
+              new Date('2018-01-01 12:30:20.456789+3'),
               {
                 type: 'Point',
                 coordinates: [10, 10]
@@ -114,7 +100,7 @@ describe('batch', () => {
               false,
               { name: 'jackमस्', val: 'tt' },
               null,
-              new Date('2018-01-21 11:30:20.123456'),
+              new Date('2018-01-21 11:30:20.123456+3'),
               {
                 type: 'Point',
                 coordinates: [10, 20]
@@ -123,8 +109,8 @@ describe('batch', () => {
             [
               0,
               null,
-              new Date('2020-12-31 23:59:59'),
-              new Date('2018-01-21 11:30:20.123456'),
+              new Date('2020-12-31 23:59:59+3'),
+              new Date('2018-01-21 11:30:20.123456+3'),
               {
                 type: 'Point',
                 coordinates: [20, 20]
@@ -142,8 +128,8 @@ describe('batch', () => {
                     id2: 1,
                     id3: 2,
                     t: 'john😎🌶\\\\',
-                    d: new Date('2001-12-31 23:59:58'),
-                    d2: new Date('2018-01-01 12:30:20.456789'),
+                    d: new Date('2001-12-31 23:59:58+3'),
+                    d2: new Date('2018-01-01 12:30:20.456789+3'),
                     g: {
                       type: 'Point',
                       coordinates: [10, 10]
@@ -155,8 +141,8 @@ describe('batch', () => {
                     id2: 1,
                     id3: 2,
                     t: 'blabla',
-                    d: new Date('2001-12-31 23:59:58'),
-                    d2: new Date('2018-01-01 12:30:20.456789'),
+                    d: new Date('2001-12-31 23:59:58+3'),
+                    d2: new Date('2018-01-01 12:30:20.456789+3'),
                     g: {
                       type: 'Point',
                       coordinates: [10, 10]
@@ -169,7 +155,7 @@ describe('batch', () => {
                     id3: 2,
                     t: '{"name":"jackमस्","val":"tt"}',
                     d: null,
-                    d2: new Date('2018-01-21 11:30:20.123456'),
+                    d2: new Date('2018-01-21 11:30:20.123456+3'),
                     g: {
                       type: 'Point',
                       coordinates: [10, 20]
@@ -181,8 +167,8 @@ describe('batch', () => {
                     id2: 0,
                     id3: 2,
                     t: null,
-                    d: new Date('2020-12-31 23:59:59'),
-                    d2: new Date('2018-01-21 11:30:20.123456'),
+                    d: new Date('2020-12-31 23:59:59+3'),
+                    d2: new Date('2018-01-21 11:30:20.123456+3'),
                     g: {
                       type: 'Point',
                       coordinates: [20, 20]

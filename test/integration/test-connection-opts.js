@@ -15,6 +15,20 @@ describe('connection option', () => {
         done();
       });
   });
+  it('wrong IANA timezone', function(done) {
+    base
+      .createConnection({ timezone: 'unknown' })
+      .then(() => {
+        done(new Error('must have thrown error'));
+      })
+      .catch(err => {
+        assert.isTrue(err.message.includes("Unknown IANA timezone 'unknown'"));
+        assert.equal(err.errno, 45033);
+        assert.equal(err.sqlState, '08S01');
+        assert.equal(err.code, 'ER_WRONG_IANA_TIMEZONE');
+        done();
+      });
+  });
 
   it('timezone Z', function(done) {
     base
@@ -26,7 +40,16 @@ describe('connection option', () => {
             new Date('2000-01-01T00:00:00Z')
           ])
           .then(res => {
+            // = 1999-12-31T23:00:00.000Z
             assert.deepEqual(res[0].tt, 946681200);
+            return conn.query(
+              "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
+              [new Date('2000-01-01T00:00:00Z')]
+            );
+          })
+          .then(res => {
+            assert.deepEqual(res[0].tt1, new Date('2003-12-31T13:00:00+01:00'));
+            assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
             return conn.end();
           })
           .then(() => {
@@ -48,6 +71,14 @@ describe('connection option', () => {
           ])
           .then(res => {
             assert.deepEqual(res[0].tt, 946688400);
+            return conn.query(
+              "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
+              [new Date('2000-01-01T00:00:00Z')]
+            );
+          })
+          .then(res => {
+            assert.deepEqual(res[0].tt1, new Date('2003-12-31T11:00:00+01:00'));
+            assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
             return conn.end();
           })
           .then(() => {
@@ -68,6 +99,7 @@ describe('connection option', () => {
             new Date('2000-01-01T00:00:00Z')
           ])
           .then(res => {
+            //946688400 => 2000-01-01T01:00:00.000Z
             assert.deepEqual(res[0].tt, 946688400);
             return conn.end();
           })
@@ -128,9 +160,30 @@ describe('connection option', () => {
         done(new Error('Must have thrown exception'));
       })
       .catch(err => {
-        assert(err.message.includes('timezone format error'));
+        assert.isTrue(err.message.includes("Unknown IANA timezone '+e:00'"));
+        assert.equal(err.errno, 45033);
+        assert.equal(err.sqlState, '08S01');
+        assert.equal(err.code, 'ER_WRONG_IANA_TIMEZONE');
         done();
       });
+  });
+
+  it('Server with different tz', function(done) {
+    base
+      .createConnection({ timezone: 'Etc/GMT+5' })
+      .then(conn => {
+        const now = new Date();
+        conn.query("SET SESSION time_zone = '-05:00'");
+        conn.query('CREATE TEMPORARY TABLE t1 (a timestamp(6))');
+        conn.query('INSERT INTO t1 values (?)', now);
+        conn.query('SELECT NOW() as b, t1.a FROM t1').then(res => {
+          assert.deepEqual(res[0].a, now);
+          assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
+          conn.end();
+          done();
+        });
+      })
+      .catch(done);
   });
 
   it('nestTables results boolean', function(done) {
