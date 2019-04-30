@@ -20,7 +20,8 @@ describe('Pool', () => {
   it('pool with wrong authentication', function(done) {
     this.timeout(10000);
     const pool = base.createPool({
-      connectionLimit: 3,
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
       user: 'wrongAuthentication'
     });
     pool
@@ -66,7 +67,8 @@ describe('Pool', () => {
   it('pool with wrong authentication connection', function(done) {
     this.timeout(10000);
     const pool = base.createPool({
-      connectionLimit: 3,
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
       user: 'wrongAuthentication'
     });
     pool
@@ -780,5 +782,61 @@ describe('Pool', () => {
         setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
       })
       .catch(done);
+  });
+
+  it('test minimum idle decrease', function(done) {
+    this.timeout(6000);
+    const pool = base.createPool({
+      connectionLimit: 10,
+      minimumIdle: 4,
+      idleTimeout: 2
+    });
+
+    const requests = [];
+    for (let i = 0; i < 10000; i++) {
+      requests.push(pool.query('SELECT ' + i));
+    }
+    Promise.all(requests)
+      .then(() => {
+        setTimeout(() => {
+          assert.equal(pool.totalConnections(), 10);
+          assert.equal(pool.idleConnections(), 10);
+        }, 5);
+
+        setTimeout(() => {
+          //wait for 1 second
+          assert.equal(pool.totalConnections(), 10);
+          assert.equal(pool.idleConnections(), 10);
+        }, 1000);
+
+        setTimeout(() => {
+          assert.equal(pool.totalConnections(), 4);
+          assert.equal(pool.idleConnections(), 4);
+          pool.end();
+          done();
+        }, 3000);
+      })
+      .catch(err => {
+        pool.end();
+        done(err);
+      });
+  });
+
+  it('test minimum idle', function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({
+      connectionLimit: 10,
+      minimumIdle: 4,
+      idleTimeout: 2
+    });
+
+    setTimeout(() => {
+      assert.equal(pool.totalConnections(), 4);
+      assert.equal(pool.idleConnections(), 4);
+      pool
+        .end()
+        .then(() => done())
+        .catch(done);
+    }, 4000);
   });
 });
