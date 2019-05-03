@@ -12,46 +12,46 @@ environment:
   TEST_LOG_PACKETS: true
   matrix:
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       MEM: "21"
       nodejs_version: "6"
       SKIP_LEAK: "1"
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       MEM: "21"
       nodejs_version: "8"
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       MEM: "21"
       nodejs_version: "11"
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       nodejs_version: "10"
       MEM: "21"
       TEST_ZIP: 1
 
-    - DB: '10.2.21'
+    - DB: '10.3.14'
       nodejs_version: "10"
       MEM: "21"
       BENCH: "1"
 
-    - DB: '10.3.11'
+    - DB: '10.2.23'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '10.1.37'
+    - DB: '10.1.38'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '10.0.37'
+    - DB: '10.0.38'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '5.5.62'
+    - DB: '5.5.63'
       MEM: "5"
       nodejs_version: "10"
 
@@ -61,7 +61,7 @@ cache:
 clone_folder: c:\projects\mariadb-connector-nodejs
 
 install:
-  - cmd: set FILE=http://sfo1.mirrors.digitalocean.com/mariadb//mariadb-%DB%/winx64-packages/mariadb-%DB%-winx64.msi
+  - cmd: set FILE=http://ftp.hosteurope.de/mirror/archive.mariadb.org//mariadb-%DB%/winx64-packages/mariadb-%DB%-winx64.msi
   - ps: Start-FileDownload $Env:FILE -FileName server.msi
   - cmd: msiexec /i server.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
   - cmd: "\"c:\\projects\\server\\bin\\mysql.exe\" -e \"create database testn\" --user=root"
