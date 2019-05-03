@@ -293,7 +293,7 @@ describe('Pool', () => {
               error++;
             }
           });
-
+          console.log('error:' + error + ' success:' + success);
           assert.isTrue(error > 0, 'error: ' + error + ' success:' + success);
           assert.isTrue(success > 0, 'error: ' + error + ' success:' + success);
           clearTimeout(handle);
@@ -418,6 +418,7 @@ describe('Pool', () => {
           done(new Error('must have thrown error 3 !'));
         })
         .catch(err => {
+          console.log(err);
           assert(err.message.includes('retrieve connection from pool timeout'));
           assert.equal(err.sqlState, 'HY000');
           assert.equal(err.errno, 45028);

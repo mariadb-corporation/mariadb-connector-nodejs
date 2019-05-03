@@ -1,7 +1,7 @@
 'use strict';
 
 const Connection = require('./lib/connection');
-const Pool = require('./lib/pool');
+const PoolPromise = require('./lib/pool-promise');
 const PoolCluster = require('./lib/pool-cluster');
 
 const ConnOptions = require('./lib/config/connection-options');
@@ -19,8 +19,8 @@ module.exports.createConnection = function createConnection(opts) {
 
 module.exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
-  const pool = new Pool(options, false);
-  pool.activatePool();
+  const pool = new PoolPromise(options, false);
+  pool.initialize();
   return pool;
 };
 

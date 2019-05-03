@@ -15,7 +15,7 @@ module.exports.createConnection = function createConnection(opts) {
 exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
   const pool = new PoolCallback(options);
-  pool.activatePool();
+  pool.initialize();
   return pool;
 };
 
