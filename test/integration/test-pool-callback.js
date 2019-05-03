@@ -551,10 +551,6 @@ describe('Pool callback', () => {
         pool.end();
         done(err);
       }
-      setTimeout(() => {
-        assert.equal(pool.totalConnections(), 10);
-        assert.equal(pool.idleConnections(), 10);
-      }, 5);
 
       setTimeout(() => {
         //wait for 1 second
