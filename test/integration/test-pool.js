@@ -786,7 +786,7 @@ describe('Pool', () => {
   });
 
   it('test minimum idle decrease', function(done) {
-    this.timeout(6000);
+    this.timeout(30000);
     const pool = base.createPool({
       connectionLimit: 10,
       minimumIdle: 4,

@@ -536,7 +536,7 @@ describe('Pool callback', () => {
   });
 
   it('test minimum idle decrease', function(done) {
-    this.timeout(10000);
+    this.timeout(30000);
     const pool = base.createPoolCallback({
       connectionLimit: 10,
       minimumIdle: 4,
