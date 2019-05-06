@@ -9,7 +9,7 @@ describe('Connection meta', function() {
     if (process.env.DB) {
       if (process.env.DB === 'build') {
         //last mariadb build version
-        assert(serverVersion.startsWith('10.3'));
+        assert(serverVersion.startsWith('10.4'));
       } else {
         const version =
           process.platform === 'win32'
