@@ -44,6 +44,12 @@ const mariadb = require('mariadb/callback');
 This initializes the constant `mariadb`, which is set to use the Callback API rather than the default Promise API.
 
 
+## Timezone consideration
+
+When database timezone differ from Node.js timezone, `timezone` option has to be set, to avoid time offset.
+Connector will then convert date timezone to indicated timezone, rather than the current Node.js timezone. 
+See [timezone](./promise-api.md#connection-options) option.
+
 # Callback API
 
 The Connector with the Callback API is similar to the one using Promise, but with a few differences.

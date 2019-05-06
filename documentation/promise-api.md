@@ -50,6 +50,12 @@ To use the Connector, you need to import the package into your application code.
 const mariadb = require('mariadb');
 ```
 
+## Timezone consideration
+
+When database timezone differ from Node.js timezone, `timezone` option has to be set, to avoid time offset.
+Connector will then convert date timezone to indicated timezone, rather than the current Node.js timezone. 
+See [timezone](./promise-api.md#connection-options) option.
+
 
 # Promise API
 

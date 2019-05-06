@@ -21,7 +21,10 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
+              err.errno === 1524 ||
+                err.errno === 1045 ||
+                err.errno === 1698 ||
+                err.errno === 45028,
               err.message
             );
             pool.end();
@@ -53,7 +56,10 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
+              err.errno === 1524 ||
+                err.errno === 1045 ||
+                err.errno === 1698 ||
+                err.errno === 45028,
               err.message
             );
             done();
