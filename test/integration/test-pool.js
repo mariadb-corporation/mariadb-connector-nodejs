@@ -44,7 +44,7 @@ describe('Pool', () => {
           .catch(err => {
             pool.end();
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();
@@ -91,7 +91,7 @@ describe('Pool', () => {
           .catch(err => {
             pool.end();
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();

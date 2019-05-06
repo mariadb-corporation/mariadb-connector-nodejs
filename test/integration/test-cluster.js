@@ -457,7 +457,6 @@ describe('cluster', function() {
       poolCluster.add('node1', connOption1);
       poolCluster.add('node2', connOption2);
       poolCluster.add('node3', connOption3);
-      let succeed = false;
       const filteredCluster = poolCluster.of(/^node2/);
       filteredCluster
         .query(
@@ -466,21 +465,8 @@ describe('cluster', function() {
         .catch(err => {
           //dismiss error
           poolCluster.end().then(() => {
-            if (succeed) done(new Error('must have thrown error !'));
-            else done();
+            done();
           });
-        });
-      filteredCluster
-        .query('SELECT 1')
-        .then(() => {
-          succeed = true;
-        })
-        .catch(err => {
-          assert.isTrue(
-            err.message.includes(
-              "No Connection available for '/^node2/'. Last connection error was: retrieve connection from pool timeout"
-            )
-          );
         });
     });
 

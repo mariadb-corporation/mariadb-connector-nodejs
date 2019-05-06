@@ -21,7 +21,7 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             pool.end();
@@ -53,7 +53,7 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();
@@ -540,7 +540,7 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({
       connectionLimit: 10,
       minimumIdle: 4,
-      idleTimeout: 2
+      idleTimeout: 5
     });
 
     for (let i = 0; i < 1000; i++) {
@@ -553,17 +553,16 @@ describe('Pool callback', () => {
       }
 
       setTimeout(() => {
-        //wait for 1 second
         assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 10);
-      }, 1000);
+      }, 3000);
 
       setTimeout(() => {
         assert.equal(pool.totalConnections(), 4);
         assert.equal(pool.idleConnections(), 4);
         pool.end();
         done();
-      }, 3000);
+      }, 10000);
     });
   });
 
