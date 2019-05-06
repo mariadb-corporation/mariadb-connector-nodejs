@@ -556,19 +556,19 @@ describe('Pool callback', () => {
       if (err) {
         pool.end();
         done(err);
+      } else {
+        setTimeout(() => {
+          assert.equal(pool.totalConnections(), 10);
+          assert.equal(pool.idleConnections(), 10);
+        }, 1000);
+
+        setTimeout(() => {
+          assert.equal(pool.totalConnections(), 4);
+          assert.equal(pool.idleConnections(), 4);
+          pool.end();
+          done();
+        }, 7000);
       }
-
-      setTimeout(() => {
-        assert.equal(pool.totalConnections(), 10);
-        assert.equal(pool.idleConnections(), 10);
-      }, 3000);
-
-      setTimeout(() => {
-        assert.equal(pool.totalConnections(), 4);
-        assert.equal(pool.idleConnections(), 4);
-        pool.end();
-        done();
-      }, 10000);
     });
   });
 
