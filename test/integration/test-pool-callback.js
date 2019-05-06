@@ -546,13 +546,13 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({
       connectionLimit: 10,
       minimumIdle: 4,
-      idleTimeout: 5
+      idleTimeout: 2
     });
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 10000; i++) {
       pool.query('SELECT ' + i);
     }
-    pool.query('SELECT 1000', [], err => {
+    pool.query('SELECT 10000', [], err => {
       if (err) {
         pool.end();
         done(err);
@@ -560,7 +560,7 @@ describe('Pool callback', () => {
         setTimeout(() => {
           assert.equal(pool.totalConnections(), 10);
           assert.equal(pool.idleConnections(), 10);
-        }, 1000);
+        }, 5);
 
         setTimeout(() => {
           assert.equal(pool.totalConnections(), 4);

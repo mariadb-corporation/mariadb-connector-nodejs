@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const moment = require('moment-timezone');
 
 describe('connection option', () => {
   it('with undefined collation', function(done) {
@@ -15,6 +16,7 @@ describe('connection option', () => {
         done();
       });
   });
+
   it('wrong IANA timezone', function(done) {
     base
       .createConnection({ timezone: 'unknown' })
@@ -28,6 +30,44 @@ describe('connection option', () => {
         assert.equal(err.code, 'ER_WRONG_IANA_TIMEZONE');
         done();
       });
+  });
+
+  it('automatic timezone', function(done) {
+    let mustFail = true;
+    shareConn
+      .query('SELECT @@system_time_zone stz, @@time_zone tz')
+      .then(res => {
+        const serverTimezone = res[0].tz === 'SYSTEM' ? res[0].stz : res[0].tz;
+        const serverZone = moment.tz.zone(serverTimezone);
+        if (serverZone) {
+          mustFail = false;
+        }
+
+        base
+          .createConnection({ timezone: undefined })
+          .then(conn => {
+            conn.end();
+            if (mustFail) {
+              done(new Error('must have thrown error'));
+            } else {
+              done();
+            }
+          })
+          .catch(err => {
+            if (mustFail) {
+              assert.isTrue(
+                err.message.includes('Automatic timezone setting fails')
+              );
+              assert.equal(err.errno, 45036);
+              assert.equal(err.sqlState, '08S01');
+              assert.equal(err.code, 'ER_WRONG_AUTO_TIMEZONE');
+              done();
+            } else {
+              done(new Error('must have thrown error'));
+            }
+          });
+      })
+      .catch(done);
   });
 
   it('timezone Z', function(done) {
