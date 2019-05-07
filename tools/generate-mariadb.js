@@ -1,35 +1,39 @@
-"use strict";
+'use strict';
 
 /**
  * Script that permit to read server source error code to generate error-codes.js file.
  * change <i> version </i> to indicate mariadb source files.
  */
 
-const https = require("https");
-const fs = require("fs");
-const readline = require("readline");
-const os = require("os");
-const path = require("path");
+const https = require('https');
+const fs = require('fs');
+const readline = require('readline');
+const os = require('os');
+const path = require('path');
 
-const version = "10.3";
+const version = '10.3';
 const extendedUrl =
-  "https://raw.githubusercontent.com/MariaDB/server/" + version + "/sql/share/errmsg-utf8.txt";
+  'https://raw.githubusercontent.com/MariaDB/server/' +
+  version +
+  '/sql/share/errmsg-utf8.txt';
 const baseUrl =
-  "https://raw.githubusercontent.com/MariaDB/server/" + version + "/include/my_base.h";
-const fileName = path.join(os.tmpdir(), "mariadb_errmsg.txt");
-const fileNameBase = path.join(os.tmpdir(), "my_base.h");
-const destFileName = path.join(__dirname, "/../src/const/error-code.js");
+  'https://raw.githubusercontent.com/MariaDB/server/' +
+  version +
+  '/include/my_base.h';
+const fileName = path.join(os.tmpdir(), 'mariadb_errmsg.txt');
+const fileNameBase = path.join(os.tmpdir(), 'my_base.h');
+const destFileName = path.join(__dirname, '/../src/const/error-code.js');
 
 const download = function(url, dest, cb) {
   const file = fs.createWriteStream(dest);
   https
     .get(url, function(response) {
       response.pipe(file);
-      file.on("finish", function() {
+      file.on('finish', function() {
         file.close(cb);
       });
     })
-    .on("error", function(err) {
+    .on('error', function(err) {
       // Handle errors
       fs.unlink(dest);
       if (cb) cb(err.message);
@@ -46,22 +50,23 @@ const writeFile = function() {
 
   const header =
     '"use strict";\n\n' +
-    "/**\n" +
-    " * File generated using test/tools/generate-mariadb.js\n" +
-    " * from MariaDB " +
+    '/**\n' +
+    ' * File generated using test/tools/generate-mariadb.js\n' +
+    ' * from MariaDB ' +
     version +
-    "\n" +
-    " *\n" +
-    " * !!!!!! DO NOT CHANGE MANUALLY !!!!!!\n" +
-    " */\n\n" +
-    "let codes = {};\n";
+    '\n' +
+    ' *\n' +
+    ' * !!!!!! DO NOT CHANGE MANUALLY !!!!!!\n' +
+    ' */\n\n' +
+    'let codes = {};\n';
   writer.write(header);
 
   for (let i = 0; i < maria_errors.length; i++) {
-    if (maria_errors[i]) writer.write("codes[" + i + '] = "' + maria_errors[i] + '";\n');
+    if (maria_errors[i])
+      writer.write('codes[' + i + '] = "' + maria_errors[i] + '";\n');
   }
-  writer.end("\nmodule.exports.codes = codes;\n");
-  console.log("finished");
+  writer.end('\nmodule.exports.codes = codes;\n');
+  console.log('finished');
 };
 
 const parseExtended = function(err) {
@@ -70,22 +75,22 @@ const parseExtended = function(err) {
     input: fs.createReadStream(fileName)
   });
 
-  lineReader.on("line", function(line) {
+  lineReader.on('line', function(line) {
     if (line.length > 0) {
       let car;
       switch ((car = line.charAt(0))) {
-        case "#":
-        case " ":
+        case '#':
+        case ' ':
           return;
         default:
           if (car.match(/[a-zA-Z]/i)) {
-            if (line.includes("start-error-number")) {
+            if (line.includes('start-error-number')) {
               counter = Number.parseInt(line.substr(19).trim());
               pause = false;
-            } else if (line.includes("skip-to-error-number")) {
+            } else if (line.includes('skip-to-error-number')) {
               counter = Number.parseInt(line.substr(21).trim());
             } else if (!pause) {
-              const words = line.split(" ");
+              const words = line.split(' ');
               maria_errors[counter++] = words[0];
             }
           }
@@ -93,7 +98,7 @@ const parseExtended = function(err) {
     }
   });
 
-  lineReader.on("close", function() {
+  lineReader.on('close', function() {
     pause = true;
     download(baseUrl, fileNameBase, parseBase);
   });
@@ -106,11 +111,11 @@ const parseBase = function(err) {
   });
 
   const re = /(^(#define\s)([A-Z_]+)(\s|\t)+([0-9]+))/i;
-  lineReader.on("line", function(line) {
+  lineReader.on('line', function(line) {
     if (line.length > 0) {
-      if (line.includes("#define HA_ERR_FIRST")) {
+      if (line.includes('#define HA_ERR_FIRST')) {
         pause = false;
-      } else if (line.includes("#define HA_ERR_LAST")) {
+      } else if (line.includes('#define HA_ERR_LAST')) {
         pause = true;
       } else if (!pause) {
         const reg = line.match(re);
@@ -121,7 +126,7 @@ const parseBase = function(err) {
     }
   });
 
-  lineReader.on("close", function() {
+  lineReader.on('close', function() {
     writeFile();
   });
 };

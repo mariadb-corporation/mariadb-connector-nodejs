@@ -1,13 +1,13 @@
-"use strict";
+'use strict';
 
-const basePromise = require("../promise");
-const baseCallback = require("../callback");
-const Conf = require("./conf");
+const basePromise = require('../promise');
+const baseCallback = require('../callback');
+const Conf = require('./conf');
 
 //*****************************************************************
 // initialize share connection
 //*****************************************************************
-before("share initialization", done => {
+before('share initialization', done => {
   if (global.shareConn) {
     done();
   } else {
@@ -21,14 +21,14 @@ before("share initialization", done => {
   }
 });
 
-after("share destroy", () => {
+after('share destroy', () => {
   if (shareConn) {
     shareConn
       .end()
       .then(() => (global.shareConn = undefined))
       .catch(err => {
         global.shareConn = undefined;
-        console.log("Error when ending shared connection : " + err.message);
+        console.log('Error when ending shared connection : ' + err.message);
       });
   }
 });

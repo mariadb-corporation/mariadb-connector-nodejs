@@ -1,15 +1,15 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
+const base = require('../base.js');
+const { assert } = require('chai');
 
-describe("Big query", function() {
+describe('Big query', function() {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
   let maxAllowedSize, buf;
 
   before(function(done) {
     shareConn
-      .query("SELECT @@max_allowed_packet as t")
+      .query('SELECT @@max_allowed_packet as t')
       .then(row => {
         maxAllowedSize = row[0].t;
         if (testSize < maxAllowedSize) {
@@ -23,14 +23,14 @@ describe("Big query", function() {
       .catch(done);
   });
 
-  it("parameter bigger than 16M packet size", function(done) {
+  it('parameter bigger than 16M packet size', function(done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    shareConn.query("CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)");
+    shareConn.query('CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)');
     shareConn
-      .query("insert into bigParameterBigParam(b) values(?)", [buf])
+      .query('insert into bigParameterBigParam(b) values(?)', [buf])
       .then(() => {
-        return shareConn.query("SELECT * from bigParameterBigParam");
+        return shareConn.query('SELECT * from bigParameterBigParam');
       })
       .then(rows => {
         assert.deepEqual(rows[0].b, buf);
@@ -39,18 +39,23 @@ describe("Big query", function() {
       .catch(done);
   });
 
-  it("int8 buffer overflow", function(done) {
-    base.createConnection({ charset: "latin1_swedish_ci" }).then(conn => {
-      conn.query("CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))");
-      const buf = Buffer.alloc(979, "0");
+  it('int8 buffer overflow', function(done) {
+    base.createConnection({ charset: 'latin1_swedish_ci' }).then(conn => {
+      conn.query(
+        'CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))'
+      );
+      const buf = Buffer.alloc(979, '0');
       conn
-        .query("insert into bigParameterInt8 values(?, ?)", [buf.toString(), "test"])
+        .query('insert into bigParameterInt8 values(?, ?)', [
+          buf.toString(),
+          'test'
+        ])
         .then(() => {
-          return conn.query("SELECT * from bigParameterInt8");
+          return conn.query('SELECT * from bigParameterInt8');
         })
         .then(rows => {
           assert.deepEqual(rows[0].a, buf.toString());
-          assert.deepEqual(rows[0].b, "test");
+          assert.deepEqual(rows[0].b, 'test');
           conn.end();
           done();
         })
@@ -58,7 +63,7 @@ describe("Big query", function() {
     });
   });
 
-  it("buffer growing", function(done) {
+  it('buffer growing', function(done) {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
     base
@@ -69,7 +74,7 @@ describe("Big query", function() {
       .catch(done);
   });
 
-  it("buffer growing compression", function(done) {
+  it('buffer growing compression', function(done) {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
     base
@@ -81,27 +86,27 @@ describe("Big query", function() {
   });
 
   function bufferGrowing(conn, done) {
-    const st = Buffer.alloc(65536, "0").toString();
-    const st2 = Buffer.alloc(1048576, "0").toString();
+    const st = Buffer.alloc(65536, '0').toString();
+    const st2 = Buffer.alloc(1048576, '0').toString();
     const params = [st];
-    let sql = "CREATE TEMPORARY TABLE bigParameter (a0 MEDIUMTEXT ";
-    let sqlInsert = "insert into bigParameter values (?";
+    let sql = 'CREATE TEMPORARY TABLE bigParameter (a0 MEDIUMTEXT ';
+    let sqlInsert = 'insert into bigParameter values (?';
     for (let i = 1; i < 10; i++) {
-      sql += ",a" + i + " MEDIUMTEXT ";
-      sqlInsert += ",?";
+      sql += ',a' + i + ' MEDIUMTEXT ';
+      sqlInsert += ',?';
       params.push(i < 4 ? st : st2);
     }
-    sql += ")";
-    sqlInsert += ")";
+    sql += ')';
+    sqlInsert += ')';
     conn.query(sql);
     conn
       .query(sqlInsert, params)
       .then(() => {
-        return conn.query("SELECT * from bigParameter");
+        return conn.query('SELECT * from bigParameter');
       })
       .then(rows => {
         for (let i = 0; i < 10; i++) {
-          assert.deepEqual(rows[0]["a" + i], params[i]);
+          assert.deepEqual(rows[0]['a' + i], params[i]);
         }
         conn.end();
         done();

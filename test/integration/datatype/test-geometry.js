@@ -1,47 +1,48 @@
-"use strict";
+'use strict';
 
-const base = require("../../base.js");
-const { assert } = require("chai");
+const base = require('../../base.js');
+const { assert } = require('chai');
 
-describe("geometry data type", () => {
-  it("Point format", function(done) {
+describe('geometry data type', () => {
+  it('Point format', function(done) {
     //MySQL 5.5 doesn't have ST_PointFromText function
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-    shareConn.query("CREATE TEMPORARY TABLE gis_point  (g POINT)");
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      this.skip();
+    shareConn.query('CREATE TEMPORARY TABLE gis_point  (g POINT)');
     shareConn
       .query(
-        "INSERT INTO gis_point VALUES\n" +
+        'INSERT INTO gis_point VALUES\n' +
           "    (ST_PointFromText('POINT(10 10)')),\n" +
           "    (ST_PointFromText('POINT(20 10)')),\n" +
           "    (ST_PointFromText('POINT(20 20)')),\n" +
           "    (ST_PointFromText('POINT(10 20)'))"
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_point");
+        return shareConn.query('SELECT * FROM gis_point');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [10, 10]
             }
           },
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [20, 10]
             }
           },
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [20, 20]
             }
           },
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [10, 20]
             }
           }
@@ -51,40 +52,44 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Point Insert", function(done) {
+  it('Point Insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_point_insert  (g POINT)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_point_insert  (g POINT)');
     shareConn
-      .query("INSERT INTO gis_point_insert VALUES (?)", [{ type: "Point", coordinates: [10, 10] }])
+      .query('INSERT INTO gis_point_insert VALUES (?)', [
+        { type: 'Point', coordinates: [10, 10] }
+      ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_point_insert VALUES (?)", [
-          { type: "Point", coordinates: [20, 10] }
+        return shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [
+          { type: 'Point', coordinates: [20, 10] }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_point_insert VALUES (?)", [
-          { type: "Point", coordinates: [] }
+        return shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [
+          { type: 'Point', coordinates: [] }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_point_insert VALUES (?)", [{ type: "Point" }]);
+        return shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [
+          { type: 'Point' }
+        ]);
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_point_insert");
+        return shareConn.query('SELECT * FROM gis_point_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [10, 10]
             }
           },
           {
             g: {
-              type: "Point",
+              type: 'Point',
               coordinates: [20, 10]
             }
           },
@@ -100,38 +105,39 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("LineString format", function(done) {
+  it('LineString format', function(done) {
     //MySQL 5.5 doesn't have ST_LineFromText function
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_line  (g LINESTRING)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_line  (g LINESTRING)');
     shareConn
       .query(
-        "INSERT INTO gis_line VALUES\n" +
+        'INSERT INTO gis_line VALUES\n' +
           "    (ST_LineFromText('LINESTRING(0 0,0 10,10 0)')),\n" +
           "    (ST_LineStringFromText('LINESTRING(10 10,20 10,20 20,10 20,10 10)')),\n" +
-          "    (ST_LineStringFromWKB(ST_AsWKB(LineString(Point(10, 10), Point(40, 10)))))"
+          '    (ST_LineStringFromWKB(ST_AsWKB(LineString(Point(10, 10), Point(40, 10)))))'
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_line");
+        return shareConn.query('SELECT * FROM gis_line');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "LineString",
+              type: 'LineString',
               coordinates: [[0, 0], [0, 10], [10, 0]]
             }
           },
           {
             g: {
-              type: "LineString",
+              type: 'LineString',
               coordinates: [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
             }
           },
           {
             g: {
-              type: "LineString",
+              type: 'LineString',
               coordinates: [[10, 10], [40, 10]]
             }
           }
@@ -141,47 +147,49 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("LineString insert", function(done) {
+  it('LineString insert', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)');
     shareConn
-      .query("INSERT INTO gis_line_insert VALUES (?)", [
-        { type: "LineString", coordinates: [[0, 0], [0, 10], [10, 0]] }
+      .query('INSERT INTO gis_line_insert VALUES (?)', [
+        { type: 'LineString', coordinates: [[0, 0], [0, 10], [10, 0]] }
       ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_line_insert VALUES (?)", [
+        return shareConn.query('INSERT INTO gis_line_insert VALUES (?)', [
           {
-            type: "LineString",
+            type: 'LineString',
             coordinates: [[0, 10]]
           }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_line_insert VALUES (?)", [
+        return shareConn.query('INSERT INTO gis_line_insert VALUES (?)', [
           {
-            type: "LineString",
+            type: 'LineString',
             coordinates: []
           }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_line_insert VALUES (?)", [{ type: "LineString" }]);
+        return shareConn.query('INSERT INTO gis_line_insert VALUES (?)', [
+          { type: 'LineString' }
+        ]);
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_line_insert");
+        return shareConn.query('SELECT * FROM gis_line_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "LineString",
+              type: 'LineString',
               coordinates: [[0, 0], [0, 10], [10, 0]]
             }
           },
           {
             g: {
-              type: "LineString",
+              type: 'LineString',
               coordinates: [[0, 10]]
             }
           },
@@ -197,32 +205,33 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Polygon format", function(done) {
+  it('Polygon format', function(done) {
     //MySQL 5.5 doesn't have ST_PolygonFromText function
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_polygon (g POLYGON)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_polygon (g POLYGON)');
     shareConn
       .query(
-        "INSERT INTO gis_polygon VALUES\n" +
+        'INSERT INTO gis_polygon VALUES\n' +
           "    (ST_PolygonFromText('POLYGON((10 10,20 10,20 20,10 20,10 10))')),\n" +
           "    (ST_PolyFromText('POLYGON((0 0,50 0,50 50,0 50,0 0), (10 10,20 10,20 20,10 20,10 10))')),\n" +
-          "    (ST_PolyFromWKB(ST_AsWKB(Polygon(LineString(Point(0, 0), Point(30, 0), Point(30, 30), Point(0, 0))))))"
+          '    (ST_PolyFromWKB(ST_AsWKB(Polygon(LineString(Point(0, 0), Point(30, 0), Point(30, 30), Point(0, 0))))))'
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_polygon");
+        return shareConn.query('SELECT * FROM gis_polygon');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "Polygon",
+              type: 'Polygon',
               coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
             }
           },
           {
             g: {
-              type: "Polygon",
+              type: 'Polygon',
               coordinates: [
                 [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
                 [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
@@ -231,7 +240,7 @@ describe("geometry data type", () => {
           },
           {
             g: {
-              type: "Polygon",
+              type: 'Polygon',
               coordinates: [[[0, 0], [30, 0], [30, 30], [0, 0]]]
             }
           }
@@ -241,19 +250,22 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Polygon insert", function(done) {
+  it('Polygon insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_polygon_insert (g POLYGON)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_polygon_insert (g POLYGON)');
     shareConn
-      .query("INSERT INTO gis_polygon_insert VALUES (?)", [
-        { type: "Polygon", coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]] }
+      .query('INSERT INTO gis_polygon_insert VALUES (?)', [
+        {
+          type: 'Polygon',
+          coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
+        }
       ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_polygon_insert VALUES (?)", [
+        return shareConn.query('INSERT INTO gis_polygon_insert VALUES (?)', [
           {
-            type: "Polygon",
+            type: 'Polygon',
             coordinates: [
               [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
               [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
@@ -262,30 +274,32 @@ describe("geometry data type", () => {
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_polygon_insert VALUES (?)", [
+        return shareConn.query('INSERT INTO gis_polygon_insert VALUES (?)', [
           {
-            type: "Polygon",
+            type: 'Polygon',
             coordinates: []
           }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_polygon_insert VALUES (?)", [{ type: "Polygon" }]);
+        return shareConn.query('INSERT INTO gis_polygon_insert VALUES (?)', [
+          { type: 'Polygon' }
+        ]);
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_polygon_insert");
+        return shareConn.query('SELECT * FROM gis_polygon_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "Polygon",
+              type: 'Polygon',
               coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
             }
           },
           {
             g: {
-              type: "Polygon",
+              type: 'Polygon',
               coordinates: [
                 [[0, 0], [50, 0], [50, 50], [0, 50], [0, 0]],
                 [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
@@ -304,39 +318,41 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("MultiPoint format", function(done) {
+  it('MultiPoint format', function(done) {
     //ST_MultiPointFromText alias doesn't exist before 10.1.4 / 5.7.6
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
-    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6))
+      this.skip();
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4))
+      this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_point (g MULTIPOINT)");
+    shareConn.query('CREATE TEMPORARY TABLE gis_multi_point (g MULTIPOINT)');
     shareConn
       .query(
-        "INSERT INTO gis_multi_point VALUES\n" +
+        'INSERT INTO gis_multi_point VALUES\n' +
           "    (ST_MultiPointFromText('MULTIPOINT(0 0,10 10,10 20,20 20)')),\n" +
           "    (ST_MPointFromText('MULTIPOINT(1 1,11 11,11 21,21 21)')),\n" +
-          "    (ST_MPointFromWKB(ST_AsWKB(MultiPoint(Point(3, 6), Point(4, 10)))))"
+          '    (ST_MPointFromWKB(ST_AsWKB(MultiPoint(Point(3, 6), Point(4, 10)))))'
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_point");
+        return shareConn.query('SELECT * FROM gis_multi_point');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiPoint",
+              type: 'MultiPoint',
               coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
             }
           },
           {
             g: {
-              type: "MultiPoint",
+              type: 'MultiPoint',
               coordinates: [[1, 1], [11, 11], [11, 21], [21, 21]]
             }
           },
           {
             g: {
-              type: "MultiPoint",
+              type: 'MultiPoint',
               coordinates: [[3, 6], [4, 10]]
             }
           }
@@ -346,44 +362,52 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("MultiPoint insert", function(done) {
+  it('MultiPoint insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_point_insert (g MULTIPOINT)");
+    shareConn.query(
+      'CREATE TEMPORARY TABLE gis_multi_point_insert (g MULTIPOINT)'
+    );
     shareConn
-      .query("INSERT INTO gis_multi_point_insert VALUES (?)", [
-        { type: "MultiPoint", coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]] }
+      .query('INSERT INTO gis_multi_point_insert VALUES (?)', [
+        {
+          type: 'MultiPoint',
+          coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
+        }
       ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_point_insert VALUES (?)", [
-          { type: "MultiPoint", coordinates: [[10, 0]] }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_point_insert VALUES (?)',
+          [{ type: 'MultiPoint', coordinates: [[10, 0]] }]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_point_insert VALUES (?)", [
-          { type: "MultiPoint", coordinates: [] }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_point_insert VALUES (?)',
+          [{ type: 'MultiPoint', coordinates: [] }]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_point_insert VALUES (?)", [
-          { type: "MultiPoint" }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_point_insert VALUES (?)',
+          [{ type: 'MultiPoint' }]
+        );
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_point_insert");
+        return shareConn.query('SELECT * FROM gis_multi_point_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiPoint",
+              type: 'MultiPoint',
               coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
             }
           },
           {
             g: {
-              type: "MultiPoint",
+              type: 'MultiPoint',
               coordinates: [[10, 0]]
             }
           },
@@ -399,39 +423,46 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-line String format", function(done) {
+  it('Multi-line String format', function(done) {
     //ST_MultiLineStringFromText alias doesn't exist before 10.1.4 / 5.7.6
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
-    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6))
+      this.skip();
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4))
+      this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_line (g MULTILINESTRING)");
+    shareConn.query(
+      'CREATE TEMPORARY TABLE gis_multi_line (g MULTILINESTRING)'
+    );
     shareConn
       .query(
-        "INSERT INTO gis_multi_line VALUES\n" +
+        'INSERT INTO gis_multi_line VALUES\n' +
           "    (ST_MultiLineStringFromText('MULTILINESTRING((10 48,10 21,10 0),(16 0,16 23,16 48))')),\n" +
           "    (ST_MLineFromText('MULTILINESTRING((10 48,10 21,10 0))')),\n" +
-          "    (ST_MLineFromWKB(ST_AsWKB(MultiLineString(LineString(Point(1, 2), Point(3, 5)), LineString(Point(2, 5), Point(5, 8), Point(21, 7))))))"
+          '    (ST_MLineFromWKB(ST_AsWKB(MultiLineString(LineString(Point(1, 2), Point(3, 5)), LineString(Point(2, 5), Point(5, 8), Point(21, 7))))))'
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_line");
+        return shareConn.query('SELECT * FROM gis_multi_line');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiLineString",
-              coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+              type: 'MultiLineString',
+              coordinates: [
+                [[10, 48], [10, 21], [10, 0]],
+                [[16, 0], [16, 23], [16, 48]]
+              ]
             }
           },
           {
             g: {
-              type: "MultiLineString",
+              type: 'MultiLineString',
               coordinates: [[[10, 48], [10, 21], [10, 0]]]
             }
           },
           {
             g: {
-              type: "MultiLineString",
+              type: 'MultiLineString',
               coordinates: [[[1, 2], [3, 5]], [[2, 5], [5, 8], [21, 7]]]
             }
           }
@@ -441,52 +472,63 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-line insert", function(done) {
+  it('Multi-line insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_line_insert (g MULTILINESTRING)");
+    shareConn.query(
+      'CREATE TEMPORARY TABLE gis_multi_line_insert (g MULTILINESTRING)'
+    );
     shareConn
-      .query("INSERT INTO gis_multi_line_insert VALUES (?)", [
+      .query('INSERT INTO gis_multi_line_insert VALUES (?)', [
         {
-          type: "MultiLineString",
-          coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+          type: 'MultiLineString',
+          coordinates: [
+            [[10, 48], [10, 21], [10, 0]],
+            [[16, 0], [16, 23], [16, 48]]
+          ]
         }
       ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_line_insert VALUES (?)", [
-          { type: "MultiLineString", coordinates: [[[10, 48], [10, 21], [10, 0]]] }
+        return shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
+          {
+            type: 'MultiLineString',
+            coordinates: [[[10, 48], [10, 21], [10, 0]]]
+          }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_line_insert VALUES (?)", [
-          { type: "MultiLineString", coordinates: [[]] }
+        return shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
+          { type: 'MultiLineString', coordinates: [[]] }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_line_insert VALUES (?)", [
-          { type: "MultiLineString", coordinates: [] }
+        return shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
+          { type: 'MultiLineString', coordinates: [] }
         ]);
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_line_insert VALUES (?)", [
-          { type: "MultiLineString" }
+        return shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
+          { type: 'MultiLineString' }
         ]);
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_line_insert");
+        return shareConn.query('SELECT * FROM gis_multi_line_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiLineString",
-              coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+              type: 'MultiLineString',
+              coordinates: [
+                [[10, 48], [10, 21], [10, 0]],
+                [[16, 0], [16, 23], [16, 48]]
+              ]
             }
           },
           {
             g: {
-              type: "MultiLineString",
+              type: 'MultiLineString',
               coordinates: [[[10, 48], [10, 21], [10, 0]]]
             }
           },
@@ -505,27 +547,31 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-polygon format", function(done) {
+  it('Multi-polygon format', function(done) {
     //ST_MultiPolygonFromText alias doesn't exist before 10.1.4 / 5.7.6
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
-    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6))
+      this.skip();
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4))
+      this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon (g MULTIPOLYGON)");
+    shareConn.query(
+      'CREATE TEMPORARY TABLE gis_multi_polygon (g MULTIPOLYGON)'
+    );
     shareConn
       .query(
-        "INSERT INTO gis_multi_polygon VALUES\n" +
+        'INSERT INTO gis_multi_polygon VALUES\n' +
           "    (ST_MultiPolygonFromText('MULTIPOLYGON(((28 26,28 0,84 0,84 42,28 26),(52 18,66 23,73 9,48 6,52 18)),((59 18,67 18,67 13,59 13,59 18)))')),\n" +
           "    (ST_MPolyFromText('MULTIPOLYGON(((28 26,28 0,84 0,84 42,28 26),(52 18,66 23,73 9,48 6,52 18)),((59 18,67 18,67 13,59 13,59 18)))')),\n" +
-          "    (ST_MPolyFromWKB(ST_AsWKB(MultiPolygon(Polygon(LineString(Point(0, 3), Point(3, 3), Point(3, 0), Point(0, 3)))))))"
+          '    (ST_MPolyFromWKB(ST_AsWKB(MultiPolygon(Polygon(LineString(Point(0, 3), Point(3, 3), Point(3, 0), Point(0, 3)))))))'
       )
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_polygon");
+        return shareConn.query('SELECT * FROM gis_multi_polygon');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiPolygon",
+              type: 'MultiPolygon',
               coordinates: [
                 [
                   [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -537,7 +583,7 @@ describe("geometry data type", () => {
           },
           {
             g: {
-              type: "MultiPolygon",
+              type: 'MultiPolygon',
               coordinates: [
                 [
                   [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -549,7 +595,7 @@ describe("geometry data type", () => {
           },
           {
             g: {
-              type: "MultiPolygon",
+              type: 'MultiPolygon',
               coordinates: [[[[0, 3], [3, 3], [3, 0], [0, 3]]]]
             }
           }
@@ -559,15 +605,17 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Multi-polygon insert", function(done) {
+  it('Multi-polygon insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query("CREATE TEMPORARY TABLE gis_multi_polygon_insert (g MULTIPOLYGON)");
+    shareConn.query(
+      'CREATE TEMPORARY TABLE gis_multi_polygon_insert (g MULTIPOLYGON)'
+    );
     shareConn
-      .query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
+      .query('INSERT INTO gis_multi_polygon_insert VALUES (?)', [
         {
-          type: "MultiPolygon",
+          type: 'MultiPolygon',
           coordinates: [
             [
               [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -578,55 +626,68 @@ describe("geometry data type", () => {
         }
       ])
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
-          {
-            type: "MultiPolygon",
-            coordinates: [
-              [
-                [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
-                [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+        return shareConn.query(
+          'INSERT INTO gis_multi_polygon_insert VALUES (?)',
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [
+                [
+                  [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+                  [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+                ]
               ]
-            ]
-          }
-        ]);
+            }
+          ]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
-          {
-            type: "MultiPolygon",
-            coordinates: [[[]]]
-          }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_polygon_insert VALUES (?)',
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [[[]]]
+            }
+          ]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
-          {
-            type: "MultiPolygon",
-            coordinates: [[]]
-          }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_polygon_insert VALUES (?)',
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [[]]
+            }
+          ]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
-          {
-            type: "MultiPolygon",
-            coordinates: []
-          }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_polygon_insert VALUES (?)',
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: []
+            }
+          ]
+        );
       })
       .then(() => {
-        return shareConn.query("INSERT INTO gis_multi_polygon_insert VALUES (?)", [
-          { type: "MultiPolygon" }
-        ]);
+        return shareConn.query(
+          'INSERT INTO gis_multi_polygon_insert VALUES (?)',
+          [{ type: 'MultiPolygon' }]
+        );
       })
       .then(() => {
-        return shareConn.query("SELECT * FROM gis_multi_polygon_insert");
+        return shareConn.query('SELECT * FROM gis_multi_polygon_insert');
       })
       .then(rows => {
         assert.deepEqual(rows, [
           {
             g: {
-              type: "MultiPolygon",
+              type: 'MultiPolygon',
               coordinates: [
                 [
                   [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -638,7 +699,7 @@ describe("geometry data type", () => {
           },
           {
             g: {
-              type: "MultiPolygon",
+              type: 'MultiPolygon',
               coordinates: [
                 [
                   [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -665,40 +726,45 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Geometry collection format", function(done) {
+  it('Geometry collection format', function(done) {
     //ST_GeomCollFromText alias doesn't exist before 10.1.4 / 5.7.6
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
-    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6))
+      this.skip();
+    if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4))
+      this.skip();
 
     base
       .createConnection()
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE gis_geometrycollection (g GEOMETRYCOLLECTION)");
+        conn.query(
+          'CREATE TEMPORARY TABLE gis_geometrycollection (g GEOMETRYCOLLECTION)'
+        );
         conn
           .query(
-            "INSERT INTO gis_geometrycollection VALUES\n" +
+            'INSERT INTO gis_geometrycollection VALUES\n' +
               "    (ST_GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0), LINESTRING(0 0,10 10))')),\n" +
-              "    (ST_GeometryFromWKB(ST_AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9))))))" +
-              (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)
-                ? ""
+              '    (ST_GeometryFromWKB(ST_AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9))))))' +
+              (!shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(8, 0, 0)
+                ? ''
                 : ",(ST_GeomFromText('GeometryCollection()')),\n" +
                   "    (ST_GeomFromText('GeometryCollection EMPTY'))")
           )
           .then(() => {
-            return conn.query("SELECT * FROM gis_geometrycollection");
+            return conn.query('SELECT * FROM gis_geometrycollection');
           })
           .then(rows => {
             let expectedValue = [
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: [
                     {
-                      type: "Point",
+                      type: 'Point',
                       coordinates: [0, 0]
                     },
                     {
-                      type: "LineString",
+                      type: 'LineString',
                       coordinates: [[0, 0], [10, 10]]
                     }
                   ]
@@ -706,14 +772,14 @@ describe("geometry data type", () => {
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: [
                     {
-                      type: "Point",
+                      type: 'Point',
                       coordinates: [44, 6]
                     },
                     {
-                      type: "LineString",
+                      type: 'LineString',
                       coordinates: [[3, 6], [7, 9]]
                     }
                   ]
@@ -721,29 +787,32 @@ describe("geometry data type", () => {
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: []
                 }
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: []
                 }
               }
             ];
-            if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) {
+            if (
+              !shareConn.info.isMariaDB() &&
+              !shareConn.info.hasMinVersion(8, 0, 0)
+            ) {
               expectedValue = [
                 {
                   g: {
-                    type: "GeometryCollection",
+                    type: 'GeometryCollection',
                     geometries: [
                       {
-                        type: "Point",
+                        type: 'Point',
                         coordinates: [0, 0]
                       },
                       {
-                        type: "LineString",
+                        type: 'LineString',
                         coordinates: [[0, 0], [10, 10]]
                       }
                     ]
@@ -751,14 +820,14 @@ describe("geometry data type", () => {
                 },
                 {
                   g: {
-                    type: "GeometryCollection",
+                    type: 'GeometryCollection',
                     geometries: [
                       {
-                        type: "Point",
+                        type: 'Point',
                         coordinates: [44, 6]
                       },
                       {
-                        type: "LineString",
+                        type: 'LineString',
                         coordinates: [[3, 6], [7, 9]]
                       }
                     ]
@@ -778,37 +847,43 @@ describe("geometry data type", () => {
       .catch(done);
   });
 
-  it("Geometry collection insert", function(done) {
+  it('Geometry collection insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0))
+      this.skip();
 
     base
       .createConnection()
       .then(conn => {
-        conn.query("CREATE TEMPORARY TABLE gis_geometrycollection_ins (g GEOMETRYCOLLECTION)");
+        conn.query(
+          'CREATE TEMPORARY TABLE gis_geometrycollection_ins (g GEOMETRYCOLLECTION)'
+        );
         conn
-          .query("INSERT INTO gis_geometrycollection_ins VALUES (?)", [
+          .query('INSERT INTO gis_geometrycollection_ins VALUES (?)', [
             {
-              type: "GeometryCollection",
+              type: 'GeometryCollection',
               geometries: [
                 {
-                  type: "Point",
+                  type: 'Point',
                   coordinates: [10, 10]
                 },
                 {
-                  type: "LineString",
+                  type: 'LineString',
                   coordinates: [[0, 0], [0, 10], [10, 0]]
                 },
                 {
-                  type: "MultiPoint",
+                  type: 'MultiPoint',
                   coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
                 },
                 {
-                  type: "MultiLineString",
-                  coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+                  type: 'MultiLineString',
+                  coordinates: [
+                    [[10, 48], [10, 21], [10, 0]],
+                    [[16, 0], [16, 23], [16, 48]]
+                  ]
                 },
                 {
-                  type: "MultiPolygon",
+                  type: 'MultiPolygon',
                   coordinates: [
                     [
                       [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -821,61 +896,73 @@ describe("geometry data type", () => {
             }
           ])
           .then(() => {
-            return conn.query("INSERT INTO gis_geometrycollection_ins VALUES (?)", [
-              {
-                type: "GeometryCollection",
-                geometries: [
-                  {
-                    type: "Point",
-                    coordinates: [10, 20]
-                  }
-                ]
-              }
-            ]);
+            return conn.query(
+              'INSERT INTO gis_geometrycollection_ins VALUES (?)',
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: [
+                    {
+                      type: 'Point',
+                      coordinates: [10, 20]
+                    }
+                  ]
+                }
+              ]
+            );
           })
           .then(() => {
-            return conn.query("INSERT INTO gis_geometrycollection_ins VALUES (?)", [
-              {
-                type: "GeometryCollection",
-                geometries: [{}]
-              }
-            ]);
+            return conn.query(
+              'INSERT INTO gis_geometrycollection_ins VALUES (?)',
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: [{}]
+                }
+              ]
+            );
           })
           .then(() => {
-            return conn.query("INSERT INTO gis_geometrycollection_ins VALUES (?)", [
-              {
-                type: "GeometryCollection",
-                geometries: []
-              }
-            ]);
+            return conn.query(
+              'INSERT INTO gis_geometrycollection_ins VALUES (?)',
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: []
+                }
+              ]
+            );
           })
           .then(() => {
-            return conn.query("SELECT * FROM gis_geometrycollection_ins");
+            return conn.query('SELECT * FROM gis_geometrycollection_ins');
           })
           .then(rows => {
             assert.deepEqual(rows, [
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: [
                     {
-                      type: "Point",
+                      type: 'Point',
                       coordinates: [10, 10]
                     },
                     {
-                      type: "LineString",
+                      type: 'LineString',
                       coordinates: [[0, 0], [0, 10], [10, 0]]
                     },
                     {
-                      type: "MultiPoint",
+                      type: 'MultiPoint',
                       coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
                     },
                     {
-                      type: "MultiLineString",
-                      coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+                      type: 'MultiLineString',
+                      coordinates: [
+                        [[10, 48], [10, 21], [10, 0]],
+                        [[16, 0], [16, 23], [16, 48]]
+                      ]
                     },
                     {
-                      type: "MultiPolygon",
+                      type: 'MultiPolygon',
                       coordinates: [
                         [
                           [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
@@ -889,10 +976,10 @@ describe("geometry data type", () => {
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: [
                     {
-                      type: "Point",
+                      type: 'Point',
                       coordinates: [10, 20]
                     }
                   ]
@@ -900,13 +987,13 @@ describe("geometry data type", () => {
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: []
                 }
               },
               {
                 g: {
-                  type: "GeometryCollection",
+                  type: 'GeometryCollection',
                   geometries: []
                 }
               }

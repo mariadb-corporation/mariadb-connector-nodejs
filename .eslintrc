@@ -2,11 +2,12 @@
   "globals": {
     "expect": true
   },
-  "extends": [
-    "prettier"
-  ],
   "plugins": [
     "markdown"
+  ],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 6
@@ -14,5 +15,8 @@
   "env": {
     "node": true,
      "es6": true
+  },
+  "rules": {
+    "linebreak-style": ["error", "unix"]
   }
 }

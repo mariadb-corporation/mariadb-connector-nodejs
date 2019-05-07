@@ -1,14 +1,15 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
-const Conf = require("../conf");
+const base = require('../base.js');
+const { assert } = require('chai');
+const Conf = require('../conf');
 
-describe("authentication plugin", () => {
-  it("ed25519 authentication plugin", function(done) {
+describe('authentication plugin', () => {
+  it('ed25519 authentication plugin', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     const self = this;
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22))
+      this.skip();
     shareConn
       .query("INSTALL SONAME 'auth_ed25519'")
       .then(
@@ -22,23 +23,25 @@ describe("authentication plugin", () => {
               );
             })
             .then(() => {
-              return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
+              return shareConn.query(
+                "GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'"
+              );
             })
             .then(() => {
               base
                 .createConnection({
-                  user: "verificationEd25519AuthPlugin",
-                  password: "secret"
+                  user: 'verificationEd25519AuthPlugin',
+                  password: 'secret'
                 })
                 .then(() => {
-                  done(new Error("must have throw an error"));
+                  done(new Error('must have throw an error'));
                 })
                 .catch(err => {
                   const expectedMsg = err.message.includes(
                     "Client does not support authentication protocol 'client_ed25519' requested by server."
                   );
                   if (!expectedMsg) console.log(err);
-                  shareConn.query("UNINSTALL PLUGIN ed25519");
+                  shareConn.query('UNINSTALL PLUGIN ed25519');
                   assert(expectedMsg);
                   done();
                 });
@@ -60,75 +63,107 @@ describe("authentication plugin", () => {
       .catch(done);
   });
 
-  it("name pipe authentication plugin", function(done) {
-    if (process.platform !== "win32") this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
-    if (Conf.baseConfig.host !== "localhost" && Conf.baseConfig.host !== "mariadb.example.com")
+  it('name pipe authentication plugin', function(done) {
+    if (process.platform !== 'win32') this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11))
+      this.skip();
+    if (
+      Conf.baseConfig.host !== 'localhost' &&
+      Conf.baseConfig.host !== 'mariadb.example.com'
+    )
       this.skip();
     const windowsUser = process.env.USERNAME;
-    if (windowsUser === "root") this.skip();
-    let conn;
+    if (windowsUser === 'root') this.skip();
 
+    const self = this;
     shareConn
-      .query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'")
-      .then(() => {})
-      .catch(err => {});
-    shareConn
-      .query("DROP USER " + windowsUser)
-      .then(() => {})
-      .catch(err => {});
-    shareConn
-      .query("CREATE USER " + windowsUser + " IDENTIFIED VIA named_pipe using 'test'")
-      .then(() => {
-        return shareConn.query("GRANT ALL on *.* to " + windowsUser);
-      })
-      .then(() => {
-        return shareConn.query("select @@version_compile_os,@@socket soc");
-      })
+      .query('SELECT @@named_pipe as pipe')
       .then(res => {
-        return base.createConnection({
-          user: null,
-          socketPath: "\\\\.\\pipe\\" + res[0].soc
-        });
+        if (res[0].pipe) {
+          shareConn
+            .query("INSTALL PLUGIN named_pipe SONAME 'auth_named_pipe'")
+            .then(() => {})
+            .catch(err => {});
+          shareConn
+            .query('DROP USER ' + windowsUser)
+            .then(() => {})
+            .catch(err => {});
+          shareConn
+            .query(
+              'CREATE USER ' +
+                windowsUser +
+                " IDENTIFIED VIA named_pipe using 'test'"
+            )
+            .then(() => {
+              return shareConn.query('GRANT ALL on *.* to ' + windowsUser);
+            })
+            .then(() => {
+              return shareConn.query(
+                'select @@version_compile_os,@@socket soc'
+              );
+            })
+            .then(res => {
+              return base.createConnection({
+                user: null,
+                socketPath: '\\\\.\\pipe\\' + res[0].soc
+              });
+            })
+            .then(conn => {
+              return conn.end();
+            })
+            .then(done)
+            .catch(done);
+        } else {
+          console.log('named pipe not enabled');
+          self.skip();
+        }
       })
-      .then(conn => {
-        return conn.end();
-      })
-      .then(done)
-      .catch(done);
+      .catch(err => {});
   });
 
-  it("unix socket authentication plugin", function(done) {
-    if (process.platform === "win32") this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
+  it('unix socket authentication plugin', function(done) {
+    if (process.platform === 'win32') this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11))
+      this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
-    if (shareConn.opts.host !== "localhost" && shareConn.opts.host !== "mariadb.example.com")
+    if (
+      Conf.baseConfig.host !== 'localhost' &&
+      Conf.baseConfig.host !== 'mariadb.example.com'
+    )
       this.skip();
 
     shareConn
-      .query("select @@version_compile_os,@@socket soc")
+      .query('select @@version_compile_os,@@socket soc')
       .then(res => {
         const unixUser = process.env.USERNAME;
-        if (unixUser === "root") this.skip();
+        if (unixUser === 'root') this.skip();
 
-        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'");
-        shareConn.query("DROP USER " + unixUser);
-        shareConn.query("CREATE USER " + unixUser + " IDENTIFIED VIA unix_socket using 'test'");
-        shareConn.query("GRANT ALL on *.* to " + unixUser);
-        base
-          .createConnection({ user: null, socketPath: res[0].soc })
-          .then(conn => {
-            return conn.end();
-          })
+        shareConn
+          .query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'")
+          .catch(err => {});
+        shareConn.query('DROP USER IF EXISTS ' + unixUser);
+        shareConn.query(
+          'CREATE USER ' + unixUser + " IDENTIFIED VIA unix_socket using 'test'"
+        );
+        shareConn
+          .query('GRANT ALL on *.* to ' + unixUser)
           .then(() => {
-            done();
+            base
+              .createConnection({ user: null, socketPath: res[0].soc })
+              .then(conn => {
+                return conn.end();
+              })
+              .then(() => {
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
       .catch(done);
   });
 
-  it("dialog authentication plugin", function(done) {
+  it('dialog authentication plugin', function(done) {
     //pam is set using .travis/entrypoint/pam.sh
     if (!process.env.TRAVIS || process.env.MAXSCALE_VERSION) this.skip();
 
@@ -136,13 +171,15 @@ describe("authentication plugin", () => {
     this.timeout(10000);
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch(err => {});
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});
-    shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
+    shareConn.query(
+      "CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'"
+    );
     shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
-    shareConn.query("FLUSH PRIVILEGES");
+    shareConn.query('FLUSH PRIVILEGES');
 
     //password is unix password "myPwd"
     base
-      .createConnection({ user: "testPam", password: "myPwd" })
+      .createConnection({ user: 'testPam', password: 'myPwd' })
       .then(conn => {
         return conn.end();
       })

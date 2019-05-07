@@ -1,0 +1,25 @@
+{
+  "globals": {
+    "expect": true
+  },
+  "plugins": [
+    "markdown"
+  ],
+  "parser":  "@typescript-eslint/parser",
+  "extends": [
+    "prettier",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 6
+  },
+  "env": {
+    "node": true,
+     "es6": true
+  },
+  "rules": {
+    "linebreak-style": ["error", "unix"]
+  }
+}

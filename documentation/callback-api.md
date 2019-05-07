@@ -44,6 +44,19 @@ const mariadb = require('mariadb/callback');
 This initializes the constant `mariadb`, which is set to use the Callback API rather than the default Promise API.
 
 
+## Timezone consideration
+
+It's not recommended, but in some cases, Node.js and database are configured with different timezone. 
+
+By default, `timezone` option is set to 'local' value, indicating to use client timezone, so no conversion will be done.
+
+If client and server timezone differ, `timezone` option has to be set to server timezone.
+- 'auto' value means client will request server timezone when creating a connection, and use server timezone afterwhile. 
+- To avoid this additional command on connection, `timezone` can be set to [IANA time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). 
+
+Connector will then convert date to server timezone, rather than the current Node.js timezone. 
+
+
 # Callback API
 
 The Connector with the Callback API is similar to the one using Promise, but with a few differences.
@@ -183,9 +196,10 @@ Specific options for pools are :
 |---:|---|:---:|:---:| 
 | **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
 | **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
+| **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds (0 means never release) |*integer* | 1800 |
+| **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
-
 
 ### `createPoolCluster(options) → PoolCluster`
 

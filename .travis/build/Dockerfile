@@ -1,7 +1,21 @@
-FROM debian:jessie
+# vim:set ft=dockerfile:
+FROM ubuntu:bionic
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
+
+# https://bugs.debian.org/830696 (apt uses gpgv by default in newer releases, rather than gpg)
+RUN set -ex; \
+	apt-get update; \
+	if ! which gpg; then \
+		apt-get install -y --no-install-recommends gnupg; \
+	fi; \
+# Ubuntu includes "gnupg" (not "gnupg2", but still 2.x), but not dirmngr, and gnupg 2.x requires dirmngr
+# so, if we're not running gnupg 1.x, explicitly install dirmngr too
+	if ! gpg --version | grep -q '^gpg (GnuPG) 1\.'; then \
+		 apt-get install -y --no-install-recommends dirmngr; \
+	fi; \
+	rm -rf /var/lib/apt/lists/*
 
 # add gosu for easy step-down from root
 ENV GOSU_VERSION 1.10
@@ -21,8 +35,9 @@ RUN set -ex; \
 	\
 # verify the signature
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
+	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
+	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc; \
 	\
 	chmod +x /usr/local/bin/gosu; \
@@ -37,27 +52,29 @@ RUN mkdir /docker-entrypoint-initdb.d
 # install "apt-transport-https" for Percona's repo (switched to https-only)
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		apt-transport-https ca-certificates \
+		tzdata \
 		pwgen \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN { \
-		echo "mariadb-server-10.3" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-10.3" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server-10.4" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server-10.4" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections
 
 RUN apt-get update -y
 RUN apt-get install -y software-properties-common wget
 RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
-RUN echo 'deb http://yum.mariadb.org/galera/repo/deb jessie main' > /etc/apt/sources.list.d/galera-test-repo.list
+RUN apt-key adv --recv-keys --keyserver ha.pool.sks-keyservers.net F1656F24C74CD1D8
+RUN echo 'deb http://yum.mariadb.org/galera/repo/deb bionic main' > /etc/apt/sources.list.d/galera-test-repo.list
 RUN apt-get update -y
 
-RUN apt-get install -y curl libdbi-perl rsync socat galera3 libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1 libcrack2
+RUN apt-get install -y curl libdbi-perl rsync socat galera3 libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2
 
 COPY *.deb /root/
 RUN chmod 777 /root/*
 
-RUN dpkg -R --install /root/mysql-common*
-RUN dpkg -R --install /root/mariadb-common*
+RUN dpkg --install /root/mysql-common*
+RUN dpkg --install /root/mariadb-common*
 RUN dpkg -R --unpack /root/
 RUN apt-get install -f -y
 

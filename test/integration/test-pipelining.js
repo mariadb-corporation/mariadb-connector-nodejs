@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
-const base = require("../base.js");
-const { assert } = require("chai");
+const base = require('../base.js');
+const { assert } = require('chai');
 
-describe("pipelining", () => {
+describe('pipelining', () => {
   let conn1, conn2;
   const iterations = 500;
 
@@ -32,45 +32,53 @@ describe("pipelining", () => {
       .catch(done);
   });
 
-  it("simple query chain no pipelining", function(done) {
+  it('simple query chain no pipelining', function(done) {
     conn1
-      .query("DO 1")
+      .query('DO 1')
       .then(rows => {
-        assert.deepEqual(rows, { affectedRows: 0, insertId: 0, warningStatus: 0 });
-        return conn1.query("DO 2");
+        assert.deepEqual(rows, {
+          affectedRows: 0,
+          insertId: 0,
+          warningStatus: 0
+        });
+        return conn1.query('DO 2');
       })
       .then(rows => {
-        assert.deepEqual(rows, { affectedRows: 0, insertId: 0, warningStatus: 0 });
+        assert.deepEqual(rows, {
+          affectedRows: 0,
+          insertId: 0,
+          warningStatus: 0
+        });
         done();
       })
       .catch(done);
   });
 
-  it("pipelining without waiting for connect", function(done) {
+  it('pipelining without waiting for connect', function(done) {
     const conn = base.createCallbackConnection();
     conn.connect(err => {});
-    conn.query("DO 1");
-    conn.query("SELECT 1", (err, rows) => {
-      assert.deepEqual(rows, [{ "1": 1 }]);
+    conn.query('DO 1');
+    conn.query('SELECT 1', (err, rows) => {
+      assert.deepEqual(rows, [{ '1': 1 }]);
       conn.end();
       done();
     });
   });
 
-  it("500 insert test speed", function(done) {
+  it('500 insert test speed', function(done) {
     this.timeout(60000);
     let diff, pipelineDiff;
     conn1
-      .query("CREATE TEMPORARY TABLE pipeline1 (test int)")
+      .query('CREATE TEMPORARY TABLE pipeline1 (test int)')
       .then(() => {
-        return conn2.query("CREATE TEMPORARY TABLE pipeline2 (test int)");
+        return conn2.query('CREATE TEMPORARY TABLE pipeline2 (test int)');
       })
       .then(() => {
-        return insertBulk(conn1, "pipeline1");
+        return insertBulk(conn1, 'pipeline1');
       })
       .then(time => {
         diff = time;
-        return insertBulk(conn2, "pipeline2");
+        return insertBulk(conn2, 'pipeline2');
       })
       .then(time => {
         pipelineDiff = time;
@@ -82,11 +90,11 @@ describe("pipelining", () => {
             (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])
           ) {
             console.log(
-              "time to insert 1000 : std=" +
+              'time to insert 1000 : std=' +
                 Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
-                "ms pipelining=" +
+                'ms pipelining=' +
                 Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
-                "ms"
+                'ms'
             );
           }
         }
@@ -101,7 +109,7 @@ describe("pipelining", () => {
     return new Promise(function(resolve, reject) {
       for (let i = 0; i < iterations; i++) {
         conn
-          .query("INSERT INTO " + tableName + " VALUES(?)", [i])
+          .query('INSERT INTO ' + tableName + ' VALUES(?)', [i])
           .then(() => {
             if (++ended === iterations) {
               resolve(process.hrtime(startTime));
