@@ -46,9 +46,16 @@ This initializes the constant `mariadb`, which is set to use the Callback API ra
 
 ## Timezone consideration
 
-When database timezone differ from Node.js timezone, `timezone` option has to be set, to avoid time offset.
-Connector will then convert date timezone to indicated timezone, rather than the current Node.js timezone. 
-See [timezone](./promise-api.md#connection-options) option.
+It's not recommended, but in some cases, Node.js and database are configured with different timezone. 
+
+By default, `timezone` option is set to 'local' value, indicating to use client timezone, so no conversion will be done.
+
+If client and server timezone differ, `timezone` option has to be set to server timezone.
+- 'auto' value means client will request server timezone when creating a connection, and use server timezone afterwhile. 
+- To avoid this additional command on connection, `timezone` can be set to [IANA time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). 
+
+Connector will then convert date to server timezone, rather than the current Node.js timezone. 
+
 
 # Callback API
 

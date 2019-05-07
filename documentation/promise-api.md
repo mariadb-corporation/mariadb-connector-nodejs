@@ -52,14 +52,15 @@ const mariadb = require('mariadb');
 
 ## Timezone consideration
 
-In some cases, Client and database are configured with different timezone. To avoid offset issues, 
-When creating a connection, connector will request server server timezone, and set option 'timezone' accordingly. 
+It's not recommended, but in some cases, Node.js and database are configured with different timezone. 
 
-To avoid this additional command on connection, `timezone` option has to be set. 
+By default, `timezone` option is set to 'local' value, indicating to use client timezone, so no conversion will be done.
 
-'local' value just indicate that client and servers are configured to use the same timezone, so no conversion will be done.
-If not 'local', timezone value must follow the [IANA time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). 
-Connector will then convert date timezone to indicated timezone, rather than the current Node.js timezone. 
+If client and server timezone differ, `timezone` option has to be set to server timezone.
+- 'auto' value means client will request server timezone when creating a connection, and use server timezone afterwhile. 
+- To avoid this additional command on connection, `timezone` can be set to [IANA time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). 
+
+Connector will then convert date to server timezone, rather than the current Node.js timezone. 
 
 
 # Promise API

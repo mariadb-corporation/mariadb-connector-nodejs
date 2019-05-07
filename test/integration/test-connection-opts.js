@@ -44,7 +44,7 @@ describe('connection option', () => {
         }
 
         base
-          .createConnection({ timezone: undefined })
+          .createConnection({ timezone: 'auto' })
           .then(conn => {
             conn.end();
             if (mustFail) {
