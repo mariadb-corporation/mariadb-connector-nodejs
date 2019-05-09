@@ -413,7 +413,7 @@ describe('Pool', () => {
         assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
         const elapse = Date.now() - initTime;
         assert.isOk(
-          elapse >= 498 && elapse < 550,
+          elapse >= 498 && elapse < 600,
           'elapse time was ' + elapse + ' but must be just after 500'
         );
       });
@@ -430,7 +430,7 @@ describe('Pool', () => {
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
           const elapse = Date.now() - initTime;
           assert.isOk(
-            elapse >= 698 && elapse < 750,
+            elapse >= 698 && elapse < 800,
             'elapse time was ' + elapse + ' but must be just after 700'
           );
           done();
@@ -816,8 +816,14 @@ describe('Pool', () => {
         }, 1000);
 
         setTimeout(() => {
-          assert.equal(pool.totalConnections(), 4);
-          assert.equal(pool.idleConnections(), 4);
+          //minimumIdle-1 is possible after reaching idleTimeout and connection
+          // is still not recreated
+          assert.isTrue(
+            pool.totalConnections() === 4 || pool.totalConnections() === 3
+          );
+          assert.isTrue(
+            pool.idleConnections() === 4 || pool.idleConnections() === 3
+          );
           pool.end();
           done();
         }, 3000);
@@ -837,8 +843,14 @@ describe('Pool', () => {
     });
 
     setTimeout(() => {
-      assert.equal(pool.totalConnections(), 4);
-      assert.equal(pool.idleConnections(), 4);
+      //minimumIdle-1 is possible after reaching idleTimeout and connection
+      // is still not recreated
+      assert.isTrue(
+        pool.totalConnections() === 4 || pool.totalConnections() === 3
+      );
+      assert.isTrue(
+        pool.idleConnections() === 4 || pool.idleConnections() === 3
+      );
       pool
         .end()
         .then(() => done())

@@ -563,8 +563,14 @@ describe('Pool callback', () => {
         }, 5);
 
         setTimeout(() => {
-          assert.equal(pool.totalConnections(), 4);
-          assert.equal(pool.idleConnections(), 4);
+          //minimumIdle-1 is possible after reaching idleTimeout and connection
+          // is still not recreated
+          assert.isTrue(
+            pool.totalConnections() === 4 || pool.totalConnections() === 3
+          );
+          assert.isTrue(
+            pool.idleConnections() === 4 || pool.idleConnections() === 3
+          );
           pool.end();
           done();
         }, 7000);
@@ -581,8 +587,14 @@ describe('Pool callback', () => {
     });
 
     setTimeout(() => {
-      assert.equal(pool.totalConnections(), 4);
-      assert.equal(pool.idleConnections(), 4);
+      //minimumIdle-1 is possible after reaching idleTimeout and connection
+      // is still not recreated
+      assert.isTrue(
+        pool.totalConnections() === 4 || pool.totalConnections() === 3
+      );
+      assert.isTrue(
+        pool.idleConnections() === 4 || pool.idleConnections() === 3
+      );
       pool.end();
       done();
     }, 4000);

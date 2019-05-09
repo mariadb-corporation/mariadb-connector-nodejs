@@ -4,6 +4,7 @@ let baseConfig = {
   user: 'root',
   database: 'testn',
   host: 'localhost',
+  connectTimeout: 1000,
   port: 3306
 };
 
