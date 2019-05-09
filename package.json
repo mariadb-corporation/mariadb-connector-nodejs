@@ -35,7 +35,7 @@
   ],
   "files": [
     "lib",
-    "types/index.d.js",
+    "types/index.d.ts",
     "promise.js",
     "callback.js"
   ],
