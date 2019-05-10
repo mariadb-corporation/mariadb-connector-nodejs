@@ -254,8 +254,45 @@ export interface PoolConfig extends ConnectionConfig {
    * The maximum number of connections to create at once. (Default: 10)
    */
   connectionLimit?: number;
+
+  /**
+   * Indicate idle time after which a pool connection is released.
+   * Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout).
+   * In seconds (0 means never release)
+   * Default: 1800 ( = 30 minutes)
+   */
+  idleTimeout?: number;
+
+  /**
+   * Timeout after which pool give up creating new connection.
+   */
+  initializationTimeout?: number;
+
+  /**
+   * When asking a connection to pool, the pool will validate the connection state.
+   * "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding
+   * useless verifications in case of frequent reuse of connections.
+   * 0 means validation is done each time the connection is asked. (in ms)
+   * Default: 500 (in millisecond)
+   */
   minDelayValidation?: number;
+
+  /**
+   * Permit to set a minimum number of connection in pool.
+   * **Recommendation is to use fixed pool, so not setting this value**
+   */
+  minimumIdle?: number;
+
+  /**
+   * Use COM_STMT_RESET when releasing a connection to pool.
+   * Default: true
+   */
   resetAfterUse?: boolean;
+
+  /**
+   * No rollback or reset when releasing a connection to pool.
+   * Default: false
+   */
   noControlAfterUse?: boolean;
 }
 

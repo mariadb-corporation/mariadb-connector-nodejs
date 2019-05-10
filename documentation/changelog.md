@@ -1,3 +1,7 @@
+#### 2.0.5 - 10-05-2019 
+
+* [CONJS-71] TypeScript definition is not exported
+
 #### 2.0.4 - 07-05-2019 
 
 * [CONJS-69] permit set numeric parameter bigger than javascript 2^53-1 limitation
