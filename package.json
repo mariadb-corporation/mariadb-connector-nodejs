@@ -48,11 +48,11 @@
     "denque": "^1.4.0",
     "iconv-lite": "^0.4.24",
     "long": "^4.0.0",
-    "moment-timezone": "^0.5.25"
+    "moment-timezone": "^0.5.25",
+    "@types/geojson": "^7946.0.7",
+    "@types/node": "^11.11.5"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.7",
-    "@types/node": "^11.11.5",
     "@typescript-eslint/eslint-plugin": "^1.5.0",
     "@typescript-eslint/parser": "^1.5.0",
     "benchmark": "^2.1.4",
