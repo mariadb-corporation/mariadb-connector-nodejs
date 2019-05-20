@@ -208,6 +208,28 @@ describe('connection option', () => {
       });
   });
 
+  it('IANA local tz', function(done) {
+    const localTz = moment.tz.guess();
+    base
+      .createConnection({ timezone: localTz })
+      .then(conn => {
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
+  it('IANA tz links', function(done) {
+    moment.tz.link(moment.tz.guess() + '|myLink');
+    base
+      .createConnection({ timezone: 'myLink' })
+      .then(conn => {
+        conn.end();
+        done();
+      })
+      .catch(done);
+  });
+
   it('Server with different tz', function(done) {
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
