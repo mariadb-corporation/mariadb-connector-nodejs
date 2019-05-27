@@ -8,11 +8,13 @@ const path = require('path');
 
 describe('local-infile', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfile.txt');
+  const nonReadableFile = path.join(os.tmpdir(), 'nonReadableFile.txt');
   const bigFileName = path.join(os.tmpdir(), 'bigLocalInfile.txt');
   let conn;
 
   after(function() {
     fs.unlink(smallFileName, err => {});
+    fs.unlink(nonReadableFile, err => {});
     fs.unlink(bigFileName, err => {});
   });
 
@@ -170,6 +172,57 @@ describe('local-infile', () => {
                 done();
               })
               .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('non readable local infile', function(done) {
+    //on windows, fs.chmodSync doesn't remove read access.
+    if (process.platform === 'win32') this.skip();
+
+    const self = this;
+    shareConn
+      .query('select @@local_infile')
+      .then(rows => {
+        if (rows[0]['@@local_infile'] === 0) {
+          self.skip();
+        }
+        return new Promise(function(resolve, reject) {
+          fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function(
+            err
+          ) {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      })
+      .then(() => {
+        fs.chmodSync(nonReadableFile, 0o222);
+        console.log;
+        base
+          .createConnection({ permitLocalInfile: true })
+          .then(conn => {
+            conn.query(
+              'CREATE TEMPORARY TABLE nonReadableFile(id int, test varchar(100))'
+            );
+            conn
+              .query(
+                "LOAD DATA LOCAL INFILE '" +
+                  nonReadableFile.replace(/\\/g, '/') +
+                  "' INTO TABLE nonReadableFile FIELDS TERMINATED BY ',' (id, test)"
+              )
+              .then(() => {
+                conn.end();
+                done('must have thrown error');
+              })
+              .catch(err => {
+                assert.equal(err.sqlState, '22000');
+                assert(!err.fatal);
+                conn.end();
+                done();
+              });
           })
           .catch(done);
       })
