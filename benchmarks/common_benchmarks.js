@@ -87,9 +87,16 @@ function Bench() {
     promiseMysql
       .createConnection(config)
       .then(conn => {
-        connList['PROMISE_MYSQL'].drv = conn;
-        connList['PROMISE_MYSQL'].pool = promiseMysql.createPool(poolConfig);
-        dbReady('promise-mysql', this.driverLen);
+        promiseMysql
+          .createPool(poolConfig)
+          .then(pool => {
+            connList['PROMISE_MYSQL'].drv = conn;
+            connList['PROMISE_MYSQL'].pool = pool;
+            dbReady('promise-mysql', this.driverLen);
+          })
+          .catch(err => {
+            throw err;
+          });
       })
       .catch(err => {
         throw err;
