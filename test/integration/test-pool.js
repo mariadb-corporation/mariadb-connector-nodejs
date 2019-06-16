@@ -857,4 +857,21 @@ describe('Pool', () => {
         .catch(done);
     }, 4000);
   });
+
+  it('new-conn event emits connection', function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({
+      connectionLimit: 10,
+      minimumIdle: 4,
+      idleTimeout: 2
+    });
+
+    pool.on('new-conn', conn => {
+      assert.isTrue(conn !== undefined);
+      pool
+        .end()
+        .then(() => done())
+        .catch(done);
+    });
+  });
 });

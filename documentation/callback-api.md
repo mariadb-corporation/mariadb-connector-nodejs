@@ -201,6 +201,22 @@ Specific options for pools are :
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
 
+#### Pool events
+
+|event|description|
+|---:|---|
+| **`new-conn`** | This event emits the connection object when a new connection is added to the pool.  |
+| **`remove-conn`** | This event is emitted when a connection is removed from the pool. |
+| **`idle-conn`** | This event is emitted when a connection is released back into the pool. |
+
+**Example:**
+
+```javascript
+pool.on('new-conn', function (conn) {
+  conn.query('SET SESSION auto_increment_increment=1')
+});
+```
+
 ### `createPoolCluster(options) → PoolCluster`
 
 > * `options`: *JSON* [poolCluster options](#poolCluster-options)
@@ -220,7 +236,7 @@ cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 })
 cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 
 //getting a connection from slave1 or slave2 using round-robin
-cluster.getConnection(/^slave*$, "RR", (err, conn) => {
+cluster.getConnection(/^slave*$/, "RR", (err, conn) => {
   conn.query("SELECT 1", (err, rows) => {
      conn.end();
      return row[0]["@node"];
@@ -503,7 +519,7 @@ pool.getConnection((err, conn => {
     console.log("connected ! connection id is " + conn.threadId);
     conn.end(); //release to pool
   }
-})
+}));
 ```
 
 ## `pool.query(sql[, values][, callback])`
