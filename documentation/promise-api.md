@@ -1091,6 +1091,24 @@ cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 })
 cluster.getConnection("slave*")
 ```
 
+## `events`
+
+PoolCluster object inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html). 
+Emits 'remove' event when a node is removed from configuration if the option `removeNodeErrorCount` is defined 
+(default to 5) and connector fails to connect more than `removeNodeErrorCount` times. 
+(if other nodes are present, each attemps will wait for value of the option `restoreNodeTimeout`)
+
+```javascript
+const mariadb = require('mariadb');
+const cluster = mariadb.createPoolCluster({ removeNodeErrorCount: 20, restoreNodeTimeout: 5000 });
+cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });*
+cluster.on('remove', node => {
+  console.log(`node ${node} was removed`);
+})
+```
+
 ## `poolCluster.of(pattern, selector) → FilteredPoolCluster`
 
 > * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
