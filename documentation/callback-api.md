@@ -146,7 +146,7 @@ It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on W
 For instance, on Unix a connection might look like this:
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const conn = mariadb.createConnection({ socketPath: '/tmp/mysql.sock', user: 'root' });
 conn.connect(err => {
   //do something with connection
@@ -158,7 +158,7 @@ conn.connect(err => {
 It has a similar syntax on Windows: 
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const conn = mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' });
 ```
 
@@ -174,7 +174,7 @@ Creates a new pool.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLimit: 5 });
 pool.getConnection((err, conn) => {
   if (err) {
@@ -212,7 +212,7 @@ Creates a new pool cluster. Cluster handle multiple pools, giving high availabil
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 
 const cluster = mariadb.createPoolCluster();
 cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
@@ -238,7 +238,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. |*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. null means node won't be removed|*integer* | 5 |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 0|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 
@@ -494,7 +494,7 @@ Connection must be given back to pool with the connection.end() method.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.getConnection((err, conn => {
   if (err) {
@@ -515,7 +515,7 @@ pool.getConnection((err, conn => {
 This is a shortcut to get a connection from pool, execute a query and release connection.
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.query("SELECT NOW()", (err, results, metadata) => {
   if (err) {
@@ -558,7 +558,7 @@ Add a new Pool to cluster.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const cluster = mariadb.createPoolCluster();
 cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
 cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
@@ -603,7 +603,7 @@ Connection must be given back to pool with the connection.end() method.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback');
 const cluster = mariadb.createPoolCluster();
 cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
 cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
@@ -628,7 +628,7 @@ Creates a new [filtered pool cluster](#filteredpoolcluster) object that is a sub
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+const mariadb = require('mariadb/callback')
 
 const cluster = mariadb.createPoolCluster();
 cluster.add("master-north", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });

@@ -1131,9 +1131,9 @@ describe('cluster', function() {
       initSql: "set @node='node2'",
       connectionLimit: 1,
       host: 'localhost',
-      connectTimeout: 100,
-      socketTimeout: 100,
-      acquireTimeout: 200,
+      connectTimeout: 200,
+      socketTimeout: 200,
+      acquireTimeout: 250,
       port: 4000,
       resetAfterUse: false
     });
