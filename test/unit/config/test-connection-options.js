@@ -34,6 +34,16 @@ describe('test connection options', () => {
     }
   });
 
+  it('wrong format', () => {
+    try {
+      new ConnOptions(
+        'mariasdb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true'
+      );
+    } catch (e) {
+      e.message.includes('error parsing connection string');
+    }
+  });
+
   it('with options', () => {
     const result = new ConnOptions(
       'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true'

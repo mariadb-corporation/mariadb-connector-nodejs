@@ -814,5 +814,14 @@ describe('parse', () => {
         reWritable: false
       });
     });
+
+    it('validateFileName', () => {
+      assert.isTrue(Parse.validateFileName('LOAD DATA LOCAL INFILE \'smallFileName\' INTO TABLE smallLocalInfile FIELDS TERMINATED BY \',\' (id, test)', null, 'smallFileName'));
+      assert.isFalse(Parse.validateFileName('LOAD DATA LOCAL INFILE \'smallFileName\' INTO TABLE smallLocalInfile FIELDS TERMINATED BY \',\' (id, test)', null, 'smallFileName2'));
+      assert.isTrue(Parse.validateFileName('LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY \',\' (id, test)', ['smallFileName'], 'smallFileName'));
+      assert.isFalse(Parse.validateFileName('LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY \',\' (id, test)', ['smallFileName'], 'smallFileName2'));
+    });
+
+
   });
 });
