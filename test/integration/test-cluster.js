@@ -291,14 +291,16 @@ describe('cluster', function() {
           expect(nodes['node1']).to.equal(10);
           expect(nodes['node2']).to.equal(10);
           expect(nodes['node3']).to.be.undefined;
-          expect(removedNode).to.have.length(1);
-          expect(removedNode[0]).to.equal('node3');
+          setTimeout(() => {
+            expect(removedNode).to.have.length(1);
+            expect(removedNode[0]).to.equal('node3');
 
-          const nodesConf = poolCluster.__tests.getNodes();
-          expect(Object.keys(nodesConf)).to.have.length(2);
-          poolCluster.end().then(() => {
-            done();
-          });
+            const nodesConf = poolCluster.__tests.getNodes();
+            expect(Object.keys(nodesConf)).to.have.length(2);
+            poolCluster.end().then(() => {
+              done();
+            });
+          }, 100);
         })
         .catch(err => {
           poolCluster.end().then(() => {
@@ -345,15 +347,17 @@ describe('cluster', function() {
         expect(nodes['node1']).to.equal(4);
         expect(nodes['node2']).to.equal(3);
         expect(nodes['error']).to.equal(3);
-        expect(removedNode).to.have.length(1);
-        expect(removedNode[0]).to.equal('node3');
+        setTimeout(() => {
+          expect(removedNode).to.have.length(1);
+          expect(removedNode[0]).to.equal('node3');
 
-        poolCluster
-          .end()
-          .then(() => {
-            done();
-          })
-          .catch(done);
+          poolCluster
+            .end()
+            .then(() => {
+              done();
+            })
+            .catch(done);
+        }, 100);
       });
     });
 
@@ -382,26 +386,27 @@ describe('cluster', function() {
             expect(nodes['node1']).to.equal(5);
             expect(nodes['node2']).to.be.undefined;
             expect(nodes['node3']).to.equal(5);
-
-            expect(removedNode).to.have.length(0);
-
-            proxy.resume();
             setTimeout(() => {
-              testTimesWithError(poolCluster, /^node*/, 10)
-                .then(nodes => {
-                  expect([3, 4]).to.contain.members([nodes['node1']]);
-                  expect([1, 2, 3, 4]).to.contain.members([nodes['node2']]);
-                  expect([3, 4]).to.contain.members([nodes['node3']]);
-                  poolCluster.end().then(() => {
+              expect(removedNode).to.have.length(0);
+
+              proxy.resume();
+              setTimeout(() => {
+                testTimesWithError(poolCluster, /^node*/, 10)
+                  .then(nodes => {
+                    expect([3, 4]).to.contain.members([nodes['node1']]);
+                    expect([1, 2, 3, 4]).to.contain.members([nodes['node2']]);
+                    expect([3, 4]).to.contain.members([nodes['node3']]);
+                    poolCluster.end().then(() => {
+                      proxy.close();
+                      done();
+                    });
+                  })
+                  .catch(err => {
                     proxy.close();
-                    done();
+                    done(err);
                   });
-                })
-                .catch(err => {
-                  proxy.close();
-                  done(err);
-                });
-            }, 550);
+              }, 550);
+            }, 100);
           });
         }, 500);
       });
@@ -879,14 +884,16 @@ describe('cluster', function() {
           expect(nodes['node1']).to.equal(10);
           expect(nodes['node2']).to.equal(10);
           expect(nodes['node3']).to.be.undefined;
-          expect(removedNode).to.have.length(1);
-          expect(removedNode[0]).to.equal('node3');
+          setTimeout(() => {
+            expect(removedNode).to.have.length(1);
+            expect(removedNode[0]).to.equal('node3');
 
-          const nodesConf = poolCluster.__tests.getNodes();
-          expect(Object.keys(nodesConf)).to.have.length(2);
-          poolCluster.end(() => {
-            done();
-          });
+            const nodesConf = poolCluster.__tests.getNodes();
+            expect(Object.keys(nodesConf)).to.have.length(2);
+            poolCluster.end(() => {
+              done();
+            });
+          }, 100);
         }
       };
       testTimesCallback(poolCluster, cb, /^node[12]*/, 20);
@@ -916,8 +923,8 @@ describe('cluster', function() {
       const connOption3 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node3'",
         user: 'wrong_user',
-        connectTimeout: 100,
-        acquireTimeout: 200,
+        connectTimeout: 50,
+        acquireTimeout: 150,
         connectionLimit: 1,
         resetAfterUse: false
       });
@@ -935,12 +942,14 @@ describe('cluster', function() {
           expect(nodes['node1']).to.equal(4);
           expect(nodes['node2']).to.equal(3);
           expect(nodes['error']).to.equal(3);
-          expect(removedNode).to.have.length(1);
-          expect(removedNode[0]).to.equal('node3');
+          setTimeout(() => {
+            expect(removedNode).to.have.length(1);
+            expect(removedNode[0]).to.equal('node3');
 
-          poolCluster.end(() => {
-            done();
-          });
+            poolCluster.end(() => {
+              done();
+            });
+          }, 100);
         }
       };
 

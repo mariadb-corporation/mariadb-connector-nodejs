@@ -799,7 +799,7 @@ describe('Pool', () => {
     });
 
     const requests = [];
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 15000; i++) {
       requests.push(pool.query('SELECT ' + i));
     }
     Promise.all(requests)
