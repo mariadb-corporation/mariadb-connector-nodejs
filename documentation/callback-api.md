@@ -72,14 +72,14 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 **Connection:**
 
 * [`connection.query(sql[, values][, callback]) → Emitter`](#connectionquerysql-values-callback---emitter): Executes a [query](#query).
-* [`connection.batch(sql, values[, callback]) → Promise`](#connectionbatchsql-values-callback): fast batch processing.
-* [`connection.beginTransaction([callback])`](#connectionbegintransaction-callback): Begins a transaction
-* [`connection.commit([callback])`](#connectioncommit-callback): Commit the current transaction, if any.
-* [`connection.rollback([callback])`](#connectionrollback-callback): Rolls back the current transaction, if any.
+* [`connection.batch(sql, values[, callback])`](#connectionbatchsql-values--callback): fast batch processing.
+* [`connection.beginTransaction([callback])`](#connectionbegintransactioncallback): Begins a transaction
+* [`connection.commit([callback])`](#connectioncommitcallback): Commit the current transaction, if any.
+* [`connection.rollback([callback])`](#connectionrollbackcallback): Rolls back the current transaction, if any.
 * [`connection.changeUser(options[, callback])`](#connectionchangeuseroptions-callback): Changes the current connection user.
-* [`connection.ping([callback])`](#connectionping-callback): Sends an empty packet to the server to check that connection is active.
-* [`connection.end([callback])`](#connectionend-callback): Gracefully closes the connection.
-* [`connection.reset([callback])`](#connectionreset-callback): reset current connection state.
+* [`connection.ping([callback])`](#connectionpingcallback): Sends an empty packet to the server to check that connection is active.
+* [`connection.end([callback])`](#connectionendcallback): Gracefully closes the connection.
+* [`connection.reset([callback])`](#connectionreset): reset current connection state.
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
 * [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
 * [`connection.pause()`](#connectionpause): Pauses the socket output.
@@ -89,24 +89,24 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 
 **Pool:**
 
-* [`pool.getConnection([callback])`](#poolgetconnection-callback) : Creates a new connection.
+* [`pool.getConnection([callback])`](#poolgetconnectioncallback) : Creates a new connection.
 * [`pool.query(sql[, values][, callback])`](#poolquerysql-values-callback): Executes a query.
 * [`pool.batch(sql, values[, callback])`](#poolbatchsql-values-callback): Executes a batch
-* [`pool.end([callback])`](#poolend-callback): Gracefully closes the connection.
+* [`pool.end([callback])`](#poolendcallback): Gracefully closes the connection.
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
-* [`pool events`](#poolevents): Subscribes to pool events.
+* [`pool events`](#pool-events-1): Subscribes to pool events.
 
 **PoolCluster**
 
 * [`poolCluster.add(id, config)`](#poolclusteraddid-config) : add a pool to cluster.
 * [`poolCluster.remove(pattern)`](#poolclusterremovepattern) : remove and end pool according to pattern.
-* [`poolCluster.end([callback])`](#poolclusterend-callback) : end cluster.
+* [`poolCluster.end([callback])`](#poolclusterendcallback) : end cluster.
 * [`poolCluster.getConnection([pattern, ][selector, ]callback)`](#poolclustergetconnectionpattern-selector-callback) : return a connection from cluster.
-* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
 * [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
+* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
 
 
 # Base API
@@ -554,7 +554,7 @@ conn.end(err => {
 })
 ```
 
-## `connection.reset([callback]) → Promise`
+## `connection.reset([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -848,7 +848,7 @@ cluster.getConnection("slave*", (err, conn) => {
 })
 ```
 
-## `events`
+## `poolCluster events`
 
 PoolCluster object inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html). 
 Emits 'remove' event when a node is removed from configuration if the option `removeNodeErrorCount` is defined 
