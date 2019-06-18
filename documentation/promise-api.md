@@ -211,7 +211,7 @@ const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLi
 pool.getConnection()
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
-      conn.end(); //release to pool
+      conn.release(); //release to pool
     })
     .catch(err => {
       console.log("not connected due to error: " + err);
@@ -925,8 +925,10 @@ When a connection is given back to the pool, any remaining transactions will be 
 > * resolves with a [Connection](#connection-api) object,
 > * raises an [Error](#error).
 
-Creates a new [Connection](#connection-api) object.
-Connection must be given back to pool with the connection.end() method.
+Creates a new [Connection](#connection-api) object with an additional release method. 
+Calling connection.release() will give back connection to pool.  
+
+Connection must be given back to pool using this connection.release() method.
 
 **Example:**
 
@@ -936,7 +938,7 @@ const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.getConnection()
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
-      conn.end(); //release to pool
+      conn.release(); //release to pool
     })
     .catch(err => {
       console.log("not connected due to error: " + err);
@@ -976,7 +978,7 @@ pool
 > * resolves with a JSON object.
 > * rejects with an [Error](#error).
 
-This is a shortcut to get a connection from pool, execute a query and release connection.
+This is a shortcut to get a connection from pool, execute a batch and release connection.
 
 ```javascript
 const mariadb = require('mariadb');

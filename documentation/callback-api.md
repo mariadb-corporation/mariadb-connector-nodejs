@@ -71,13 +71,42 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 
 **Connection:**
 
-* [`query(sql[, values][, callback]) → Emitter`](#querysql-values-callback---emitter): Executes a [query](#query).
-* [`beginTransaction([callback])`](#begintransaction-callback): Begins a transaction
-* [`commit([callback])`](#commit-callback): Commit the current transaction, if any.
-* [`rollback([callback])`](#rollback-callback): Rolls back the current transaction, if any.
-* [`changeUser(options[, callback])`](#changeuseroptions-callback): Changes the current connection user.
-* [`ping([callback]) → Promise`](#ping-callback): Sends an empty packet to the server to check that connection is active.
-* [`end([callback])`](#end-callback): Gracefully closes the connection.
+* [`connection.query(sql[, values][, callback]) → Emitter`](#connectionquerysql-values-callback---emitter): Executes a [query](#query).
+* [`connection.batch(sql, values[, callback]) → Promise`](#connectionbatchsql-values-callback): fast batch processing.
+* [`connection.beginTransaction([callback])`](#connectionbegintransaction-callback): Begins a transaction
+* [`connection.commit([callback])`](#connectioncommit-callback): Commit the current transaction, if any.
+* [`connection.rollback([callback])`](#connectionrollback-callback): Rolls back the current transaction, if any.
+* [`connection.changeUser(options[, callback])`](#connectionchangeuseroptions-callback): Changes the current connection user.
+* [`connection.ping([callback])`](#connectionping-callback): Sends an empty packet to the server to check that connection is active.
+* [`connection.end([callback])`](#connectionend-callback): Gracefully closes the connection.
+* [`connection.reset([callback])`](#connectionreset-callback): reset current connection state.
+* [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
+* [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
+* [`connection.pause()`](#connectionpause): Pauses the socket output.
+* [`connection.resume()`](#connectionresume): Resumes the socket output.
+* [`connection.serverVersion()`](#connectionserverversion): Retrieves the current server version.
+* [`events`](#events): Subscribes to connection error events.
+
+**Pool:**
+
+* [`pool.getConnection([callback])`](#poolgetconnection-callback) : Creates a new connection.
+* [`pool.query(sql[, values][, callback])`](#poolquerysql-values-callback): Executes a query.
+* [`pool.batch(sql, values[, callback])`](#poolbatchsql-values-callback): Executes a batch
+* [`pool.end([callback])`](#poolend-callback): Gracefully closes the connection.
+* `pool.activeConnections() → Number`: Gets current active connection number.
+* `pool.totalConnections() → Number`: Gets current total connection number.
+* `pool.idleConnections() → Number`: Gets current idle connection number.
+* `pool.taskQueueSize() → Number`: Gets current stacked request.
+* [`pool events`](#poolevents): Subscribes to pool events.
+
+**PoolCluster**
+
+* [`poolCluster.add(id, config)`](#poolclusteraddid-config) : add a pool to cluster.
+* [`poolCluster.remove(pattern)`](#poolclusterremovepattern) : remove and end pool according to pattern.
+* [`poolCluster.end([callback])`](#poolclusterend-callback) : end cluster.
+* [`poolCluster.getConnection([pattern, ][selector, ]callback)`](#poolclustergetconnectionpattern-selector-callback) : return a connection from cluster.
+* [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
+* [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
 
 
 # Base API
@@ -207,7 +236,7 @@ Specific options for pools are :
 |---:|---|
 | **`acquire`** | This event emits a connection is acquired from pool.  |
 | **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
-| **`enqueue`** | This event is emitted when a command cannot be satified immediatly by pool and is queued. |
+| **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
 | **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
 
 **Example:**
@@ -215,6 +244,7 @@ Specific options for pools are :
 ```javascript
 pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
 ```
+
 
 ### `createPoolCluster(options) → PoolCluster`
 
@@ -260,7 +290,7 @@ Specific options for pool cluster are :
 
 # Connection API
  
-## `query(sql[, values][, callback])` -> `Emitter`
+## `connection.query(sql[, values][, callback])` -> `Emitter`
 
 > * `sql`: *string | JSON* An SQL string value or JSON object to supersede default connections options.  If  aJSON object, it must have an `"sql"` property.  For example: `{dateStrings:true, sql:'SELECT NOW()'}`
 > * `values`: *array | object* Placeholder values. Usually an array, but in cases of just one placeholder, it can be given as is. 
@@ -391,20 +421,59 @@ connection.query("SELECT * FROM mysql.user")
       });
 ```
 
-## `beginTransaction([callback])`
+## `connection.batch(sql, values [, callback])`
+
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* Array of parameter (array of array or array of object if using named placeholders). 
+> * `callback`: *function* Callback function with arguments (error, results, metadata).
+>
+> Returns a promise that :
+> * resolves with a JSON object.
+> * rejects with an [Error](#error).
+
+Implementation depend of server type and version. 
+for MariaDB server version 10.2.7+, implementation use dedicated bulk protocol. 
+
+For other, insert queries will be rewritten for optimization.
+example:
+insert into ab (i) values (?) with first batch values = 1, second = 2 will be rewritten
+insert into ab (i) values (1), (2). 
+
+If query cannot be re-writen will execute a query for each values.
+
+result difference compared to execute multiple single query insert is that only first generated insert id will be returned. 
+
+For instance,
+
+```javascript
+  connection.query(
+    "CREATE TEMPORARY TABLE batchExample(id int, id2 int, id3 int, t varchar(128), id4 int)"
+  );
+  connection
+    .batch("INSERT INTO `batchExample` values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]], (err, res) => {
+      if (err) {
+        console.log('handle error');
+      } else {
+      console.log(res.affectedRows); // 2
+      }
+    });
+
+```
+
+## `connection.beginTransaction([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me#error) if any error.
 
 Begins a new transaction.
 
-## `commit([callback])`
+## `connection.commit([callback])`
 
 > * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
 
 Commits the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  When there isn't an active transaction, this method sends no commands to the server.
 
 
-## `rollback([callback])`
+## `connection.rollback([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -440,7 +509,7 @@ conn.beginTransaction(err => {
 });
 ```
  
-## `changeUser(options[, callback])`
+## `connection.changeUser(options[, callback])`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
 > * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
@@ -457,7 +526,7 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'}, err => {
 });
 ```
 
-## `ping([callback])`
+## `connection.ping([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -473,7 +542,7 @@ conn.ping(err => {
 })
 ```
 
-## `end([callback])`
+## `connection.end([callback])`
 
 > * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
 
@@ -485,6 +554,104 @@ conn.end(err => {
 })
 ```
 
+## `connection.reset([callback]) → Promise`
+
+> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
+
+reset the connection. Reset will:
+
+   * rollback any open transaction
+   * reset transaction isolation level
+   * reset session variables
+   * delete user variables
+   * remove temporary tables
+   * remove all PREPARE statement
+   
+
+## `connection.isValid() → boolean`
+
+> Returns a boolean
+
+Indicates the connection state as the Connector knows it.  If it returns false, there is an issue with the connection, such as the socket disconnected without the Connector knowing about it.
+
+
+## `connection.destroy()`
+
+Closes the connection without waiting for any currently executing queries.  These queries are interrupted.  MariaDB logs the event as an unexpected socket close.
+
+
+## `connection.pause()`
+
+Pauses data reads.
+
+## `connection.resume()`
+
+Resumes data reads from a pause. 
+
+
+## `connection.serverVersion()` 
+
+> Returns a string 
+
+Retrieves the version of the currently connected server.  Throws an error when not connected to a server.
+
+```javascript
+  console.log(connection.serverVersion()); //10.2.14-MariaDB
+```
+
+## `Error`
+
+When the Connector encounters an error, Promise returns an [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object.  In addition to the standard properties, this object has the following properties:
+* `fatal`: A boolean value indicating whether the connection remains valid.
+* `errno`: The error number. 
+* `sqlState`: The SQL state code.
+* `code`: The error code.
+
+Example on `console.log(error)`: 
+```
+{ Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
+  sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
+      ...
+      at Socket.Readable.push (_stream_readable.js:134:10)
+      at TCP.onread (net.js:559:20)
+    From event:
+      at C:\mariadb-connector-nodejs\lib\connection.js:185:29
+      at Connection.query (C:\mariadb-connector-nodejs\lib\connection.js:183:12)
+      at Context.<anonymous> (C:\mariadb-connector-nodejs\test\integration\test-error.js:250:8)
+    fatal: false,
+    errno: 1146,
+    sqlState: '42S02',
+    code: 'ER_NO_SUCH_TABLE' } }
+```
+
+Errors contain an error stack, query and parameter values (the length of which is limited to 1,024 characters, by default).  To retrieve the initial stack trace (shown as `From event...` in the example above), you must have the Connection option `trace` enabled.
+
+For more information on error numbers and SQL state signification, see the [MariaDB Error Code](https://mariadb.com/kb/en/library/mariadb-error-codes/) documentation.
+
+
+## `events`
+
+Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html).  Emits an error event when the connection closes unexpectedly.
+
+```javascript
+  const conn = mariadb.createConnection({user: 'root', password: 'myPwd', host: 'localhost', socketTimeout: 100})
+  conn.on('error', err => {
+    //will be executed after 100ms due to inactivity, socket has closed. 
+    console.log(err);
+    //log : 
+    //{ Error: (conn=6283, no: 45026, SQLState: 08S01) socket timeout
+    //    ...
+    //    at Socket.emit (events.js:208:7)
+    //    at Socket._onTimeout (net.js:410:8)
+    //    at ontimeout (timers.js:498:11)
+    //    at tryOnTimeout (timers.js:323:5)
+    //    at Timer.listOnTimeout (timers.js:290:5)
+    //  fatal: true,
+    //  errno: 45026,
+    //  sqlState: '08S01',
+    //  code: 'ER_SOCKET_TIMEOUT' }
+  });
+```
 
 # Pool API
 
@@ -541,6 +708,42 @@ pool.query("SELECT NOW()", (err, results, metadata) => {
 });
 ```
 
+## `pool.batch(sql, values[, callback])`
+
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have an "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array* array of Placeholder values. Usually an array of array, but in cases of only one placeholder per value, it can be given as a single array. 
+> * `callback`: *function* Callback function with arguments (error, results, metadata).
+
+This is a shortcut to get a connection from pool, execute a batch and release connection.
+
+```javascript
+const mariadb = require('mariadb/callback');
+const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+pool.query(
+  "CREATE TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
+);
+pool
+  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]],
+    (err, res) => {
+      if (err) {
+        //handle error
+      } else {
+        //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+        assert.equal(res.affectedRows, 2);
+        pool.query("select * from `parse`", (err, res) => {
+            /*
+            res = [ 
+                { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+                { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+                meta: ...
+              }
+            */ 
+        });
+      }
+  });
+```
+
 ## `pool.end([callback])`
 
 > * `callback`: *function* Callback function with argument ([Error](#error)).
@@ -557,6 +760,23 @@ pool.end(err => {
   }
 });
 ```
+
+## Pool events
+
+|event|description|
+|---:|---|
+| **`acquire`** | This event emits a connection is acquired from pool.  |
+| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
+| **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
+| **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
+
+**Example:**
+
+```javascript
+pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
+```
+
+
 
 # Pool cluster API
 
@@ -580,7 +800,7 @@ cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 })
 cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 ```
 
-## `poolCluster.remove(pattern)``
+## `poolCluster.remove(pattern)`
 
 > * `pattern`: *string* regex pattern to select pools. Example, `"slave*"`
 >
