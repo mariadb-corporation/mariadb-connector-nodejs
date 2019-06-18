@@ -201,20 +201,19 @@ Specific options for pools are :
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
 
-#### Pool events
+## Pool events
 
 |event|description|
 |---:|---|
-| **`new-conn`** | This event emits the connection object when a new connection is added to the pool.  |
-| **`remove-conn`** | This event is emitted when a connection is removed from the pool. |
-| **`idle-conn`** | This event is emitted when a connection is released back into the pool. |
+| **`acquire`** | This event emits a connection is acquired from pool.  |
+| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
+| **`enqueue`** | This event is emitted when a command cannot be satified immediatly by pool and is queued. |
+| **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
 
 **Example:**
 
 ```javascript
-pool.on('new-conn', function (conn) {
-  conn.query('SET SESSION auto_increment_increment=1')
-});
+pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
 ```
 
 ### `createPoolCluster(options) → PoolCluster`

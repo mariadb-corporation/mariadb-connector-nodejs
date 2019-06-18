@@ -101,7 +101,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
-
+* [`pool events`](#poolevents): Subscribes to pool events.
 
 **PoolCluster**
 
@@ -110,6 +110,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
 * [`poolCluster.getConnection(pattern, selector) → Promise`](#poolclustergetconnectionpattern-selector--promise) : return a connection from cluster.
 * [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
+* [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
 
 
 # Base API
@@ -1021,6 +1022,21 @@ pool.end()
   .catch(err => {});
 ```
 
+## Pool events
+
+|event|description|
+|---:|---|
+| **`acquire`** | This event emits a connection is acquired from pool.  |
+| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
+| **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
+| **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
+
+**Example:**
+
+```javascript
+pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
+```
+
 # Pool cluster API
 
 Cluster handle multiple pools according to patterns and handle failover / distributed load (round robin / random / ordered ).
@@ -1091,7 +1107,7 @@ cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 })
 cluster.getConnection("slave*")
 ```
 
-## `events`
+## `poolCluster events`
 
 PoolCluster object inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html). 
 Emits 'remove' event when a node is removed from configuration if the option `removeNodeErrorCount` is defined 

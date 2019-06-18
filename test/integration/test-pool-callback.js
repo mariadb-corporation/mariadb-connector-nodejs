@@ -549,10 +549,10 @@ describe('Pool callback', () => {
       idleTimeout: 2
     });
 
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 15000; i++) {
       pool.query('SELECT ' + i);
     }
-    pool.query('SELECT 10000', [], err => {
+    pool.query('SELECT 15000', [], err => {
       if (err) {
         pool.end();
         done(err);
