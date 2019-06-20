@@ -19,7 +19,7 @@ describe('authentication plugin', () => {
             .then(() => {
               return shareConn.query(
                 "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                  "VIA ed25519 USING 'ZIgUREUg5PVgQ6LskhXmO+eZLS0nC8be6HPjYWR4YJY'"
+                  "VIA ed25519 USING 'Dl7wP5om2lNrAfxWw3ooyZKDAoBztFNuhtVFdIrWfi0'"
               );
             })
             .then(() => {
@@ -31,20 +31,13 @@ describe('authentication plugin', () => {
               base
                 .createConnection({
                   user: 'verificationEd25519AuthPlugin',
-                  password: 'secret'
+                  password: '!Passw0rd3'
                 })
-                .then(() => {
-                  done(new Error('must have throw an error'));
-                })
-                .catch(err => {
-                  const expectedMsg = err.message.includes(
-                    "Client does not support authentication protocol 'client_ed25519' requested by server."
-                  );
-                  if (!expectedMsg) console.log(err);
-                  shareConn.query('UNINSTALL PLUGIN ed25519');
-                  assert(expectedMsg);
+                .then(conn => {
+                  conn.end();
                   done();
-                });
+                })
+                .catch(done);
             })
             .catch(err => {
               const expectedMsg = err.message.includes(
@@ -193,5 +186,60 @@ describe('authentication plugin', () => {
           done(err);
         }
       });
+  });
+
+  it('multi authentication plugin', function(done) {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3))
+      this.skip();
+    shareConn.query("drop user IF EXISTS mysqltest1@'%'");
+    shareConn
+      .query(
+        "CREATE USER mysqltest1@'%' IDENTIFIED " +
+          "VIA ed25519 as password('!Passw0rd3') " +
+          " OR mysql_native_password as password('!Passw0rd3Works')"
+      )
+      .then(() => {
+        return shareConn.query("grant all on *.* to mysqltest1@'%'");
+      })
+      .then(() => {
+        return base.createConnection({
+          user: 'mysqltest1',
+          password: '!Passw0rd3',
+          debug: true
+        });
+      })
+      .then(conn => {
+        return conn.query('select 1').then(res => {
+          return conn.end();
+        });
+      })
+      .then(() => {
+        base
+          .createConnection({
+            user: 'mysqltest1',
+            password: '!Passw0rd3Works'
+          })
+          .then(conn => {
+            conn
+              .query('select 1')
+              .then(res => {
+                conn.end();
+                base
+                  .createConnection({
+                    user: 'mysqltest1',
+                    password: '!Passw0rd3Wrong'
+                  })
+                  .then(conn => {
+                    done(new Error('must have throw Error!'));
+                  })
+                  .catch(() => {
+                    done();
+                  });
+              })
+              .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
   });
 });
