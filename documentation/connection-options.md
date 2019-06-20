@@ -351,6 +351,8 @@ mariadb.createConnection({
 | **sessionVariables** | Permit to set session variables when connecting. Example: sessionVariables:{'idle_transaction_timeout':10000}|*json* |
 | **initSql** | When a connection is established, permit to execute commands before using connection|*string|array* |
 | **bulk** | disabled bulk command in batch|*boolean* |
+| **permitConnectionWhenExpired** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
+
 
 
 ## F.A.Q.

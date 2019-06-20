@@ -773,4 +773,96 @@ describe('connection', () => {
       done();
     }
   });
+
+  it('connection error if user expired', function(done) {
+    if (
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 3)) ||
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
+      process.env.MAXSCALE_VERSION
+    ) {
+      //session tracking not implemented
+      this.skip();
+    }
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query('set global disconnect_on_expired_password= ON');
+    shareConn.query(
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY 'mypassword' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query(
+      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY 'mypassword'"
+    );
+    shareConn.query(
+      'set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)'
+    );
+    shareConn.query(
+      'update mysql.global_priv set\n' +
+        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+        "    where user='jeffrey'"
+    );
+    shareConn.query('flush privileges').then(() => {
+      base
+        .createConnection({
+          user: 'jeffrey',
+          password: 'mypassword'
+        })
+        .then(conn => {
+          done(new Error('must have thrown error !'));
+        })
+        .catch(err => {
+          shareConn.query('set global disconnect_on_expired_password= OFF');
+          assert.equal(err.sqlState, 'HY000');
+          assert.equal(err.code, 'ER_MUST_CHANGE_PASSWORD_LOGIN');
+          done();
+        });
+    });
+  });
+
+  it('connection with expired user', function(done) {
+    if (
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 3)) ||
+      (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
+      process.env.MAXSCALE_VERSION
+    ) {
+      //session tracking not implemented
+      this.skip();
+    }
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query('set global disconnect_on_expired_password= ON');
+    shareConn.query(
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY 'mypassword' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query(
+      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY 'mypassword'"
+    );
+    shareConn.query(
+      'set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)'
+    );
+    shareConn.query(
+      'update mysql.global_priv set\n' +
+        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+        "    where user='jeffrey'"
+    );
+    shareConn.query('flush privileges').then(() => {
+      base
+        .createConnection({
+          user: 'jeffrey',
+          password: 'mypassword',
+          permitConnectionWhenExpired: true
+        })
+        .then(conn => {
+          conn
+            .query("SET PASSWORD = PASSWORD('blabla')")
+            .then(() => {
+              shareConn.query('set global disconnect_on_expired_password= OFF');
+              conn.end();
+              done();
+            })
+            .catch(done);
+        })
+        .catch(err => {
+          done(new Error('must have thrown error !'));
+          done();
+        });
+    });
+  });
 });
