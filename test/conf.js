@@ -5,7 +5,8 @@ let baseConfig = {
   database: 'testn',
   host: 'localhost',
   connectTimeout: 1000,
-  port: 3306
+  port: 3306,
+  compress: true
 };
 
 if (process.env.TEST_HOST) baseConfig['host'] = process.env.TEST_HOST;

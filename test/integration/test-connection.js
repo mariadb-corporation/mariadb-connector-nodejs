@@ -776,7 +776,8 @@ describe('connection', () => {
 
   it('connection error if user expired', function(done) {
     if (
-      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 3)) ||
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(10, 4, 3) ||
       process.env.MAXSCALE_VERSION
     ) {
       //session tracking not implemented
@@ -818,7 +819,8 @@ describe('connection', () => {
 
   it('connection with expired user', function(done) {
     if (
-      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 3)) ||
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(10, 4, 3) ||
       process.env.MAXSCALE_VERSION
     ) {
       //session tracking not implemented
