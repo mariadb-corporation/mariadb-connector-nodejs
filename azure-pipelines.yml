@@ -1,0 +1,201 @@
+resources:
+  containers:
+
+    - container: ubuntu-1604
+      image: ubuntu:16.04
+      options: "--name ubuntu-1604 --add-host=mariadb.example.com:127.0.0.1 -v /usr/bin/docker:/tmp/docker:ro"
+
+    - container: ubuntu-1804
+      image: ubuntu:18.04
+      options: "--name ubuntu-1804 --add-host=mariadb.example.com:127.0.0.1 -v /usr/bin/docker:/tmp/docker:ro"
+
+jobs:
+
+  - job: SSLFiles
+    displayName: 'Creating SSL Files'
+    pool:
+      vmImage: 'ubuntu-16.04'
+      container: $[ variables['containerImage'] ]
+    steps:
+      - script: |
+          java --version
+          mkdir tmp
+          .travis/gen-ssl.sh mariadb.example.com tmp
+          ls -lrt tmp
+          cp -R tmp $BUILD_ARTIFACTSTAGINGDIRECTORY
+        displayName: 'create SSL certificates'
+
+      - task: PublishPipelineArtifact@0
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+          artifactName: ssl_certs
+
+  - job: windowsTest
+    displayName: 'test windows'
+    pool:
+      vmImage: 'win1803'
+    dependsOn:
+      - SSLFiles
+    steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download SSL files'
+        inputs:
+          artifactName: ssl_certs
+          targetPath: $(System.DefaultWorkingDirectory)
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download 10.4 enterprise server artifact files'
+        inputs:
+          source: 'specific'
+          project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
+          artifact: Windows
+          runVersion: 'specific'
+          runId: 408
+          downloadPath: $(System.DefaultWorkingDirectory)
+          #buildVersionToDownload: 'latest'
+          #pipeline: 'mariadb-corporation.MariaDBEnterprise'
+          #branchName: 'refs/heads/10.4-enterprise'
+          #definition: '3'
+      - script: |
+          node --version
+          npm --version
+        displayName: 'install node.js'
+
+      - script: |
+          msiexec /i $(System.DefaultWorkingDirectory)\win_build\win\packaging\mariadb-10.4.5-winx64.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
+          c:\projects\server\bin\mysql.exe -e "create database testj" --user=root
+        displayName: 'install server'
+
+      - script: |
+          echo 127.0.0.1 mariadb.example.com >> %WINDIR%\System32\Drivers\Etc\Hosts
+          dir
+        displayName: 'set hostname'
+
+      - script: |
+          npm install
+        displayName: 'install connector'
+      - script: npm test
+        displayName: 'run tests'
+        env:
+          TEST_HOST: "mariadb.example.com"
+          RUN_LONG_TEST: 1
+          TEST_PASSWORD: 'Passw@rd2'
+          TEST_SSL_CA_FILE: "$(System.DefaultWorkingDirectory)/tmp/server.crt"
+          TEST_SSL_CLIENT_KEY_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.key"
+          TEST_SSL_CLIENT_CERT_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.crt"
+          TEST_SSL_CLIENT_KEYSTORE_FILE: "$(System.DefaultWorkingDirectory)/tmp/client-keystore.p12"
+
+  - job: RunInContainer
+    pool:
+      vmImage: 'ubuntu-16.04'
+    displayName: 'test ubuntu xenial+bionic'
+    dependsOn:
+      - SSLFiles
+    strategy:
+      matrix:
+        ubuntu-1604:
+          containerImage: ubuntu-1604
+          containerName: xenial
+        ubuntu-1804:
+          containerImage: ubuntu-1804
+          containerName: bionic
+
+    container: $[variables['containerImage']]
+
+    steps:
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          artifactName: ssl_certs
+          targetPath: $(System.DefaultWorkingDirectory)
+
+      - script: /tmp/docker exec -t -u 0 $(containerImage) sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" -y install sudo"
+        displayName: Set up sudo
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download 10.4 enterprise server artifact files'
+        inputs:
+          source: 'specific'
+          project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
+          artifact: '$(containerImage)-deb'
+          runVersion: 'specific'
+          runId: 408
+          downloadPath: $(System.DefaultWorkingDirectory)
+
+
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download galera server artifact files'
+        inputs:
+          source: 'specific'
+          project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
+          artifact: $(containerImage)
+          runVersion: 'latestFromBranch'
+          pipeline: 2
+          runBranch: 'refs/heads/es-mariadb-4.x'
+          downloadPath: $(System.DefaultWorkingDirectory)
+
+      - script: |
+          ls -lrt .
+          sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https ca-certificates tzdata pwgen
+          export DEBIAN_FRONTEND="noninteractive"
+          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password password !Passw0rd"
+          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password_again password !Passw0rd"
+          sudo apt-get update -y
+
+          sudo apt-get install --allow-unauthenticated -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 gawk lsof psmisc libaio1 perl libreadline5
+
+          echo 'Installing deb files'
+          cd binary
+          ls -lrt binary
+          rm -R binary/mariadb-plugin*
+          rm -R binary/*-dev*.deb
+          rm -R binary/*-test*.deb
+          rm -R binary/galera-arbitrator*.deb
+          chmod 777 binary
+          sudo apt install -f -y binary/*.deb
+
+          sudo ls -lrt /etc/mysql/
+          sudo bash -c 'echo "ssl-ca=$(System.DefaultWorkingDirectory)/tmp/ca.crt" >> /etc/mysql/mariadb-enterprise.cnf'
+          sudo bash -c 'echo "ssl-cert=$(System.DefaultWorkingDirectory)/tmp/server.crt" >> /etc/mysql/mariadb-enterprise.cnf'
+          sudo bash -c 'echo "ssl-key=$(System.DefaultWorkingDirectory)/tmp/server.key" >> /etc/mysql/mariadb-enterprise.cnf'
+          sudo tail -n 500 /etc/mysql/mariadb-enterprise.cnf
+
+          sudo service mysql restart
+
+        displayName: 'install server'
+
+      - script: |
+          sudo mysql -e "CREATE USER 'root'@'%' identified by 'Passw@rd2';"
+          sudo mysql -e "GRANT ALL on *.* to 'root'@'%' identified by 'Passw@rd2' with grant option;"
+          sudo mysql -e "CREATE DATABASE testj;"
+        displayName: 'Add non socket user'
+
+      - script: |
+          sudo apt-get install -y curl
+          curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+          sudo apt-get update
+          sudo apt-get install -y nodejs
+          ls -lrt /usr/bin/nodejs
+
+          ls -lrt /usr/lib/node_modules
+
+          nodejs -v
+          node -v
+          npm -v
+        displayName: 'Install node.js'
+
+      - script: |
+          ls -lrt
+          npm install
+          npm test
+        env:
+          TEST_HOST: "mariadb.example.com"
+          RUN_LONG_TEST: 1
+          TEST_PASSWORD: 'Passw@rd2'
+          TEST_SSL_CA_FILE: "$(System.DefaultWorkingDirectory)/tmp/server.crt"
+          TEST_SSL_CLIENT_KEY_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.key"
+          TEST_SSL_CLIENT_CERT_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.crt"
+          TEST_SSL_CLIENT_KEYSTORE_FILE: "$(System.DefaultWorkingDirectory)/tmp/client-keystore.p12"
+        displayName: 'run tests'
