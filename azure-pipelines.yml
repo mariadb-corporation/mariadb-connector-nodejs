@@ -63,7 +63,8 @@ jobs:
 
       - script: |
           dir $(System.DefaultWorkingDirectory)\win_build\
-          msiexec /i $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.*-winx64.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
+          for /f %a in ('dir /B $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.*-winx64.msi') do set servername =%a
+          msiexec /i $(servername) INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
           c:\projects\server\bin\mysql.exe -e "create database testj" --user=root
           c:\projects\server\bin\mysql.exe -e "CREATE USER 'root'@'%' identified by 'Passw@rd2';" --user=root
           c:\projects\server\bin\mysql.exe -e "GRANT ALL on *.* to 'root'@'%' identified by 'Passw@rd2' with grant option;" --user=root
