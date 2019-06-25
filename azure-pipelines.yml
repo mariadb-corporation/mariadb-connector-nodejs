@@ -62,7 +62,8 @@ jobs:
         displayName: 'install node.js'
 
       - script: |
-          msiexec /i $(System.DefaultWorkingDirectory)\win_build\win\packaging\mariadb-10.4.5-winx64.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
+          dir $(System.DefaultWorkingDirectory)\win_build\
+          msiexec /i $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.4.6-winx64.msi INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
           c:\projects\server\bin\mysql.exe -e "create database testj" --user=root
         displayName: 'install server'
 
