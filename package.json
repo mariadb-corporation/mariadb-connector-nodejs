@@ -45,8 +45,8 @@
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1+",
   "dependencies": {
-    "denque": "^1.4.0",
-    "iconv-lite": "^0.4.24",
+    "denque": "^1.4.1",
+    "iconv-lite": "^0.5.0",
     "long": "^4.0.0",
     "moment-timezone": "^0.5.25"
   },
