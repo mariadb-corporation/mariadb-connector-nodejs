@@ -39,6 +39,37 @@ describe('basic query', () => {
       .catch(done);
   });
 
+  it('array parameter', function(done) {
+    base
+      .createConnection({
+        user: 'root',
+        debug: true,
+        permitSetMultiParamEntries: true
+      })
+      .then(conn => {
+        conn.query('CREATE TEMPORARY TABLE arrayParam (id int, val varchar(10))');
+        conn.query("INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')");
+        conn
+          .query('SELECT * FROM arrayParam WHERE val IN ?', [['b', 'c', 1]])
+          .then(rows => {
+            assert.deepEqual(rows, [
+              {
+                id: 2,
+                val: 'b'
+              },
+              {
+                id: 3,
+                val: 'c'
+              }
+            ]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+
+  });
   it('permitSetMultiParamEntries set', done => {
     const jsonValue = { id: 1, val: 'test' };
     base
