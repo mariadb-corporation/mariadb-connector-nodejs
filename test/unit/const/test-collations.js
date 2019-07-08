@@ -4,16 +4,23 @@ const Collations = require('../../../lib/const/collations');
 const { assert } = require('chai');
 
 describe('collations', () => {
-  it('fromEncoding wrong encoding', () => {
-    try {
-      Collations.fromEncoding('unknown');
-    } catch (err) {
-      assert.isTrue(err.message.includes("unknown encoding : '"));
-    }
+  it('fromCharset wrong charset', () => {
+    assert.strictEqual(Collations.fromCharset('unknown'), undefined);
   });
 
-  it('fromEncoding good encoding', () => {
-    assert.equal(Collations.fromEncoding('utf8').name, 'UTF8_GENERAL_CI');
+  it('fromCharset good charset', () => {
+    assert.equal(Collations.fromCharset('utf8').name, 'UTF8_GENERAL_CI');
+  });
+
+  it('fromName wrong value', () => {
+    assert.equal(Collations.fromName('unknown'), undefined);
+  });
+
+  it('fromName good value', () => {
+    assert.equal(
+      Collations.fromName('UTF8_GENERAL_CI').name,
+      'UTF8_GENERAL_CI'
+    );
   });
 
   it('fromIndex wrong index', () => {

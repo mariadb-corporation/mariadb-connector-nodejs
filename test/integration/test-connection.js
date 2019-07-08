@@ -46,7 +46,7 @@ describe('connection', () => {
     base
       .createConnection({
         connectAttributes: { par1: 'bouh', par2: mediumAttribute },
-        charset: 'BIG5_CHINESE_CI'
+        collation: 'BIG5_CHINESE_CI'
       })
       .then(conn => {
         conn
@@ -697,7 +697,7 @@ describe('connection', () => {
     let currDb = Conf.baseConfig.database;
     assert.equal(currDb, shareConn.info.database);
     shareConn
-      .query('CREATE DATABASE changedb')
+      .query('CREATE DATABASE IF NOT EXISTS changedb')
       .then(() => {
         return shareConn.query('USE changedb');
       })

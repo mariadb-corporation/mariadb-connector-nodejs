@@ -272,7 +272,7 @@ describe('batch', () => {
       .createConnection({
         compress: useCompression,
         bulk: useBulk,
-        charset: 'CP1251_GENERAL_CI'
+        collation: 'CP1251_GENERAL_CI'
       })
       .then(conn => {
         const timeout = setTimeout(() => {

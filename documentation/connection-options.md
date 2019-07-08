@@ -333,7 +333,8 @@ mariadb.createConnection({
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **charset** | Protocol character set used with the server.  It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4_UNICODE_CI| 
+| **charset** | Protocol character set used with the server. Connection collation will be the default collation associated with charset. It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4| 
+| **collation** | (used in replacement of charset) Permit to defined collation used for connection|*string* |UTF8MB4_UNICODE_CI| 
 | **dateStrings** | Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
 | **debug** |  Logs all exchanges with the server.  Displays in hexa.|*boolean* |false| 
 | **foundRows** | When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|

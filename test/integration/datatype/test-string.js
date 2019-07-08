@@ -79,7 +79,7 @@ describe('string', () => {
     ];
     for (let i = 0; i < encodings.length; i++) {
       base
-        .createConnection({ charset: encodings[i] })
+        .createConnection({ collation: encodings[i] })
         .then(conn => {
           conn
             .query('select ? as t', value)

@@ -142,7 +142,7 @@ describe('change user', () => {
           .changeUser({
             user: 'ChangeUser',
             password: 'mypassword',
-            charset: 'UTF8_PERSIAN_CI'
+            collation: 'UTF8_PERSIAN_CI'
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');

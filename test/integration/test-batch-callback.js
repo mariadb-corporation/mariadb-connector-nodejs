@@ -283,7 +283,7 @@ describe('batch callback', () => {
     const conn = base.createCallbackConnection({
       compress: useCompression,
       bulk: useBulk,
-      charset: 'CP1251_GENERAL_CI'
+      collation: 'CP1251_GENERAL_CI'
     });
     conn.connect(function(err) {
       if (err) return done(err);

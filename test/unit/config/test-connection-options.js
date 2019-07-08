@@ -4,6 +4,25 @@ const { assert } = require('chai');
 const ConnOptions = require('../../../lib/config/connection-options');
 
 describe('test connection options', () => {
+  it('charset option', () => {
+    let opt = new ConnOptions();
+    assert.equal(opt.collation.name, 'UTF8MB4_UNICODE_CI');
+
+    opt = new ConnOptions({ collation: 'utf8mb4_esperanto_ci' });
+    assert.equal(opt.collation.name, 'UTF8MB4_ESPERANTO_CI');
+
+    //for compatibility, but will be removed in the future
+    opt = new ConnOptions({ charset: 'utf8mb4_esperanto_ci' });
+    assert.equal(opt.collation.name, 'UTF8MB4_ESPERANTO_CI');
+
+    opt = new ConnOptions({ charset: 'utf8' });
+    assert.equal(opt.collation.name, 'UTF8_GENERAL_CI');
+
+    opt = new ConnOptions({ charset: 'utf8mb4' });
+    //yes standard default to UTF8MB4_GENERAL_CI, not UTF8MB4_UNICODE_CI
+    assert.equal(opt.collation.name, 'UTF8MB4_GENERAL_CI');
+  });
+
   it('permitLocalInfile/pipelining combination ', () => {
     let opt = new ConnOptions();
     assert.isFalse(opt.permitLocalInfile);
@@ -161,7 +180,7 @@ describe('test connection options', () => {
 
     it('with options', () => {
       const result = ConnOptions.parse(
-        'mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true&charset=latin1_swedish_ci&maxAllowedPacket=1048576&permitSetMultiParamEntries=true'
+        'mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true&collation=latin1_swedish_ci&maxAllowedPacket=1048576&permitSetMultiParamEntries=true'
       );
       assert.deepEqual(result, {
         database: 'db',
@@ -172,7 +191,7 @@ describe('test connection options', () => {
         port: 3307,
         ssl: true,
         user: 'root',
-        charset: 'latin1_swedish_ci',
+        collation: 'latin1_swedish_ci',
         maxAllowedPacket: 1048576,
         permitSetMultiParamEntries: true
       });
