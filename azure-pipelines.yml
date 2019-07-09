@@ -174,7 +174,11 @@ jobs:
 
           sudo tail -n 5000 /etc/mysql/ssl.cnf
 
-          sudo service mysql restart
+          sudo mysql_install_db
+
+          sudo service mysql status
+          sudo service mysql start
+          sudo service mysql status
 
           #temporary fix for error in mariadb-enterprise.cnf
           #sudo apt purge -y mariadb-server
