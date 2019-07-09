@@ -35,9 +35,11 @@ describe('buffer', () => {
     shareConn
       .query('SELECT * FROM blobToBuff', [buf])
       .then(rows => {
-        assert.deepEqual(rows, [
-          { id: 1, test: Buffer.from('a'), test2: Buffer.from('b'), test3: 'c' }
-        ]);
+        assert.strictEqual(rows.length, 1);
+        assert.strictEqual(rows[0].id, 1);
+        assert.deepStrictEqual(rows[0].test, Buffer.from('a'));
+        assert.deepStrictEqual(rows[0].test2, Buffer.from('b'));
+        assert.strictEqual(rows[0].test3, 'c');
         done();
       })
       .catch(done);

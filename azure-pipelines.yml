@@ -20,6 +20,7 @@ jobs:
       - script: |
           java --version
           mkdir tmp
+          chmod 777 .travis/gen-ssl.sh
           .travis/gen-ssl.sh mariadb.example.com tmp
           ls -lrt tmp
           cp -R tmp $BUILD_ARTIFACTSTAGINGDIRECTORY
@@ -50,7 +51,7 @@ jobs:
           project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
           artifact: Windows
           runVersion: 'specific'
-          runId: 408
+          runId: 438
           downloadPath: $(System.DefaultWorkingDirectory)
           #buildVersionToDownload: 'latest'
           #pipeline: 'mariadb-corporation.MariaDBEnterprise'
@@ -63,11 +64,12 @@ jobs:
 
       - script: |
           dir $(System.DefaultWorkingDirectory)\win_build\
-          for /f %a in ('dir /B $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.*-winx64.msi') do set servername =%a
-          msiexec /i $(servername) INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
-          c:\projects\server\bin\mysql.exe -e "create database testj" --user=root
-          c:\projects\server\bin\mysql.exe -e "CREATE USER 'root'@'%' identified by 'Passw@rd2';" --user=root
-          c:\projects\server\bin\mysql.exe -e "GRANT ALL on *.* to 'root'@'%' identified by 'Passw@rd2' with grant option;" --user=root
+          for /f %%a in ('dir /B $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.*-winx64.msi') do set servername=$(System.DefaultWorkingDirectory)\win_build\%%a
+          echo %servername%
+          msiexec /i %servername% INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
+          c:\projects\server\bin\mysql.exe -e "create database testn" --user=root
+          c:\projects\server\bin\mysql.exe -e "CREATE USER 'someUser'@'%' identified by 'Passw@rd2';" --user=root
+          c:\projects\server\bin\mysql.exe -e "GRANT ALL on *.* to 'someUser'@'%' identified by 'Passw@rd2' with grant option;" --user=root
         displayName: 'install server'
 
       - script: |
@@ -85,6 +87,7 @@ jobs:
         env:
           TEST_HOST: "mariadb.example.com"
           RUN_LONG_TEST: 1
+          TEST_USER: 'someUser'
           TEST_PASSWORD: 'Passw@rd2'
           TEST_SSL_CA_FILE: "$(System.DefaultWorkingDirectory)/tmp/server.crt"
           TEST_SSL_CLIENT_KEY_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.key"
@@ -125,7 +128,7 @@ jobs:
           project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
           artifact: '$(containerImage)-deb'
           runVersion: 'specific'
-          runId: 408
+          runId: 569
           downloadPath: $(System.DefaultWorkingDirectory)
 
 
@@ -146,36 +149,55 @@ jobs:
 
           sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https ca-certificates tzdata pwgen
           export DEBIAN_FRONTEND="noninteractive"
-          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password password !Passw0rd"
-          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password_again password !Passw0rd"
+          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password password P4ssw@rd"
+          sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password_again password P4ssw@rd"
           sudo apt-get update -y
 
           sudo apt-get install --allow-unauthenticated -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 gawk lsof psmisc libaio1 perl libreadline5
 
           echo 'Installing deb files'
-          cd binary
           ls -lrt binary
-          rm -R binary/mariadb-plugin*
-          rm -R binary/*-dev*.deb
-          rm -R binary/*-test*.deb
-          rm -R binary/galera-arbitrator*.deb
-          chmod 777 binary
-          sudo apt install -f -y binary/*.deb
+          sudo chmod 777 binary
+          sudo chmod 777 binary/*
+          cd binary
+          rm -R ./mariadb-plugin*
+          rm -R */*-dev*.deb
+          rm -R ./*-test*.deb
+          rm -R ./galera-arbitrator*.deb
+          sudo apt install -f -y ./*.deb
 
-          sudo ls -lrt /etc/mysql/
-          sudo bash -c 'echo "ssl-ca=$(System.DefaultWorkingDirectory)/tmp/ca.crt" >> /etc/mysql/mariadb-enterprise.cnf'
-          sudo bash -c 'echo "ssl-cert=$(System.DefaultWorkingDirectory)/tmp/server.crt" >> /etc/mysql/mariadb-enterprise.cnf'
-          sudo bash -c 'echo "ssl-key=$(System.DefaultWorkingDirectory)/tmp/server.key" >> /etc/mysql/mariadb-enterprise.cnf'
-          sudo tail -n 500 /etc/mysql/mariadb-enterprise.cnf
+          #sudo sed -i 's/secure-file-priv/#secure-file-priv/g' /etc/mysql/conf.d/mariadb-enterprise.cnf
+          sudo tail -n 5000 /etc/mysql/conf.d/mariadb-enterprise.cnf
+
+          sudo touch /etc/mysql/ssl.cnf
+          sudo chmod 777 /etc/mysql/ssl.cnf
+          sudo echo '[mysqld]' >> /etc/mysql/ssl.cnf
+          sudo bash -c 'echo "ssl-ca=$(System.DefaultWorkingDirectory)/tmp/ca.crt" >> /etc/mysql/ssl.cnf'
+          sudo bash -c 'echo "ssl-cert=$(System.DefaultWorkingDirectory)/tmp/server.crt" >> /etc/mysql/ssl.cnf'
+          sudo bash -c 'echo "ssl-key=$(System.DefaultWorkingDirectory)/tmp/server.key" >> /etc/mysql/ssl.cnf'
+
+          sudo tail -n 5000 /etc/mysql/ssl.cnf
 
           sudo service mysql restart
 
+          #temporary fix for error in mariadb-enterprise.cnf
+          #sudo apt purge -y mariadb-server
+          #sudo apt purge -y mariadb-server-10.4
+
+          #reinstall
+          #sudo apt install -f -y ./*.deb
+
+          #systemctl status mariadb.service
+          #/usr/sbin/mysqld &
+
+        env:
+          WORKING_DIR: $(System.DefaultWorkingDirectory)
         displayName: 'install server'
 
       - script: |
-          sudo mysql -e "CREATE USER 'root'@'%' identified by 'Passw@rd2';"
-          sudo mysql -e "GRANT ALL on *.* to 'root'@'%' identified by 'Passw@rd2' with grant option;"
-          sudo mysql -e "CREATE DATABASE testj;"
+          sudo mysql -e "CREATE USER 'someUser'@'%' identified by 'Passw@rd2';"
+          sudo mysql -e "GRANT ALL on *.* to 'someUser'@'%' identified by 'Passw@rd2' with grant option;"
+          sudo mysql -e "CREATE DATABASE testn;"
         displayName: 'Add non socket user'
 
       - script: |
@@ -200,6 +222,7 @@ jobs:
           TEST_HOST: "mariadb.example.com"
           RUN_LONG_TEST: 1
           TEST_PASSWORD: 'Passw@rd2'
+          TEST_USER: 'someUser'
           TEST_SSL_CA_FILE: "$(System.DefaultWorkingDirectory)/tmp/server.crt"
           TEST_SSL_CLIENT_KEY_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.key"
           TEST_SSL_CLIENT_CERT_FILE: "$(System.DefaultWorkingDirectory)/tmp/client.crt"

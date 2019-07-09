@@ -24,7 +24,7 @@ describe('ssl', function() {
 
     shareConn
       .query(
-        "CREATE USER 'sslTestUser'@'%'" +
+        "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
           ((shareConn.info.isMariaDB() &&
             shareConn.info.hasMinVersion(10, 2, 0)) ||
           (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
@@ -33,7 +33,7 @@ describe('ssl', function() {
       )
       .then(() => {
         return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
             ((shareConn.info.isMariaDB() &&
               !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() &&
@@ -44,7 +44,7 @@ describe('ssl', function() {
       })
       .then(() => {
         return shareConn.query(
-          "CREATE USER 'X509testUser'@'%'" +
+          "CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
             ((shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() &&
@@ -55,7 +55,7 @@ describe('ssl', function() {
       })
       .then(() => {
         return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%'" +
+          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
             ((shareConn.info.isMariaDB() &&
               !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() &&
@@ -67,11 +67,21 @@ describe('ssl', function() {
       .then(() => {
         if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
           return shareConn.query(
-            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'myPwd'"
+            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'ytoKS@ç%ùed5'"
           );
         }
         return shareConn.query(
-          "SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('myPwd')"
+          "SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('ytoKS@ç%ùed5')"
+        );
+      })
+      .then(() => {
+        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
+          return shareConn.query(
+            "ALTER USER 'X509testUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'éà@d684SQpl¨^'"
+          );
+        }
+        return shareConn.query(
+          "SET PASSWORD FOR 'X509testUser'@'%' = PASSWORD('éà@d684SQpl¨^')"
         );
       })
       .then(() => {
@@ -114,7 +124,11 @@ describe('ssl', function() {
   it('signed certificate error ', function(done) {
     if (!sslEnable) this.skip();
     base
-      .createConnection({ user: 'sslTestUser', password: 'myPwd', ssl: true })
+      .createConnection({
+        user: 'sslTestUser',
+        password: 'ytoKS@ç%ùed5',
+        ssl: true
+      })
       .then(() => {
         done(new Error('Must have thrown an exception !'));
       })
@@ -140,7 +154,7 @@ describe('ssl', function() {
     base
       .createConnection({
         user: 'sslTestUser',
-        password: 'myPwd',
+        password: 'ytoKS@ç%ùed5',
         ssl: { rejectUnauthorized: false }
       })
       .then(conn => {
@@ -185,6 +199,8 @@ describe('ssl', function() {
 
   it('TLSv1 working', function(done) {
     if (!sslEnable) this.skip();
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0))
+      this.skip();
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
@@ -388,7 +404,9 @@ describe('ssl', function() {
         const isWin = process.platform === 'win32';
         let expectedProtocol = 'TLSv1.2';
         if (shareConn.info.isMariaDB()) {
-          if (isWin) expectedProtocol = 'TLSv1.1';
+          if (isWin && !shareConn.info.hasMinVersion(10, 4, 0)) {
+            expectedProtocol = 'TLSv1.1';
+          }
         } else if (!shareConn.info.hasMinVersion(8, 0, 0)) {
           expectedProtocol = 'TLSv1.1';
         }
@@ -406,7 +424,7 @@ describe('ssl', function() {
     base
       .createConnection({
         user: 'X509testUser',
-        password: null,
+        password: 'éà@d684SQpl¨^',
         host: 'mariadb.example.com',
         ssl: { ca: ca }
       })
@@ -434,7 +452,7 @@ describe('ssl', function() {
     base
       .createConnection({
         user: 'X509testUser',
-        password: null,
+        password: 'éà@d684SQpl¨^',
         host: 'mariadb.example.com',
         ssl: {
           ca: ca,
@@ -461,7 +479,7 @@ describe('ssl', function() {
     base
       .createConnection({
         user: 'X509testUser',
-        password: null,
+        password: 'éà@d684SQpl¨^',
         host: 'mariadb.example.com',
         ssl: {
           ca: ca,
@@ -487,7 +505,7 @@ describe('ssl', function() {
         conn = con;
         conn.query("DROP USER IF EXISTS ChangeUser@'%'").catch(err => {});
         conn.query('FLUSH PRIVILEGES');
-        conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
+        conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mySupPassw@rd'");
         conn.query(
           "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option"
         );
@@ -500,7 +518,7 @@ describe('ssl', function() {
             currUser = res[0]['CURRENT_USER'];
             return conn.changeUser({
               user: 'ChangeUser',
-              password: 'mypassword',
+              password: 'mySupPassw@rd',
               connectAttributes: { par1: 'bouh', par2: 'bla' }
             });
           })

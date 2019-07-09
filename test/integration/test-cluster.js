@@ -393,13 +393,13 @@ describe('cluster', function() {
               setTimeout(() => {
                 testTimesWithError(poolCluster, /^node*/, 10)
                   .then(nodes => {
+                    poolCluster.end().then(() => {
+                      proxy.close();
+                    });
                     expect([3, 4]).to.contain.members([nodes['node1']]);
                     expect([1, 2, 3, 4]).to.contain.members([nodes['node2']]);
                     expect([3, 4]).to.contain.members([nodes['node3']]);
-                    poolCluster.end().then(() => {
-                      proxy.close();
-                      done();
-                    });
+                    done();
                   })
                   .catch(err => {
                     proxy.close();
@@ -993,13 +993,13 @@ describe('cluster', function() {
                   testTimesCallback(
                     poolCluster,
                     (err, nodes) => {
+                      poolCluster.end(() => {
+                        proxy.close();
+                      });
                       expect([3, 4]).to.contain.members([nodes['node1']]);
                       expect([3, 4]).to.contain.members([nodes['node2']]);
                       expect([3, 4]).to.contain.members([nodes['node3']]);
-                      poolCluster.end(() => {
-                        proxy.close();
-                        done();
-                      });
+                      done();
                     },
                     /^node*/,
                     10

@@ -786,10 +786,10 @@ describe('connection', () => {
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
     shareConn.query(
-      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY 'mypassword' PASSWORD EXPIRE INTERVAL 1 DAY"
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
     );
     shareConn.query(
-      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY 'mypassword'"
+      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd'"
     );
     shareConn.query(
       'set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)'
@@ -803,7 +803,7 @@ describe('connection', () => {
       base
         .createConnection({
           user: 'jeffrey',
-          password: 'mypassword'
+          password: '5$?kLOPµ€rd'
         })
         .then(conn => {
           done(new Error('must have thrown error !'));
@@ -829,10 +829,10 @@ describe('connection', () => {
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
     shareConn.query(
-      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY 'mypassword' PASSWORD EXPIRE INTERVAL 1 DAY"
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
     );
     shareConn.query(
-      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY 'mypassword'"
+      "GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd'"
     );
     shareConn.query(
       'set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)'
@@ -846,12 +846,12 @@ describe('connection', () => {
       base
         .createConnection({
           user: 'jeffrey',
-          password: 'mypassword',
+          password: '5$?tuiHLKyklµ€rd',
           permitConnectionWhenExpired: true
         })
         .then(conn => {
           conn
-            .query("SET PASSWORD = PASSWORD('blabla')")
+            .query("SET PASSWORD = PASSWORD('5$?tuiHLKyklµ€rdssss')")
             .then(() => {
               shareConn.query('set global disconnect_on_expired_password= OFF');
               conn.end();
@@ -859,10 +859,7 @@ describe('connection', () => {
             })
             .catch(done);
         })
-        .catch(err => {
-          done(new Error('must have thrown error !'));
-          done();
-        });
+        .catch(done);
     });
   });
 });

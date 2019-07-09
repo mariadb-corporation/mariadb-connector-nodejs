@@ -10,49 +10,63 @@ describe('authentication plugin', () => {
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22))
       this.skip();
+
     shareConn
-      .query("INSTALL SONAME 'auth_ed25519'")
-      .then(
-        () => {
-          shareConn
-            .query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'")
-            .then(() => {
-              return shareConn.query(
-                "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                  "VIA ed25519 USING 'Dl7wP5om2lNrAfxWw3ooyZKDAoBztFNuhtVFdIrWfi0'"
-              );
-            })
-            .then(() => {
-              return shareConn.query(
-                "GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'"
-              );
-            })
-            .then(() => {
-              base
-                .createConnection({
-                  user: 'verificationEd25519AuthPlugin',
-                  password: '!Passw0rd3'
-                })
-                .then(conn => {
-                  conn.end();
-                  done();
-                })
-                .catch(done);
-            })
-            .catch(err => {
-              const expectedMsg = err.message.includes(
-                "Client does not support authentication protocol 'client_ed25519' requested by server."
-              );
-              if (!expectedMsg) console.log(err);
-              assert(expectedMsg);
-              done();
-            });
-        },
-        err => {
-          //server wasn't build with this plugin, cancelling test
+      .query('SELECT @@strict_password_validation as a')
+      .then(res => {
+        if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0))
           self.skip();
-        }
-      )
+        shareConn
+          .query("INSTALL SONAME 'auth_ed25519'")
+          .then(
+            () => {
+              shareConn
+                .query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'")
+                .then(() => {
+                  if (shareConn.info.hasMinVersion(10, 4, 0)) {
+                    return shareConn.query(
+                      "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+                        "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+                    );
+                  }
+                  return shareConn.query(
+                    "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+                      "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
+                  );
+                })
+                .then(() => {
+                  return shareConn.query(
+                    "GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'"
+                  );
+                })
+                .then(() => {
+                  base
+                    .createConnection({
+                      user: 'verificationEd25519AuthPlugin',
+                      password: 'MySup8%rPassw@ord'
+                    })
+                    .then(conn => {
+                      conn.end();
+                      done();
+                    })
+                    .catch(done);
+                })
+                .catch(err => {
+                  const expectedMsg = err.message.includes(
+                    "Client does not support authentication protocol 'client_ed25519' requested by server."
+                  );
+                  if (!expectedMsg) console.log(err);
+                  assert(expectedMsg);
+                  done();
+                });
+            },
+            err => {
+              //server wasn't build with this plugin, cancelling test
+              self.skip();
+            }
+          )
+          .catch(done);
+      })
       .catch(done);
   });
 
@@ -128,18 +142,28 @@ describe('authentication plugin', () => {
     shareConn
       .query('select @@version_compile_os,@@socket soc')
       .then(res => {
-        const unixUser = process.env.USERNAME;
-        if (unixUser === 'root') this.skip();
-
+        const unixUser = process.env.USER;
+        if (!unixUser || unixUser === 'root') this.skip();
+        console.log('unixUser:' + unixUser);
         shareConn
           .query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'")
           .catch(err => {});
         shareConn.query('DROP USER IF EXISTS ' + unixUser);
         shareConn.query(
-          'CREATE USER ' + unixUser + " IDENTIFIED VIA unix_socket using 'test'"
+          "CREATE USER '" +
+            unixUser +
+            "'@'" +
+            Conf.baseConfig.host +
+            "' IDENTIFIED VIA unix_socket"
         );
         shareConn
-          .query('GRANT ALL on *.* to ' + unixUser)
+          .query(
+            "GRANT ALL on *.* to '" +
+              unixUser +
+              "'@'" +
+              Conf.baseConfig.host +
+              "'"
+          )
           .then(() => {
             base
               .createConnection({ user: null, socketPath: res[0].soc })
