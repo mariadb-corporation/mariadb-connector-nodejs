@@ -27,7 +27,10 @@ describe('debug', () => {
         });
       })
       .then(() => {
-        done();
+        //ensure that debug from previous test are written to console
+        setTimeout(() => {
+          done();
+        }, 1000);
       })
       .catch(done);
   });
