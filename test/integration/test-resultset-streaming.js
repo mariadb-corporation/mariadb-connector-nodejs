@@ -133,9 +133,7 @@ describe('results-set streaming', () => {
       }
     });
 
-    shareConn
-      .queryStream('SELECT * FROM testStreamResult')
-      .pipe(writableStream);
+    shareConn.queryStream('SELECT * FROM testStreamResult').pipe(writableStream);
   });
 
   it('Streaming error handling', function(done) {

@@ -10,10 +10,7 @@ describe('server additional information API', () => {
       .then(res => {
         if (process.env.MAXSCALE_VERSION) {
           //maxscale version is set to 10.3.99-MariaDB-maxScale
-          assert.deepEqual(
-            shareConn.serverVersion(),
-            '10.3.99-MariaDB-maxScale'
-          );
+          assert.deepEqual(shareConn.serverVersion(), '10.3.99-MariaDB-maxScale');
         } else {
           assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
         }

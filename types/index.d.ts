@@ -11,9 +11,7 @@ import tls = require('tls');
 import stream = require('stream');
 import { Geometry } from 'geojson';
 
-export function createConnection(
-  connectionUri: string | ConnectionConfig
-): Promise<Connection>;
+export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
 

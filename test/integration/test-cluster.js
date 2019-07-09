@@ -66,9 +66,7 @@ describe('cluster', function() {
           });
         })
         .catch(err => {
-          expect(err.message).to.have.string(
-            "No node found for pattern '/^M*$/'"
-          );
+          expect(err.message).to.have.string("No node found for pattern '/^M*$/'");
           poolCluster.end().then(() => {
             done();
           });
@@ -88,9 +86,7 @@ describe('cluster', function() {
           return done(new Error('must have thrown an error'));
         });
       } catch (e) {
-        assert.isTrue(
-          e.message.includes("Node identifier 'node1' already exist")
-        );
+        assert.isTrue(e.message.includes("Node identifier 'node1' already exist"));
         poolCluster.end().then(() => {
           done();
         });
@@ -363,10 +359,7 @@ describe('cluster', function() {
 
     it('reusing node after timeout', function(done) {
       this.timeout(20000);
-      const cl = get3NodeClusterWithProxy(
-        { restoreNodeTimeout: 500 },
-        basePromise
-      );
+      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const poolCluster = cl.cluster;
       const proxy = cl.proxy;
       let removedNode = [];
@@ -453,11 +446,7 @@ describe('cluster', function() {
 
     it('socket close connection during query', function(done) {
       if (process.env.MAXSCALE_VERSION) this.skip();
-      if (
-        !shareConn.info.isMariaDB() ||
-        !shareConn.info.hasMinVersion(10, 1, 2)
-      )
-        this.skip();
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});
 
@@ -612,17 +601,16 @@ describe('cluster', function() {
           const promises = [];
           for (let i = 0; i < 60; i++) {
             promises.push(
-              filteredCluster.batch(
-                'INSERT INTO filteredSimpleBatch(val) values (?)',
-                [[1], [2], [3]]
-              )
+              filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [
+                [1],
+                [2],
+                [3]
+              ])
             );
           }
           Promise.all(promises)
             .then(() => {
-              return filteredCluster.query(
-                'SELECT count(*) as nb FROM filteredSimpleBatch'
-              );
+              return filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
             })
             .then(res => {
               expect(res[0].nb).to.equal(180);
@@ -958,10 +946,7 @@ describe('cluster', function() {
 
     it('reusing node after timeout', function(done) {
       this.timeout(20000);
-      const cl = get3NodeClusterWithProxy(
-        { restoreNodeTimeout: 500 },
-        baseCallback
-      );
+      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
       const poolCluster = cl.cluster;
       const proxy = cl.proxy;
       let removedNode = [];
@@ -1280,10 +1265,7 @@ describe('cluster', function() {
         .query('SELECT @node')
         .then(row => {
           nodeName = row[0]['@node'];
-          return conn.batch('INSERT INTO clusterInsert VALUES (?,?)', [
-            [1, 'TOM'],
-            [2, 'JERRY']
-          ]);
+          return conn.batch('INSERT INTO clusterInsert VALUES (?,?)', [[1, 'TOM'], [2, 'JERRY']]);
         })
         .then(res => {
           assert.equal(res.affectedRows, 2);

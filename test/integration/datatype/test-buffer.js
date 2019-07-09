@@ -52,11 +52,7 @@ describe('buffer', () => {
     const toInsert1 = '\u00D8bbcdefgh\njklmn"';
     const toInsert2 = '\u00D8abcdefgh\njklmn"';
 
-    shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [
-      2,
-      toInsert1,
-      toInsert2
-    ]);
+    shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [2, toInsert1, toInsert2]);
     shareConn
       .query('select * from BlobTeststreamtest2')
       .then(rows => {

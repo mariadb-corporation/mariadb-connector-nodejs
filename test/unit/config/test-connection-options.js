@@ -96,9 +96,7 @@ describe('test connection options', () => {
       new ConnOptions({ maxAllowedPacket: 'abc' });
       return new Error('must have thrown exception');
     } catch (e) {
-      assert.isTrue(
-        e.message.includes("maxAllowedPacket must be an integer. was 'abc'")
-      );
+      assert.isTrue(e.message.includes("maxAllowedPacket must be an integer. was 'abc'"));
     }
   });
 
@@ -151,9 +149,7 @@ describe('test connection options', () => {
     });
 
     it('single option', () => {
-      const result = ConnOptions.parse(
-        'mariadb://root:pass@localhost:3307/db?metaAsArray=false'
-      );
+      const result = ConnOptions.parse('mariadb://root:pass@localhost:3307/db?metaAsArray=false');
       assert.deepEqual(result, {
         database: 'db',
         host: 'localhost',
@@ -165,9 +161,7 @@ describe('test connection options', () => {
     });
 
     it('unknown option', () => {
-      const result = ConnOptions.parse(
-        'mariadb://root:pass@localhost:3307/db?wrongOption=false'
-      );
+      const result = ConnOptions.parse('mariadb://root:pass@localhost:3307/db?wrongOption=false');
       assert.deepEqual(result, {
         database: 'db',
         host: 'localhost',

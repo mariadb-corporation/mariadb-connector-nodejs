@@ -6,9 +6,7 @@ const { assert } = require('chai');
 describe('ok packet', () => {
   it('insertId', function(done) {
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE autoInc (id BIGINT not null primary key auto_increment)'
-      )
+      .query('CREATE TEMPORARY TABLE autoInc (id BIGINT not null primary key auto_increment)')
       .then(() => {
         return shareConn.query('INSERT INTO autoInc values ()');
       })
@@ -61,19 +59,13 @@ describe('ok packet', () => {
 
   it('negative insertId', function(done) {
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE negAutoInc (id BIGINT not null primary key auto_increment)'
-      )
+      .query('CREATE TEMPORARY TABLE negAutoInc (id BIGINT not null primary key auto_increment)')
       .then(() => {
-        return shareConn.query(
-          'INSERT INTO negAutoInc values (-9007199254740990)'
-        );
+        return shareConn.query('INSERT INTO negAutoInc values (-9007199254740990)');
       })
       .then(rows => {
         assert.equal(rows.insertId, -9007199254740990);
-        return shareConn.query(
-          'INSERT INTO negAutoInc values (-9007199254740989)'
-        );
+        return shareConn.query('INSERT INTO negAutoInc values (-9007199254740989)');
       })
       .then(rows => {
         assert.equal(rows.insertId, -9007199254740989);
@@ -101,9 +93,7 @@ describe('ok packet', () => {
       })
       .then(rows => {
         assert.equal(rows.insertId, -245);
-        return shareConn.query(
-          'INSERT INTO negAutoInc values (-9007199254740992)'
-        );
+        return shareConn.query('INSERT INTO negAutoInc values (-9007199254740992)');
       })
       .then(rows => {
         assert.equal(rows.insertId.toString(10), '-9007199254740992');
@@ -175,9 +165,7 @@ describe('ok packet', () => {
     shareConn
       .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
       .then(() => {
-        return shareConn.query(
-          'INSERT INTO updateResultSet1 values (1), (1), (2), (3)'
-        );
+        return shareConn.query('INSERT INTO updateResultSet1 values (1), (1), (2), (3)');
       })
       .then(() => {
         return shareConn.query('UPDATE updateResultSet1 set id = 1');
@@ -208,9 +196,7 @@ describe('ok packet', () => {
         conn
           .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
           .then(() => {
-            return conn.query(
-              'INSERT INTO updateResultSet1 values (1), (1), (2), (3)'
-            );
+            return conn.query('INSERT INTO updateResultSet1 values (1), (1), (2), (3)');
           })
           .then(() => {
             return conn.query('UPDATE updateResultSet1 set id = 1');

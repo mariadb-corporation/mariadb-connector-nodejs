@@ -83,11 +83,7 @@ describe('parse', () => {
     });
 
     it('Call', () => {
-      const res = Parse.searchPlaceholder(
-        'CALL dsdssd(:id1,:id2)',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('CALL dsdssd(:id1,:id2)', null, values);
       assert.deepEqual(res, {
         sql: 'CALL dsdssd(?,?)',
         values: [[1, 2], [null, 4], [6, 5]]
@@ -101,8 +97,7 @@ describe('parse', () => {
         values
       );
       assert.deepEqual(res, {
-        sql:
-          "UPDATE MultiTestt4 SET test = ? #comm :id3\n WHERE s='\\\\' and test = ?",
+        sql: "UPDATE MultiTestt4 SET test = ? #comm :id3\n WHERE s='\\\\' and test = ?",
         values: [[1, 2], [null, 4], [6, 5]]
       });
     });
@@ -123,11 +118,7 @@ describe('parse', () => {
     });
 
     it('select without parameter', () => {
-      const res = Parse.searchPlaceholder(
-        'SELECT testFunction()',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('SELECT testFunction()', null, values);
       assert.deepEqual(res, {
         sql: 'SELECT testFunction()',
         values: [[], [], []]
@@ -135,11 +126,7 @@ describe('parse', () => {
     });
 
     it('insert without parameter', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT VALUES (testFunction())',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT VALUES (testFunction())', null, values);
       assert.deepEqual(res, {
         sql: 'INSERT VALUES (testFunction())',
         values: [[], [], []]
@@ -155,11 +142,7 @@ describe('parse', () => {
     });
 
     it('insert without parameters', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO tt VALUES (1)',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO tt VALUES (1)', null, values);
       assert.deepEqual(res, {
         sql: 'INSERT INTO tt VALUES (1)',
         values: [[], [], []]
@@ -173,8 +156,7 @@ describe('parse', () => {
         values
       );
       assert.deepEqual(res, {
-        sql:
-          "INSERT INTO tt (tt) VALUES (?); INSERT INTO tt (tt) VALUES ('multiple')",
+        sql: "INSERT INTO tt (tt) VALUES (?); INSERT INTO tt (tt) VALUES ('multiple')",
         values: [[1], [null], [6]]
       });
     });
@@ -204,11 +186,7 @@ describe('parse', () => {
     });
 
     it('line end comment', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO tt (tt) VALUES (:id1) --fin',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO tt (tt) VALUES (:id1) --fin', null, values);
       assert.deepEqual(res, {
         sql: 'INSERT INTO tt (tt) VALUES (?) --fin',
         values: [[1], [null], [6]]
@@ -234,12 +212,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO tt (tt, tt2) VALUES',
-          ' (LAST_INSERT_ID(), ',
-          ')',
-          ''
-        ],
+        partList: ['INSERT INTO tt (tt, tt2) VALUES', ' (LAST_INSERT_ID(), ', ')', ''],
         values: [[1], [null], [6]],
         reWritable: false
       });
@@ -248,18 +221,10 @@ describe('parse', () => {
 
   describe('batch rewrite', () => {
     it('select', () => {
-      const res = Parse.splitRewritableQuery(
-        'select \'\\\'\' as a, ? as b, "\\"" as c, ? as d'
-      );
+      const res = Parse.splitRewritableQuery('select \'\\\'\' as a, ? as b, "\\"" as c, ? as d');
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          "select '\\'' as a, ",
-          '',
-          ' as b, "\\"" as c, ',
-          '',
-          ' as d'
-        ],
+        partList: ["select '\\'' as a, ", '', ' as b, "\\"" as c, ', '', ' as d'],
         reWritable: false
       });
     });
@@ -334,20 +299,10 @@ describe('parse', () => {
     });
 
     it('rewritable with multiple values ', () => {
-      const res = Parse.splitRewritableQuery(
-        'INSERT INTO TABLE(col1,col2) VALUES (?, ?), (?, ?)'
-      );
+      const res = Parse.splitRewritableQuery('INSERT INTO TABLE(col1,col2) VALUES (?, ?), (?, ?)');
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO TABLE(col1,col2) VALUES',
-          ' (',
-          ', ',
-          '), (',
-          ', ',
-          ')',
-          ''
-        ],
+        partList: ['INSERT INTO TABLE(col1,col2) VALUES', ' (', ', ', '), (', ', ', ')', ''],
         reWritable: false
       });
     });
@@ -362,18 +317,10 @@ describe('parse', () => {
     });
 
     it('Update', () => {
-      const res = Parse.splitRewritableQuery(
-        'UPDATE MultiTestt4 SET test = ? WHERE test = ?'
-      );
+      const res = Parse.splitRewritableQuery('UPDATE MultiTestt4 SET test = ? WHERE test = ?');
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'UPDATE MultiTestt4 SET test = ',
-          '',
-          ' WHERE test = ',
-          '',
-          ''
-        ],
+        partList: ['UPDATE MultiTestt4 SET test = ', '', ' WHERE test = ', '', ''],
         reWritable: false
       });
     });
@@ -448,9 +395,7 @@ describe('parse', () => {
     });
 
     it('semicolon with empty data after', () => {
-      const res = Parse.splitRewritableQuery(
-        'INSERT INTO table (column1) VALUES (?); '
-      );
+      const res = Parse.splitRewritableQuery('INSERT INTO table (column1) VALUES (?); ');
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['INSERT INTO table (column1) VALUES', ' (', ')', '; '],
@@ -459,25 +404,16 @@ describe('parse', () => {
     });
 
     it('semicolon not rewritable if not at end', () => {
-      const res = Parse.splitRewritableQuery(
-        'INSERT INTO table (column1) VALUES (?); SELECT 1'
-      );
+      const res = Parse.splitRewritableQuery('INSERT INTO table (column1) VALUES (?); SELECT 1');
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO table (column1) VALUES',
-          ' (',
-          ')',
-          '; SELECT 1'
-        ],
+        partList: ['INSERT INTO table (column1) VALUES', ' (', ')', '; SELECT 1'],
         reWritable: false
       });
     });
 
     it('line end comment', () => {
-      const res = Parse.splitRewritableQuery(
-        'INSERT INTO tt (tt) VALUES (?) --fin'
-      );
+      const res = Parse.splitRewritableQuery('INSERT INTO tt (tt) VALUES (?) --fin');
       assert.deepEqual(res, {
         multipleQueries: false,
         partList: ['INSERT INTO tt (tt) VALUES', ' (', ')', ' --fin'],
@@ -486,9 +422,7 @@ describe('parse', () => {
     });
 
     it('line finished comment', () => {
-      const res = Parse.splitRewritableQuery(
-        'INSERT INTO tt (tt) VALUES --fin\n (?)'
-      );
+      const res = Parse.splitRewritableQuery('INSERT INTO tt (tt) VALUES --fin\n (?)');
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['INSERT INTO tt (tt) VALUES', ' --fin\n (', ')', ''],
@@ -502,12 +436,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO tt (tt, tt2) VALUES',
-          ' (LAST_INSERT_ID(), ',
-          ')',
-          ''
-        ],
+        partList: ['INSERT INTO tt (tt, tt2) VALUES', ' (LAST_INSERT_ID(), ', ')', ''],
         reWritable: false
       });
     });
@@ -523,13 +452,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          "select '\\'' as a, ",
-          '',
-          ' as b, "\\"" as c, ',
-          '',
-          ' as d'
-        ],
+        partList: ["select '\\'' as a, ", '', ' as b, "\\"" as c, ', '', ' as d'],
         values: [[2, 1], [4, null], [5, 6]],
         reWritable: false
       });
@@ -608,25 +531,14 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO TABLE(col1,col2) VALUES',
-          ' (',
-          ', ',
-          '), (',
-          ', ',
-          ')',
-          ''
-        ],
+        partList: ['INSERT INTO TABLE(col1,col2) VALUES', ' (', ', ', '), (', ', ', ')', ''],
         values: [[2, null, 1, null], [4, 3, null, null], [5, null, 6, null]],
         reWritable: false
       });
     });
 
     it('Call', () => {
-      const res = Parse.splitRewritableNamedParameterQuery(
-        'CALL dsdssd(:id1,:id2)',
-        values
-      );
+      const res = Parse.splitRewritableNamedParameterQuery('CALL dsdssd(:id1,:id2)', values);
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['CALL dsdssd(', '', ',', ')', ''],
@@ -642,13 +554,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'UPDATE MultiTestt4 SET test = ',
-          '',
-          ' WHERE test = ',
-          '',
-          ''
-        ],
+        partList: ['UPDATE MultiTestt4 SET test = ', '', ' WHERE test = ', '', ''],
         values: [[1, 2], [null, 4], [6, 5]],
         reWritable: false
       });
@@ -674,10 +580,7 @@ describe('parse', () => {
     });
 
     it('select without parameter', () => {
-      const res = Parse.splitRewritableNamedParameterQuery(
-        'SELECT testFunction()',
-        values
-      );
+      const res = Parse.splitRewritableNamedParameterQuery('SELECT testFunction()', values);
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['SELECT testFunction()', '', ''],
@@ -710,10 +613,7 @@ describe('parse', () => {
     });
 
     it('insert without parameters', () => {
-      const res = Parse.splitRewritableNamedParameterQuery(
-        'INSERT INTO tt VALUES (1)',
-        values
-      );
+      const res = Parse.splitRewritableNamedParameterQuery('INSERT INTO tt VALUES (1)', values);
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['INSERT INTO tt VALUES', ' (1)', ''],
@@ -760,12 +660,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO table (column1) VALUES',
-          ' (',
-          ')',
-          '; SELECT 1'
-        ],
+        partList: ['INSERT INTO table (column1) VALUES', ' (', ')', '; SELECT 1'],
         values: [[1], [null], [6]],
         reWritable: false
       });
@@ -804,12 +699,7 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: [
-          'INSERT INTO tt (tt, tt2) VALUES',
-          ' (LAST_INSERT_ID(), ',
-          ')',
-          ''
-        ],
+        partList: ['INSERT INTO tt (tt, tt2) VALUES', ' (LAST_INSERT_ID(), ', ')', ''],
         values: [[1], [null], [6]],
         reWritable: false
       });

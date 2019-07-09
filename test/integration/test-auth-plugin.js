@@ -8,14 +8,12 @@ describe('authentication plugin', () => {
   it('ed25519 authentication plugin', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     const self = this;
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22))
-      this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
     shareConn
       .query('SELECT @@strict_password_validation as a')
       .then(res => {
-        if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0))
-          self.skip();
+        if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
         shareConn
           .query("INSTALL SONAME 'auth_ed25519'")
           .then(
@@ -35,9 +33,7 @@ describe('authentication plugin', () => {
                   );
                 })
                 .then(() => {
-                  return shareConn.query(
-                    "GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'"
-                  );
+                  return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
                 })
                 .then(() => {
                   base
@@ -72,12 +68,8 @@ describe('authentication plugin', () => {
 
   it('name pipe authentication plugin', function(done) {
     if (process.platform !== 'win32') this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11))
-      this.skip();
-    if (
-      Conf.baseConfig.host !== 'localhost' &&
-      Conf.baseConfig.host !== 'mariadb.example.com'
-    )
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
     const windowsUser = process.env.USERNAME;
     if (windowsUser === 'root') this.skip();
@@ -96,18 +88,12 @@ describe('authentication plugin', () => {
             .then(() => {})
             .catch(err => {});
           shareConn
-            .query(
-              'CREATE USER ' +
-                windowsUser +
-                " IDENTIFIED VIA named_pipe using 'test'"
-            )
+            .query('CREATE USER ' + windowsUser + " IDENTIFIED VIA named_pipe using 'test'")
             .then(() => {
               return shareConn.query('GRANT ALL on *.* to ' + windowsUser);
             })
             .then(() => {
-              return shareConn.query(
-                'select @@version_compile_os,@@socket soc'
-              );
+              return shareConn.query('select @@version_compile_os,@@socket soc');
             })
             .then(res => {
               return base.createConnection({
@@ -130,13 +116,9 @@ describe('authentication plugin', () => {
 
   it('unix socket authentication plugin', function(done) {
     if (process.platform === 'win32') this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11))
-      this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (process.env.MUST_USE_TCPIP) this.skip();
-    if (
-      Conf.baseConfig.host !== 'localhost' &&
-      Conf.baseConfig.host !== 'mariadb.example.com'
-    )
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
 
     shareConn
@@ -145,25 +127,13 @@ describe('authentication plugin', () => {
         const unixUser = process.env.USER;
         if (!unixUser || unixUser === 'root') this.skip();
         console.log('unixUser:' + unixUser);
-        shareConn
-          .query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'")
-          .catch(err => {});
+        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch(err => {});
         shareConn.query('DROP USER IF EXISTS ' + unixUser);
         shareConn.query(
-          "CREATE USER '" +
-            unixUser +
-            "'@'" +
-            Conf.baseConfig.host +
-            "' IDENTIFIED VIA unix_socket"
+          "CREATE USER '" + unixUser + "'@'" + Conf.baseConfig.host + "' IDENTIFIED VIA unix_socket"
         );
         shareConn
-          .query(
-            "GRANT ALL on *.* to '" +
-              unixUser +
-              "'@'" +
-              Conf.baseConfig.host +
-              "'"
-          )
+          .query("GRANT ALL on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'")
           .then(() => {
             base
               .createConnection({ user: null, socketPath: res[0].soc })
@@ -188,9 +158,7 @@ describe('authentication plugin', () => {
     this.timeout(10000);
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch(err => {});
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});
-    shareConn.query(
-      "CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'"
-    );
+    shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
     shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
     shareConn.query('FLUSH PRIVILEGES');
 
@@ -213,8 +181,7 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function(done) {
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3))
-      this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'");
     shareConn
       .query(

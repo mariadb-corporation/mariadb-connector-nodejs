@@ -18,9 +18,7 @@ describe('debug', () => {
       .then(rows => {
         permitLocalInfile = rows[0]['@@local_infile'] === 1;
         return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(
-            err
-          ) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
             if (err) reject(err);
             else resolve();
           });
@@ -88,13 +86,11 @@ describe('debug', () => {
               const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
-                  (!conn.info.isMariaDB() &&
-                    conn.info.hasMinVersion(5, 7, 5))) &&
+                  (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
                 !process.env.MAXSCALE_VERSION
               ) {
                 assert(
-                  data.length > rangeWithoutEOF[0] &&
-                    data.length < rangeWithoutEOF[1],
+                  data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
                   'wrong data length : ' +
                     data.length +
                     ' expected value between ' +
@@ -110,8 +106,7 @@ describe('debug', () => {
               } else {
                 //EOF Packet make exchange bigger
                 assert(
-                  data.length > rangeWithEOF[0] &&
-                    data.length < rangeWithEOF[1],
+                  data.length > rangeWithEOF[0] && data.length < rangeWithEOF[1],
                   'wrong data length : ' +
                     data.length +
                     ' expected value between ' +
@@ -205,9 +200,7 @@ describe('debug', () => {
         compress: compress
       })
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))'
-        );
+        conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
         conn
           .query(
             "LOAD DATA LOCAL INFILE '" +

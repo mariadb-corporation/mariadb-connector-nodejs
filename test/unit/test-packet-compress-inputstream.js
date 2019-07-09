@@ -72,10 +72,7 @@ describe('test compress PacketInputStream data', () => {
     const cis = createCompressObj(done, buf);
 
     const compressChunk1 = ZLib.deflateSync(
-      Buffer.concat([
-        Buffer.from([0xff, 0xff, 0xff, 0x00]),
-        buf.slice(0, 16777211)
-      ])
+      Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777211)])
     );
     const buf2 = Buffer.concat([
       buf.slice(16777211, 16777215),
@@ -121,12 +118,7 @@ describe('test compress PacketInputStream data', () => {
       info
     );
 
-    const cis = new CompressionInputStream(
-      pis,
-      queue,
-      new ConnOptions(Conf.baseConfig),
-      info
-    );
+    const cis = new CompressionInputStream(pis, queue, new ConnOptions(Conf.baseConfig), info);
     return cis;
   }
 });

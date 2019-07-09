@@ -167,18 +167,8 @@ describe('test PacketInputStream data', () => {
       new ConnOptions(Conf.baseConfig),
       info
     );
-    pis.onData(
-      Buffer.concat([
-        Buffer.from([0xff, 0xff, 0xff, 0x00]),
-        buf.slice(0, 16777215)
-      ])
-    );
-    pis.onData(
-      Buffer.concat([
-        Buffer.from([0x00, 0x00, 0x40, 0x01]),
-        buf.slice(16777215)
-      ])
-    );
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
+    pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
   }).timeout(300000);
 
   it('big packet multi part data with part', done => {
@@ -197,19 +187,11 @@ describe('test PacketInputStream data', () => {
       new ConnOptions(Conf.baseConfig),
       info
     );
-    pis.onData(
-      Buffer.concat([
-        Buffer.from([0xff, 0xff, 0xff, 0x00]),
-        buf.slice(0, 1000000)
-      ])
-    );
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
     pis.onData(buf.slice(1000000, 2000000));
     pis.onData(buf.slice(2000000, 16777215));
     pis.onData(
-      Buffer.concat([
-        Buffer.from([0x00, 0x00, 0x40, 0x01]),
-        buf.slice(16777215, 17777215)
-      ])
+      Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215, 17777215)])
     );
     pis.onData(buf.slice(17777215));
     assert.ok(beenDispatch);

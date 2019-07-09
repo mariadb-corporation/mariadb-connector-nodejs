@@ -7,9 +7,7 @@ const Long = require('long');
 describe('integer with big value', () => {
   before(done => {
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)'
-      )
+      .query('CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)')
       .then(() => {
         done();
       })
@@ -86,12 +84,10 @@ describe('integer with big value', () => {
     shareConn
       .query({ supportBigNumbers: true, sql: 'SELECT * FROM testBigintNull' })
       .then(checkResult);
-    shareConn
-      .query({ bigNumberStrings: true, sql: 'SELECT * FROM testBigintNull' })
-      .then(rows => {
-        checkResult(rows);
-        done();
-      });
+    shareConn.query({ bigNumberStrings: true, sql: 'SELECT * FROM testBigintNull' }).then(rows => {
+      checkResult(rows);
+      done();
+    });
   });
 
   it('numeric fields conversion to int', done => {

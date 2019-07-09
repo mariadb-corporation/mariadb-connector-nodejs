@@ -17,10 +17,7 @@ describe('collations', () => {
   });
 
   it('fromName good value', () => {
-    assert.equal(
-      Collations.fromName('UTF8_GENERAL_CI').name,
-      'UTF8_GENERAL_CI'
-    );
+    assert.equal(Collations.fromName('UTF8_GENERAL_CI').name, 'UTF8_GENERAL_CI');
   });
 
   it('fromIndex wrong index', () => {

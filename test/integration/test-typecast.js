@@ -17,14 +17,11 @@ describe('TypeCast', () => {
   it('query level typecast function', function(done) {
     shareConn
       .query({
-        sql:
-          "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r",
+        sql: "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r",
         typeCast: changeCaseCast
       })
       .then(rows => {
-        assert.deepEqual(rows, [
-          { upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }
-        ]);
+        assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
         done();
       })
       .catch(done);
@@ -35,13 +32,9 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: changeCaseCast })
       .then(conn => {
         conn
-          .query(
-            "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r"
-          )
+          .query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r")
           .then(rows => {
-            assert.deepEqual(rows, [
-              { upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }
-            ]);
+            assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
             conn.end();
             done();
           })
@@ -71,13 +64,9 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: changeCaseCast })
       .then(conn => {
         conn
-          .query(
-            "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r"
-          )
+          .query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r")
           .then(rows => {
-            assert.deepEqual(rows, [
-              { upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }
-            ]);
+            assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
             conn.end();
             done();
           })
@@ -116,13 +105,9 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: tinyToBoolean })
       .then(conn => {
         conn
-          .query(
-            'CREATE TEMPORARY TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2))'
-          )
+          .query('CREATE TEMPORARY TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2))')
           .then(() => {
-            return conn.query(
-              'INSERT INTO tinyToBool VALUES (0,0), (1,1), (2,2), (null,null)'
-            );
+            return conn.query('INSERT INTO tinyToBool VALUES (0,0), (1,1), (2,2), (null,null)');
           })
           .then(() => {
             return conn.query('SELECT * from tinyToBool');

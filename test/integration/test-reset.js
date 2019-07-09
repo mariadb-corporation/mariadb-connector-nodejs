@@ -94,9 +94,7 @@ describe('reset connection', () => {
               return conn.query("UPDATE resetTransaction SET firstName='Tom'");
             })
             .then(() => {
-              assert.isTrue(
-                (conn.info.status & ServerStatus.STATUS_IN_TRANS) === 1
-              );
+              assert.isTrue((conn.info.status & ServerStatus.STATUS_IN_TRANS) === 1);
               return conn.reset();
             })
             .then(() => {
@@ -105,9 +103,7 @@ describe('reset connection', () => {
                 (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
                 (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
               ) {
-                assert.isTrue(
-                  (conn.info.status & ServerStatus.STATUS_IN_TRANS) === 0
-                );
+                assert.isTrue((conn.info.status & ServerStatus.STATUS_IN_TRANS) === 0);
                 conn.end();
                 done();
               } else {

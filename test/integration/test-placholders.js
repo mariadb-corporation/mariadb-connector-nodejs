@@ -72,16 +72,13 @@ describe('Placeholder', () => {
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
         conn
-          .query(
-            'INSERT INTO falseTable(t1, t2, t3, t4, t5) values (:t1, :t2, :t3, :t4, :t5) ',
-            {
-              t1: 1,
-              t2: Buffer.from([0x01, 0xff]),
-              t3: 'hh',
-              t4: new Date(2001, 0, 1, 0, 0, 0),
-              t5: null
-            }
-          )
+          .query('INSERT INTO falseTable(t1, t2, t3, t4, t5) values (:t1, :t2, :t3, :t4, :t5) ', {
+            t1: 1,
+            t2: Buffer.from([0x01, 0xff]),
+            t3: 'hh',
+            t4: new Date(2001, 0, 1, 0, 0, 0),
+            t5: null
+          })
           .then(() => {
             done(new Error('must have thrown error!'));
           })
@@ -111,18 +108,13 @@ describe('Placeholder', () => {
     base
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE undefinedParameter (id int, id2 int, id3 int)'
-        );
+        conn.query('CREATE TEMPORARY TABLE undefinedParameter (id int, id2 int, id3 int)');
         conn
-          .query(
-            'INSERT INTO undefinedParameter values (:param3, :param1, :param2)',
-            {
-              param1: 1,
-              param3: 3,
-              param4: 4
-            }
-          )
+          .query('INSERT INTO undefinedParameter values (:param3, :param1, :param2)', {
+            param1: 1,
+            param3: 3,
+            param4: 4
+          })
           .then(() => {
             done(new Error('must have thrown error!'));
           })
@@ -151,17 +143,12 @@ describe('Placeholder', () => {
     base
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)'
-        );
+        conn.query('CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)');
         conn
-          .query(
-            'INSERT INTO execute_missing_parameter values (:t1, :t2, :t3)',
-            {
-              t1: 1,
-              t3: 3
-            }
-          )
+          .query('INSERT INTO execute_missing_parameter values (:t1, :t2, :t3)', {
+            t1: 1,
+            t3: 3
+          })
           .then(() => {
             done(new Error('must have thrown error!'));
           })
@@ -189,9 +176,7 @@ describe('Placeholder', () => {
     base
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)'
-        );
+        conn.query('CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)');
         conn
           .query('INSERT INTO execute_no_parameter values (:t1, :t2, :t3)', [])
           .then(() => {
@@ -210,9 +195,7 @@ describe('Placeholder', () => {
     base
       .createConnection({ namedPlaceholders: true })
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE to_much_parameters (id int, id2 int, id3 int)'
-        );
+        conn.query('CREATE TEMPORARY TABLE to_much_parameters (id int, id2 int, id3 int)');
         conn
           .query('INSERT INTO to_much_parameters values (:t2, :t0, :t1)', {
             t0: 0,

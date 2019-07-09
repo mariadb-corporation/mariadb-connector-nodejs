@@ -98,15 +98,11 @@ describe('local-infile', () => {
           .createConnection({ permitLocalInfile: true })
           .then(conn => {
             conn
-              .query(
-                'CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))'
-              )
+              .query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))')
               .then(() => {
                 return conn.query(
                   "LOAD DATA LOCAL INFILE '" +
-                    path
-                      .join(os.tmpdir(), 'notExistFile.txt')
-                      .replace(/\\/g, '/') +
+                    path.join(os.tmpdir(), 'notExistFile.txt').replace(/\\/g, '/') +
                     "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
                 );
               })
@@ -139,9 +135,7 @@ describe('local-infile', () => {
           self.skip();
         }
         return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(
-            err
-          ) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
             if (err) reject(err);
             else resolve();
           });
@@ -151,9 +145,7 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then(conn => {
-            conn.query(
-              'CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))'
-            );
+            conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
             conn
               .query(
                 "LOAD DATA LOCAL INFILE '" +
@@ -164,10 +156,7 @@ describe('local-infile', () => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
               .then(rows => {
-                assert.deepEqual(rows, [
-                  { id: 1, test: 'hello' },
-                  { id: 2, test: 'world' }
-                ]);
+                assert.deepEqual(rows, [{ id: 1, test: 'hello' }, { id: 2, test: 'world' }]);
                 conn.end();
                 done();
               })
@@ -190,9 +179,7 @@ describe('local-infile', () => {
           self.skip();
         }
         return new Promise(function(resolve, reject) {
-          fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function(
-            err
-          ) {
+          fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function(err) {
             if (err) reject(err);
             else resolve();
           });
@@ -204,9 +191,7 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then(conn => {
-            conn.query(
-              'CREATE TEMPORARY TABLE nonReadableFile(id int, test varchar(100))'
-            );
+            conn.query('CREATE TEMPORARY TABLE nonReadableFile(id int, test varchar(100))');
             conn
               .query(
                 "LOAD DATA LOCAL INFILE '" +
@@ -262,9 +247,7 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then(conn => {
-            conn.query(
-              'CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))'
-            );
+            conn.query('CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
             conn
               .query(
                 "LOAD DATA LOCAL INFILE '" +
@@ -280,10 +263,7 @@ describe('local-infile', () => {
               .then(rows => {
                 assert.equal(rows.length, size);
                 for (let i = 0; i < size; i++) {
-                  if (
-                    rows[i].t1 !== 'a' + padStartZero(i, 8) &&
-                    rows[i].t2 !== 'b'
-                  ) {
+                  if (rows[i].t1 !== 'a' + padStartZero(i, 8) && rows[i].t2 !== 'b') {
                     console.log(
                       'result differ (no:' +
                         i +

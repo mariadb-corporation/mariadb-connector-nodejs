@@ -38,22 +38,19 @@ describe('change user', () => {
 
       conn.query('SELECT CURRENT_USER', (err, res) => {
         const currUser = res[0]['CURRENT_USER'];
-        conn.changeUser(
-          { user: 'ChangeUser', password: 'm1P4ssw0@rd' },
-          err => {
-            if (err) {
-              done(err);
-            } else {
-              conn.query('SELECT CURRENT_USER', (err, res) => {
-                const user = res[0]['CURRENT_USER'];
-                assert.equal(user, 'ChangeUser@%');
-                assert(user !== currUser);
-                conn.end();
-                done();
-              });
-            }
+        conn.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' }, err => {
+          if (err) {
+            done(err);
+          } else {
+            conn.query('SELECT CURRENT_USER', (err, res) => {
+              const user = res[0]['CURRENT_USER'];
+              assert.equal(user, 'ChangeUser@%');
+              assert(user !== currUser);
+              conn.end();
+              done();
+            });
           }
-        );
+        });
       });
     });
   });

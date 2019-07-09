@@ -11,22 +11,10 @@ describe('enum', () => {
         "  fruit ENUM('apple','orange','pear'),\n" +
         '  bushels INT)'
     );
-    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [
-      'pear',
-      20
-    ]);
-    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [
-      'apple',
-      100
-    ]);
-    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [
-      2,
-      110
-    ]);
-    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [
-      null,
-      120
-    ]);
+    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['pear', 20]);
+    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['apple', 100]);
+    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [2, 110]);
+    shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [null, 120]);
     shareConn
       .query('SELECT * FROM fruits')
       .then(rows => {

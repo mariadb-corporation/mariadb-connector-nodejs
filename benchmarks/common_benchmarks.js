@@ -48,15 +48,7 @@ function Bench() {
 
   const dbReady = function(name, driverLen) {
     bench.dbReady++;
-    console.log(
-      'driver for ' +
-        name +
-        ' connected (' +
-        bench.dbReady +
-        '/' +
-        driverLen +
-        ')'
-    );
+    console.log('driver for ' + name + ' connected (' + bench.dbReady + '/' + driverLen + ')');
     if (bench.dbReady === driverLen) {
       bench.suiteReady();
     }
@@ -132,9 +124,7 @@ function Bench() {
       .createConnection(config)
       .then(conn => {
         connList['PROMISE_MYSQL2'].drv = conn;
-        conn.on('error', err =>
-          console.log('driver mysql2 promise error :' + err)
-        );
+        conn.on('error', err => console.log('driver mysql2 promise error :' + err));
         connList['PROMISE_MYSQL2'].pool = promiseMysql2.createPool(poolConfig);
         dbReady('promise mysql2', this.driverLen);
       })
@@ -156,9 +146,7 @@ function Bench() {
     .createConnection(config)
     .then(conn => {
       connList['PROMISE_MARIADB'].drv = conn;
-      conn.on('error', err =>
-        console.log('driver mariadb promise error :' + err)
-      );
+      conn.on('error', err => console.log('driver mariadb promise error :' + err));
       connList['PROMISE_MARIADB'].pool = mariadb.createPool(poolConfig);
       dbReady('promise-mariadb', this.driverLen);
     })
@@ -208,9 +196,7 @@ function Bench() {
     onStart: function() {
       console.log('start : init test : ' + bench.initFcts.length);
       for (let i = 0; i < bench.initFcts.length; i++) {
-        console.log(
-          'initializing test data ' + (i + 1) + '/' + bench.initFcts.length
-        );
+        console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
         if (bench.initFcts[i]) {
           bench.initFcts[i].call(this, bench.CONN.MARIADB.drv);
         }
@@ -224,16 +210,12 @@ function Bench() {
       this.currentNb++;
       if (this.currentNb < this.length) pingAll(connList);
       //to avoid mysql2 taking all the server memory
-      if (promiseMysql2 && promiseMysql2.clearParserCache)
-        promiseMysql2.clearParserCache();
+      if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
-        event.target.options.benchTitle +
-        ' ( sql: ' +
-        event.target.options.displaySql +
-        ' )';
+        event.target.options.benchTitle + ' ( sql: ' + event.target.options.displaySql + ' )';
       const iteration = 1 / event.target.times.period;
       const variation = event.target.stats.rme;
 
@@ -363,15 +345,7 @@ Bench.prototype.fill = function(val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function(
-  title,
-  displaySql,
-  fct,
-  onComplete,
-  isPromise,
-  usePool,
-  conn
-) {
+Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, usePool, conn) {
   const self = this;
   const addTest = getAddTest(
     self,
@@ -425,16 +399,7 @@ Bench.prototype.add = function(
   }
 };
 
-const getAddTest = function(
-  self,
-  suite,
-  fct,
-  minSamples,
-  title,
-  displaySql,
-  onComplete,
-  usePool
-) {
+const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
   return function(conn, name) {
     suite.add({
       name: title + ' - ' + name,
