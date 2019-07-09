@@ -34,7 +34,7 @@ jobs:
   - job: windowsTest
     displayName: 'test windows'
     pool:
-      vmImage: 'win1803'
+      vmImage: 'windows-2019'
     dependsOn:
       - SSLFiles
     steps:
@@ -45,18 +45,15 @@ jobs:
           targetPath: $(System.DefaultWorkingDirectory)
 
       - task: DownloadPipelineArtifact@2
-        displayName: 'Download 10.4 enterprise server artifact files'
+        displayName: 'Download 10.4 server'
         inputs:
           source: 'specific'
           project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
-          artifact: Windows
-          runVersion: 'specific'
-          runId: 438
+          artifact: 'Windows'
+          pipeline: 3
+          runVersion: 'latestFromBranch'
+          runBranch: 'refs/heads/10.4-enterprise'
           downloadPath: $(System.DefaultWorkingDirectory)
-          #buildVersionToDownload: 'latest'
-          #pipeline: 'mariadb-corporation.MariaDBEnterprise'
-          #branchName: 'refs/heads/10.4-enterprise'
-          #definition: '3'
       - script: |
           node --version
           npm --version
@@ -68,7 +65,6 @@ jobs:
           echo %servername%
           msiexec /i %servername% INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
           c:\projects\server\bin\mysql.exe -e "create database testn" --user=root
-          c:\projects\server\bin\mysql.exe -e "CREATE USER 'someUser'@'%' identified by 'Passw@rd2';" --user=root
           c:\projects\server\bin\mysql.exe -e "GRANT ALL on *.* to 'someUser'@'%' identified by 'Passw@rd2' with grant option;" --user=root
         displayName: 'install server'
 
@@ -127,10 +123,10 @@ jobs:
           source: 'specific'
           project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
           artifact: '$(containerImage)-deb'
-          runVersion: 'specific'
-          runId: 569
+          pipeline: 3
+          runVersion: 'latestFromBranch'
+          runBranch: 'refs/heads/10.4-enterprise'
           downloadPath: $(System.DefaultWorkingDirectory)
-
 
       - task: DownloadPipelineArtifact@2
         displayName: 'Download galera server artifact files'
