@@ -45,19 +45,19 @@ matrix:
   - node_js: "11"
     env: DB=build
   - node_js: "6"
-    env: DB=mariadb:10.3 SKIP_LEAK=1
+    env: DB=mariadb:10.4 SKIP_LEAK=1
   - node_js: "8"
-    env: DB=mariadb:10.3
+    env: DB=mariadb:10.4
   - node_js: "10"
-    env: DB=mariadb:10.3
+    env: DB=mariadb:10.4
   - node_js: "11"
-    env: DB=mariadb:10.3
+    env: DB=mariadb:10.4
   - node_js: "11"
-    env: DB=mariadb:10.3 LINT=1
+    env: DB=mariadb:10.4 LINT=1
   - node_js: "11"
-    env: DB=mariadb:10.3 BENCH=1
+    env: DB=mariadb:10.4 BENCH=1
   - node_js: "11"
-    env: DB=mariadb:10.3 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2
+    env: DB=mariadb:10.4 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2
   - node_js: "11"
     env: DB=mariadb:5.5
   - node_js: "11"
@@ -66,6 +66,8 @@ matrix:
     env: DB=mariadb:10.1
   - node_js: "11"
     env: DB=mariadb:10.2
+  - node_js: "11"
+    env: DB=mariadb:10.3
   - node_js: "11"
     env: DB=mysql:5.5
   - node_js: "11"
