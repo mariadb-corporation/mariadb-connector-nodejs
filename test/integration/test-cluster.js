@@ -648,8 +648,13 @@ describe('cluster', function() {
   });
 
   describe('callback', () => {
-    beforeEach(function() {
-      return shareConn.query('TRUNCATE TABLE clusterInsert');
+    beforeEach(function(done) {
+      shareConn
+        .query('TRUNCATE TABLE clusterInsert')
+        .then(() => {
+          done();
+        })
+        .catch(done);
     });
 
     it('no node', function(done) {

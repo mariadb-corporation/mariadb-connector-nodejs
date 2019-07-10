@@ -109,16 +109,10 @@ describe('test compress PacketInputStream data', () => {
         done();
       })
     );
+    const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
+    const pis = new PacketInputStream(unexpectedPacket, queue, null, opts, info);
 
-    const pis = new PacketInputStream(
-      unexpectedPacket,
-      queue,
-      null,
-      new ConnOptions(Conf.baseConfig),
-      info
-    );
-
-    const cis = new CompressionInputStream(pis, queue, new ConnOptions(Conf.baseConfig), info);
+    const cis = new CompressionInputStream(pis, queue, opts, info);
     return cis;
   }
 });

@@ -8,6 +8,7 @@ const Queue = require('denque');
 const Command = require('../../lib/cmd/command');
 const ConnectionInformation = require('../../lib/misc/connection-information');
 const EventEmitter = require('events');
+const Collations = require('../../lib/const/collations');
 
 describe('test PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
@@ -49,7 +50,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(buf);
@@ -66,7 +67,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.from([5]));
@@ -85,7 +86,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.from([5, 0]));
@@ -104,7 +105,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.from([5, 0]));
@@ -124,7 +125,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.from([5, 0]));
@@ -144,7 +145,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.from([5, 0, 0, 0, 1, 2]));
@@ -164,7 +165,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
@@ -184,7 +185,7 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
@@ -217,9 +218,18 @@ describe('test PacketInputStream data', () => {
       unexpectedPacket,
       queue,
       null,
-      new ConnOptions(Conf.baseConfig),
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
     pis.onData(buf);
+  });
+
+  it('collation change', () => {
+    const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
+    const queue = new Queue();
+    let pis = new PacketInputStream(unexpectedPacket, queue, null, opts, info);
+    assert.equal(pis.encoding, 'utf8');
+    opts.emit('collation', Collations.fromName('BIG5_CHINESE_CI'));
+    assert.equal(pis.encoding, 'big5');
   });
 });
