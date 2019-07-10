@@ -38,7 +38,7 @@ type=monitor
 module=mariadbmon
 servers=server1
 user=boby
-passwd=hey
+passwd=heyPassw0@rd
 monitor_interval=10000
 
 # Service definitions
@@ -52,23 +52,23 @@ monitor_interval=10000
 
 [Read-OnlyService]
 enable_root_user=1
-version_string=10.3.99-MariaDB-maxScale
+version_string=10.4.99-MariaDB-maxScale
 type=service
 router=readconnroute
 servers=server1
 user=boby
-passwd=hey
+passwd=heyPassw0@rd
 router_options=slave
 localhost_match_wildcard_host=1
 
 [Read-WriteService]
 enable_root_user=1
-version_string=10.3.99-MariaDB-maxScale
+version_string=10.4.99-MariaDB-maxScale
 type=service
 router=readwritesplit
 servers=server1
 user=boby
-passwd=hey
+passwd=heyPassw0@rd
 localhost_match_wildcard_host=1
 
 [WriteService]
@@ -76,10 +76,10 @@ type=service
 router=readconnroute
 servers=server1
 user=boby
-passwd=hey
+passwd=heyPassw0@rd
 router_options=master
 localhost_match_wildcard_host=1
-version_string=10.3.99-MariaDB-maxScale
+version_string=10.4.99-MariaDB-maxScale
 
 
 # This service enables the use of the MaxAdmin interface
@@ -88,7 +88,7 @@ version_string=10.3.99-MariaDB-maxScale
 
 [MaxAdminService]
 enable_root_user=1
-version_string=10.3.99-MariaDB-maxScale
+version_string=10.4.99-MariaDB-maxScale
 type=service
 router=cli
 
