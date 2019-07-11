@@ -32,7 +32,7 @@ describe('ssl', function() {
       )
       .then(() => {
         return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
+          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
             ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
               ? ' REQUIRE SSL'
@@ -50,7 +50,7 @@ describe('ssl', function() {
       })
       .then(() => {
         return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
+          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' " +
             ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
               ? ' REQUIRE X509'
