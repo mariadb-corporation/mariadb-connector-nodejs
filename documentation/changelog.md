@@ -1,3 +1,27 @@
+#### 2.1.0 - 11-07-2019 
+
+* [CONJS-19]	implement Ed25519 plugin		
+* [CONJS-57]	Multiple alternative authentication methods for the same user		
+* [CONJS-61]	Permit handling expired password		
+* [CONJS-85]	Implement pool events according to mysql/mysql2 API		
+* [CONJS-87]	Array parameter automatic conversion		
+* [CONJS-88]	Charset collation option mismatch		
+* [CONJS-89]	Performance improvement on decoding string	
+* [CONJS-74]	Types definition must be string, not byte		
+* [CONJS-75]	Missing import dependencies for typeScript		
+* [CONJS-79]	Read errors while processing LOCAL INFILE causes process crash		
+* [CONJS-83]	Add poolCluster 'remove' event		
+* [CONJS-84]	option `restoreNodeTimeout` is not respected when removeNodeErrorCount is set		
+* [CONJS-73]	Setting timezone to current IANA might provoque server automatic retrieval		
+
+New Options
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`collation`** | (used in replacement of charset) Permit to defined collation used for connection. This will defined the charset encoding used for exchanges with database and defines the order used when comparing strings. It's mainly used for micro-optimizations|*string* |UTF8MB4_UNICODE_CI| 
+| **`permitConnectionWhenExpired`** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
+
+
 #### 2.0.5 - 10-05-2019 
 
 * [CONJS-71] TypeScript definition is not exported
