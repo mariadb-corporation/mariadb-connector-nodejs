@@ -46,9 +46,7 @@ describe('initial connection commands', () => {
           conn
             .query('SELECT @@wait_timeout, @@interactive_timeout')
             .then(rows => {
-              assert.deepEqual(rows, [
-                { '@@wait_timeout': 10000, '@@interactive_timeout': 2540 }
-              ]);
+              assert.deepEqual(rows, [{ '@@wait_timeout': 10000, '@@interactive_timeout': 2540 }]);
               conn.end();
               done();
             })

@@ -13,9 +13,7 @@ describe('json', () => {
       this.skip();
     }
 
-    shareConn.query(
-      'CREATE TEMPORARY TABLE `test-json-insert-type` (val1 JSON)'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE `test-json-insert-type` (val1 JSON)');
     const obj = { id: 2, val: 'test' };
     shareConn.query(
       {
@@ -24,9 +22,7 @@ describe('json', () => {
       },
       [obj]
     );
-    shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [
-      JSON.stringify(obj)
-    ]);
+    shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj)]);
     validateJSON('test-json-insert-type', done);
   });
 

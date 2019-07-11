@@ -9,13 +9,11 @@ chars.push('🥂');
 
 function randomString(length) {
   let result = '';
-  for (let i = length; i > 0; --i)
-    result += chars[Math.round(Math.random() * (chars.length - 1))];
+  for (let i = length; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
   return result;
 }
 
-let sqlTable =
-  'CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text';
+let sqlTable = 'CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text';
 let sqlParam = '';
 let sqlCol = 't0';
 for (let i = 1; i < 10; i++) {
@@ -23,8 +21,7 @@ for (let i = 1; i < 10; i++) {
   sqlCol += ',t' + i;
   sqlTable += ',t' + i + ' text';
 }
-sqlInsert =
-  'INSERT INTO testn.perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
+sqlInsert = 'INSERT INTO testn.perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
 sqlTable += ', PRIMARY KEY (id))';
 
 module.exports.title = 'insert 10 parameters of 100 characters using promise';

@@ -40,16 +40,11 @@ describe('Big query', function() {
   });
 
   it('int8 buffer overflow', function(done) {
-    base.createConnection({ charset: 'latin1_swedish_ci' }).then(conn => {
-      conn.query(
-        'CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))'
-      );
+    base.createConnection({ collation: 'latin1_swedish_ci' }).then(conn => {
+      conn.query('CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
       const buf = Buffer.alloc(979, '0');
       conn
-        .query('insert into bigParameterInt8 values(?, ?)', [
-          buf.toString(),
-          'test'
-        ])
+        .query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test'])
         .then(() => {
           return conn.query('SELECT * from bigParameterInt8');
         })

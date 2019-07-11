@@ -5,9 +5,7 @@ const { assert } = require('chai');
 
 describe('set', () => {
   it('set array', done => {
-    shareConn.query(
-      "CREATE TEMPORARY TABLE set_array(tt SET('v1','v2', 'v3'))"
-    );
+    shareConn.query("CREATE TEMPORARY TABLE set_array(tt SET('v1','v2', 'v3'))");
 
     shareConn.query(
       'INSERT INTO set_array values ' +

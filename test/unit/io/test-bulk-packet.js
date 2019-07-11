@@ -6,6 +6,8 @@ const ConnOptions = require('../../../lib/config/connection-options');
 const Conf = require('../../conf');
 const PacketOutputStream = require('../../../lib/io/packet-output-stream');
 const ConnectionInformation = require('../../../lib/misc/connection-information');
+const EventEmitter = require('events');
+
 const MAX_BUFFER_SIZE = 16777219;
 
 describe('bulk packet', () => {
@@ -25,7 +27,7 @@ describe('bulk packet', () => {
   };
 
   it('datatypeChanged', () => {
-    const conOpts = new ConnOptions(baseOpts);
+    const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     const packet = new BulkPacket(conOpts, out, [
       true,
@@ -144,7 +146,7 @@ describe('bulk packet', () => {
   });
 
   it('writeLengthStringAscii', () => {
-    const conOpts = new ConnOptions(baseOpts);
+    const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let packet = new BulkPacket(conOpts, out, [true]);
 
@@ -153,10 +155,7 @@ describe('bulk packet', () => {
     packet.writeLengthStringAscii('hello basic ascii');
     assert.equal(packet.pos, prevPos + 18);
     assert.equal(packet.buf[prevPos], 17);
-    assert.deepEqual(
-      packet.buf.slice(prevPos + 1, prevPos + 18),
-      Buffer.from('hello basic ascii')
-    );
+    assert.deepEqual(packet.buf.slice(prevPos + 1, prevPos + 18), Buffer.from('hello basic ascii'));
 
     //BIG ASCII
     packet = new BulkPacket(conOpts, out, [true]);
@@ -171,14 +170,11 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos], 0xfc);
     assert.equal(packet.buf[prevPos + 1], 0);
     assert.equal(packet.buf[prevPos + 2], 10);
-    assert.deepEqual(
-      packet.buf.slice(prevPos + 3, prevPos + 2560 + 3),
-      Buffer.from(str)
-    );
+    assert.deepEqual(packet.buf.slice(prevPos + 3, prevPos + 2560 + 3), Buffer.from(str));
   });
 
   it('writeLength', () => {
-    const conOpts = new ConnOptions(baseOpts);
+    const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     const out = new PacketOutputStream(conOpts, new ConnectionInformation());
     const stream = getStream();
     out.setStream(stream);
@@ -311,7 +307,7 @@ describe('bulk packet', () => {
   };
 
   it('writeDefaultLengthEncodedString', () => {
-    const conOpts = new ConnOptions(baseOpts);
+    const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
@@ -323,9 +319,7 @@ describe('bulk packet', () => {
     packet.writeDefaultLengthEncodedString(str);
     assert.equal(packet.pos, prevPos + 21);
     assert.equal(packet.buf[prevPos++], 20);
-    assert.isTrue(
-      packet.buf.slice(prevPos, prevPos + 20).equals(Buffer.from(str))
-    );
+    assert.isTrue(packet.buf.slice(prevPos, prevPos + 20).equals(Buffer.from(str)));
     prevPos += 20;
 
     str = generateString(2000);
@@ -334,9 +328,7 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos], 0xfc);
     assert.equal(packet.buf[prevPos + 1], 208);
     assert.equal(packet.buf[prevPos + 2], 7);
-    assert.isTrue(
-      packet.buf.slice(prevPos + 3, prevPos + 2003).equals(Buffer.from(str))
-    );
+    assert.isTrue(packet.buf.slice(prevPos + 3, prevPos + 2003).equals(Buffer.from(str)));
     prevPos += 2003;
 
     str = generateString(1000000);
@@ -346,9 +338,7 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos + 1], 64);
     assert.equal(packet.buf[prevPos + 2], 66);
     assert.equal(packet.buf[prevPos + 3], 15);
-    assert.isTrue(
-      packet.buf.slice(prevPos + 4, prevPos + 1000004).equals(Buffer.from(str))
-    );
+    assert.isTrue(packet.buf.slice(prevPos + 4, prevPos + 1000004).equals(Buffer.from(str)));
     prevPos += 1000004;
 
     str = generateString(20000000);
@@ -385,9 +375,7 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos], 0xfc);
     assert.equal(packet.buf[prevPos + 1], 208);
     assert.equal(packet.buf[prevPos + 2], 7);
-    assert.isTrue(
-      packet.buf.slice(prevPos + 3, prevPos + 2003).equals(Buffer.from(str))
-    );
+    assert.isTrue(packet.buf.slice(prevPos + 3, prevPos + 2003).equals(Buffer.from(str)));
     prevPos += 2003;
 
     str = generateString(1000000);
@@ -397,13 +385,11 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos + 1], 64);
     assert.equal(packet.buf[prevPos + 2], 66);
     assert.equal(packet.buf[prevPos + 3], 15);
-    assert.isTrue(
-      packet.buf.slice(prevPos + 4, prevPos + 1000004).equals(Buffer.from(str))
-    );
+    assert.isTrue(packet.buf.slice(prevPos + 4, prevPos + 1000004).equals(Buffer.from(str)));
   });
 
   it('writeBinaryLocalDate', () => {
-    const conOpts = new ConnOptions(baseOpts);
+    const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
@@ -457,9 +443,11 @@ describe('bulk packet', () => {
   });
 
   it('writeBinaryTimezoneDate', () => {
-    const conOpts = new ConnOptions(
-      Object.assign({}, baseOpts, { timezone: '+07:00' })
+    const conOpts = Object.assign(
+      new EventEmitter(),
+      new ConnOptions(Object.assign({}, baseOpts, { timezone: '+07:00' }))
     );
+
     let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();
     out.setStream(stream);
@@ -469,10 +457,7 @@ describe('bulk packet', () => {
 
     // normal
 
-    packet.writeBinaryTimezoneDate(
-      new Date('2020-12-31 23:58:59 GMT+07:00'),
-      conOpts
-    );
+    packet.writeBinaryTimezoneDate(new Date('2020-12-31 23:58:59 GMT+07:00'), conOpts);
     assert.equal(packet.pos, prevPos + 8);
     assert.equal(packet.buf[prevPos++], 7);
     assert.equal(packet.buf[prevPos++], 228);
@@ -482,10 +467,7 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[prevPos++], 23);
     assert.equal(packet.buf[prevPos++], 58);
     assert.equal(packet.buf[prevPos++], 59);
-    packet.writeBinaryTimezoneDate(
-      new Date('2020-12-31 23:58:59.123456 GMT+07:00'),
-      conOpts
-    );
+    packet.writeBinaryTimezoneDate(new Date('2020-12-31 23:58:59.123456 GMT+07:00'), conOpts);
     assert.equal(packet.pos, prevPos + 12);
     assert.equal(packet.buf[prevPos++], 11);
     assert.equal(packet.buf[prevPos++], 228);
@@ -502,10 +484,7 @@ describe('bulk packet', () => {
 
     packet.pos = packet.buf.length - 2;
     prevPos = packet.pos;
-    packet.writeBinaryTimezoneDate(
-      new Date('2020-12-31 23:58:59.123456 GMT+07:00'),
-      conOpts
-    );
+    packet.writeBinaryTimezoneDate(new Date('2020-12-31 23:58:59.123456 GMT+07:00'), conOpts);
     assert.equal(packet.pos, prevPos + 12);
     assert.equal(packet.buf[prevPos++], 11);
     assert.equal(packet.buf[prevPos++], 228);

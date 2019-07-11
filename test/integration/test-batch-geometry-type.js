@@ -124,10 +124,7 @@ describe('batch geometry type', () => {
         return shareConn.query('SELECT * FROM gis_line_batch');
       })
       .then(rows => {
-        if (
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 2, 0)
-        ) {
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
               g: {
@@ -220,17 +217,12 @@ describe('batch geometry type', () => {
         return shareConn.query('SELECT * FROM gis_polygon_batch');
       })
       .then(rows => {
-        if (
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 2, 0)
-        ) {
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
               g: {
                 type: 'Polygon',
-                coordinates: [
-                  [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
-                ]
+                coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
               }
             },
             {
@@ -260,9 +252,7 @@ describe('batch geometry type', () => {
             {
               g: {
                 type: 'Polygon',
-                coordinates: [
-                  [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]
-                ]
+                coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
               }
             },
             {
@@ -292,9 +282,7 @@ describe('batch geometry type', () => {
 
   it('MultiPoint insert', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query(
-      'CREATE TEMPORARY TABLE gis_multi_point_batch (g MULTIPOINT)'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE gis_multi_point_batch (g MULTIPOINT)');
     shareConn
       .batch('INSERT INTO gis_multi_point_batch VALUES (?)', [
         [
@@ -311,10 +299,7 @@ describe('batch geometry type', () => {
         return shareConn.query('SELECT * FROM gis_multi_point_batch');
       })
       .then(rows => {
-        if (
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 2, 0)
-        ) {
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
               g: {
@@ -370,18 +355,13 @@ describe('batch geometry type', () => {
 
   it('Multi-line insert', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query(
-      'CREATE TEMPORARY TABLE gis_multi_line_batch (g MULTILINESTRING)'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE gis_multi_line_batch (g MULTILINESTRING)');
     shareConn
       .batch('INSERT INTO gis_multi_line_batch VALUES (?)', [
         [
           {
             type: 'MultiLineString',
-            coordinates: [
-              [[10, 48], [10, 21], [10, 0]],
-              [[16, 0], [16, 23], [16, 48]]
-            ]
+            coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
           }
         ],
         [
@@ -398,18 +378,12 @@ describe('batch geometry type', () => {
         return shareConn.query('SELECT * FROM gis_multi_line_batch');
       })
       .then(rows => {
-        if (
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 2, 0)
-        ) {
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
               g: {
                 type: 'MultiLineString',
-                coordinates: [
-                  [[10, 48], [10, 21], [10, 0]],
-                  [[16, 0], [16, 23], [16, 48]]
-                ]
+                coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
               }
             },
             {
@@ -442,10 +416,7 @@ describe('batch geometry type', () => {
             {
               g: {
                 type: 'MultiLineString',
-                coordinates: [
-                  [[10, 48], [10, 21], [10, 0]],
-                  [[16, 0], [16, 23], [16, 48]]
-                ]
+                coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
               }
             },
             {
@@ -473,9 +444,7 @@ describe('batch geometry type', () => {
   it('Multi-polygon insert', function(done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
-    shareConn.query(
-      'CREATE TEMPORARY TABLE gis_multi_polygon_batch (g MULTIPOLYGON)'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
     shareConn
       .batch('INSERT INTO gis_multi_polygon_batch VALUES (?)', [
         [
@@ -529,10 +498,7 @@ describe('batch geometry type', () => {
         return shareConn.query('SELECT * FROM gis_multi_polygon_batch');
       })
       .then(rows => {
-        if (
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 2, 0)
-        ) {
+        if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
               g: {
@@ -632,9 +598,7 @@ describe('batch geometry type', () => {
     base
       .createConnection()
       .then(conn => {
-        conn.query(
-          'CREATE TEMPORARY TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)'
-        );
+        conn.query('CREATE TEMPORARY TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)');
         conn
           .batch('INSERT INTO gis_geometrycollection_batch VALUES (?)', [
             [
@@ -655,10 +619,7 @@ describe('batch geometry type', () => {
                   },
                   {
                     type: 'MultiLineString',
-                    coordinates: [
-                      [[10, 48], [10, 21], [10, 0]],
-                      [[16, 0], [16, 23], [16, 48]]
-                    ]
+                    coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
                   },
                   {
                     type: 'MultiPolygon',
@@ -725,10 +686,7 @@ describe('batch geometry type', () => {
                     },
                     {
                       type: 'MultiLineString',
-                      coordinates: [
-                        [[10, 48], [10, 21], [10, 0]],
-                        [[16, 0], [16, 23], [16, 48]]
-                      ]
+                      coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
                     },
                     {
                       type: 'MultiPolygon',

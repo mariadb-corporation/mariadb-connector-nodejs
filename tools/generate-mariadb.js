@@ -11,18 +11,14 @@ const readline = require('readline');
 const os = require('os');
 const path = require('path');
 
-const version = '10.3';
+const version = '10.4';
 const extendedUrl =
-  'https://raw.githubusercontent.com/MariaDB/server/' +
-  version +
-  '/sql/share/errmsg-utf8.txt';
+  'https://raw.githubusercontent.com/MariaDB/server/' + version + '/sql/share/errmsg-utf8.txt';
 const baseUrl =
-  'https://raw.githubusercontent.com/MariaDB/server/' +
-  version +
-  '/include/my_base.h';
+  'https://raw.githubusercontent.com/MariaDB/server/' + version + '/include/my_base.h';
 const fileName = path.join(os.tmpdir(), 'mariadb_errmsg.txt');
 const fileNameBase = path.join(os.tmpdir(), 'my_base.h');
-const destFileName = path.join(__dirname, '/../src/const/error-code.js');
+const destFileName = path.join(__dirname, '/../lib/const/error-code.js');
 
 const download = function(url, dest, cb) {
   const file = fs.createWriteStream(dest);
@@ -62,8 +58,7 @@ const writeFile = function() {
   writer.write(header);
 
   for (let i = 0; i < maria_errors.length; i++) {
-    if (maria_errors[i])
-      writer.write('codes[' + i + '] = "' + maria_errors[i] + '";\n');
+    if (maria_errors[i]) writer.write('codes[' + i + "] = '" + maria_errors[i] + "';\n");
   }
   writer.end('\nmodule.exports.codes = codes;\n');
   console.log('finished');

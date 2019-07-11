@@ -101,7 +101,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
-
+* [`pool events`](#poolevents): Subscribes to pool events.
 
 **PoolCluster**
 
@@ -110,6 +110,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
 * [`poolCluster.getConnection(pattern, selector) → Promise`](#poolclustergetconnectionpattern-selector--promise) : return a connection from cluster.
 * [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
+* [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
 
 
 # Base API
@@ -210,7 +211,7 @@ const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLi
 pool.getConnection()
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
-      conn.end(); //release to pool
+      conn.release(); //release to pool
     })
     .catch(err => {
       console.log("not connected due to error: " + err);
@@ -274,7 +275,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. |*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. null means node won't be removed|*integer* | 5 |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 0|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 
@@ -924,8 +925,10 @@ When a connection is given back to the pool, any remaining transactions will be 
 > * resolves with a [Connection](#connection-api) object,
 > * raises an [Error](#error).
 
-Creates a new [Connection](#connection-api) object.
-Connection must be given back to pool with the connection.end() method.
+Creates a new [Connection](#connection-api) object with an additional release method. 
+Calling connection.release() will give back connection to pool.  
+
+Connection must be given back to pool using this connection.release() method.
 
 **Example:**
 
@@ -935,7 +938,7 @@ const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.getConnection()
     .then(conn => {
       console.log("connected ! connection id is " + conn.threadId);
-      conn.end(); //release to pool
+      conn.release(); //release to pool
     })
     .catch(err => {
       console.log("not connected due to error: " + err);
@@ -975,7 +978,7 @@ pool
 > * resolves with a JSON object.
 > * rejects with an [Error](#error).
 
-This is a shortcut to get a connection from pool, execute a query and release connection.
+This is a shortcut to get a connection from pool, execute a batch and release connection.
 
 ```javascript
 const mariadb = require('mariadb');
@@ -1019,6 +1022,21 @@ pool.end()
     //connections have been ended properly
   })
   .catch(err => {});
+```
+
+## Pool events
+
+|event|description|
+|---:|---|
+| **`acquire`** | This event emits a connection is acquired from pool.  |
+| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
+| **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
+| **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
+
+**Example:**
+
+```javascript
+pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
 ```
 
 # Pool cluster API
@@ -1089,6 +1107,24 @@ cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 })
 cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
 cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 cluster.getConnection("slave*")
+```
+
+## `poolCluster events`
+
+PoolCluster object inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html). 
+Emits 'remove' event when a node is removed from configuration if the option `removeNodeErrorCount` is defined 
+(default to 5) and connector fails to connect more than `removeNodeErrorCount` times. 
+(if other nodes are present, each attemps will wait for value of the option `restoreNodeTimeout`)
+
+```javascript
+const mariadb = require('mariadb');
+const cluster = mariadb.createPoolCluster({ removeNodeErrorCount: 20, restoreNodeTimeout: 5000 });
+cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });*
+cluster.on('remove', node => {
+  console.log(`node ${node} was removed`);
+})
 ```
 
 ## `poolCluster.of(pattern, selector) → FilteredPoolCluster`

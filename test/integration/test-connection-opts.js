@@ -55,9 +55,7 @@ describe('connection option', () => {
           })
           .catch(err => {
             if (mustFail) {
-              assert.isTrue(
-                err.message.includes('Automatic timezone setting fails')
-              );
+              assert.isTrue(err.message.includes('Automatic timezone setting fails'));
               assert.equal(err.errno, 45036);
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_WRONG_AUTO_TIMEZONE');
@@ -76,9 +74,7 @@ describe('connection option', () => {
       .then(conn => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
-          .query('SELECT UNIX_TIMESTAMP(?) tt', [
-            new Date('2000-01-01T00:00:00Z')
-          ])
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
           .then(res => {
             // = 1999-12-31T23:00:00.000Z
             assert.deepEqual(res[0].tt, 946681200);
@@ -106,9 +102,7 @@ describe('connection option', () => {
       .then(conn => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
-          .query('SELECT UNIX_TIMESTAMP(?) tt', [
-            new Date('2000-01-01T00:00:00Z')
-          ])
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
           .then(res => {
             assert.deepEqual(res[0].tt, 946688400);
             return conn.query(
@@ -135,9 +129,7 @@ describe('connection option', () => {
       .then(conn => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
-          .query('SELECT UNIX_TIMESTAMP(?) tt', [
-            new Date('2000-01-01T00:00:00Z')
-          ])
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
           .then(res => {
             //946688400 => 2000-01-01T01:00:00.000Z
             assert.deepEqual(res[0].tt, 946688400);
@@ -157,9 +149,7 @@ describe('connection option', () => {
       .then(conn => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
-          .query('SELECT UNIX_TIMESTAMP(?) tt', [
-            new Date('2000-01-01T00:00:00+0100')
-          ])
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
           .then(res => {
             assert.deepEqual(res[0].tt, 946681200);
             return conn.end();
@@ -178,9 +168,7 @@ describe('connection option', () => {
       .then(conn => {
         conn.query("SET SESSION time_zone = '-01:00'");
         conn
-          .query('SELECT UNIX_TIMESTAMP(?) tt', [
-            new Date('2000-01-01T00:00:00+0100')
-          ])
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
           .then(res => {
             assert.deepEqual(res[0].tt, 946681200);
             return conn.end();
@@ -232,8 +220,7 @@ describe('connection option', () => {
 
   it('Server with different tz', function(done) {
     //MySQL 5.5 doesn't have milliseconds
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-      this.skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
     base
       .createConnection({ timezone: 'Etc/GMT+5' })
@@ -288,10 +275,7 @@ describe('connection option', () => {
         conn
           .query('SELECT * FROM t1, t2')
           .then(rows => {
-            assert.deepEqual(rows, [
-              { t1_a: 'bla', t2_b: 'bou' },
-              { t1_a: 'bla2', t2_b: 'bou' }
-            ]);
+            assert.deepEqual(rows, [{ t1_a: 'bla', t2_b: 'bou' }, { t1_a: 'bla2', t2_b: 'bou' }]);
             return conn.end();
           })
           .then(() => {
@@ -382,10 +366,7 @@ describe('connection option', () => {
         conn
           .query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' })
           .then(rows => {
-            assert.deepEqual(rows, [
-              { t1_a: 'bla', t2_b: 'bou' },
-              { t1_a: 'bla2', t2_b: 'bou' }
-            ]);
+            assert.deepEqual(rows, [{ t1_a: 'bla', t2_b: 'bou' }, { t1_a: 'bla2', t2_b: 'bou' }]);
             return conn.end();
           })
           .then(() => {

@@ -7,9 +7,13 @@ const Conf = require('../conf');
 
 describe('change user', () => {
   before(done => {
-    shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mypassword'");
+    shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
     shareConn.query(
-      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option"
+      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd' with grant option"
+    );
+    shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
+    shareConn.query(
+      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd' with grant option"
     );
     shareConn
       .query('FLUSH PRIVILEGES')
@@ -19,6 +23,7 @@ describe('change user', () => {
 
   after(done => {
     shareConn.query("DROP USER ChangeUser@'%'");
+    shareConn.query("DROP USER ChangeUser2@'%'");
     shareConn
       .query('FLUSH PRIVILEGES')
       .then(() => done())
@@ -33,7 +38,7 @@ describe('change user', () => {
 
       conn.query('SELECT CURRENT_USER', (err, res) => {
         const currUser = res[0]['CURRENT_USER'];
-        conn.changeUser({ user: 'ChangeUser', password: 'mypassword' }, err => {
+        conn.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' }, err => {
           if (err) {
             done(err);
           } else {
@@ -56,7 +61,7 @@ describe('change user', () => {
       conn
         .changeUser({
           user: 'ChangeUser',
-          password: 'mypassword',
+          password: 'm1P4ssw0@rd',
           charset: 'wrong'
         })
         .then(() => {
@@ -76,10 +81,13 @@ describe('change user', () => {
     const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) done(err);
-      conn.changeUser();
-      conn.changeUser(err => {});
+      conn.changeUser({
+        user: 'ChangeUser',
+        password: 'm1P4ssw0@rd'
+      });
+
       conn.query('SELECT CURRENT_USER', (err, res) => {
-        conn.changeUser({ user: 'ChangeUser', password: 'mypassword' });
+        conn.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' });
         conn.end(() => {
           done();
         });
@@ -90,21 +98,15 @@ describe('change user', () => {
   it('basic change user using promise', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
-    const baseConf = Conf.baseConfig;
 
-    let initialUser;
     base
       .createConnection()
       .then(conn => {
-        conn
-          .query('SELECT CURRENT_USER')
-          .then(res => {
-            initialUser = res[0]['CURRENT_USER'];
-            return conn.changeUser({
-              user: 'ChangeUser',
-              password: 'mypassword',
-              connectAttributes: { par1: 'bouh', par2: 'bla' }
-            });
+        return conn
+          .changeUser({
+            user: 'ChangeUser',
+            password: 'm1P4ssw0@rd',
+            connectAttributes: { par1: 'bouh', par2: 'bla' }
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');
@@ -112,10 +114,9 @@ describe('change user', () => {
           .then(res => {
             const user = res[0]['CURRENT_USER'];
             assert.equal(user, 'ChangeUser@%');
-            assert(user !== initialUser);
             return conn.changeUser({
-              user: baseConf.user,
-              password: baseConf.password,
+              user: 'ChangeUser2',
+              password: 'm1SecondP@rd',
               connectAttributes: true
             });
           })
@@ -124,7 +125,47 @@ describe('change user', () => {
           })
           .then(res => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, initialUser);
+            assert.equal(user, 'ChangeUser2@%');
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('basic change user using promise non node.js encoding', function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+
+    base
+      .createConnection()
+      .then(conn => {
+        return conn
+          .changeUser({
+            user: 'ChangeUser',
+            password: 'm1P4ssw0@rd',
+            connectAttributes: { par1: 'bouh', par2: 'bla' },
+            charset: 'big5'
+          })
+          .then(() => {
+            return conn.query('SELECT CURRENT_USER');
+          })
+          .then(res => {
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser@%');
+            return conn.changeUser({
+              user: 'ChangeUser2',
+              password: 'm1SecondP@rd',
+              connectAttributes: true
+            });
+          })
+          .then(() => {
+            return conn.query('SELECT CURRENT_USER');
+          })
+          .then(res => {
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser2@%');
             conn.end();
             done();
           })
@@ -141,8 +182,8 @@ describe('change user', () => {
         conn
           .changeUser({
             user: 'ChangeUser',
-            password: 'mypassword',
-            charset: 'UTF8_PERSIAN_CI'
+            password: 'm1P4ssw0@rd',
+            collation: 'UTF8_PERSIAN_CI'
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');
@@ -200,7 +241,7 @@ describe('change user', () => {
             }
             return conn.changeUser({
               user: 'ChangeUser',
-              password: 'mypassword'
+              password: 'm1P4ssw0@rd'
             });
           })
           .then(() => {

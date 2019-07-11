@@ -13,7 +13,11 @@ describe('connection', () => {
   });
 
   it('with basic connection attributes', function(done) {
-    connectWithAttributes(false, done);
+    connectWithAttributes(true, done);
+  });
+
+  it('with basic connection attributes non node.js encoding', function(done) {
+    connectWithAttributes(true, done, 'big5');
   });
 
   it('with small connection attributes', function(done) {
@@ -25,9 +29,9 @@ describe('connection', () => {
     connectWithAttributes({ par1: 'bouh', par2: mediumAttribute }, done);
   });
 
-  function connectWithAttributes(attr, done) {
+  function connectWithAttributes(attr, done, charset) {
     base
-      .createConnection({ connectAttributes: attr })
+      .createConnection({ connectAttributes: attr, charset: charset })
       .then(conn => {
         conn
           .query('SELECT 1')
@@ -46,7 +50,7 @@ describe('connection', () => {
     base
       .createConnection({
         connectAttributes: { par1: 'bouh', par2: mediumAttribute },
-        charset: 'BIG5_CHINESE_CI'
+        collation: 'BIG5_CHINESE_CI'
       })
       .then(conn => {
         conn
@@ -105,9 +109,7 @@ describe('connection', () => {
       done();
     });
     process.nextTick(
-      conn.__tests
-        .getSocket()
-        .destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
+      conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
     );
   });
 
@@ -118,9 +120,7 @@ describe('connection', () => {
       assert.isTrue(err.message.includes('Connection timeout'));
       done();
     });
-    process.nextTick(
-      conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket())
-    );
+    process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket()));
   });
 
   it('socket timeout', function(done) {
@@ -367,9 +367,7 @@ describe('connection', () => {
         .then(() => done(new Error('expected error !')))
         .catch(err => {
           assert.isTrue(err != null);
-          assert.isTrue(
-            err.message.includes('Connection destroyed, command was killed')
-          );
+          assert.isTrue(err.message.includes('Connection destroyed, command was killed'));
           assert.isTrue(err.fatal);
           done();
         });
@@ -386,10 +384,7 @@ describe('connection', () => {
       connectTimeout: 1000
     });
     conn.connect(err => {
-      assert.strictEqual(
-        err.message,
-        '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout'
-      );
+      assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
       assert.isTrue(
         Date.now() - initTime >= 990,
         'expected > 990, but was ' + (Date.now() - initTime)
@@ -416,8 +411,7 @@ describe('connection', () => {
       })
       .catch(err => {
         assert.isTrue(
-          err.message.includes('socket timeout') ||
-            err.message.includes('Connection timeout'),
+          err.message.includes('socket timeout') || err.message.includes('Connection timeout'),
           err.message
         );
         assert.equal(err.sqlState, '08S01');
@@ -482,10 +476,7 @@ describe('connection', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.strictEqual(
-          err.message,
-          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout'
-        );
+        assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
         assert.isTrue(
           Date.now() - initTime >= 990,
           'expected > 990, but was ' + (Date.now() - initTime)
@@ -500,23 +491,18 @@ describe('connection', () => {
 
   it('connection timeout error (wrong url)', function(done) {
     const initTime = Date.now();
-    base
-      .createConnection({ host: 'www.google.fr', connectTimeout: 1000 })
-      .catch(err => {
-        assert.strictEqual(
-          err.message,
-          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout'
-        );
-        assert.isTrue(
-          Date.now() - initTime >= 990,
-          'expected > 990, but was ' + (Date.now() - initTime)
-        );
-        assert.isTrue(
-          Date.now() - initTime < 2000,
-          'expected < 2000, but was ' + (Date.now() - initTime)
-        );
-        done();
-      });
+    base.createConnection({ host: 'www.google.fr', connectTimeout: 1000 }).catch(err => {
+      assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
+      assert.isTrue(
+        Date.now() - initTime >= 990,
+        'expected > 990, but was ' + (Date.now() - initTime)
+      );
+      assert.isTrue(
+        Date.now() - initTime < 2000,
+        'expected < 2000, but was ' + (Date.now() - initTime)
+      );
+      done();
+    });
   });
 
   it('changing session state', function(done) {
@@ -533,8 +519,7 @@ describe('connection', () => {
       .createConnection()
       .then(conn => {
         if (
-          (shareConn.info.isMariaDB() &&
-            !shareConn.info.hasMinVersion(10, 3, 1)) ||
+          (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 3, 1)) ||
           (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 2))
         ) {
           //mariadb session tracking default value was empty before 10.3.1
@@ -543,28 +528,17 @@ describe('connection', () => {
               "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
           );
         }
-        assert.equal(
-          conn.__tests.getCollation(),
-          Collations.fromName('UTF8MB4_UNICODE_CI')
-        );
+        assert.equal(conn.__tests.getCollation(), Collations.fromName('UTF8MB4_UNICODE_CI'));
         conn
           .query("SET time_zone = '+00:00', character_set_client = cp850")
           .then(() => {
             //encoding supported by iconv.js, but not by node.js
-            assert.equal(
-              conn.__tests.getCollation(),
-              Collations.fromName('CP850_GENERAL_CI')
-            );
-            return conn.query(
-              "SET character_set_client = latin1, time_zone = '+01:00'"
-            );
+            assert.equal(conn.__tests.getCollation(), Collations.fromName('CP850_GENERAL_CI'));
+            return conn.query("SET character_set_client = latin1, time_zone = '+01:00'");
           })
           .then(() => {
             //encoding supported by node.js
-            assert.equal(
-              conn.__tests.getCollation(),
-              Collations.fromName('LATIN1_SWEDISH_CI')
-            );
+            assert.equal(conn.__tests.getCollation(), Collations.fromName('LATIN1_SWEDISH_CI'));
             return conn.end();
           })
           .then(() => done())
@@ -697,16 +671,14 @@ describe('connection', () => {
     let currDb = Conf.baseConfig.database;
     assert.equal(currDb, shareConn.info.database);
     shareConn
-      .query('CREATE DATABASE changedb')
+      .query('CREATE DATABASE IF NOT EXISTS changedb')
       .then(() => {
         return shareConn.query('USE changedb');
       })
       .then(() => {
         if (
-          ((shareConn.info.isMariaDB() &&
-            shareConn.info.hasMinVersion(10, 2)) ||
-            (!shareConn.info.isMariaDB() &&
-              shareConn.info.hasMinVersion(5, 7))) &&
+          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
+            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
           !process.env.MAXSCALE_VERSION
         ) {
           //ok packet contain meta change
@@ -772,5 +744,86 @@ describe('connection', () => {
       assert.equal(err.code, 'ER_NOT_IMPLEMENTED_FORMAT');
       done();
     }
+  });
+
+  it('connection error if user expired', function(done) {
+    if (
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(10, 4, 3) ||
+      process.env.MAXSCALE_VERSION
+    ) {
+      //session tracking not implemented
+      this.skip();
+    }
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query('set global disconnect_on_expired_password= ON');
+    shareConn.query(
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query("GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd'");
+    shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
+    shareConn.query(
+      'update mysql.global_priv set\n' +
+        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+        "    where user='jeffrey'"
+    );
+    shareConn.query('flush privileges').then(() => {
+      base
+        .createConnection({
+          user: 'jeffrey',
+          password: '5$?kLOPµ€rd'
+        })
+        .then(conn => {
+          done(new Error('must have thrown error !'));
+        })
+        .catch(err => {
+          shareConn.query('set global disconnect_on_expired_password= OFF');
+          assert.equal(err.sqlState, 'HY000');
+          assert.equal(err.code, 'ER_MUST_CHANGE_PASSWORD_LOGIN');
+          done();
+        });
+    });
+  });
+
+  it('connection with expired user', function(done) {
+    if (
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(10, 4, 3) ||
+      process.env.MAXSCALE_VERSION
+    ) {
+      //session tracking not implemented
+      this.skip();
+    }
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query('set global disconnect_on_expired_password= ON');
+    shareConn.query(
+      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query("GRANT ALL ON *.* TO 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd'");
+    shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
+    shareConn.query(
+      'update mysql.global_priv set\n' +
+        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+        "    where user='jeffrey'"
+    );
+    shareConn.query('flush privileges').then(() => {
+      base
+        .createConnection({
+          user: 'jeffrey',
+          password: '5$?tuiHLKyklµ€rd',
+          permitConnectionWhenExpired: true
+        })
+        .then(conn => {
+          conn
+            .query("SET PASSWORD = PASSWORD('5$?tuiHLKyklµ€rdssss')")
+            .then(() => {
+              shareConn.query('set global disconnect_on_expired_password= OFF');
+              conn.end();
+              done();
+            })
+            .catch(done);
+        })
+        .catch(done);
+    });
   });
 });

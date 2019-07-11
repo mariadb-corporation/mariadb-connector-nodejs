@@ -31,10 +31,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.isTrue(
-          err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
-          err.message
-        );
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
         pool
           .query('SELECT 3')
           .then(() => {
@@ -44,10 +41,7 @@ describe('Pool', () => {
           .catch(err => {
             pool.end();
             assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();
@@ -60,10 +54,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.isTrue(
-          err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
-          err.message
-        );
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
       });
   });
 
@@ -81,10 +72,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.isTrue(
-          err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
-          err.message
-        );
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
         pool
           .getConnection()
           .then(() => {
@@ -94,10 +82,7 @@ describe('Pool', () => {
           .catch(err => {
             pool.end();
             assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();
@@ -110,10 +95,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.isTrue(
-          err.errno === 1524 || err.errno === 1045 || err.errno === 1698,
-          err.message
-        );
+        assert.isTrue(err.errno === 1524 || err.errno === 1045 || err.errno === 1698, err.message);
       });
   });
 
@@ -263,10 +245,7 @@ describe('Pool', () => {
     pool.getConnection().then(conn => {
       conn.end().then(() => {
         const reflect = p =>
-          p.then(
-            v => ({ v, status: 'resolved' }),
-            e => ({ e, status: 'rejected' })
-          );
+          p.then(v => ({ v, status: 'resolved' }), e => ({ e, status: 'rejected' }));
 
         const requests = [];
         for (let i = 0; i < 10000; i++) {
@@ -708,14 +687,9 @@ describe('Pool', () => {
 
   it('pool batch', function(done) {
     const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
-    pool.query(
-      'CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)'
-    );
+    pool.query('CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
     pool
-      .batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [
-        [1, 'john'],
-        [2, 'jack']
-      ])
+      .batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [[1, 'john'], [2, 'jack']])
       .then(res => {
         assert.equal(res.affectedRows, 2);
         return pool.query('select * from `parse`');
@@ -774,10 +748,7 @@ describe('Pool', () => {
         );
 
         stream.pipeline(queryStream, transformStream, someWriterStream, () => {
-          assert.isTrue(
-            received >= 0 && received < 10000,
-            'received ' + received + ' results'
-          );
+          assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
           conn.query('SELECT 1').then(res => {
             conn.end();
             pool.end();
@@ -799,7 +770,7 @@ describe('Pool', () => {
     });
 
     const requests = [];
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 15000; i++) {
       requests.push(pool.query('SELECT ' + i));
     }
     Promise.all(requests)
@@ -818,12 +789,8 @@ describe('Pool', () => {
         setTimeout(() => {
           //minimumIdle-1 is possible after reaching idleTimeout and connection
           // is still not recreated
-          assert.isTrue(
-            pool.totalConnections() === 4 || pool.totalConnections() === 3
-          );
-          assert.isTrue(
-            pool.idleConnections() === 4 || pool.idleConnections() === 3
-          );
+          assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+          assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
           pool.end();
           done();
         }, 3000);
@@ -845,12 +812,8 @@ describe('Pool', () => {
     setTimeout(() => {
       //minimumIdle-1 is possible after reaching idleTimeout and connection
       // is still not recreated
-      assert.isTrue(
-        pool.totalConnections() === 4 || pool.totalConnections() === 3
-      );
-      assert.isTrue(
-        pool.idleConnections() === 4 || pool.idleConnections() === 3
-      );
+      assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+      assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
       pool
         .end()
         .then(() => done())

@@ -27,9 +27,7 @@ describe('Connection meta', function() {
       done(new Error('Must have thrown exception'));
     } catch (err) {
       assert(
-        err.message.includes(
-          'cannot know if server information until connection is established'
-        )
+        err.message.includes('cannot know if server information until connection is established')
       );
       conn.connect(conn.end);
       done();
@@ -58,9 +56,7 @@ describe('Connection meta', function() {
       done(new Error('Must have thrown exception'));
     } catch (err) {
       assert(
-        err.message.includes(
-          'cannot know if server is MariaDB until connection is established'
-        )
+        err.message.includes('cannot know if server is MariaDB until connection is established')
       );
       conn.connect(conn.end);
       done();
@@ -73,11 +69,7 @@ describe('Connection meta', function() {
       conn.info.hasMinVersion();
       done(new Error('Must have thrown exception'));
     } catch (err) {
-      assert(
-        err.message.includes(
-          'cannot know if server version until connection is established'
-        )
-      );
+      assert(err.message.includes('cannot know if server version until connection is established'));
       conn.connect(conn.end);
       done();
     }

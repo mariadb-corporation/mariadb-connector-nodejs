@@ -9,8 +9,7 @@ chars.push('🥂');
 
 function randomString(length) {
   let result = '';
-  for (let i = length; i > 0; --i)
-    result += chars[Math.round(Math.random() * (chars.length - 1))];
+  for (let i = length; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
   return result;
 }
 
@@ -21,8 +20,7 @@ sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title =
   "100 * insert 100 characters using promise and batch method (for mariadb only, since doesn't exist for others)";
-module.exports.displaySql =
-  'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
+module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
 const iterations = 100;
 module.exports.promise = true;
 module.exports.benchFct = function(conn, deferred, connType) {

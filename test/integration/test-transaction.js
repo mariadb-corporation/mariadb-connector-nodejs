@@ -49,55 +49,34 @@ describe('transaction', () => {
     const conn = base.createCallbackConnection();
     conn.connect(function(err) {
       if (err) return done(err);
-      conn.query(
-        'CREATE TEMPORARY TABLE testTransaction2 (v varchar(10))',
-        err => {
+      conn.query('CREATE TEMPORARY TABLE testTransaction2 (v varchar(10))', err => {
+        if (err) return done(err);
+        conn.rollback(err => {
           if (err) return done(err);
-          conn.rollback(err => {
+          conn.query('SET autocommit=0', err => {
             if (err) return done(err);
-            conn.query('SET autocommit=0', err => {
+            assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            conn.beginTransaction(err => {
               if (err) return done(err);
-              assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-              assert.equal(
-                conn.info.status & ServerStatus.STATUS_AUTOCOMMIT,
-                0
-              );
-              conn.beginTransaction(err => {
+              assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.query("INSERT INTO testTransaction2 values ('test')");
+              assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.rollback(err => {
                 if (err) return done(err);
-                assert.equal(
-                  conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                  1
-                );
-                conn.query("INSERT INTO testTransaction2 values ('test')");
-                assert.equal(
-                  conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                  1
-                );
-                conn.rollback(err => {
+                assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+                conn.query('SELECT count(*) as nb FROM testTransaction2', (err, rows) => {
                   if (err) return done(err);
-                  assert.equal(
-                    conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                    0
-                  );
-                  conn.query(
-                    'SELECT count(*) as nb FROM testTransaction2',
-                    (err, rows) => {
-                      if (err) return done(err);
-                      assert.equal(
-                        conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                        1
-                      );
-                      assert.equal(rows[0].nb, 0);
-                      conn.end();
-                      done();
-                    }
-                  );
+                  assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+                  assert.equal(rows[0].nb, 0);
+                  conn.end();
+                  done();
                 });
               });
             });
           });
-        }
-      );
+        });
+      });
     });
   });
 
@@ -105,34 +84,25 @@ describe('transaction', () => {
     const conn = base.createCallbackConnection();
     conn.connect(function(err) {
       if (err) return done(err);
-      conn.query(
-        'CREATE TEMPORARY TABLE testTransaction2 (v varchar(10))',
-        err => {
+      conn.query('CREATE TEMPORARY TABLE testTransaction2 (v varchar(10))', err => {
+        if (err) return done(err);
+        conn.rollback();
+        conn.query('SET autocommit=0', err => {
           if (err) return done(err);
+          assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+          assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+          conn.beginTransaction();
+          conn.query("INSERT INTO testTransaction2 values ('test')");
           conn.rollback();
-          conn.query('SET autocommit=0', err => {
+          conn.query('SELECT count(*) as nb FROM testTransaction2', (err, rows) => {
             if (err) return done(err);
-            assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-            assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
-            conn.beginTransaction();
-            conn.query("INSERT INTO testTransaction2 values ('test')");
-            conn.rollback();
-            conn.query(
-              'SELECT count(*) as nb FROM testTransaction2',
-              (err, rows) => {
-                if (err) return done(err);
-                assert.equal(
-                  conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                  1
-                );
-                assert.equal(rows[0].nb, 0);
-                conn.end();
-                done();
-              }
-            );
+            assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+            assert.equal(rows[0].nb, 0);
+            conn.end();
+            done();
           });
-        }
-      );
+        });
+      });
     });
   });
 
@@ -180,9 +150,7 @@ describe('transaction', () => {
       })
       .then(() => {
         process.nextTick(
-          conn.__tests
-            .getSocket()
-            .destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
+          conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
         );
         conn
           .commit()
@@ -205,9 +173,7 @@ describe('transaction', () => {
       conn.query('CREATE TEMPORARY TABLE testTransaction (v varchar(10))');
       conn.query("INSERT INTO testTransaction values ('test')", err => {
         process.nextTick(
-          conn.__tests
-            .getSocket()
-            .destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
+          conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
         );
         conn.commit();
         done();
@@ -243,11 +209,7 @@ describe('transaction', () => {
             done(new Error('must have thrown error !'));
           })
           .catch(err => {
-            assert(
-              err.message.includes(
-                'Cannot execute new commands: connection closed'
-              )
-            );
+            assert(err.message.includes('Cannot execute new commands: connection closed'));
             assert.equal(err.sqlState, '08S01');
             assert.equal(err.errno, 45013);
             assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
@@ -263,59 +225,35 @@ describe('transaction', () => {
     const conn = base.createCallbackConnection();
     conn.connect(err => {
       if (err) return done(err);
-      conn.query(
-        'CREATE TEMPORARY TABLE testTransaction (v varchar(10))',
-        err => {
+      conn.query('CREATE TEMPORARY TABLE testTransaction (v varchar(10))', err => {
+        if (err) return done(err);
+        conn.commit(err => {
           if (err) return done(err);
-          conn.commit(err => {
+          conn.query('SET autocommit=0', err => {
             if (err) return done(err);
-            conn.query('SET autocommit=0', err => {
+            assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+            assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+            conn.beginTransaction(err => {
               if (err) return done(err);
-              assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-              assert.equal(
-                conn.info.status & ServerStatus.STATUS_AUTOCOMMIT,
-                0
-              );
-              conn.beginTransaction(err => {
+              assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+              conn.query("INSERT INTO testTransaction values ('test')", err => {
                 if (err) return done(err);
-                assert.equal(
-                  conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                  1
-                );
-                conn.query(
-                  "INSERT INTO testTransaction values ('test')",
-                  err => {
+                assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+                conn.commit(err => {
+                  if (err) return done(err);
+                  assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+                  conn.query('SELECT count(*) as nb FROM testTransaction', (err, rows) => {
                     if (err) return done(err);
-                    assert.equal(
-                      conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                      1
-                    );
-                    conn.commit(err => {
-                      if (err) return done(err);
-                      assert.equal(
-                        conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                        0
-                      );
-                      conn.query(
-                        'SELECT count(*) as nb FROM testTransaction',
-                        (err, rows) => {
-                          if (err) return done(err);
-                          assert.equal(
-                            conn.info.status & ServerStatus.STATUS_IN_TRANS,
-                            1
-                          );
-                          assert.equal(rows[0].nb, 1);
-                          conn.end(done);
-                        }
-                      );
-                    });
-                  }
-                );
+                    assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+                    assert.equal(rows[0].nb, 1);
+                    conn.end(done);
+                  });
+                });
               });
             });
           });
-        }
-      );
+        });
+      });
     });
   });
 });

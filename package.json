@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -45,31 +45,31 @@
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1+",
   "dependencies": {
+    "@types/geojson": "^7946.0.7",
+    "@types/node": "^11.13.15",
     "denque": "^1.4.0",
     "iconv-lite": "^0.4.24",
     "long": "^4.0.0",
     "moment-timezone": "^0.5.25"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.7",
-    "@types/node": "^11.11.5",
-    "@typescript-eslint/eslint-plugin": "^1.5.0",
-    "@typescript-eslint/parser": "^1.5.0",
+    "@typescript-eslint/eslint-plugin": "^1.11.0",
+    "@typescript-eslint/parser": "^1.11.0",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
-    "codecov": "^3.2.0",
+    "codecov": "^3.5.0",
     "colors": "^1.3.2",
+    "dom-parser": "^0.1.6",
     "error-stack-parser": "^2.0.1",
     "eslint": "^5.15.3",
-    "eslint-config-prettier": "^4.1.0",
+    "eslint-config-prettier": "^4.3.0",
     "eslint-plugin-markdown": "^1.0.0-rc.0",
-    "eslint-plugin-prettier": "^3.0.1",
-    "mocha": "^6.0.2",
+    "eslint-plugin-prettier": "^3.1.0",
+    "mocha": "^6.1.4",
     "mocha-lcov-reporter": "^1.3.0",
-    "nyc": "^13.3.0",
-    "prettier": "^1.15.3",
-    "typescript": "^3.3.4000",
-    "dom-parser": "^0.1.6"
+    "nyc": "^14.1.1",
+    "prettier": "^1.18.2",
+    "typescript": "^3.5.2"
   },
   "bugs": {
     "url": "https://jira.mariadb.org/projects/CONJS/"

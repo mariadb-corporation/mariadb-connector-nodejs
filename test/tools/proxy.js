@@ -82,8 +82,7 @@ function Proxy(args) {
       });
     });
     server.listen(LOCAL_PORT);
-    if (log)
-      console.log('TCP server accepting connection on port: ' + LOCAL_PORT);
+    if (log) console.log('TCP server accepting connection on port: ' + LOCAL_PORT);
   };
 
   this.start();

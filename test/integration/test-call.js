@@ -7,9 +7,7 @@ const { assert } = require('chai');
 describe('stored procedure', () => {
   before(done => {
     shareConn
-      .query(
-        'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
-      )
+      .query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end')
       .then(() => {
         done();
       })
@@ -66,23 +64,15 @@ describe('stored procedure', () => {
   });
 
   it('call with out parameter query', function(done) {
-    shareConn.query(
-      'CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end'
-    );
+    shareConn.query('CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end');
     shareConn
       .query('call stmtOutParam(?,?)', [2, 3])
       .then(() => {
-        done(
-          new Error(
-            'must not be possible since output parameter is not a variable'
-          )
-        );
+        done(new Error('must not be possible since output parameter is not a variable'));
       })
       .catch(err => {
         assert.ok(
-          err.message.includes(
-            'is not a variable or NEW pseudo-variable in BEFORE trigger'
-          )
+          err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger')
         );
         done();
       });

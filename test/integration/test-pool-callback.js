@@ -21,10 +21,7 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             pool.end();
@@ -56,10 +53,7 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028,
+              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
               err.message
             );
             done();
@@ -85,10 +79,7 @@ describe('Pool callback', () => {
     });
     pool.getConnection((err, conn) => {
       conn.query('SELECT SLEEP(1)', () => {
-        assert(
-          Date.now() - initTime >= 1999,
-          'expected > 2s, but was ' + (Date.now() - initTime)
-        );
+        assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
         conn.release();
         pool.end(err => {
           done();
@@ -111,10 +102,7 @@ describe('Pool callback', () => {
     });
     pool.getConnection((err, conn) => {
       conn.query('SELECT SLEEP(1)', () => {
-        assert(
-          Date.now() - initTime >= 1999,
-          'expected > 2s, but was ' + (Date.now() - initTime)
-        );
+        assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
         conn.release();
         pool.end(err => {
           done();
@@ -447,35 +435,26 @@ describe('Pool callback', () => {
         done(err);
       } else {
         conn.query('DROP TABLE IF EXISTS rollbackTable', (err, res) => {
-          conn.query(
-            'CREATE TABLE rollbackTable(col varchar(10))',
-            (err, res) => {
-              conn.query('set autocommit = 0', (err, res) => {
-                conn.beginTransaction((err, res) => {
-                  conn.query(
-                    "INSERT INTO rollbackTable value ('test')",
-                    (err, res) => {
-                      conn.release(err => {
-                        pool.getConnection((err, conn) => {
-                          conn.query(
-                            'SELECT * FROM rollbackTable',
-                            (err, res) => {
-                              assert.equal(res.length, 0);
-                              conn.end(() => {
-                                pool.end(() => {
-                                  done();
-                                });
-                              });
-                            }
-                          );
+          conn.query('CREATE TABLE rollbackTable(col varchar(10))', (err, res) => {
+            conn.query('set autocommit = 0', (err, res) => {
+              conn.beginTransaction((err, res) => {
+                conn.query("INSERT INTO rollbackTable value ('test')", (err, res) => {
+                  conn.release(err => {
+                    pool.getConnection((err, conn) => {
+                      conn.query('SELECT * FROM rollbackTable', (err, res) => {
+                        assert.equal(res.length, 0);
+                        conn.end(() => {
+                          pool.end(() => {
+                            done();
+                          });
                         });
                       });
-                    }
-                  );
+                    });
+                  });
                 });
               });
-            }
-          );
+            });
+          });
         });
       }
     });
@@ -487,9 +466,7 @@ describe('Pool callback', () => {
       resetAfterUse: false
     });
     pool.query('DROP TABLE IF EXISTS parse');
-    pool.query(
-      'CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)'
-    );
+    pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
     pool.batch(
       'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
       [[1, 'john'], [2, 'jack']],
@@ -549,10 +526,10 @@ describe('Pool callback', () => {
       idleTimeout: 2
     });
 
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 15000; i++) {
       pool.query('SELECT ' + i);
     }
-    pool.query('SELECT 10000', [], err => {
+    pool.query('SELECT 15000', [], err => {
       if (err) {
         pool.end();
         done(err);
@@ -565,12 +542,8 @@ describe('Pool callback', () => {
         setTimeout(() => {
           //minimumIdle-1 is possible after reaching idleTimeout and connection
           // is still not recreated
-          assert.isTrue(
-            pool.totalConnections() === 4 || pool.totalConnections() === 3
-          );
-          assert.isTrue(
-            pool.idleConnections() === 4 || pool.idleConnections() === 3
-          );
+          assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+          assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
           pool.end();
           done();
         }, 7000);
@@ -589,12 +562,8 @@ describe('Pool callback', () => {
     setTimeout(() => {
       //minimumIdle-1 is possible after reaching idleTimeout and connection
       // is still not recreated
-      assert.isTrue(
-        pool.totalConnections() === 4 || pool.totalConnections() === 3
-      );
-      assert.isTrue(
-        pool.idleConnections() === 4 || pool.idleConnections() === 3
-      );
+      assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+      assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
       pool.end();
       done();
     }, 4000);

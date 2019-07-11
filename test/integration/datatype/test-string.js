@@ -16,9 +16,7 @@ describe('string', () => {
         assert.equal(results[0].t1, '🤘💪');
         assert.equal(results[0].t2, '🤘💪');
         assert.equal(results[0].tt, '🤘💪');
-        return shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', [
-          '🤘🤖'
-        ]);
+        return shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', ['🤘🤖']);
       })
       .then(() => {
         return shareConn.query('SELECT ? t2, tt FROM buf_utf8_chars', ['🤖']);
@@ -71,15 +69,10 @@ describe('string', () => {
 
   it('connection encoding', done => {
     const value = '©°';
-    const encodings = [
-      'KOI8R_GENERAL_CI',
-      'UTF8_GENERAL_CI',
-      'CP850_BIN',
-      'CP1251_GENERAL_CI'
-    ];
+    const encodings = ['KOI8R_GENERAL_CI', 'UTF8_GENERAL_CI', 'CP850_BIN', 'CP1251_GENERAL_CI'];
     for (let i = 0; i < encodings.length; i++) {
       base
-        .createConnection({ charset: encodings[i] })
+        .createConnection({ collation: encodings[i] })
         .then(conn => {
           conn
             .query('select ? as t', value)
@@ -96,12 +89,8 @@ describe('string', () => {
 
   it('table encoding not affecting query', done => {
     const str = '財團法人資訊工業策進會';
-    shareConn.query(
-      'CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8'
-    );
-    shareConn.query(
-      'CREATE TEMPORARY TABLE big5_encoding_table(t2 text) CHARSET big5'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8');
+    shareConn.query('CREATE TEMPORARY TABLE big5_encoding_table(t2 text) CHARSET big5');
     shareConn.query('INSERT INTO utf8_encoding_table values (?)', [str]);
     shareConn.query('INSERT INTO big5_encoding_table values (?)', [str]);
     shareConn
@@ -114,9 +103,7 @@ describe('string', () => {
   });
 
   it('string escape', done => {
-    shareConn.query(
-      'CREATE TEMPORARY TABLE escape_utf8_string(tt text) CHARSET utf8'
-    );
+    shareConn.query('CREATE TEMPORARY TABLE escape_utf8_string(tt text) CHARSET utf8');
     shareConn.query('INSERT INTO escape_utf8_string values (?)', ['a \'b\\"c']);
     shareConn
       .query('SELECT * from escape_utf8_string')
@@ -130,9 +117,7 @@ describe('string', () => {
   it('wrong surrogate', done => {
     const wrongString = 'a\ue800\ud800b\udc01c\ud800';
     base.createConnection().then(conn => {
-      conn.query(
-        'CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4'
-      );
+      conn.query('CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');
       conn.query('INSERT INTO wrong_utf8_string values (?)', [wrongString]);
       conn
         .query('SELECT * from wrong_utf8_string')

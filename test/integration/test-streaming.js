@@ -48,9 +48,7 @@ describe('streaming', () => {
           'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.3.0/mariadb-java-client-2.3.0.jar',
           readableStream => {
             shareConn
-              .query('INSERT INTO StreamingContent (b) VALUE (?)', [
-                readableStream
-              ])
+              .query('INSERT INTO StreamingContent (b) VALUE (?)', [readableStream])
               .then(() => shareConn.query('SELECT * FROM StreamingContent'))
               .then(rows => {
                 done();
@@ -89,10 +87,12 @@ describe('streaming', () => {
     shareConn
       .query('truncate Streaming')
       .then(() => {
-        return shareConn.query(
-          'insert into Streaming(b, c, d, e) values(?, ?, ?, ?)',
-          [r, 't1', r2, 't2']
-        );
+        return shareConn.query('insert into Streaming(b, c, d, e) values(?, ?, ?, ?)', [
+          r,
+          't1',
+          r2,
+          't2'
+        ]);
       })
       .then(() => {
         return shareConn.query('SELECT * from Streaming');
@@ -114,10 +114,12 @@ describe('streaming', () => {
     shareConn
       .query('truncate Streaming')
       .then(() => {
-        return shareConn.query(
-          'insert into Streaming(c, b, e, d) values(?, ?, ?, ?)',
-          ['t1', r, 't2', r2]
-        );
+        return shareConn.query('insert into Streaming(c, b, e, d) values(?, ?, ?, ?)', [
+          't1',
+          r,
+          't2',
+          r2
+        ]);
       })
       .then(() => {
         return shareConn.query('SELECT * from Streaming');

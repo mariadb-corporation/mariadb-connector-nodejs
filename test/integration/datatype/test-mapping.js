@@ -216,8 +216,7 @@ describe('mapping', () => {
         assert.ok(Buffer.isBuffer(rows[0].test));
         assert.ok(Buffer.isBuffer(rows[0].test2));
         assert.ok(
-          typeof typeof rows[0].test3 === 'string' ||
-            typeof rows[0].test3 instanceof String
+          typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String
         );
         done();
       })

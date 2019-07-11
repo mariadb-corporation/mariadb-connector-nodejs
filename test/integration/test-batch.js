@@ -219,10 +219,7 @@ describe('batch', () => {
               sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
               maxAllowedPacket: 1048576
             },
-            [
-              [1, new Date('2001-12-31 23:59:58')],
-              [2, new Date('2001-12-31 23:59:58')]
-            ]
+            [[1, new Date('2001-12-31 23:59:58')], [2, new Date('2001-12-31 23:59:58')]]
           )
           .then(res => {
             assert.equal(res.affectedRows, 2);
@@ -262,17 +259,12 @@ describe('batch', () => {
       .catch(done);
   };
 
-  const simpleBatchEncodingCP1251 = (
-    useCompression,
-    useBulk,
-    timezone,
-    done
-  ) => {
+  const simpleBatchEncodingCP1251 = (useCompression, useBulk, timezone, done) => {
     base
       .createConnection({
         compress: useCompression,
         bulk: useBulk,
-        charset: 'CP1251_GENERAL_CI'
+        collation: 'CP1251_GENERAL_CI'
       })
       .then(conn => {
         const timeout = setTimeout(() => {
@@ -280,23 +272,15 @@ describe('batch', () => {
         }, 25000);
 
         conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
-        conn.query(
-          'CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4'
-        );
+        conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
         conn
-          .batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [
-            ['john', 2],
-            ['©°', 3]
-          ])
+          .batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [['john', 2], ['©°', 3]])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
               .query('select * from `simpleBatchCP1251`')
               .then(res => {
-                assert.deepEqual(res, [
-                  { id: 2, t: 'john' },
-                  { id: 3, t: '©°' }
-                ]);
+                assert.deepEqual(res, [{ id: 2, t: 'john' }, { id: 3, t: '©°' }]);
                 conn
                   .query('DROP TABLE simpleBatchCP1251')
                   .then(res => {
@@ -406,10 +390,8 @@ describe('batch', () => {
           .then(res => {
             conn.end();
             if (
-              (shareConn.info.isMariaDB() &&
-                shareConn.info.hasMinVersion(10, 2, 0)) ||
-              (!shareConn.info.isMariaDB() &&
-                shareConn.info.hasMinVersion(5, 7, 0))
+              (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+              (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
             ) {
               //field truncated must have thrown error
               done(new Error('must have throw error !'));
@@ -452,11 +434,7 @@ describe('batch', () => {
           .batch('SELECT ? as id, ? as t', [[1, 'john'], [2, 'jack']])
           .then(res => {
             clearTimeout(timeout);
-            if (
-              useBulk &&
-              conn.info.isMariaDB() &&
-              conn.info.hasMinVersion(10, 2, 7)
-            ) {
+            if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               done(new Error('Must have thrown an exception'));
             } else {
               assert.deepEqual(res, [
@@ -480,10 +458,7 @@ describe('batch', () => {
           .catch(err => {
             conn.end();
             clearTimeout(timeout);
-            if (
-              useBulk & conn.info.isMariaDB() &&
-              conn.info.hasMinVersion(10, 2, 7)
-            ) {
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               assert.isTrue(
                 err.message.includes(
                   'This command is not supported in the prepared statement protocol yet'
@@ -520,10 +495,7 @@ describe('batch', () => {
           values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
         }
         conn
-          .batch(
-            'INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)',
-            values
-          )
+          .batch('INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
           })
@@ -579,10 +551,7 @@ describe('batch', () => {
           values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
         }
         conn
-          .batch(
-            'INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)',
-            values
-          )
+          .batch('INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
           })
@@ -649,28 +618,22 @@ describe('batch', () => {
       .catch(done);
   };
 
-  const singleBigInsertWithoutMaxAllowedPacket = (
-    useCompression,
-    useBulk,
-    done
-  ) => {
+  const singleBigInsertWithoutMaxAllowedPacket = (useCompression, useBulk, done) => {
     base
       .createConnection({ compress: useCompression, bulk: useBulk })
       .then(conn => {
         const timeout = setTimeout(() => {
           console.log(conn.info.getLastPackets());
         }, 25000);
-        conn.query(
-          'DROP TABLE IF EXISTS singleBigInsertWithoutMaxAllowedPacket'
-        );
+        conn.query('DROP TABLE IF EXISTS singleBigInsertWithoutMaxAllowedPacket');
         conn.query(
           'CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
         );
         conn
-          .batch(
-            'INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)',
-            [[1, bigBuf], [2, 'john']]
-          )
+          .batch('INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)', [
+            [1, bigBuf],
+            [2, 'john']
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
@@ -797,8 +760,7 @@ describe('batch', () => {
   const bigBatchWithStreams = (useCompression, useBulk, done) => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
-      if (i % 100000 === 0)
-        values.push([i, fs.createReadStream(fileName), i * 2]);
+      if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
       else values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪', i * 2]);
     }
     base
@@ -816,10 +778,7 @@ describe('batch', () => {
           'CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
         );
         conn
-          .batch(
-            'INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)',
-            values
-          )
+          .batch('INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)', values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
             let currRow = 0;
@@ -855,8 +814,7 @@ describe('batch', () => {
   const bigBatchErrorWithStreams = (useCompression, useBulk, done) => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
-      if (i % 100000 === 0)
-        values.push([i, fs.createReadStream(fileName), i * 2]);
+      if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
       else values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪', i * 2]);
     }
 
@@ -902,10 +860,10 @@ describe('batch', () => {
           'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
         );
         conn
-          .batch(
-            'INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)',
-            [{ param_1: 1, param_2: 'john' }, { param_1: 2, param_2: 'jack' }]
-          )
+          .batch('INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)', [
+            { param_1: 1, param_2: 'john' },
+            { param_1: 2, param_2: 'jack' }
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
@@ -981,16 +939,10 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
         conn
-          .batch('SELECT :id2 as id, :id1 as t', [
-            { id2: 1, id1: 'john' },
-            { id1: 'jack', id2: 2 }
-          ])
+          .batch('SELECT :id2 as id, :id1 as t', [{ id2: 1, id1: 'john' }, { id1: 'jack', id2: 2 }])
           .then(res => {
             conn.end();
-            if (
-              useBulk & conn.info.isMariaDB() &&
-              conn.info.hasMinVersion(10, 2, 7)
-            ) {
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               done(new Error('Must have thrown an exception'));
             } else {
               assert.deepEqual(res, [
@@ -1013,10 +965,7 @@ describe('batch', () => {
           })
           .catch(err => {
             conn.end();
-            if (
-              useBulk & conn.info.isMariaDB() &&
-              conn.info.hasMinVersion(10, 2, 7)
-            ) {
+            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
               assert.isTrue(
                 err.message.includes(
                   'This command is not supported in the prepared statement protocol yet'
@@ -1048,10 +997,7 @@ describe('batch', () => {
           values.push({ id1: i, id2: 'abcdefghijkflmnopqrtuvwxyz🤘💪' });
         }
         conn
-          .batch(
-            'INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)',
-            values
-          )
+          .batch('INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)', values)
           .then(res => {
             assert.equal(res.affectedRows, 1000000);
 
@@ -1096,10 +1042,10 @@ describe('batch', () => {
           'CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
         );
         conn
-          .batch(
-            'INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)',
-            [{ id: 1, id2: bigBuf }, { id: 2, id2: 'john' }]
-          )
+          .batch('INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)', [
+            { id: 1, id2: bigBuf },
+            { id: 2, id2: 'john' }
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
@@ -1147,13 +1093,10 @@ describe('batch', () => {
           'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
         );
         conn
-          .batch(
-            'INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)',
-            [
-              { id1: 1, id3: stream1, id4: 99, id5: 6 },
-              { id1: 2, id3: stream2, id4: 98 }
-            ]
-          )
+          .batch('INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)', [
+            { id1: 1, id3: stream1, id4: 99, id5: 6 },
+            { id1: 2, id3: stream2, id4: 98 }
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn.query('select * from `streamNamedPlaceHolders`').then(res => {
@@ -1225,8 +1168,7 @@ describe('batch', () => {
   const stream16MNamedPlaceHolders = function(useBulk, done) {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
-      if (i % 100000 === 0)
-        values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
+      if (i % 100000 === 0) values.push({ id1: i, id2: fs.createReadStream(fileName), id3: i * 2 });
       else
         values.push({
           id1: i,
@@ -1286,80 +1228,61 @@ describe('batch', () => {
     const useCompression = false;
     it('simple batch, local date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
     it('simple batch with option', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatchWithOptions(useCompression, true, done);
     });
 
     it('batch without parameter', function(done) {
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
-      base
-        .createConnection({ compress: useCompression, bulk: true })
-        .then(conn => {
-          conn
-            .batch('INSERT INTO `blabla` values (?)')
-            .then(res => {
-              conn.end();
-              done(new Error('expect an error !'));
-            })
-            .catch(err => {
-              assert.isTrue(
-                err.message.includes('Batch must have values set'),
-                err.message
-              );
-              conn.end();
-              done();
-            });
-        });
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+        conn
+          .batch('INSERT INTO `blabla` values (?)')
+          .then(res => {
+            conn.end();
+            done(new Error('expect an error !'));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes('Batch must have values set'), err.message);
+            conn.end();
+            done();
+          });
+      });
     });
 
     it('batch with erroneous parameter', function(done) {
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
-      base
-        .createConnection({ compress: useCompression, bulk: true })
-        .then(conn => {
-          conn
-            .batch('INSERT INTO `blabla` values (?, ?)', [
-              [1, 2],
-              [1, undefined]
-            ])
-            .then(res => {
-              conn.end();
-              done(new Error('expect an error !'));
-            })
-            .catch(err => {
-              assert.isTrue(
-                err.message.includes(
-                  'Parameter at position 2 is undefined for values 1',
-                  err.message
-                )
-              );
-              conn.end();
-              done();
-            });
-        });
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+        conn
+          .batch('INSERT INTO `blabla` values (?, ?)', [[1, 2], [1, undefined]])
+          .then(res => {
+            conn.end();
+            done(new Error('expect an error !'));
+          })
+          .catch(err => {
+            assert.isTrue(
+              err.message.includes('Parameter at position 2 is undefined for values 1', err.message)
+            );
+            conn.end();
+            done();
+          });
+      });
     });
 
     it('simple batch offset date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
     it('simple batch offset date Z ', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'Z', done);
     });
 
@@ -1375,8 +1298,7 @@ describe('batch', () => {
 
     it('simple batch error message packet split', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatchErrorSplit(useCompression, true, 'local', done);
     });
 
@@ -1442,15 +1364,13 @@ describe('batch', () => {
 
     it('simple batch, local date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
@@ -1521,91 +1441,70 @@ describe('batch', () => {
 
     it('simple batch, local date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
     it('batch without parameter', function(done) {
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
-      base
-        .createConnection({ compress: useCompression, bulk: false })
-        .then(conn => {
-          conn
-            .batch('INSERT INTO `blabla` values (?)')
-            .then(res => {
-              conn.end();
-              done(new Error('expect an error !'));
-            })
-            .catch(err => {
-              assert.isTrue(
-                err.message.includes('Batch must have values set'),
-                err.message
-              );
-              conn.end();
-              done();
-            });
-        });
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base.createConnection({ compress: useCompression, bulk: false }).then(conn => {
+        conn
+          .batch('INSERT INTO `blabla` values (?)')
+          .then(res => {
+            conn.end();
+            done(new Error('expect an error !'));
+          })
+          .catch(err => {
+            assert.isTrue(err.message.includes('Batch must have values set'), err.message);
+            conn.end();
+            done();
+          });
+      });
     });
 
     it('batch with erroneous parameter', function(done) {
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
-      base
-        .createConnection({ compress: useCompression, bulk: true })
-        .then(conn => {
-          conn
-            .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]])
-            .then(res => {
-              conn.end();
-              done(new Error('expect an error !'));
-            })
-            .catch(err => {
-              assert.isTrue(
-                err.message.includes(
-                  'Parameter at position 2 is not set for values 1'
-                ),
-                err.message
-              );
-              conn.end();
-              done();
-            });
-        });
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+        conn
+          .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]])
+          .then(res => {
+            conn.end();
+            done(new Error('expect an error !'));
+          })
+          .catch(err => {
+            assert.isTrue(
+              err.message.includes('Parameter at position 2 is not set for values 1'),
+              err.message
+            );
+            conn.end();
+            done();
+          });
+      });
     });
 
     it('batch with undefined parameter', function(done) {
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
-      base
-        .createConnection({ compress: useCompression, bulk: true })
-        .then(conn => {
-          conn
-            .batch('INSERT INTO `blabla` values (?,?)', [
-              [1, 2],
-              [1, undefined]
-            ])
-            .then(res => {
-              conn.end();
-              done(new Error('expect an error !'));
-            })
-            .catch(err => {
-              assert.isTrue(
-                err.message.includes(
-                  'Parameter at position 2 is undefined for values 1'
-                ),
-                err.message
-              );
-              conn.end();
-              done();
-            });
-        });
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+        conn
+          .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1, undefined]])
+          .then(res => {
+            conn.end();
+            done(new Error('expect an error !'));
+          })
+          .catch(err => {
+            assert.isTrue(
+              err.message.includes('Parameter at position 2 is undefined for values 1'),
+              err.message
+            );
+            conn.end();
+            done();
+          });
+      });
     });
 
     it('simple batch offset date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 
@@ -1677,15 +1576,13 @@ describe('batch', () => {
 
     it('simple batch, local date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
       this.timeout(30000);
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-        this.skip();
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 
