@@ -167,6 +167,47 @@ describe('local-infile', () => {
       .catch(done);
   });
 
+  it('small local infile with non supported node.js encoding', function(done) {
+    const self = this;
+    shareConn
+      .query('select @@local_infile')
+      .then(rows => {
+        if (rows[0]['@@local_infile'] === 0) {
+          self.skip();
+        }
+        return new Promise(function(resolve, reject) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      })
+      .then(() => {
+        base
+          .createConnection({ permitLocalInfile: true, charset: 'big5' })
+          .then(conn => {
+            conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
+            conn
+              .query(
+                "LOAD DATA LOCAL INFILE '" +
+                smallFileName.replace(/\\/g, '/') +
+                "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+              )
+              .then(() => {
+                return conn.query('SELECT * FROM smallLocalInfile');
+              })
+              .then(rows => {
+                assert.deepEqual(rows, [{ id: 1, test: 'hello' }, { id: 2, test: 'world' }]);
+                conn.end();
+                done();
+              })
+              .catch(done);
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it('non readable local infile', function(done) {
     //on windows, fs.chmodSync doesn't remove read access.
     if (process.platform === 'win32') this.skip();

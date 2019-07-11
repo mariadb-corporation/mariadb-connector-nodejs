@@ -13,7 +13,11 @@ describe('connection', () => {
   });
 
   it('with basic connection attributes', function(done) {
-    connectWithAttributes(false, done);
+    connectWithAttributes(true, done);
+  });
+
+  it('with basic connection attributes non node.js encoding', function(done) {
+    connectWithAttributes(true, done, 'big5');
   });
 
   it('with small connection attributes', function(done) {
@@ -25,9 +29,9 @@ describe('connection', () => {
     connectWithAttributes({ par1: 'bouh', par2: mediumAttribute }, done);
   });
 
-  function connectWithAttributes(attr, done) {
+  function connectWithAttributes(attr, done, charset) {
     base
-      .createConnection({ connectAttributes: attr })
+      .createConnection({ connectAttributes: attr, charset: charset })
       .then(conn => {
         conn
           .query('SELECT 1')

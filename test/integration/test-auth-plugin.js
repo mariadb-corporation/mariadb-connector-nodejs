@@ -181,6 +181,7 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'");
     shareConn

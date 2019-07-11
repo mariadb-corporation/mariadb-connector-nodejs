@@ -98,7 +98,6 @@ describe('change user', () => {
   it('basic change user using promise', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
-    const baseConf = Conf.baseConfig;
 
     base
       .createConnection()
@@ -108,6 +107,46 @@ describe('change user', () => {
             user: 'ChangeUser',
             password: 'm1P4ssw0@rd',
             connectAttributes: { par1: 'bouh', par2: 'bla' }
+          })
+          .then(() => {
+            return conn.query('SELECT CURRENT_USER');
+          })
+          .then(res => {
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser@%');
+            return conn.changeUser({
+              user: 'ChangeUser2',
+              password: 'm1SecondP@rd',
+              connectAttributes: true
+            });
+          })
+          .then(() => {
+            return conn.query('SELECT CURRENT_USER');
+          })
+          .then(res => {
+            const user = res[0]['CURRENT_USER'];
+            assert.equal(user, 'ChangeUser2@%');
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('basic change user using promise non node.js encoding', function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+
+    base
+      .createConnection()
+      .then(conn => {
+        return conn
+          .changeUser({
+            user: 'ChangeUser',
+            password: 'm1P4ssw0@rd',
+            connectAttributes: { par1: 'bouh', par2: 'bla' },
+            charset: 'big5'
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');
