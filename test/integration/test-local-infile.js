@@ -190,8 +190,8 @@ describe('local-infile', () => {
             conn
               .query(
                 "LOAD DATA LOCAL INFILE '" +
-                smallFileName.replace(/\\/g, '/') +
-                "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+                  smallFileName.replace(/\\/g, '/') +
+                  "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
               )
               .then(() => {
                 return conn.query('SELECT * FROM smallLocalInfile');
