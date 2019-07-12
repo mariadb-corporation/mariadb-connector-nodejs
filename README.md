@@ -55,14 +55,16 @@ For more information, see the [Batch](/documentation/batch.md) documentation.
 
 MariaDB provides benchmarks comparing the Connector with popular Node.js MySQL clients, including: 
 
-* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 3.3.1 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.15.0 
-* [`mysql2`](https://www.npmjs.com/package/mysql2) version 1.5.3
+* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 4.0.4 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.17.1 
+* [`mysql2`](https://www.npmjs.com/package/mysql2) version 1.6.5
 
 ```
-promise-mysql  : 1,366 ops/sec ±1.42%
-mysql2         : 1,469 ops/sec ±1.63%
-mariadb        : 1,802 ops/sec ±1.19%
+promise-mysql  : 646 ops/sec ±2.20%
+mysql2         : 746 ops/sec ±2.35%
+mariadb        : 961 ops/sec ±2.82%
 ```
+
+query: **SELECT <all mysql fields>, 1 FROM mysql.user LIMIT 1**
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
 
