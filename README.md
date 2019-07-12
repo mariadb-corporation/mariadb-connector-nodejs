@@ -64,7 +64,7 @@ mysql2         : 746 ops/sec ±2.35%
 mariadb        : 961 ops/sec ±2.82%
 ```
 
-query: **SELECT <all mysql fields>, 1 FROM mysql.user LIMIT 1**
+query: **SELECT &lt; all mysql fields &gt;, 1 FROM mysql.user LIMIT 1**
 
 <img src="./documentation/misc/bench.png" width="559" height="209"/>
 
