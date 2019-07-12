@@ -105,7 +105,7 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`poolCluster.remove(pattern)`](#poolclusterremovepattern) : remove and end pool according to pattern.
 * [`poolCluster.end([callback])`](#poolclusterendcallback) : end cluster.
 * [`poolCluster.getConnection([pattern, ][selector, ]callback)`](#poolclustergetconnectionpattern-selector-callback) : return a connection from cluster.
-* [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
+* [`poolCluster events`](#poolcluster-events): Subscribes to pool cluster events.
 * [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
 
 

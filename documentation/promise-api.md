@@ -101,7 +101,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
 * `pool.taskQueueSize() → Number`: Gets current stacked request.
-* [`pool events`](#poolevents): Subscribes to pool events.
+* [`pool events`](#pool-events): Subscribes to pool events.
 
 **PoolCluster**
 
@@ -110,7 +110,7 @@ Connector will then convert date to server timezone, rather than the current Nod
 * [`poolCluster.end() → Promise`](#poolclusterend--promise) : end cluster.
 * [`poolCluster.getConnection(pattern, selector) → Promise`](#poolclustergetconnectionpattern-selector--promise) : return a connection from cluster.
 * [`poolCluster.of(pattern, selector) → FilteredPoolCluster`](#poolclusterofpattern-selector--filteredpoolcluster) : return a subset of cluster.
-* [`poolCluster events`](#poolclusterevents): Subscribes to pool cluster events.
+* [`poolCluster events`](#poolcluster-events): Subscribes to pool cluster events.
 
 
 # Base API
