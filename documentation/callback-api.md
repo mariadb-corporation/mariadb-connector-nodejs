@@ -23,7 +23,7 @@ You can then uses the Connector in your application code with the Callback API. 
         console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
         conn.end();
       });
-  });    
+  });
 ```
 
 
@@ -427,9 +427,7 @@ connection.query("SELECT * FROM mysql.user")
 > * `values`: *array* Array of parameter (array of array or array of object if using named placeholders). 
 > * `callback`: *function* Callback function with arguments (error, results, metadata).
 >
-> Returns a promise that :
-> * resolves with a JSON object.
-> * rejects with an [Error](#error).
+> callback either return an [[#error|Error]] with results/metadata null or with error empty and results/metadata 
 
 Implementation depend of server type and version. 
 for MariaDB server version 10.2.7+, implementation use dedicated bulk protocol. 
@@ -462,20 +460,20 @@ For instance,
 
 ## `connection.beginTransaction([callback])`
 
-> * `callback`: *function* Callback function with argument [Error](../README.me#error) if any error.
+> * `callback`: *function* Callback function with argument [Error](#error) if any error.
 
 Begins a new transaction.
 
 ## `connection.commit([callback])`
 
-> * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* callback function with argument [Error](#error) if any error.
 
 Commits the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  When there isn't an active transaction, this method sends no commands to the server.
 
 
 ## `connection.rollback([callback])`
 
-> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](#error) if any error.
 
 Rolls back the current transaction, if there is one active.  The Connector keeps track of the current transaction state on the server.  Where there isn't an active transaction, this method sends no commands to the server.
 
@@ -512,7 +510,7 @@ conn.beginTransaction(err => {
 ## `connection.changeUser(options[, callback])`
 
 > * `options`: *JSON*, subset of [connection option documentation](#connection-options) = database / charset / password / user
-> * `callback`: *function* callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* callback function with argument [Error](#error) if any error.
 
 Resets the connection and re-authenticates with the given credentials.  This is the equivalent of creating a new connection with a new user, reusing the existing open socket.
 
@@ -528,7 +526,7 @@ conn.changeUser({user: 'changeUser', password: 'mypassword'}, err => {
 
 ## `connection.ping([callback])`
 
-> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](#error) if any error.
 
 Sends a one byte packet to the server to check that the connection is still active.
 
@@ -544,7 +542,7 @@ conn.ping(err => {
 
 ## `connection.end([callback])`
 
-> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](#error) if any error.
 
 Closes the connection gracefully.  That is, the Connector waits for current queries to finish their execution then closes the connection.
 
@@ -556,7 +554,7 @@ conn.end(err => {
 
 ## `connection.reset([callback])`
 
-> * `callback`: *function* Callback function with argument [Error](../README.me##error) if any error.
+> * `callback`: *function* Callback function with argument [Error](#error) if any error.
 
 reset the connection. Reset will:
 
