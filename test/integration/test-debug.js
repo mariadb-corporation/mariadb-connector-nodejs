@@ -33,6 +33,14 @@ describe('debug', () => {
       .catch(done);
   });
 
+  //ensure that debug from previous test are written to console
+  afterEach(done => {
+    setTimeout(() => {
+      done();
+    }, 1000);
+  });
+
+
   after(done => {
     fs.unlink(smallFileName, done);
   });

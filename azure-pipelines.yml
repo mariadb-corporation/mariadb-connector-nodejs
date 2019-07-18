@@ -1,10 +1,6 @@
 resources:
   containers:
 
-    - container: ubuntu-1604
-      image: ubuntu:16.04
-      options: "--name ubuntu-1604 --add-host=mariadb.example.com:127.0.0.1 -v /usr/bin/docker:/tmp/docker:ro"
-
     - container: ubuntu-1804
       image: ubuntu:18.04
       options: "--name ubuntu-1804 --add-host=mariadb.example.com:127.0.0.1 -v /usr/bin/docker:/tmp/docker:ro"
@@ -22,7 +18,6 @@ jobs:
           mkdir tmp
           chmod 777 .travis/gen-ssl.sh
           .travis/gen-ssl.sh mariadb.example.com tmp
-          ls -lrt tmp
           cp -R tmp $BUILD_ARTIFACTSTAGINGDIRECTORY
         displayName: 'create SSL certificates'
 
@@ -60,7 +55,6 @@ jobs:
         displayName: 'install node.js'
 
       - script: |
-          dir $(System.DefaultWorkingDirectory)\win_build\
           for /f %%a in ('dir /B $(System.DefaultWorkingDirectory)\win_build\mariadb-enterprise-10.*-winx64.msi') do set servername=$(System.DefaultWorkingDirectory)\win_build\%%a
           echo %servername%
           msiexec /i %servername% INSTALLDIR=c:\projects\server SERVICENAME=mariadb ALLOWREMOTEROOTACCESS=true /qn
@@ -70,7 +64,6 @@ jobs:
 
       - script: |
           echo 127.0.0.1 mariadb.example.com >> %WINDIR%\System32\Drivers\Etc\Hosts
-          dir
         displayName: 'set hostname'
 
       - script: |
@@ -79,6 +72,12 @@ jobs:
 
       - script: |
           npm test
+          if %ERRORLEVEL% EQU 0 (
+            echo Success
+          ) else (
+            echo exit code is %errorlevel%
+            exit /b %errorlevel%
+          )
         displayName: 'run tests'
         env:
           TEST_HOST: "mariadb.example.com"
@@ -93,14 +92,11 @@ jobs:
   - job: RunInContainer
     pool:
       vmImage: 'ubuntu-16.04'
-    displayName: 'test ubuntu xenial+bionic'
+    displayName: 'test ubuntu bionic'
     dependsOn:
       - SSLFiles
     strategy:
       matrix:
-        ubuntu-1604:
-          containerImage: ubuntu-1604
-          containerName: xenial
         ubuntu-1804:
           containerImage: ubuntu-1804
           containerName: bionic
@@ -122,7 +118,7 @@ jobs:
         inputs:
           source: 'specific'
           project: '550599d3-6165-4abd-8c86-e3f7e53a1847'
-          artifact: '$(containerImage)-deb'
+          artifact: '$(containerImage)'
           pipeline: 3
           runVersion: 'latestFromBranch'
           runBranch: 'refs/heads/10.4-enterprise'
@@ -139,8 +135,10 @@ jobs:
           runBranch: 'refs/heads/es-mariadb-4.x'
           downloadPath: $(System.DefaultWorkingDirectory)
 
+
       - script: |
-          ls -lrt .
+          tar xf mariadb-enterprise*
+
           sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
 
           sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https ca-certificates tzdata pwgen
@@ -148,66 +146,48 @@ jobs:
           sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password password P4ssw@rd"
           sudo debconf-set-selections <<< "mariadb-server-10.4 mysql-server/root_password_again password P4ssw@rd"
           sudo apt-get update -y
+          sudo apt-get install --allow-unauthenticated -f -y libaio1 libaio-dev libxml2 libcurl4 curl libc-dev linux-libc-dev libc-dev-bin libdbi-perl rsync socat libnuma1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 gawk lsof psmisc perl libreadline5
 
-          sudo apt-get install --allow-unauthenticated -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 gawk lsof psmisc libaio1 perl libreadline5
+          cd mariadb-enterprise*/
+          sudo groupadd mysql
+          sudo useradd -g mysql mysql
 
-          echo 'Installing deb files'
-          ls -lrt binary
-          sudo chmod 777 binary
-          sudo chmod 777 binary/*
-          cd binary
-          rm -R ./mariadb-plugin*
-          rm -R */*-dev*.deb
-          rm -R ./*-test*.deb
-          rm -R ./galera-arbitrator*.deb
-          sudo apt install -f -y ./*.deb
+          export PROJ_PATH=`pwd`
+          echo $PROJ_PATH
 
-          #sudo sed -i 's/secure-file-priv/#secure-file-priv/g' /etc/mysql/conf.d/mariadb-enterprise.cnf
-          sudo tail -n 5000 /etc/mysql/conf.d/mariadb-enterprise.cnf
+          cat <<EOT >> my.cnf
+          [mysqld]
+          port=3306
+          max_allowed_packet=16M
+          datadir=$PROJ_PATH/data
+          socket=/tmp/mysql.sock
+          user=mysql
+          ssl-ca=$(System.DefaultWorkingDirectory)/tmp/ca.crt
+          ssl-cert=$(System.DefaultWorkingDirectory)/tmp/server.crt
+          ssl-key=$(System.DefaultWorkingDirectory)/tmp/server.key
+          EOT
 
-          sudo touch /etc/mysql/ssl.cnf
-          sudo chmod 777 /etc/mysql/ssl.cnf
-          sudo echo '[mysqld]' >> /etc/mysql/ssl.cnf
-          sudo bash -c 'echo "ssl-ca=$(System.DefaultWorkingDirectory)/tmp/ca.crt" >> /etc/mysql/ssl.cnf'
-          sudo bash -c 'echo "ssl-cert=$(System.DefaultWorkingDirectory)/tmp/server.crt" >> /etc/mysql/ssl.cnf'
-          sudo bash -c 'echo "ssl-key=$(System.DefaultWorkingDirectory)/tmp/server.key" >> /etc/mysql/ssl.cnf'
+          sudo chown mysql $PROJ_PATH/my.cnf
+          sudo tail -n 5000 $PROJ_PATH/my.cnf
 
-          sudo tail -n 5000 /etc/mysql/ssl.cnf
+          sudo chmod 777 $PROJ_PATH
+          sudo ln -s $PROJ_PATH /usr/local/mysql
 
-          sudo mysql_install_db
+          sudo ./scripts/mysql_install_db --defaults-file=$PROJ_PATH/my.cnf --user=mysql
+          sudo chown -R root .
+          sudo chown -R mysql data
 
-          sudo service mysql status
-          sudo service mysql start
-          sudo service mysql status
-
-          #temporary fix for error in mariadb-enterprise.cnf
-          #sudo apt purge -y mariadb-server
-          #sudo apt purge -y mariadb-server-10.4
-
-          #reinstall
-          #sudo apt install -f -y ./*.deb
-
-          #systemctl status mariadb.service
-          #/usr/sbin/mysqld &
+          export PATH=$PATH:$PROJ_PATH/bin/
 
         env:
           WORKING_DIR: $(System.DefaultWorkingDirectory)
         displayName: 'install server'
 
       - script: |
-          sudo mysql -e "CREATE USER 'someUser'@'%' identified by 'Passw@rd2';"
-          sudo mysql -e "GRANT ALL on *.* to 'someUser'@'%' identified by 'Passw@rd2' with grant option;"
-          sudo mysql -e "CREATE DATABASE testn;"
-        displayName: 'Add non socket user'
-
-      - script: |
           sudo apt-get install -y curl
           curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
           sudo apt-get update
           sudo apt-get install -y nodejs
-          ls -lrt /usr/bin/nodejs
-
-          ls -lrt /usr/lib/node_modules
 
           nodejs -v
           node -v
@@ -215,9 +195,36 @@ jobs:
         displayName: 'Install node.js'
 
       - script: |
-          ls -lrt
+          cd mariadb-enterprise*/
+          sudo ./bin/mysqld --defaults-file=./my.cnf &
+
+          for i in {30..0}; do
+          	if sudo ./bin/mysql -e "SELECT 1" &> /dev/null; then
+          	    echo 'MySQL connected...'
+          		break
+          	fi
+          	echo 'MySQL init process in progress...'
+          	sleep 1
+          done
+          if [ "$i" = 0 ]; then
+          	echo >&2 'MySQL init process failed.'
+            sudo ./bin/mysql -e "SELECT 1"
+          	exit 1
+          fi
+
+          sudo ./bin/mysql -e "CREATE USER 'someUser'@'%' identified by 'Passw@rd2';"
+          sudo ./bin/mysql -e "GRANT ALL on *.* to 'someUser'@'%' identified by 'Passw@rd2' with grant option;"
+          sudo ./bin/mysql -e "CREATE DATABASE testn;"
+
+          cd ..
+
           npm install
           npm test
+          if [ $? -ne 0 ]; then
+            exit 1
+          fi
+          cd mariadb-enterprise*/
+          sudo ./bin/mysqladmin shutdown
         env:
           TEST_HOST: "mariadb.example.com"
           RUN_LONG_TEST: 1
