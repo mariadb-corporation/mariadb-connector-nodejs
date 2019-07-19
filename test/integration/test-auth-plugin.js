@@ -196,8 +196,7 @@ describe('authentication plugin', () => {
       .then(() => {
         return base.createConnection({
           user: 'mysqltest1',
-          password: '!Passw0rd3',
-          debug: true
+          password: '!Passw0rd3'
         });
       })
       .then(conn => {
