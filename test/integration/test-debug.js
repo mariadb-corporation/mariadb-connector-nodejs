@@ -40,7 +40,6 @@ describe('debug', () => {
     }, 1000);
   });
 
-
   after(done => {
     fs.unlink(smallFileName, done);
   });
