@@ -182,6 +182,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function(done) {
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
       .then(conn => {

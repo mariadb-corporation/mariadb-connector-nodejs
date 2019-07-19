@@ -302,11 +302,9 @@ describe('ssl', function() {
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
     const isWin = process.platform === 'win32';
-    if (
-      (shareConn.info.isMariaDB() && isWin && !shareConn.info.hasMinVersion(10, 4, 2)) ||
-      (isWin && !shareConn.info.isMariaDB())
-    )
+    if (!shareConn.info.isMariaDB() || (isWin && !shareConn.info.hasMinVersion(10, 4, 2))) {
       this.skip();
+    }
 
     base
       .createConnection({
