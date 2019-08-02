@@ -190,9 +190,12 @@ describe('connection', () => {
           done();
         });
         conn.query('KILL ' + conn.threadId).catch(err => {
-          assert.isTrue(err.message.includes('Connection was killed'));
+          assert.isTrue(
+            err.message.includes('Connection was killed') ||
+              err.message.includes('Query execution was interrupted')
+          );
           assert.equal(err.sqlState, '70100');
-          assert.equal(err.errno, 1927);
+          assert.isTrue(err.errno === 1927 || err.errno === 1317);
         });
       })
       .catch(done);
@@ -564,6 +567,11 @@ describe('connection', () => {
     conn.connect(err => {
       if (!err) done(new Error('must have thrown error'));
       switch (err.errno) {
+        case 45025:
+          //Client does not support authentication protocol
+          assert.equal(err.sqlState, '08004');
+          break;
+
         case 1251:
           //authentication method unavailable
           assert.equal(err.sqlState, '08004');
@@ -603,6 +611,11 @@ describe('connection', () => {
       })
       .catch(err => {
         switch (err.errno) {
+          case 45025:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08004');
+            break;
+
           case 1251:
             //authentication method unavailable
             assert.equal(err.sqlState, '08004');

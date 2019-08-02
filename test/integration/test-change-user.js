@@ -8,13 +8,9 @@ const Conf = require('../conf');
 describe('change user', () => {
   before(done => {
     shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-    shareConn.query(
-      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd' with grant option"
-    );
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
     shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
-    shareConn.query(
-      "GRANT ALL PRIVILEGES ON *.* TO ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd' with grant option"
-    );
+    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser2@'%' with grant option");
     shareConn
       .query('FLUSH PRIVILEGES')
       .then(() => done())
