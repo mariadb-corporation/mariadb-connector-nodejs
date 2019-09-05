@@ -4,12 +4,9 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.1
 
-/// <reference types="node" />
-/// <reference types="geojson" />
-
 import tls = require('tls');
 import stream = require('stream');
-import { Geometry } from 'geojson';
+import geojson = require('geojson');
 
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
@@ -26,8 +23,8 @@ export interface QueryConfig {
    */
   typeCast?: (
     field: FieldInfo,
-    next: () => boolean | number | string | symbol | null | Geometry | Buffer
-  ) => boolean | number | string | symbol | null | Geometry | Buffer;
+    next: () => boolean | number | string | symbol | null | geojson.Geometry | Buffer
+  ) => boolean | number | string | symbol | null | geojson.Geometry | Buffer;
 
   /**
    * Return result-sets as array, rather than a JSON object. This is a faster way to get results
@@ -636,5 +633,5 @@ export interface FieldInfo {
   long(): number | null;
   decimal(): number | null;
   date(): Date | null;
-  geometry(): Geometry | null;
+  geometry(): geojson.Geometry | null;
 }
