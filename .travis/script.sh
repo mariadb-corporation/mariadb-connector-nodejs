@@ -25,7 +25,7 @@ else
   docker-compose -f .travis/docker-compose.yml up -d
 fi
 
-npm install node-memwatch
+if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
 
 node .travis/wait-for-docker-up.js
 
