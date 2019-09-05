@@ -13,12 +13,12 @@ describe('ssl', function() {
   before(function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (
-      process.platform === 'win32' &&
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
-      ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
+      ((process.platform === 'win32' && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
     ) {
-      //TLSv1.2 is supported on windows only since MariaDB 10.4 and MySQL 8.0
+      //TLSv1.2 is supported on windows only since MariaDB 10.4
+      //TLSv1.2 is supported in MySQL only since 8.0 (unix/windows)
       //so if testing with Node.js 12, force possible TLS1.1
       tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
     }
