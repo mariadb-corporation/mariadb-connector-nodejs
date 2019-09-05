@@ -14,7 +14,9 @@ describe('ssl', function() {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
-      ((process.platform === 'win32' && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
+      ((process.platform === 'win32' &&
+        shareConn.info.isMariaDB() &&
+        !shareConn.info.hasMinVersion(10, 4, 0)) ||
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
     ) {
       //TLSv1.2 is supported on windows only since MariaDB 10.4
