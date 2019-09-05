@@ -12,7 +12,6 @@ describe('ssl', function() {
 
   before(function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
-    console.log(tls.DEFAULT_MIN_VERSION);
     if (
       process.platform === 'win32' &&
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
@@ -392,7 +391,7 @@ describe('ssl', function() {
       .createConnection({ host: 'mariadb.example.com', ssl: { ca: ca } })
       .then(conn => {
         const isWin = process.platform === 'win32';
-        let expectedProtocol = 'TLSv1.2';
+        let expectedProtocol = ['TLSv1.2', 'TLSv1.3'];
         if (shareConn.info.isMariaDB()) {
           if (isWin && !shareConn.info.hasMinVersion(10, 4, 0)) {
             expectedProtocol = 'TLSv1.1';
@@ -527,7 +526,17 @@ describe('ssl', function() {
 
 function checkProtocol(conn, protocol) {
   const ver = process.version.substring(1).split('.');
-  if (ver[0] > 5 || (ver[0] === 5 && ver[1] === 7)) {
-    assert.equal(conn.__tests.getSocket().getProtocol(), protocol);
+  const currentProtocol = conn.__tests.getSocket().getProtocol();
+
+  if (ver[0] > 5 || (ver[0] == 5 && ver[1] == 7)) {
+    if (Array.isArray(protocol)) {
+      for (let i = 0; i < protocol.length; i++) {
+        if (currentProtocol === protocol[i]) return;
+      }
+      //throw error
+      assert.equal(currentProtocol, protocol);
+      return;
+    }
+    assert.equal(currentProtocol, protocol);
   }
 }
