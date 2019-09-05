@@ -4,6 +4,7 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const fs = require('fs');
 const Conf = require('../conf');
+const tls = require('tls');
 
 describe('ssl', function() {
   let ca = null;
@@ -11,6 +12,17 @@ describe('ssl', function() {
 
   before(function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
+    console.log(tls.DEFAULT_MIN_VERSION);
+    if (
+      process.platform === 'win32' &&
+      tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
+      ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
+        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
+    ) {
+      //TLSv1.2 is supported on windows only since MariaDB 10.4 and MySQL 8.0
+      //so if testing with Node.js 12, force possible TLS1.1
+      tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
+    }
 
     if (process.env.TEST_SSL_CA_FILE) {
       const caFileName = process.env.TEST_SSL_CA_FILE;
