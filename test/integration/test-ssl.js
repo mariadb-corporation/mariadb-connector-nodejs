@@ -22,7 +22,12 @@ describe('ssl', function() {
       //TLSv1.2 is supported on windows only since MariaDB 10.4
       //TLSv1.2 is supported in MySQL only since 8.0 (unix/windows)
       //so if testing with Node.js 12, force possible TLS1.1
-      tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0)) {
+        //MySQL 5.5 and MySQL 5.6 needs TLSv1
+        tls.DEFAULT_MIN_VERSION = 'TLSv1';
+      } else {
+        tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
+      }
     }
 
     if (process.env.TEST_SSL_CA_FILE) {
