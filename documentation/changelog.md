@@ -1,3 +1,12 @@
+#### 2.1.1 - 06-09-2019 
+
+* node.je v12 CI testing
+* cluster ordered selector bug fix on failover (thanks to @kkx)
+* bump dependencies
+* documentation update with node.js v12 minimum TLSv1.2 default support
+* connection.reset() error message improvement (and documentation)
+* small performance improvement when debug not enable
+
 #### 2.1.0 - 11-07-2019 
 
 * [CONJS-19]	implement Ed25519 plugin		
