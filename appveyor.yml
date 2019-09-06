@@ -14,11 +14,6 @@ environment:
 
     - DB: '10.4.6'
       MEM: "21"
-      nodejs_version: "6"
-      SKIP_LEAK: "1"
-
-    - DB: '10.4.6'
-      MEM: "21"
       nodejs_version: "8"
 
     - DB: '10.4.6'
@@ -27,37 +22,45 @@ environment:
 
     - DB: '10.4.6'
       MEM: "21"
-      nodejs_version: "11"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
     - DB: '10.4.6'
-      nodejs_version: "10"
+      nodejs_version: "12"
       MEM: "21"
       TEST_ZIP: 1
+      SKIP_LEAK: "1"
 
     - DB: '10.4.6'
-      nodejs_version: "10"
+      nodejs_version: "12"
       MEM: "21"
       BENCH: "1"
+      SKIP_LEAK: "1"
 
     - DB: '10.3.16'
       MEM: "21"
-      nodejs_version: "10"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
     - DB: '10.2.25'
       MEM: "21"
-      nodejs_version: "10"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
     - DB: '10.1.40'
       MEM: "21"
-      nodejs_version: "10"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
     - DB: '10.0.38'
       MEM: "21"
-      nodejs_version: "10"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
     - DB: '5.5.64'
       MEM: "5"
-      nodejs_version: "10"
+      nodejs_version: "12"
+      SKIP_LEAK: "1"
 
 cache:
   - node_modules

@@ -197,8 +197,11 @@ function Bench() {
       console.log('start : init test : ' + bench.initFcts.length);
       for (let i = 0; i < bench.initFcts.length; i++) {
         console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
-        if (bench.initFcts[i]) {
-          bench.initFcts[i].call(this, bench.CONN.MARIADB.drv);
+        if (bench.initFcts[i][0]) {
+          bench.initFcts[i][0].call(
+            this,
+            bench.initFcts[i][1] ? bench.CONN.PROMISE_MARIADB.drv : bench.CONN.MARIADB.drv
+          );
         }
       }
       this.currentNb = 0;

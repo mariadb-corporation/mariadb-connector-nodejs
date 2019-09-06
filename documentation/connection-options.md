@@ -367,6 +367,13 @@ Hostname/IP doesn't match certificate's altnames: "Host: other.example.com. is n
 ```
 To fix this, correct the `host` value to correspond to the host identified in the certificate.
 
+####  routines:ssl_choose_client_version:unsupported protocol
 
+Since Node.js 12 minimum TLS version is set to 1.2. 
+MariaDB server can be build with different SSL library, old version supporting only TLS up to 1.1.  
+The error "1976:error:1425F102:SSL routines:ssl_choose_client_version:unsupported protocol" can occur if MariaDB SSL implementation doesn't support TLSv1.2.
+This can be solved by : 
+- Server side: update MariaDB to a recent version
+- Client side: permit lesser version with "tls.DEFAULT_MIN_VERSION = 'TLSv1.1';" or with connection configuration: using option `ssl: { secureProtocol: 'TLSv1_1_method' }'  
 
 
