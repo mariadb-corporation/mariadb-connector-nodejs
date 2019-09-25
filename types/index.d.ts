@@ -12,6 +12,10 @@ export function createConnection(connectionUri: string | ConnectionConfig): Prom
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
 
+export type TypeCastResult = boolean | number | string | symbol | null | geojson.Geometry | Buffer;
+export type TypeCastNextFunction = () => TypeCastResult;
+export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
+
 export interface QueryConfig {
   /**
    * Presents result-sets by table to avoid results with colliding fields. See the query() description for more information.
@@ -21,10 +25,7 @@ export interface QueryConfig {
   /**
    * Allows to cast result types.
    */
-  typeCast?: (
-    field: FieldInfo,
-    next: () => boolean | number | string | symbol | null | geojson.Geometry | Buffer
-  ) => boolean | number | string | symbol | null | geojson.Geometry | Buffer;
+  typeCast?: TypeCastFunction;
 
   /**
    * Return result-sets as array, rather than a JSON object. This is a faster way to get results
@@ -533,7 +534,6 @@ export interface FilteredPoolCluster {
 }
 
 export interface PoolCluster {
-  add(config: PoolConfig): void;
   add(id: string, config: PoolConfig): void;
   end(): Promise<void>;
   of(pattern: string, selector?: string): FilteredPoolCluster;
@@ -570,6 +570,73 @@ export interface MariaDbError extends Error {
    * Boolean, indicating if this error is terminal to the connection object.
    */
   fatal: boolean;
+}
+
+export const enum TypeNumbers {
+  DECIMAL = 0,
+  TINY = 1,
+  SHORT = 2,
+  LONG = 3,
+  FLOAT = 4,
+  DOUBLE = 5,
+  NULL = 6,
+  TIMESTAMP = 7,
+  LONGLONG = 8,
+  INT24 = 9,
+  DATE = 10,
+  TIME = 11,
+  DATETIME = 12,
+  YEAR = 13,
+  NEWDATE = 14,
+  VARCHAR = 15,
+  BIT = 16,
+  TIMESTAMP2 = 17,
+  DATETIME2 = 18,
+  TIME2 = 19,
+  JSON = 245, //only for MySQ,
+  NEWDECIMAL = 246,
+  ENUM = 247,
+  SET = 248,
+  TINY_BLOB = 249,
+  MEDIUM_BLOB = 250,
+  LONG_BLOB = 251,
+  BLOB = 252,
+  VAR_STRING = 253,
+  STRING = 254,
+  GEOMETRY = 255
+}
+
+export const enum Flags {
+  //	field cannot be null
+  NOT_NULL = 1,
+  //	field is a primary key
+  PRIMARY_KEY = 2,
+  //field is unique
+  UNIQUE_KEY = 4,
+  //field is in a multiple key
+  MULTIPLE_KEY = 8,
+  //is this field a Blob
+  BLOB = 1 << 4,
+  //	is this field unsigned
+  UNSIGNED = 1 << 5,
+  //is this field a zerofill
+  ZEROFILL_FLAG = 1 << 6,
+  //whether this field has a binary collation
+  BINARY_COLLATION = 1 << 7,
+  //Field is an enumeration
+  ENUM = 1 << 8,
+  //field auto-increment
+  AUTO_INCREMENT = 1 << 9,
+  //field is a timestamp value
+  TIMESTAMP = 1 << 10,
+  //field is a SET
+  SET = 1 << 11,
+  //field doesn't have default value
+  NO_DEFAULT_VALUE_FLAG = 1 << 12,
+  //field is set to NOW on UPDATE
+  ON_UPDATE_NOW_FLAG = 1 << 13,
+  //field is num
+  NUM_FLAG = 1 << 14
 }
 
 export const enum Types {
@@ -616,18 +683,24 @@ export interface Collation {
 }
 
 export interface FieldInfo {
-  columnLength: number;
-  db: string;
-  table: string;
-  orgTable: string;
-  name: string;
-  orgName: string;
-  type: Types;
-  flags: number;
-  scale: number;
   collation: Collation;
+  columnLength: number;
+  columnType: TypeNumbers;
+  scale: number;
+  type: Types;
+  flags: Flags;
+  db(): string;
+  schema(): string; // Alias for db()
+  table(): string;
+  orgTable(): string;
+  name(): string;
+  orgName(): string;
 
+  // Note that you may only call *one* of these functions
+  // when decoding a column via the typeCast callback.
+  // Calling additional functions will give you incorrect results.
   string(): string | null;
+  buffer(): Buffer | null;
   float(): number | null;
   int(): number | null;
   long(): number | null;
