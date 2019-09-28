@@ -12,7 +12,15 @@ export function createConnection(connectionUri: string | ConnectionConfig): Prom
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
 
-export type TypeCastResult = boolean | number | string | symbol | null | geojson.Geometry | Buffer;
+export type TypeCastResult =
+  | boolean
+  | number
+  | string
+  | symbol
+  | null
+  | Date
+  | geojson.Geometry
+  | Buffer;
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
 
