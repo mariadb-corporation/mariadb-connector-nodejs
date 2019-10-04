@@ -6,10 +6,11 @@
 
 # MariaDB Node.js connector
 
-[![Linux Build](https://travis-ci.org/MariaDB/mariadb-connector-nodejs.svg?branch=master)](https://travis-ci.org/MariaDB/mariadb-connector-nodejs)
-[![Windows status](https://ci.appveyor.com/api/projects/status/bcg7yy4iy9viq08t/branch/master?svg=true)](https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs)
-[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square)](http://opensource.org/licenses/LGPL-2.1)
-[![codecov](https://codecov.io/gh/MariaDB/mariadb-connector-nodejs/branch/master/graph/badge.svg)](https://codecov.io/gh/MariaDB/mariadb-connector-nodejs)
+[![npm package][npm-image]][npm-url] 
+[![Linux Build][travis-image]][travis-url]
+[![Windows status][appveyor-image]][appveyor-url]
+[![License (LGPL version 2.1)][licence-image]][licence-url]
+[![codecov][codecov-image]][codecov-url]
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
@@ -143,3 +144,13 @@ If you would like to contribute to the MariaDB Node.js Connector, please follow 
 To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
 
 
+[travis-image]:https://travis-ci.org/MariaDB/mariadb-connector-nodejs.svg?branch=master
+[travis-url]:https://travis-ci.org/MariaDB/mariadb-connector-nodejs
+[npm-image]:https://img.shields.io/npm/v/mariadb.svg
+[npm-url]:http://npmjs.org/package/mariadb
+[appveyor-image]:https://ci.appveyor.com/api/projects/status/bcg7yy4iy9viq08t/branch/master?svg=true
+[appveyor-url]:https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs
+[licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square
+[licence-url]:http://opensource.org/licenses/LGPL-2.1
+[codecov-image]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs/branch/master/graph/badge.svg
+[codecov-url]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs
