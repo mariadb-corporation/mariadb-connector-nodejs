@@ -57,6 +57,41 @@ If client and server timezone differ, `timezone` option has to be set to server 
 Connector will then convert date to server timezone, rather than the current Node.js timezone. 
 
 
+## Security consideration
+
+Connection details such as URL, username, and password are better hidden into environment variables.
+using code like : 
+```js
+  const mariadb = require('mariadb');
+
+  const conn = mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD});
+```
+Then for example, run node.js setting those environment variable :
+```
+$ DB_HOST=localhost DB_USER=test DB_PASSWORD=secretPasswrd node my-app.js
+```
+
+Another solution is using `dotenv` package. Dotenv loads environment variables from .env files into the process.env variable in Node.js :
+```
+$ npm install dotenv
+```
+
+then configure dotenv to load all .env files
+ 
+```js
+  const mariadb = require('mariadb');
+  require('dotenv').config()
+  const conn = mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD});
+```
+
+with a .env file containing
+```
+DB_HOST=localhost
+DB_USER=test
+DB_PWD=secretPasswrd
+```
+.env files must NOT be pushed into repository,  using .gitignore
+
 # Callback API
 
 The Connector with the Callback API is similar to the one using Promise, but with a few differences.
