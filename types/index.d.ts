@@ -8,6 +8,7 @@ import tls = require('tls');
 import stream = require('stream');
 import geojson = require('geojson');
 
+export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;

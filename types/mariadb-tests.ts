@@ -278,3 +278,5 @@ poolCluster.end();
 
 mariadb.createConnection({ debug: true });
 mariadb.createConnection({ dateStrings: true });
+
+mariadb.version;
