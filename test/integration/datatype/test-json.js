@@ -4,6 +4,19 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('json', () => {
+  it('json escape', function(done) {
+    const buf = { id: 2, val: "t'est" };
+    assert.equal(shareConn.escape(buf), '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\'');
+
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: '{"id":2,"val":"t\'est"}' }]);
+        done();
+      })
+      .catch(done);
+  });
+
   it('insert json format', function(done) {
     //server permit JSON format
     if (

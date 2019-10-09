@@ -128,6 +128,8 @@ DB_PWD=secretPasswrd
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
 * [`connection.end() → Promise`](#connectionend--promise): Gracefully close the connection.
 * [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
+* [`connection.escape(value) → String`](#connectionescapevalue--string): escape parameter 
+* [`connection.escapeId(value) → String`](#connectionescapeidvalue--string): escape identifier 
 * [`connection.pause()`](#connectionpause): Pauses the socket output.
 * [`connection.resume()`](#connectionresume): Resumes the socket output.
 * [`connection.serverVersion()`](#connectionserverversion): Retrieves the current server version.
@@ -139,6 +141,8 @@ DB_PWD=secretPasswrd
 * [`pool.query(sql[, values]) → Promise`](#poolquerysql-values---promise): Executes a query.
 * [`pool.batch(sql, values) → Promise`](#poolbatchsql-values---promise): Executes a batch
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
+* [`pool.escape(value) → String`](#poolescapevalue--string): escape parameter 
+* [`pool.escapeId(value) → String`](#poolescapeidvalue--string): escape identifier 
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
@@ -875,6 +879,55 @@ conn.query(
 conn.destroy(); //will immediately close the connection, even if query above would have take a minute
 ```
 
+## `connection.escape(value) → String`
+
+This function permit to escape a parameter properly according to parameter type to avoid injection. 
+See [mariadb String literals](https://mariadb.com/kb/en/library/string-literals/) for escaping. 
+
+Escaping has some limitation :
+- doesn't permit [Stream](https://nodejs.org/api/stream.html#stream_readable_streams) parameters
+- this is less efficient compare to using standard conn.query(), that will stream data to socket, avoiding string concatenation and using memory unnecessary     
+
+escape per type:
+* boolean: explicit `true` or `false`
+* number: string representation. ex: 123 => '123'
+* Date: String representation using `YYYY-MM-DD HH:mm:ss.SSS` format
+* Buffer: _binary'<escaped buffer>'
+* object with toSqlString function: String escaped result of toSqlString
+* Array: list of escaped value. ex: `[true, "o'o"]` => `('true', 'o\'o')` 
+* geoJson: MariaDB transformation to corresponding geotype. ex: `{ type: 'Point', coordinates: [20, 10] }` => `"ST_PointFromText('POINT(20 10)')"`
+* JSON: Stringification of JSON, or if `permitSetMultiParamEntries` is enable, key escaped as identifier + value
+* String: escaped value, (\u0000, ', ", \b, \n, \r, \t, \u001A, and \ characters are escaped with '\')   
+
+Escape is done for [sql_mode](https://mariadb.com/kb/en/library/sql-mode/) value without NO_BACKSLASH_ESCAPES that disable \ escaping (default);  
+
+```javascript
+const myColVar = "let'go";
+const myTable = "table:a"
+const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
+// cmd value will be:
+// "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+```
+
+## `connection.escapeId(value) → String`
+
+This function permit to escape a Identifier properly . See [Identifier Names](https://mariadb.com/kb/en/library/identifier-names/) for escaping. 
+Value will be enclosed by '`' character if content doesn't satisfy: 
+* ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)
+* Extended: U+0080 .. U+FFFF
+and escaping '`' character if needed. 
+
+
+```javascript
+const myColVar = "let'go";
+const myTable = "table:a"
+const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
+// cmd value will be:
+// "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+
+```
+
+
 ## `connection.pause()`
 
 Pauses data reads.
@@ -1070,6 +1123,12 @@ pool.end()
   })
   .catch(err => {});
 ```
+
+## `pool.escape(value) → String`
+This is an alias for [`connection.escape(value) → String`](#connectionescapevalue--string) to escape parameters
+
+## `pool.escapeId(value) → String` 
+This is an alias for [`connection.escapeId(value) → String`](#connectionescapeidvalue--string) to escape Identifier
 
 ## Pool events
 

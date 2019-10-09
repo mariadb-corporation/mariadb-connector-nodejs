@@ -4,6 +4,26 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('string', () => {
+  it('String escape', function(done) {
+    assert.equal(shareConn.escape(null), 'NULL');
+    assert.equal(shareConn.escape("let'g'o😊"), "'let\\'g\\'o😊'");
+    const buf = "a'\nb\tc\rd\\e%_\u001a";
+    assert.equal(shareConn.escape(buf), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
+    shareConn
+      .query(' SELECT ' + shareConn.escape('\u0000\u001a') + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: '\u0000\u001a' }]);
+      })
+      .catch(done);
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: buf }]);
+        done();
+      })
+      .catch(done);
+  });
+
   it('utf8 buffer verification', done => {
     shareConn.query(
       'CREATE TEMPORARY TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
