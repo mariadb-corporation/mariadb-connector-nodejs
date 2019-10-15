@@ -900,6 +900,7 @@ escape per type:
 * String: escaped value, (\u0000, ', ", \b, \n, \r, \t, \u001A, and \ characters are escaped with '\')   
 
 Escape is done for [sql_mode](https://mariadb.com/kb/en/library/sql-mode/) value without NO_BACKSLASH_ESCAPES that disable \ escaping (default);  
+Escaping API are meant to prevent [SQL injection](https://en.wikipedia.org/wiki/SQL_injection). However, privilege the use of [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise) and avoid building the command manually.   
 
 ```javascript
 const myColVar = "let'go";
