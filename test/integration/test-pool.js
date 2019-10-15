@@ -19,7 +19,7 @@ describe('Pool', () => {
 
   it('pool escape', function() {
     const pool = base.createPool({ connectionLimit: 1 });
-    setTimeout(() => {
+    pool.on('connection', () => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
       assert.equal(
         pool.escape(Buffer.from("let's rocks\n😊 🤘")),
@@ -44,7 +44,7 @@ describe('Pool', () => {
       assert.equal(pool.escape("let'g'o😊"), "'let\\'g\\'o😊'");
       assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
       pool.end();
-    }, 100);
+    });
   });
 
   it('pool with wrong authentication', function(done) {
