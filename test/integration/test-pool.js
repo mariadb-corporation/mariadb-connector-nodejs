@@ -19,7 +19,7 @@ describe('Pool', () => {
 
   it('pool escape', function() {
     const pool = base.createPool({ connectionLimit: 1 });
-    pool.on('connection', () => {
+    pool.on('connection', conn => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
       assert.equal(
         pool.escape(Buffer.from("let's rocks\n😊 🤘")),
@@ -27,9 +27,8 @@ describe('Pool', () => {
       );
       assert.equal(pool.escape(19925.1), '19925.1');
       let prefix =
-        shareConn.info &&
-        ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 4)) ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 6)))
+        (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 1, 4)) ||
+        (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 6))
           ? 'ST_'
           : '';
       assert.equal(
