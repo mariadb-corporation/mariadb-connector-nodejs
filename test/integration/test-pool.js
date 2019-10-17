@@ -17,6 +17,35 @@ describe('Pool', () => {
     });
   });
 
+  it('pool escape', function() {
+    const pool = base.createPool({ connectionLimit: 1 });
+    pool.on('connection', conn => {
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+      assert.equal(
+        pool.escape(Buffer.from("let's rocks\n😊 🤘")),
+        "_binary'let\\'s rocks\\n😊 🤘'"
+      );
+      assert.equal(pool.escape(19925.1), '19925.1');
+      let prefix =
+        (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 1, 4)) ||
+        (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 6))
+          ? 'ST_'
+          : '';
+      assert.equal(
+        pool.escape({ type: 'Point', coordinates: [20, 10] }),
+        prefix + "PointFromText('POINT(20 10)')"
+      );
+      assert.equal(
+        pool.escape({ id: 2, val: "t'est" }),
+        '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\''
+      );
+      assert.equal(pool.escape(null), 'NULL');
+      assert.equal(pool.escape("let'g'o😊"), "'let\\'g\\'o😊'");
+      assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
+      pool.end();
+    });
+  });
+
   it('pool with wrong authentication', function(done) {
     this.timeout(10000);
     const pool = base.createPool({

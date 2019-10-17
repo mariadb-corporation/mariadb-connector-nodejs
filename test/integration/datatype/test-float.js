@@ -14,6 +14,19 @@ describe('float', () => {
       .catch(done);
   });
 
+  it('float escape', function(done) {
+    const buf = 19925.1;
+    assert.equal(shareConn.escape(buf), '19925.1');
+
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: buf }]);
+        done();
+      })
+      .catch(done);
+  });
+
   it('bigint format', done => {
     shareConn
       .query(

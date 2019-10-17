@@ -41,6 +41,20 @@ describe('datetime', () => {
     }
   });
 
+  it('date escape', function(done) {
+    const val = '1999-01-31 12:13:14.000';
+    const buf = new Date('1999-01-31 12:13:14.000');
+    assert.equal(shareConn.escape(buf), "'1999-01-31 12:13:14.000'");
+
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: val }]);
+        done();
+      })
+      .catch(done);
+  });
+
   it('standard date', function(done) {
     //using distant server, time might be different
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')

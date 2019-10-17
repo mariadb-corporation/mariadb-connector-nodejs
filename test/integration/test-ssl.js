@@ -403,7 +403,7 @@ describe('ssl', function() {
           if (isWin && !shareConn.info.hasMinVersion(10, 4, 0)) {
             expectedProtocol = 'TLSv1.1';
           }
-        } else if (!shareConn.info.hasMinVersion(8, 0, 0)) {
+        } else if (!shareConn.info.hasMinVersion(5, 7, 28)) {
           expectedProtocol = 'TLSv1.1';
         }
         checkProtocol(conn, expectedProtocol);

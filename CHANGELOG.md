@@ -1,4 +1,24 @@
-#### 2.1.1 - 06-09-2019 
+# Change Log
+
+## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (17 Oct. 2019)
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
+
+Implemented enhancements:
+* CONJS-101	Escape functions API
+* CONJS-100	Improve performance using reusable Object type for column definition result
+* CONJS-102 Expose library version to API
+
+Use milestone to specify in which version bug was fixed #22
+Fixed bugs:
+* CONJS-96	TypeScript definition typecast correction
+* CONJS-95	Pool idle maintainer error
+* CONJS-98	Missing collation option in typescript definition
+* CONJS-99	Improve documentation for best practice concerning credential
+* CONJS-97	Remove coverage comment on github pull request
+
+## [2.1.1](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.1) (06 Sep. 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.0...2.1.1)
 
 * node.je v12 CI testing
 * cluster ordered selector bug fix on failover (thanks to @kkx)
@@ -7,7 +27,9 @@
 * connection.reset() error message improvement (and documentation)
 * small performance improvement when debug not enable
 
-#### 2.1.0 - 11-07-2019 
+## [2.1.0](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.0) (11 Jul. 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.5...2.1.0)
 
 * [CONJS-19]	implement Ed25519 plugin		
 * [CONJS-57]	Multiple alternative authentication methods for the same user		
@@ -31,11 +53,15 @@ New Options
 | **`permitConnectionWhenExpired`** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
 
 
-#### 2.0.5 - 10-05-2019 
+## [2.0.5](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.5) (10 May 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.4...2.0.5)
 
 * [CONJS-71] TypeScript definition is not exported
 
-#### 2.0.4 - 07-05-2019 
+## [2.0.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.4) (07 May 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.3...2.0.4)
 
 * [CONJS-69] permit set numeric parameter bigger than javascript 2^53-1 limitation
 * [CONJS-68] error when reading datetime data and timezone option is set
@@ -46,7 +72,7 @@ New Options
 * [CONJS-66] SET datatype handling (returning array)
 * [CONJS-67] Changing user does not takes in account connector internal state (transaction status)
 
-##### Pool improvement
+#### Pool improvement
 
 New Options
 
@@ -62,7 +88,9 @@ Pool handle connection creation automatically, with now some delayed after faili
 Authentication error in pool have now a better handling.
 
 
-#### 2.0.3 - 30-01-2019 
+## [2.0.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.3) (30 Jan. 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.2-rc...2.0.3)
 
 * [CONJS-56] TypeError: Cannot read property 'totalConnections' of undefined
 * [CONJS-59] pool now throw `ER_ACCESS_DENIED_ERROR` in place of basic timeout error
@@ -71,6 +99,9 @@ Authentication error in pool have now a better handling.
 
 
 #### 2.0.2-rc - 11-12-2018 
+## [2.0.2-rc](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.2-rc) (30 Jan. 2019)
+
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.1-beta...2.0.2-rc)
 
 ##### Changes
 
@@ -93,7 +124,7 @@ Authentication error in pool have now a better handling.
 * pool end() now correctly wait for all connections ending
 
 
-#### 2.0.1-alpha - 15-11-2018 
+#### 2.0.1-alpha - 15 Nov. 2018 
 
 * [CONJS-52] (Bug) Commit not executed when in transaction and autocommit is enabled
 * [CONJS-50] (Bug) race condition when using authentication plugins
@@ -104,7 +135,7 @@ Authentication error in pool have now a better handling.
 * [CONJS-51] Permit use of connection string to provide options
 * [CONJS-48] Add option to permit query command when establishing a connection
 
-#### 2.0.0-alpha - 20-09-2018 
+#### 2.0.0-alpha - 20 Sep. 2018 
 
 * [CONJS-42] check other connections in pool when an unexpected connection error occur
 * [CONJS-44] Create option to permit setting Object to one prepareStatement parameter
@@ -116,6 +147,6 @@ Authentication error in pool have now a better handling.
 * [misc] change pool implementation to permit node 6 compatibility (removal of async await)
  
 
-#### 0.7.0 - 18-07-2018 
+#### 0.7.0 - 18 Jul. 2018 
 
 * First alpha version 

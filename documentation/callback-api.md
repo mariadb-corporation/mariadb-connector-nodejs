@@ -57,6 +57,41 @@ If client and server timezone differ, `timezone` option has to be set to server 
 Connector will then convert date to server timezone, rather than the current Node.js timezone. 
 
 
+## Security consideration
+
+Connection details such as URL, username, and password are better hidden into environment variables.
+using code like : 
+```js
+  const mariadb = require('mariadb');
+
+  const conn = mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD});
+```
+Then for example, run node.js setting those environment variable :
+```
+$ DB_HOST=localhost DB_USER=test DB_PASSWORD=secretPasswrd node my-app.js
+```
+
+Another solution is using `dotenv` package. Dotenv loads environment variables from .env files into the process.env variable in Node.js :
+```
+$ npm install dotenv
+```
+
+then configure dotenv to load all .env files
+ 
+```js
+  const mariadb = require('mariadb');
+  require('dotenv').config()
+  const conn = mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD});
+```
+
+with a .env file containing
+```
+DB_HOST=localhost
+DB_USER=test
+DB_PWD=secretPasswrd
+```
+.env files must NOT be pushed into repository,  using .gitignore
+
 # Callback API
 
 The Connector with the Callback API is similar to the one using Promise, but with a few differences.
@@ -67,6 +102,7 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`createConnection(options) → Connection`](#createconnectionoptions--connection): Creates a connection to a MariaDB Server.
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
 * [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
+* [`version → String`](#version--string) : Return library version.
 
 
 **Connection:**
@@ -81,7 +117,9 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`connection.end([callback])`](#connectionendcallback): Gracefully closes the connection.
 * [`connection.reset([callback])`](#connectionreset): reset current connection state.
 * [`connection.isValid() → boolean`](#connectionisvalid--boolean): Checks that the connection is active without checking socket state.
-* [`connection.destroy()`](#connectiondestroy): Forces the connection to close. 
+* [`connection.destroy()`](#connectiondestroy): Forces the connection to close.
+* [`connection.escape(value) → String`](#connectionescapevalue--string): escape parameter 
+* [`connection.escapeId(value) → String`](#connectionescapeidvalue--string): escape identifier  
 * [`connection.pause()`](#connectionpause): Pauses the socket output.
 * [`connection.resume()`](#connectionresume): Resumes the socket output.
 * [`connection.serverVersion()`](#connectionserverversion): Retrieves the current server version.
@@ -93,6 +131,8 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`pool.query(sql[, values][, callback])`](#poolquerysql-values-callback): Executes a query.
 * [`pool.batch(sql, values[, callback])`](#poolbatchsql-values-callback): Executes a batch
 * [`pool.end([callback])`](#poolendcallback): Gracefully closes the connection.
+* [`pool.escape(value) → String`](#poolescapevalue--string): escape parameter 
+* [`pool.escapeId(value) → String`](#poolescapeidvalue--string): escape identifier 
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
@@ -192,7 +232,7 @@ const conn = mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 
 ```
 
 
-### `createPool(options) → Pool`
+## `createPool(options) → Pool`
 
 > * `options`: *JSON/string* [pool options](#pool-options)
 >
@@ -215,7 +255,7 @@ pool.getConnection((err, conn) => {
 });
 ```
 
-#### Pool options
+### Pool options
 
 Pool options includes [connection option documentation](#connection-options) that will be used when creating new connections. 
 
@@ -231,7 +271,7 @@ Specific options for pools are :
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
 | **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (MariaDB >=10.2.4 / MySQL >= 5.7.3). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true|
 
-## Pool events
+### Pool events
 
 |event|description|
 |---:|---|
@@ -247,7 +287,7 @@ pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has bee
 ```
 
 
-### `createPoolCluster(options) → PoolCluster`
+## `createPoolCluster(options) → PoolCluster`
 
 > * `options`: *JSON* [poolCluster options](#poolCluster-options)
 >
@@ -275,7 +315,7 @@ cluster.getConnection(/^slave*$/, "RR", (err, conn) => {
 ```
 
  
-#### PoolCluster options
+### PoolCluster options
 
 Pool cluster options includes [pool option documentation](#pool-options) that will be used when creating new pools. 
 
@@ -287,6 +327,11 @@ Specific options for pool cluster are :
 | **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. null means node won't be removed|*integer* | 5 |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 0|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
+
+
+## `version → String`
+
+> Returns a String that is library version. example '2.1.2'.
 
 
 # Connection API
@@ -583,6 +628,46 @@ Indicates the connection state as the Connector knows it.  If it returns false, 
 Closes the connection without waiting for any currently executing queries.  These queries are interrupted.  MariaDB logs the event as an unexpected socket close.
 
 
+## `connection.escape(value) → String`
+
+This function permit to escape a parameter properly according to parameter type to avoid injection. 
+See [mariadb String literals](https://mariadb.com/kb/en/library/string-literals/) for escaping. 
+
+Escaping has some limitation :
+- doesn't permit [Stream](https://nodejs.org/api/stream.html#stream_readable_streams) parameters
+- this is less efficient compare to using standard conn.query(), that will stream data to socket, avoiding string concatenation and using memory unnecessary
+
+escape per type:
+* boolean: explicit `true` or `false`
+* number: string representation. ex: 123 => '123'
+* Date: String representation using `YYYY-MM-DD HH:mm:ss.SSS` format
+* Buffer: _binary'<escaped buffer>'
+* object with toSqlString function: String escaped result of toSqlString
+* Array: list of escaped value. ex: `[true, "o'o"]` => `('true', 'o\'o')` 
+* geoJson: MariaDB transformation to corresponding geotype. ex: `{ type: 'Point', coordinates: [20, 10] }` => `"ST_PointFromText('POINT(20 10)')"`
+* JSON: Stringification of JSON, or if `permitSetMultiParamEntries` is enable, key escaped as identifier + value
+* String: escaped value, (\u0000, ', ", \b, \n, \r, \t, \u001A, and \ characters are escaped with '\')   
+
+Escape is done for [sql_mode](https://mariadb.com/kb/en/library/sql-mode/) value without NO_BACKSLASH_ESCAPES that disable \ escaping (default);
+Escaping API are meant to prevent [SQL injection](https://en.wikipedia.org/wiki/SQL_injection). However, privilege the use of [`connection.query(sql[, values][, callback])`](#connectionquerysql-values-callback---emitter) and avoid building the command manually.   
+
+```javascript
+const myColVar = "let'go";
+const myTable = "table:a"
+const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
+// cmd value will be:
+// "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+```
+
+## `connection.escapeId(value) → String`
+
+This function permit to escape a Identifier properly . See [Identifier Names](https://mariadb.com/kb/en/library/identifier-names/) for escaping. 
+Value will be enclosed by '`' character if content doesn't satisfy: 
+* ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)
+* Extended: U+0080 .. U+FFFF
+and escaping '`' character if needed. 
+
+
 ## `connection.pause()`
 
 Pauses data reads.
@@ -763,6 +848,13 @@ pool.end(err => {
   }
 });
 ```
+
+## `pool.escape(value) → String`
+This is an alias for [`connection.escape(value) → String`](#connectionescapevalue--string) to escape parameters
+
+## `pool.escapeId(value) → String` 
+This is an alias for [`connection.escapeId(value) → String`](#connectionescapeidvalue--string) to escape Identifier
+
 
 ## Pool events
 

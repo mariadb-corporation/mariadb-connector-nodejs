@@ -14,8 +14,30 @@ describe('buffer', () => {
       .catch(done);
   });
 
-  const buf = Buffer.from("let's rocks 🤘");
+  const buf = Buffer.from("let's rocks\n😊 🤘");
   const hex = buf.toString('hex').toUpperCase();
+
+  it('buffer escape', function(done) {
+    assert.equal(shareConn.escape(buf), "_binary'let\\'s rocks\\n😊 🤘'");
+    shareConn.query('CREATE TEMPORARY TABLE BufEscape(b blob)');
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: buf }]);
+        return shareConn.query('INSERT INTO BufEscape VALUE (' + shareConn.escape(buf) + ')');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO BufEscape VALUE (?)', buf);
+      })
+      .then(() => {
+        return shareConn.query('SELECT * FROM BufEscape');
+      })
+      .then(rows => {
+        assert.deepEqual(rows, [{ b: buf }, { b: buf }]);
+        done();
+      })
+      .catch(done);
+  });
 
   it('query hex() function result', function(done) {
     shareConn

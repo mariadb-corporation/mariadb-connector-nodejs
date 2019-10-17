@@ -51,6 +51,77 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
+  it('geometry escape', function() {
+    let prefix =
+      shareConn.info &&
+      ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 4)) ||
+        (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 6)))
+        ? 'ST_'
+        : '';
+    assert.equal(
+      shareConn.escape({ type: 'Point', coordinates: [20, 10] }),
+      prefix + "PointFromText('POINT(20 10)')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'LineString',
+        coordinates: [[0, 0], [0, 10], [10, 0]]
+      }),
+      prefix + "LineFromText('LINESTRING(0 0,0 10,10 0)')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'Polygon',
+        coordinates: [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]]
+      }),
+      prefix + "PolygonFromText('POLYGON((10 10,20 10,20 20,10 20,10 10))')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'MultiPoint',
+        coordinates: [[0, 0], [10, 10], [10, 20], [20, 20]]
+      }),
+      prefix + "MULTIPOINTFROMTEXT('MULTIPOINT(0 0,10 10,10 20,20 20)')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'MultiLineString',
+        coordinates: [[[10, 48], [10, 21], [10, 0]], [[16, 0], [16, 23], [16, 48]]]
+      }),
+      prefix + "MLineFromText('MULTILINESTRING((10 48,10 21,10 0),(16 0,16 23,16 48))')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [[28, 26], [28, 0], [84, 0], [84, 42], [28, 26]],
+            [[52, 18], [66, 23], [73, 9], [48, 6], [52, 18]]
+          ],
+          [[[59, 18], [67, 18], [67, 13], [59, 13], [59, 18]]]
+        ]
+      }),
+      prefix +
+        "MPolyFromText('MULTIPOLYGON(((28 26,28 0,84 0,84 42,28 26),(52 18,66 23,73 9,48 6,52 18)),((59 18,67 18,67 13,59 13,59 18)))')"
+    );
+    assert.equal(
+      shareConn.escape({
+        type: 'GeometryCollection',
+        geometries: [
+          {
+            type: 'Point',
+            coordinates: [0, 0]
+          },
+          {
+            type: 'LineString',
+            coordinates: [[0, 0], [10, 10]]
+          }
+        ]
+      }),
+      prefix + "GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0),LINESTRING(0 0,10 10))')"
+    );
+  });
+
   it('Point Insert', function(done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();

@@ -727,26 +727,29 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('API escape error', function(done) {
+  it('API escapeId error', function(done) {
     try {
-      shareConn.escape('fff');
+      shareConn.escapeId('');
       done(new Error('should have thrown error!'));
     } catch (err) {
       assert.equal(err.sqlState, '0A000');
-      assert.equal(err.code, 'ER_NOT_IMPLEMENTED_ESCAPE');
+      assert.equal(err.code, 'ER_NULL_ESCAPEID');
+      done();
+    }
+    try {
+      shareConn.escapeId('\u0000ff');
+      done(new Error('should have thrown error!'));
+    } catch (e) {
+      assert.equal(err.sqlState, '0A000');
+      assert.equal(err.code, 'ER_NULL_CHAR_ESCAPEID');
       done();
     }
   });
 
-  it('API escapeId error', function(done) {
-    try {
-      shareConn.escapeId('fff');
-      done(new Error('should have thrown error!'));
-    } catch (err) {
-      assert.equal(err.sqlState, '0A000');
-      assert.equal(err.code, 'ER_NOT_IMPLEMENTED_ESCAPEID');
-      done();
-    }
+  it('API escapeId', function() {
+    assert.equal(shareConn.escapeId('good_$one'), 'good_$one');
+    assert.equal(shareConn.escapeId('f:a'), '`f:a`');
+    assert.equal(shareConn.escapeId('good_`è`one'), '`good_``è``one`');
   });
 
   it('API format error', function(done) {

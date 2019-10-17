@@ -14,6 +14,19 @@ describe('integer with big value', () => {
       .catch(done);
   });
 
+  it('int escape', function(done) {
+    const buf = 19925;
+    assert.equal(shareConn.escape(buf), '19925');
+
+    shareConn
+      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .then(rows => {
+        assert.deepEqual(rows, [{ t: buf }]);
+        done();
+      })
+      .catch(done);
+  });
+
   it('bigint format', done => {
     shareConn
       .query('INSERT INTO testBigint values (127), (128)')
