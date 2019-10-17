@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (not released)
+## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (17 Oct. 2019)
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
 
 Implemented enhancements:
@@ -16,7 +16,7 @@ Fixed bugs:
 * CONJS-99	Improve documentation for best practice concerning credential
 * CONJS-97	Remove coverage comment on github pull request
 
-## [2.1.1](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.1) (06-09-2019)
+## [2.1.1](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.1) (06 Sep. 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.0...2.1.1)
 
@@ -27,7 +27,7 @@ Fixed bugs:
 * connection.reset() error message improvement (and documentation)
 * small performance improvement when debug not enable
 
-## [2.1.0](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.0) (11-07-2019)
+## [2.1.0](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.0) (11 Jul. 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.5...2.1.0)
 
@@ -53,13 +53,13 @@ New Options
 | **`permitConnectionWhenExpired`** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
 
 
-## [2.0.5](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.5) (10-05-2019)
+## [2.0.5](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.5) (10 May 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.4...2.0.5)
 
 * [CONJS-71] TypeScript definition is not exported
 
-## [2.0.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.4) (07-05-2019)
+## [2.0.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.4) (07 May 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.3...2.0.4)
 
@@ -88,7 +88,7 @@ Pool handle connection creation automatically, with now some delayed after faili
 Authentication error in pool have now a better handling.
 
 
-## [2.0.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.3) (30-01-2019)
+## [2.0.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.3) (30 Jan. 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.2-rc...2.0.3)
 
@@ -99,7 +99,7 @@ Authentication error in pool have now a better handling.
 
 
 #### 2.0.2-rc - 11-12-2018 
-## [2.0.2-rc](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.2-rc) (30-01-2019)
+## [2.0.2-rc](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.2-rc) (30 Jan. 2019)
 
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.1-beta...2.0.2-rc)
 
@@ -124,7 +124,7 @@ Authentication error in pool have now a better handling.
 * pool end() now correctly wait for all connections ending
 
 
-#### 2.0.1-alpha - 15-11-2018 
+#### 2.0.1-alpha - 15 Nov. 2018 
 
 * [CONJS-52] (Bug) Commit not executed when in transaction and autocommit is enabled
 * [CONJS-50] (Bug) race condition when using authentication plugins
@@ -135,7 +135,7 @@ Authentication error in pool have now a better handling.
 * [CONJS-51] Permit use of connection string to provide options
 * [CONJS-48] Add option to permit query command when establishing a connection
 
-#### 2.0.0-alpha - 20-09-2018 
+#### 2.0.0-alpha - 20 Sep. 2018 
 
 * [CONJS-42] check other connections in pool when an unexpected connection error occur
 * [CONJS-44] Create option to permit setting Object to one prepareStatement parameter
@@ -147,6 +147,6 @@ Authentication error in pool have now a better handling.
 * [misc] change pool implementation to permit node 6 compatibility (removal of async await)
  
 
-#### 0.7.0 - 18-07-2018 
+#### 0.7.0 - 18 Jul. 2018 
 
 * First alpha version 
