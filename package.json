@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",

@@ -102,6 +102,7 @@ The Connector with the Callback API is similar to the one using Promise, but wit
 * [`createConnection(options) → Connection`](#createconnectionoptions--connection): Creates a connection to a MariaDB Server.
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
 * [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
+* [`version → String`](#version--string) : Return library version.
 
 
 **Connection:**
@@ -231,7 +232,7 @@ const conn = mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 
 ```
 
 
-### `createPool(options) → Pool`
+## `createPool(options) → Pool`
 
 > * `options`: *JSON/string* [pool options](#pool-options)
 >
@@ -254,7 +255,7 @@ pool.getConnection((err, conn) => {
 });
 ```
 
-#### Pool options
+### Pool options
 
 Pool options includes [connection option documentation](#connection-options) that will be used when creating new connections. 
 
@@ -270,7 +271,7 @@ Specific options for pools are :
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
 | **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (MariaDB >=10.2.4 / MySQL >= 5.7.3). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true|
 
-## Pool events
+### Pool events
 
 |event|description|
 |---:|---|
@@ -286,7 +287,7 @@ pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has bee
 ```
 
 
-### `createPoolCluster(options) → PoolCluster`
+## `createPoolCluster(options) → PoolCluster`
 
 > * `options`: *JSON* [poolCluster options](#poolCluster-options)
 >
@@ -314,7 +315,7 @@ cluster.getConnection(/^slave*$/, "RR", (err, conn) => {
 ```
 
  
-#### PoolCluster options
+### PoolCluster options
 
 Pool cluster options includes [pool option documentation](#pool-options) that will be used when creating new pools. 
 
@@ -326,6 +327,11 @@ Specific options for pool cluster are :
 | **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. null means node won't be removed|*integer* | 5 |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 0|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
+
+
+## `version → String`
+
+> Returns a String that is library version. example '2.1.2'.
 
 
 # Connection API

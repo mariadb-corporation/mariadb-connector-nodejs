@@ -1,11 +1,12 @@
 # Change Log
 
-## [2.2.0](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.2.0) (not released)
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.2.0)
+## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (not released)
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
 
 Implemented enhancements:
 * CONJS-101	Escape functions API
 * CONJS-100	Improve performance using reusable Object type for column definition result
+* CONJS-102 Expose library version to API
 
 Use milestone to specify in which version bug was fixed #22
 Fixed bugs:
