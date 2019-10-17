@@ -16,17 +16,17 @@
 
 MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, compatible with Node.js 6+, with the Promise API.
 
+
+## Documentation
+
+See [promise documentation](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API. 
+
+[Callback documentation](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
+   
 ## Why a New Client?
 
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
 
-
-## Documentation
-
-[Documentation](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) using promise default implementation. 
-
-A callback wrapper for [Callback API](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) is provided for compatibility with the `mysql` and `mysql2` APIs.
-   
 
 ### Insert Streaming 
 
