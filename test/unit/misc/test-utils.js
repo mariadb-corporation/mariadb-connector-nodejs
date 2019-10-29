@@ -27,6 +27,21 @@ describe('utils', () => {
     0x10
   ]);
 
+  it('log', () => {
+    const opts = new ConnOptions({});
+    const buf = Buffer.from('test some value 123');
+    assert.equal(
+      Utils.log(opts, buf),
+      '74 65 73 74 20 73 6F 6D  65 20 76 61 6C 75 65 20     test some value \n' +
+      '31 32 33                                             123\n'
+    );
+    assert.equal(
+      Utils.log(opts, buf, 3),
+      '74 20 73 6F 6D 65 20 76  61 6C 75 65 20 31 32 33     t some value 123\n'
+    );
+    assert.equal(Utils.log(opts), '');
+  });
+
   it('log no buffer', () => {
     let opt = new ConnOptions();
     assert.equal('', Utils.log(opt, null, 0, 0));
