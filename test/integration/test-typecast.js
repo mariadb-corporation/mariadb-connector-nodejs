@@ -126,4 +126,125 @@ describe('TypeCast', () => {
       })
       .catch(done);
   });
+
+  it('long cast', function(done) {
+    const longCast = (column, next) => {
+      if (column.type == 'TINY' && column.columnLength === 1) {
+        return column.long();
+      }
+      if (column.type == 'VAR_STRING') {
+        return column.decimal();
+      }
+      return next();
+    };
+    base
+      .createConnection({ typeCast: longCast })
+      .then(conn => {
+        conn
+          .query('CREATE TEMPORARY TABLE stupidCast(b1 TINYINT(1), b2 varchar(3))')
+          .then(() => {
+            return conn.query(
+              "INSERT INTO stupidCast VALUES (0,'0.1'), (1,'1.1')," + " (2,'2.2'), (null,null)"
+            );
+          })
+          .then(() => {
+            return conn.query('SELECT * from stupidCast');
+          })
+          .then(rows => {
+            assert.deepEqual(rows, [
+              { b1: 0, b2: 0.1 },
+              { b1: 1, b2: 1.1 },
+              { b1: 2, b2: 2.2 },
+              { b1: null, b2: null }
+            ]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('date cast', function(done) {
+    const longCast = (column, next) => {
+      if (column.type == 'VAR_STRING') {
+        let da = column.date();
+        return da == null ? null : da.getMinutes();
+      }
+      return next();
+    };
+    base
+      .createConnection({ typeCast: longCast })
+      .then(conn => {
+        conn
+          .query('CREATE TEMPORARY TABLE stupidCast(b1 varchar(100))')
+          .then(() => {
+            return conn.query(
+              "INSERT INTO stupidCast VALUES ('1999-01-31" +
+                " 12:13:14.000'), ('1999-01-31 12:16:15'), (null)"
+            );
+          })
+          .then(() => {
+            return conn.query('SELECT * from stupidCast');
+          })
+          .then(rows => {
+            assert.deepEqual(rows, [{ b1: 13 }, { b1: 16 }, { b1: null }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('geometry cast', function(done) {
+    const longCast = (column, next) => {
+      if (column.type == 'BINARY') {
+        return column.geometry();
+      }
+      return next();
+    };
+    base
+      .createConnection({ typeCast: longCast })
+      .then(conn => {
+        conn
+          .query('CREATE TEMPORARY TABLE stupidCast(b1 POINT)')
+          .then(() => {
+            return conn.query('INSERT INTO stupidCast VALUES (?), (?),(null)', [
+              {
+                type: 'Point',
+                coordinates: [10, 10]
+              },
+              {
+                type: 'Point',
+                coordinates: [20, 10]
+              }
+            ]);
+          })
+          .then(() => {
+            return conn.query('SELECT * from stupidCast');
+          })
+          .then(rows => {
+            assert.deepEqual(rows, [
+              {
+                b1: {
+                  type: 'Point',
+                  coordinates: [10, 10]
+                }
+              },
+              {
+                b1: {
+                  type: 'Point',
+                  coordinates: [20, 10]
+                }
+              },
+              { b1: null }
+            ]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });
