@@ -17,6 +17,8 @@ describe('integer with big value', () => {
   it('int escape', function(done) {
     const buf = 19925;
     assert.equal(shareConn.escape(buf), '19925');
+    const maxValue = Long.fromString('18446744073709551615', true);
+    assert.equal(shareConn.escape(maxValue), '18446744073709551615');
 
     shareConn
       .query(' SELECT ' + shareConn.escape(buf) + ' t')

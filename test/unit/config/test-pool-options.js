@@ -6,7 +6,7 @@ const PoolOptions = require('../../../lib/config/pool-options');
 describe('test pool options', () => {
   it('with options', () => {
     const result = new PoolOptions(
-      'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true&resetAfterUse=false&acquireTimeout=200&connectionLimit=2&minDelayValidation=100&minimumIdle=2&noControlAfterUse=true'
+      'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true&resetAfterUse=false&acquireTimeout=200&connectionLimit=2&minDelayValidation=100&minimumIdle=2&noControlAfterUse=true&initializationTimeout=200'
     );
     assert.equal(result.connOptions.database, 'db');
     assert.equal(result.connOptions.host, 'example.com');
@@ -22,11 +22,12 @@ describe('test pool options', () => {
     assert.equal(result.minDelayValidation, 100);
     assert.equal(result.minimumIdle, 2);
     assert.equal(result.noControlAfterUse, true);
+    assert.equal(result.initializationTimeout, 200);
   });
 
   it('with other options', () => {
     const result = new PoolOptions(
-      'mariadb://root:pass@example.com:3307/db?metaAsArray=true&ssl=false&dateStrings=false&resetAfterUse=true&acquireTimeout=800&connectionLimit=2&minDelayValidation=100&minimumIdle=2&noControlAfterUse=false'
+      'mariadb://root:pass@example.com:3307/db?metaAsArray=true&ssl=false&dateStrings=false&resetAfterUse=true&acquireTimeout=800&connectionLimit=2&minDelayValidation=100&minimumIdle=2&noControlAfterUse=false&initializationTimeout=300'
     );
     assert.equal(result.connOptions.database, 'db');
     assert.equal(result.connOptions.host, 'example.com');
@@ -42,5 +43,6 @@ describe('test pool options', () => {
     assert.equal(result.minDelayValidation, 100);
     assert.equal(result.minimumIdle, 2);
     assert.equal(result.noControlAfterUse, false);
+    assert.equal(result.initializationTimeout, 300);
   });
 });

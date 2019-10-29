@@ -53,6 +53,19 @@ describe('test connection options', () => {
     }
   });
 
+  it('timezone error', () => {
+    try {
+      new ConnOptions({ timezone: '+02:20' });
+      throw new Error('Must have thrown error');
+    } catch (e) {
+      assert.isTrue(
+        e.message.includes(
+          "timezone format incompatible with IANA standard timezone format was '+02:20'"
+        )
+      );
+    }
+  });
+
   it('wrong format', () => {
     try {
       new ConnOptions(
@@ -94,10 +107,27 @@ describe('test connection options', () => {
   it('wrong maxAllowedPacket value', () => {
     try {
       new ConnOptions({ maxAllowedPacket: 'abc' });
-      return new Error('must have thrown exception');
+      throw new Error('must have thrown exception');
     } catch (e) {
       assert.isTrue(e.message.includes("maxAllowedPacket must be an integer. was 'abc'"));
     }
+  });
+
+  it('wrong maxAllowedPacket value', () => {
+    try {
+      new ConnOptions({ collation: 'wrongcollation' });
+      throw new Error('must have thrown exception');
+    } catch (e) {
+      assert.isTrue(e.message.includes("Unknown collation 'wrongcollation'"));
+    }
+  });
+
+  it('wrong value is skipped charsetNumber', () => {
+    const result = new ConnOptions(
+      'mariadb://root:pass@example.com:3307/db?wrongOption=false&ssl=true&dateStrings=true&charsetNumber=aaa'
+    );
+    assert.equal(result.database, 'db');
+    assert.isUndefined(result.charsetNumber);
   });
 
   describe('parsing', () => {

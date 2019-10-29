@@ -1651,6 +1651,50 @@ describe('batch', () => {
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
+    it('simple batch error message truncated', function(done) {
+      this.timeout(30000);
+      displayError(80, done);
+    });
+
+    it('simple batch error message super truncated', function(done) {
+      this.timeout(30000);
+      displayError(50, done);
+    });
+
+    const displayError = (debugLen, done) => {
+      base
+        .createConnection({ trace: true, bulk: false, debugLen: debugLen })
+        .then(conn => {
+          const timeout = setTimeout(() => {
+            console.log(conn.info.getLastPackets());
+          }, 25000);
+          conn
+            .batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
+              [1, 'john"'],
+              [2, 'jac"k']
+            ])
+            .then(() => {
+              done(new Error('must have thrown error !'));
+            })
+            .catch(err => {
+              assert.isTrue(err != null);
+              assert.isTrue(err.message.includes(" doesn't exist"));
+              const expectedMsg =
+                debugLen === 80
+                  ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
+                  : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
+              assert.isTrue(err.message.includes(expectedMsg));
+              assert.equal(err.errno, 1146);
+              assert.equal(err.sqlState, '42S02');
+              assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+              conn.end();
+              clearTimeout(timeout);
+              done();
+            });
+        })
+        .catch(done);
+    };
+
     it('non rewritable batch', function(done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, false, done);

@@ -207,12 +207,12 @@ describe('parse', () => {
 
     it('line finished comment', () => {
       const res = Parse.splitRewritableNamedParameterQuery(
-        'INSERT INTO tt (tt, tt2) VALUES (LAST_INSERT_ID(), :id1)',
+        'INSERT INTO select_tt (tt, tt2) VALUES (LAST_INSERT_ID(), :id1)',
         values
       );
       assert.deepEqual(res, {
         multipleQueries: true,
-        partList: ['INSERT INTO tt (tt, tt2) VALUES', ' (LAST_INSERT_ID(), ', ')', ''],
+        partList: ['INSERT INTO select_tt (tt, tt2) VALUES', ' (LAST_INSERT_ID(), ', ')', ''],
         values: [[1], [null], [6]],
         reWritable: false
       });
@@ -240,12 +240,31 @@ describe('parse', () => {
 
     it('rewritable with constant parameters ', () => {
       const res = Parse.splitRewritableQuery(
-        'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=col2+10'
+        'INSERT INTO SELECT_TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE' +
+          ' KEY UPDATE col2=col2+10'
       );
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: [
-          'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES',
+          'INSERT INTO SELECT_TABLE(col1,col2,col3,col4, col5) VALUES',
+          ' (9, ',
+          ', 5, ',
+          ', 8)',
+          ' ON DUPLICATE KEY UPDATE col2=col2+10'
+        ],
+        reWritable: true
+      });
+    });
+
+    it('rewritable with constant parameters ', () => {
+      const res = Parse.splitRewritableQuery(
+        'INSERT INTO SELECT_TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE' +
+          ' KEY UPDATE col2=col2+10'
+      );
+      assert.deepEqual(res, {
+        multipleQueries: true,
+        partList: [
+          'INSERT INTO SELECT_TABLE(col1,col2,col3,col4, col5) VALUES',
           ' (9, ',
           ', 5, ',
           ', 8)',
@@ -454,6 +473,16 @@ describe('parse', () => {
         multipleQueries: true,
         partList: ["select '\\'' as a, ", '', ' as b, "\\"" as c, ', '', ' as d'],
         values: [[2, 1], [4, null], [5, 6]],
+        reWritable: false
+      });
+    });
+
+    it('select comment', () => {
+      const res = Parse.splitRewritableNamedParameterQuery('select "d\\\\" as a #test', values);
+      assert.deepEqual(res, {
+        multipleQueries: false,
+        partList: ['select "d\\\\" as a #test', '', ''],
+        values: [[], [], []],
         reWritable: false
       });
     });

@@ -40,7 +40,8 @@ describe('streaming', () => {
     this.timeout(30000);
     shareConn
       .query(
-        'CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, PRIMARY KEY (id))'
+        'CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, c' +
+          ' varchar(10), PRIMARY KEY (id))'
       )
       .then(() => {
         const https = require('https');
@@ -48,7 +49,7 @@ describe('streaming', () => {
           'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.3.0/mariadb-java-client-2.3.0.jar',
           readableStream => {
             shareConn
-              .query('INSERT INTO StreamingContent (b) VALUE (?)', [readableStream])
+              .query('INSERT INTO StreamingContent (b, c) VALUE (?, ?)', [readableStream, null])
               .then(() => shareConn.query('SELECT * FROM StreamingContent'))
               .then(rows => {
                 done();
