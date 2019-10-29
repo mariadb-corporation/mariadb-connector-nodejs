@@ -2,7 +2,7 @@ version: '2'
 services:
   db:
     image: $DB
-    command: --innodb-log-file-size=400m --max-allowed-packet=40m  --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0
+    command: --innodb-log-file-size=400m --max-allowed-packet=40m  --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0 $ADDITIONAL_CONF
     ports:
       - 3305:3306
     volumes:

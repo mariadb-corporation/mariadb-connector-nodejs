@@ -186,6 +186,36 @@ describe('authentication plugin', () => {
       });
   });
 
+  it('dialog authentication plugin multiple password', function(done) {
+    //pam is set using .travis/entrypoint/pam.sh
+    if (!process.env.TRAVIS || process.env.MAXSCALE_VERSION) this.skip();
+
+    if (!shareConn.info.isMariaDB()) this.skip();
+    this.timeout(10000);
+    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch(err => {});
+    shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch(err => {});
+    shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
+    shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
+    shareConn.query('FLUSH PRIVILEGES');
+
+    //password is unix password "myPwd"
+    base
+      .createConnection({ user: 'testPam', password: ['myPwd', 'myPwd'] })
+      .then(conn => {
+        return conn.end();
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        if (err.errno === 1045 || err.errno === 1044) {
+          done();
+        } else {
+          done(err);
+        }
+      });
+  });
+
   it('multi authentication plugin', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();

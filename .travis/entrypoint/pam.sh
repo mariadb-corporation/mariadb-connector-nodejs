@@ -2,6 +2,7 @@
 
 tee /etc/pam.d/mariadb << EOF
 auth required pam_unix.so audit
+auth required pam_unix.so audit
 account required pam_unix.so audit
 EOF
 
