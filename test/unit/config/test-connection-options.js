@@ -78,7 +78,7 @@ describe('test connection options', () => {
 
   it('with options', () => {
     const result = new ConnOptions(
-      'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true'
+      'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true&charsetNumber=200'
     );
     assert.equal(result.database, 'db');
     assert.equal(result.host, 'example.com');
@@ -88,6 +88,7 @@ describe('test connection options', () => {
     assert.equal(result.port, 3307);
     assert.equal(result.ssl, true);
     assert.equal(result.user, 'root');
+    assert.equal(result.collation.index, 200);
   });
 
   it('unknown option', () => {
