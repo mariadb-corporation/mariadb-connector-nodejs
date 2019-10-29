@@ -73,6 +73,83 @@ describe('cluster', function() {
         });
     });
 
+    it('default id', function(done) {
+      const poolCluster = basePromise.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        initSql: "set @node='node1'",
+        connectionLimit: 1,
+        resetAfterUse: false
+      });
+
+      poolCluster.add(connOption1);
+      poolCluster
+        .getConnection('PoolNode-0')
+        .then(conn => {
+          poolCluster.end().then(() => {
+            conn.end();
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('pool full', function(done) {
+      this.timeout(30000);
+      const poolCluster = basePromise.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        initSql: "set @node='node1'",
+        connectionLimit: 1,
+        resetAfterUse: false,
+        connectTimeout: 1000,
+        acquireTimeout: 500
+      });
+
+      poolCluster.add(connOption1);
+      poolCluster
+        .getConnection('PoolNode-0')
+        .then(conn => {
+          poolCluster
+            .getConnection('PoolNode-0')
+            .then(() => {
+              poolCluster.end();
+              done(new Error('must have thrown an error !'));
+            })
+            .catch(err => {
+              expect(err.message).to.have.string(
+                "No Connection available for 'PoolNode-0'. Last connection error was: retrieve connection from pool timeout"
+              );
+              poolCluster
+                .getConnection('PoolNode-0')
+                .then(() => {
+                  poolCluster.end();
+                  done(new Error('must have thrown an error !'));
+                })
+                .catch(err => {
+                  expect(err.message).to.have.string(
+                    'No node have been added to cluster or nodes have been removed due to too much connection error'
+                  );
+                  poolCluster
+                    .getConnection('PoolNode-0')
+                    .then(() => {
+                      poolCluster.end();
+                      done(new Error('must have thrown an error !'));
+                    })
+                    .catch(err => {
+                      expect(err.message).to.have.string(
+                        'No node have been added to cluster or nodes have been removed due' +
+                          ' to too much connection error'
+                      );
+                      conn.end();
+                      poolCluster.end().then(() => {
+                        done();
+                      });
+                    });
+                });
+            });
+        })
+        .catch(done);
+    });
+
     it('cluster add error', function(done) {
       const poolCluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
@@ -677,6 +754,39 @@ describe('cluster', function() {
         if (err) {
           done(err);
         } else done();
+      });
+    });
+
+    it('pool full', function(done) {
+      this.timeout(30000);
+      const poolCluster = baseCallback.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        initSql: "set @node='node1'",
+        connectionLimit: 1,
+        resetAfterUse: false,
+        connectTimeout: 1000,
+        acquireTimeout: 500
+      });
+
+      poolCluster.add(connOption1);
+      poolCluster.getConnection('PoolNode-0', (err, conn) => {
+        if (err) {
+          done(err);
+        } else {
+          poolCluster.getConnection('PoolNode-0', (err, conn2) => {
+            if (!err) {
+              poolCluster.end();
+              done(new Error('must have thrown an error !'));
+            } else {
+              expect(err.message).to.have.string(
+                "No Connection available for 'PoolNode-0'. Last connection error was: retrieve connection from pool timeout"
+              );
+              conn.end();
+              poolCluster.end();
+              done();
+            }
+          });
+        }
       });
     });
 
