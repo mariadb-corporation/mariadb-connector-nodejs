@@ -7,6 +7,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+const str = base.utf8Collation()
+  ? "abcdefghijkflmn'opqrtuvwx🤘💪"
+  : 'abcdefghijkflmn\'opqrtuvwxyz"';
+
 describe('batch', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempBatchFile.txt');
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
@@ -26,7 +30,7 @@ describe('batch', () => {
             bigBuf[i] = 97 + (i % 10);
           }
         }
-        const buf = Buffer.from('abcdefghijkflmnopqrtuvwxyz🤘💪');
+        const buf = Buffer.from(str);
         fs.writeFile(fileName, buf, 'utf8', function(err) {
           if (err) {
             done(err);
@@ -78,7 +82,7 @@ describe('batch', () => {
           .batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
             [
               true,
-              'john😎🌶\\\\',
+              'Ʉjo"h\u000An😎🌶\\\\',
               new Date('2001-12-31 23:59:58+3'),
               new Date('2018-01-01 12:30:20.456789+3'),
               {
@@ -98,7 +102,7 @@ describe('batch', () => {
             ],
             [
               false,
-              { name: 'jackमस्', val: 'tt' },
+              { name: 'jack\u000Aमस्', val: 'tt' },
               null,
               new Date('2018-01-21 11:30:20.123456+3'),
               {
@@ -127,7 +131,7 @@ describe('batch', () => {
                     id: 1,
                     id2: 1,
                     id3: 2,
-                    t: 'john😎🌶\\\\',
+                    t: 'Ʉjo"h\u000An😎🌶\\\\',
                     d: new Date('2001-12-31 23:59:58+3'),
                     d2: new Date('2018-01-01 12:30:20.456789+3'),
                     g: {
@@ -153,7 +157,7 @@ describe('batch', () => {
                     id: 1,
                     id2: 0,
                     id3: 2,
-                    t: '{"name":"jackमस्","val":"tt"}',
+                    t: '{"name":"jack\\nमस्","val":"tt"}',
                     d: null,
                     d2: new Date('2018-01-21 11:30:20.123456+3'),
                     g: {
@@ -492,7 +496,7 @@ describe('batch', () => {
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
+          values.push([i, str]);
         }
         conn
           .batch('INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values)
@@ -511,7 +515,7 @@ describe('batch', () => {
               id: 1,
               id2: currRow,
               id3: 2,
-              t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+              t: str,
               id4: 3
             });
             currRow++;
@@ -548,7 +552,7 @@ describe('batch', () => {
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
+          values.push([i, str]);
         }
         conn
           .batch('INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values)
@@ -567,7 +571,7 @@ describe('batch', () => {
               id: 1,
               id2: currRow,
               id3: 2,
-              t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+              t: str,
               id4: 3
             });
             currRow++;
@@ -596,7 +600,7 @@ describe('batch', () => {
         }, 200000);
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
+          values.push([i, str]);
         }
         conn
           .batch('INSERT INTO `bigBatchError` values (1, ?, 2, ?, 3)', values)
@@ -697,7 +701,7 @@ describe('batch', () => {
                   id: 1,
                   id2: 1,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: 99,
                   id5: 3
                 },
@@ -705,7 +709,7 @@ describe('batch', () => {
                   id: 1,
                   id2: 2,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: 98,
                   id5: 3
                 }
@@ -761,7 +765,7 @@ describe('batch', () => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪', i * 2]);
+      else values.push([i, str, i * 2]);
     }
     base
       .createConnection({
@@ -792,7 +796,7 @@ describe('batch', () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: currRow * 2,
                   id5: 3
                 });
@@ -815,7 +819,7 @@ describe('batch', () => {
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪', i * 2]);
+      else values.push([i, str, i * 2]);
     }
 
     base
@@ -994,7 +998,7 @@ describe('batch', () => {
         );
         const values = [];
         for (let i = 0; i < 1000000; i++) {
-          values.push({ id1: i, id2: 'abcdefghijkflmnopqrtuvwxyz🤘💪' });
+          values.push({ id1: i, id2: str });
         }
         conn
           .batch('INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)', values)
@@ -1012,7 +1016,7 @@ describe('batch', () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: 3
                 });
                 currRow++;
@@ -1105,7 +1109,7 @@ describe('batch', () => {
                   id: 1,
                   id2: 1,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: null,
                   id5: 3
                 },
@@ -1113,7 +1117,7 @@ describe('batch', () => {
                   id: 1,
                   id2: 2,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: null,
                   id5: 3
                 }
@@ -1172,7 +1176,7 @@ describe('batch', () => {
       else
         values.push({
           id1: i,
-          id2: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+          id2: str,
           id3: i * 2
         });
     }
@@ -1205,7 +1209,7 @@ describe('batch', () => {
                   id: 1,
                   id2: currRow,
                   id3: 2,
-                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  t: str,
                   id4: currRow * 2,
                   id5: 3
                 });
@@ -1227,6 +1231,7 @@ describe('batch', () => {
   describe('standard question mark using bulk', () => {
     const useCompression = false;
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
@@ -1275,12 +1280,14 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
     it('simple batch offset date Z ', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'Z', done);
@@ -1335,6 +1342,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
@@ -1363,12 +1371,14 @@ describe('batch', () => {
     const useCompression = true;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
@@ -1412,6 +1422,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
@@ -1440,6 +1451,7 @@ describe('batch', () => {
     const useCompression = false;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
@@ -1503,6 +1515,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
@@ -1512,6 +1525,50 @@ describe('batch', () => {
       this.timeout(30000);
       simpleBatchErrorMsg(useCompression, false, done);
     });
+
+    it('simple batch error message truncated', function(done) {
+      this.timeout(30000);
+      displayError(80, done);
+    });
+
+    it('simple batch error message super truncated', function(done) {
+      this.timeout(30000);
+      displayError(50, done);
+    });
+
+    const displayError = (debugLen, done) => {
+      base
+        .createConnection({ trace: true, bulk: false, debugLen: debugLen })
+        .then(conn => {
+          const timeout = setTimeout(() => {
+            console.log(conn.info.getLastPackets());
+          }, 25000);
+          conn
+            .batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
+              [1, 'john"'],
+              [2, 'jac"k']
+            ])
+            .then(() => {
+              done(new Error('must have thrown error !'));
+            })
+            .catch(err => {
+              assert.isTrue(err != null);
+              assert.isTrue(err.message.includes(" doesn't exist"));
+              const expectedMsg =
+                debugLen === 80
+                  ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
+                  : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
+              assert.isTrue(err.message.includes(expectedMsg));
+              assert.equal(err.errno, 1146);
+              assert.equal(err.sqlState, '42S02');
+              assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+              conn.end();
+              clearTimeout(timeout);
+              done();
+            });
+        })
+        .catch(done);
+    };
 
     it('non rewritable batch', function(done) {
       this.timeout(30000);
@@ -1547,6 +1604,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
@@ -1575,12 +1633,14 @@ describe('batch', () => {
     const useCompression = true;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
@@ -1625,6 +1685,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
@@ -1680,6 +1741,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(true, done);
     });
@@ -1728,6 +1790,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(false, done);
     });

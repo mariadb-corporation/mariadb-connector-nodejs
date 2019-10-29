@@ -518,6 +518,7 @@ describe('connection', () => {
       //session tracking not implemented
       this.skip();
     }
+    if (!base.utf8Collation()) this.skip();
 
     base
       .createConnection()
@@ -772,6 +773,7 @@ describe('connection', () => {
       //session tracking not implemented
       this.skip();
     }
+    if (!base.utf8Collation()) this.skip();
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
     shareConn.query(
@@ -811,6 +813,7 @@ describe('connection', () => {
       //session tracking not implemented
       this.skip();
     }
+    if (!base.utf8Collation()) this.skip();
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
     shareConn.query(

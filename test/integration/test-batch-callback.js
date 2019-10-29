@@ -889,6 +889,7 @@ describe('batch callback', () => {
   describe('standard question mark using bulk', () => {
     const useCompression = false;
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
@@ -937,6 +938,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
@@ -970,6 +972,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
@@ -984,12 +987,14 @@ describe('batch callback', () => {
     const useCompression = true;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
@@ -1012,6 +1017,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
@@ -1026,6 +1032,7 @@ describe('batch callback', () => {
     const useCompression = false;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
@@ -1089,6 +1096,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
@@ -1105,6 +1113,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
@@ -1119,12 +1128,14 @@ describe('batch callback', () => {
     const useCompression = true;
 
     it('simple batch, local date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
     it('simple batch offset date', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
@@ -1141,6 +1152,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
@@ -1168,6 +1180,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(true, done);
     });
@@ -1195,6 +1208,7 @@ describe('batch callback', () => {
     });
 
     it('batch with streams', function(done) {
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(false, done);
     });

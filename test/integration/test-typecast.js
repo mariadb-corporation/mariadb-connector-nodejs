@@ -78,7 +78,7 @@ describe('TypeCast', () => {
   it('cast fields', function(done) {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      assert.equal(field.columnLength, 24);
+      assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
       return next();
     };
     shareConn

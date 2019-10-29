@@ -18,7 +18,15 @@ describe('buffer', () => {
   const hex = buf.toString('hex').toUpperCase();
 
   it('buffer escape', function(done) {
-    assert.equal(shareConn.escape(buf), "_binary'let\\'s rocks\\n😊 🤘'");
+    const buf = Buffer.from(
+      base.utf8Collation() ? "let's rocks\n😊 🤘" : "let's rocks\nmore simple"
+    );
+    assert.equal(
+      shareConn.escape(buf),
+      base.utf8Collation()
+        ? "_binary'let\\'s rocks\\n😊 🤘'"
+        : "_binary'let\\'s rocks\\nmore simple'"
+    );
     shareConn.query('CREATE TEMPORARY TABLE BufEscape(b blob)');
     shareConn
       .query(' SELECT ' + shareConn.escape(buf) + ' t')
@@ -34,6 +42,24 @@ describe('buffer', () => {
       })
       .then(rows => {
         assert.deepEqual(rows, [{ b: buf }, { b: buf }]);
+        done();
+      })
+      .catch(done);
+  });
+
+  it('text multi bytes characters', function(done) {
+    if (!base.utf8Collation()) this.skip();
+    shareConn.query(
+      'CREATE TEMPORARY TABLE BlobTeststreamtest2 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
+    );
+    const toInsert1 = '\u00D8bbcdefgh\njklmn"';
+    const toInsert2 = '\u00D8abcdefgh\njklmn"';
+
+    shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [2, toInsert1, toInsert2]);
+    shareConn
+      .query('select * from BlobTeststreamtest2')
+      .then(rows => {
+        assert.deepEqual(rows, [{ id: 2, st: toInsert1, strm: toInsert2 }]);
         done();
       })
       .catch(done);
@@ -62,23 +88,6 @@ describe('buffer', () => {
         assert.deepStrictEqual(rows[0].test, Buffer.from('a'));
         assert.deepStrictEqual(rows[0].test2, Buffer.from('b'));
         assert.strictEqual(rows[0].test3, 'c');
-        done();
-      })
-      .catch(done);
-  });
-
-  it('text multi bytes characters', function(done) {
-    shareConn.query(
-      'CREATE TEMPORARY TABLE BlobTeststreamtest2 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
-    );
-    const toInsert1 = '\u00D8bbcdefgh\njklmn"';
-    const toInsert2 = '\u00D8abcdefgh\njklmn"';
-
-    shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [2, toInsert1, toInsert2]);
-    shareConn
-      .query('select * from BlobTeststreamtest2')
-      .then(rows => {
-        assert.deepEqual(rows, [{ id: 2, st: toInsert1, strm: toInsert2 }]);
         done();
       })
       .catch(done);

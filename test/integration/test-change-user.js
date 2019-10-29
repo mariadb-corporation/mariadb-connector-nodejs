@@ -71,6 +71,42 @@ describe('change user', () => {
     });
   });
 
+  it('wrong collation in charset', function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
+    base.createConnection().then(conn => {
+      conn
+        .changeUser({
+          user: 'ChangeUser',
+          password: 'm1P4ssw0@rd',
+          charset: 'UTF8MB4_UNICODE_CI'
+        })
+        .then(() => {
+          conn.end();
+          done();
+        })
+        .catch(done);
+    });
+  });
+  it('wrong collation', function(done) {
+    if (!shareConn.info.isMariaDB()) this.skip();
+    base.createConnection().then(conn => {
+      conn
+        .changeUser({
+          user: 'ChangeUser',
+          password: 'm1P4ssw0@rd',
+          collation: 'wrong_collation'
+        })
+        .then(() => {
+          done(new Error('must have thrown error!'));
+        })
+        .catch(err => {
+          assert(err.message.includes("Unknown collation 'wrong_collation'"));
+          conn.end();
+          done();
+        });
+    });
+  });
+
   it('basic change user using callback no function', function(done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
@@ -88,6 +124,26 @@ describe('change user', () => {
           done();
         });
       });
+    });
+  });
+
+  it('callback change user without option', function(done) {
+    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+    const conn = base.createCallbackConnection();
+    conn.connect(err => {
+      if (err) {
+        done(err);
+      } else {
+        conn.changeUser(err => {
+          if (err) {
+            done(err);
+          } else {
+            conn.end();
+            done();
+          }
+        });
+      }
     });
   });
 

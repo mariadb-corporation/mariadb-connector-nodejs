@@ -158,6 +158,7 @@ describe('ssl', function() {
 
   it('ensure connection use SSL ', function(done) {
     if (!sslEnable) this.skip();
+    if (!base.utf8Collation()) this.skip();
     base
       .createConnection({
         user: 'sslTestUser',
@@ -435,7 +436,7 @@ describe('ssl', function() {
   it('Mutual authentication providing client certificate', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-
+    if (!base.utf8Collation()) this.skip();
     const clientKeyFileName =
       process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + '/../certificats/client.key';
     const clientCertFileName =
@@ -464,7 +465,7 @@ describe('ssl', function() {
   it('Mutual authentication providing client keystore', function(done) {
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
-
+    if (!base.utf8Collation()) this.skip();
     const clientKeystoreFileName =
       process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
       __dirname + '/../certificats/client-keystore.p12';

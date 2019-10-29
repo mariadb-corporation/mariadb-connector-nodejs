@@ -7,6 +7,7 @@ const Conf = require('../../conf');
 const PacketOutputStream = require('../../../lib/io/packet-output-stream');
 const ConnectionInformation = require('../../../lib/misc/connection-information');
 const EventEmitter = require('events');
+const base = require('../../base.js');
 
 const MAX_BUFFER_SIZE = 16777219;
 
@@ -299,14 +300,15 @@ describe('bulk packet', () => {
     assert.equal(packet.buf[11], 0);
   });
 
-  const base = 'abcdefghij';
+  const baseSt = 'abcdefghij';
   const generateString = len => {
     let str = '';
-    for (let i = 0; i < len / 10; i++) str += base;
+    for (let i = 0; i < len / 10; i++) str += baseSt;
     return str;
   };
 
-  it('writeDefaultLengthEncodedString', () => {
+  it('writeDefaultLengthEncodedString', function() {
+    if (!base.utf8Collation()) this.skip();
     const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     let out = new PacketOutputStream(conOpts, new ConnectionInformation());
     let stream = getStream();

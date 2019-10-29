@@ -24,7 +24,9 @@ describe('string', () => {
       .catch(done);
   });
 
-  it('utf8 buffer verification', done => {
+  it('utf8 buffer verification', function(done) {
+    if (!base.utf8Collation()) this.skip();
+
     shareConn.query(
       'CREATE TEMPORARY TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
     );
@@ -51,7 +53,9 @@ describe('string', () => {
       .catch(done);
   });
 
-  it('utf8 strings', done => {
+  it('utf8 strings', function(done) {
+    if (!base.utf8Collation()) this.skip();
+
     shareConn.query(
       'CREATE TEMPORARY TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
     );
@@ -107,7 +111,8 @@ describe('string', () => {
     }
   });
 
-  it('table encoding not affecting query', done => {
+  it('table encoding not affecting query', function(done) {
+    if (!base.utf8Collation()) this.skip();
     const str = '財團法人資訊工業策進會';
     shareConn.query('CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8');
     shareConn.query('CREATE TEMPORARY TABLE big5_encoding_table(t2 text) CHARSET big5');
@@ -134,7 +139,9 @@ describe('string', () => {
       .catch(done);
   });
 
-  it('wrong surrogate', done => {
+  it('wrong surrogate', function(done) {
+    if (!base.utf8Collation()) this.skip();
+
     const wrongString = 'a\ue800\ud800b\udc01c\ud800';
     base.createConnection().then(conn => {
       conn.query('CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');

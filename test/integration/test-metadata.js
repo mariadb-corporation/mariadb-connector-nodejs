@@ -41,8 +41,10 @@ describe('metadata', () => {
         assert.equal(rows.meta[1].orgTable(), 'metadatatable');
         assert.equal(rows.meta[1].name(), 't1');
         assert.equal(rows.meta[1].orgName(), 't');
-        assert.equal(rows.meta[1].collation, Collations.fromName('UTF8MB4_UNICODE_CI'));
-        assert.equal(rows.meta[1].columnLength, 128);
+        if (base.utf8Collation()) {
+          assert.equal(rows.meta[1].collation, Collations.fromName('UTF8MB4_UNICODE_CI'));
+          assert.equal(rows.meta[1].columnLength, 128);
+        }
         assert.equal(rows.meta[1].columnType, FieldType.VAR_STRING);
 
         assert.equal(rows.meta[2].db(), 'testn');

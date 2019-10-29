@@ -9,6 +9,7 @@ const Command = require('../../lib/cmd/command');
 const ConnectionInformation = require('../../lib/misc/connection-information');
 const EventEmitter = require('events');
 const Collations = require('../../lib/const/collations');
+const base = require('../base.js');
 
 describe('test PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
@@ -228,7 +229,9 @@ describe('test PacketInputStream data', () => {
     const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
     const queue = new Queue();
     let pis = new PacketInputStream(unexpectedPacket, queue, null, opts, info);
-    assert.equal(pis.encoding, 'utf8');
+    if (base.utf8Collation()) {
+      assert.equal(pis.encoding, 'utf8');
+    }
     opts.emit('collation', Collations.fromName('BIG5_CHINESE_CI'));
     assert.equal(pis.encoding, 'big5');
   });

@@ -3,6 +3,7 @@
 const basePromise = require('../promise');
 const baseCallback = require('../callback');
 const Conf = require('./conf');
+const Collations = require('../lib/const/collations.js');
 
 //*****************************************************************
 // initialize share connection
@@ -54,4 +55,11 @@ module.exports.createCallbackConnection = function createConnection(opts) {
 module.exports.createPoolCallback = opts => {
   const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return baseCallback.createPool(poolOptionTemp);
+};
+
+module.exports.utf8Collation = () => {
+  const collationString = Conf.baseConfig.collation;
+  if (!collationString) return true;
+  const collation = Collations.fromName(collationString.toUpperCase());
+  return collation.charset === 'utf8' || collation.charset === 'utf8mb4';
 };

@@ -18,6 +18,7 @@ describe('Pool', () => {
   });
 
   it('pool escape', function() {
+    if (!base.utf8Collation()) this.skip();
     const pool = base.createPool({ connectionLimit: 1 });
     pool.on('connection', conn => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
@@ -39,11 +40,35 @@ describe('Pool', () => {
         pool.escape({ id: 2, val: "t'est" }),
         '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\''
       );
+      const fctStr = new Object();
+      fctStr.toSqlString = () => {
+        return "bla'bla";
+      };
+      assert.equal(pool.escape(fctStr), "'bla\\'bla'");
       assert.equal(pool.escape(null), 'NULL');
       assert.equal(pool.escape("let'g'o😊"), "'let\\'g\\'o😊'");
       assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
+      const arr = ["let'g'o😊", false, null, fctStr];
+      assert.equal(pool.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
+
+      assert.equal(pool.escapeId('good_$one'), 'good_$one');
+      assert.equal(pool.escape(''), "''");
+      assert.equal(pool.escapeId('f:a'), '`f:a`');
+      assert.equal(pool.escapeId('`f:a`'), '`f:a`');
+      assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+
       pool.end();
     });
+  });
+
+  it('pool escape on init', function() {
+    const pool = base.createPool({ connectionLimit: 1 });
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+    assert.equal(pool.escapeId('good_$one'), 'good_$one');
+    assert.equal(pool.escapeId('f:a'), '`f:a`');
+    assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+
+    pool.end();
   });
 
   it('pool with wrong authentication', function(done) {
