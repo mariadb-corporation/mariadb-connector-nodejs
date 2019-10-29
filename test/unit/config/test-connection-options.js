@@ -53,6 +53,15 @@ describe('test connection options', () => {
     }
   });
 
+  it('unknown collation', () => {
+    try {
+      new ConnOptions({ collation: 'not_existing_collation' });
+      throw new Error('Must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes("Unknown collation 'not_existing_collation'"));
+    }
+  });
+
   it('timezone error', () => {
     try {
       new ConnOptions({ timezone: '+02:20' });
