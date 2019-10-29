@@ -33,7 +33,7 @@ describe('utils', () => {
     assert.equal(
       Utils.log(opts, buf),
       '74 65 73 74 20 73 6F 6D  65 20 76 61 6C 75 65 20     test some value \n' +
-      '31 32 33                                             123\n'
+        '31 32 33                                             123\n'
     );
     assert.equal(
       Utils.log(opts, buf, 3),
@@ -49,7 +49,10 @@ describe('utils', () => {
 
   it('log no length', () => {
     let opt = new ConnOptions();
-    assert.equal('', Utils.log(opt, buf, 0, 0, buf));
+    assert.equal(
+      'F0 9F A4 98 F0 9F 92 AA                             ........\n',
+      Utils.log(opt, buf, 0, 0, buf)
+    );
   });
 
   it('log entry without header', () => {
@@ -63,8 +66,16 @@ describe('utils', () => {
   it('log entry with header', () => {
     let opt = new ConnOptions();
     assert.equal(
+      'AA BB CC 33 F0 9F A4 98  F0 9F                       ...3......\n',
+      Utils.log(opt, buf, 0, buf.length - 2, head)
+    );
+  });
+
+  it('log entry with header without length', () => {
+    let opt = new ConnOptions();
+    assert.equal(
       'AA BB CC 33 F0 9F A4 98  F0 9F 92 AA                 ...3........\n',
-      Utils.log(opt, buf, 0, buf.length, head)
+      Utils.log(opt, buf, 0, null, head)
     );
   });
 
