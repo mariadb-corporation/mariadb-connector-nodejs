@@ -210,4 +210,46 @@ describe('basic query', () => {
       })
       .catch(done);
   });
+
+  it('escape validation', function(done) {
+    if (!base.utf8Collation()) this.skip();
+    shareConn.query('CREATE TEMPORARY TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+    shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
+    shareConn
+      .query('SELECT * FROM tt1')
+      .then(res => {
+        assert.equal(res[0].tt, 'jack\nkमस्');
+        done();
+      })
+      .catch(done);
+  });
+
+  it('permitSetMultiParamEntries escape ', function(done) {
+    const fctStr = new Object();
+    fctStr.toSqlString = () => {
+      return "bla'bla";
+    };
+    const arr = {
+      stg: "let'g'o😊",
+      bool: false,
+      nullVal: null,
+      fctSt: fctStr
+    };
+
+    base.createConnection({ permitSetMultiParamEntries: true }).then(conn => {
+      assert.equal(
+        conn.escape(arr),
+        "`stg`='let\\'g\\'o😊',`bool`=false,`nullVal`=NULL,`fctSt`='bla\\'bla'"
+      );
+      conn.end();
+      base.createConnection({ permitSetMultiParamEntries: false }).then(conn2 => {
+        assert.equal(
+          conn2.escape(arr),
+          '\'{\\"stg\\":\\"let\\\'g\\\'o😊\\",\\"bool\\":false,\\"nullVal\\":null,\\"fctSt\\":{}}\''
+        );
+        conn2.end();
+        done();
+      });
+    });
+  });
 });
