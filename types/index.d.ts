@@ -491,6 +491,22 @@ export interface Connection {
    */
   debugCompress(value: boolean): void;
 
+  /**
+   * This function permit to escape a parameter properly according to parameter type to avoid injection.
+   * @param value parameter
+   */
+  escape(value: any): string;
+
+  /**
+   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed by '`' character if content doesn't satisfy:
+   * <OL>
+   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)</LI>
+   *  <LI>Extended: U+0080 .. U+FFFF and escaping '`' character if needed.</LI>
+   * </OL>
+   * @param identifier identifier
+   */
+  escapeId(identifier: string): string;
+
   on(ev: 'end', callback: () => void): Connection;
   on(ev: 'error', callback: (err: MariaDbError) => void): Connection;
 }
@@ -544,6 +560,22 @@ export interface Pool {
    * Get current stacked connection request.
    */
   taskQueueSize(): number;
+
+  /**
+   * This function permit to escape a parameter properly according to parameter type to avoid injection.
+   * @param value parameter
+   */
+  escape(value: any): string;
+
+  /**
+   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed by '`' character if content doesn't satisfy:
+   * <OL>
+   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)</LI>
+   *  <LI>Extended: U+0080 .. U+FFFF and escaping '`' character if needed.</LI>
+   * </OL>
+   * @param identifier identifier
+   */
+  escapeId(identifier: string): string;
 }
 
 export interface FilteredPoolCluster {

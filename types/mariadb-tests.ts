@@ -111,6 +111,10 @@ async function testMisc(): Promise<void> {
   console.log('ended');
 
   connection.destroy();
+  connection.escape('test');
+  connection.escape(true);
+  connection.escape(5);
+  connection.escapeId('myColumn');
 
   await createConnection({ multipleStatements: true });
 
@@ -167,6 +171,11 @@ async function testPool(): Promise<void> {
   pool = createPool();
 
   const connection = await pool.getConnection();
+  pool.escape('test');
+  pool.escape(true);
+  pool.escape(5);
+  pool.escapeId('myColumn');
+
   console.log(connection.threadId != null);
 
   await connection.query('SELECT 1 + 1 AS solution');
