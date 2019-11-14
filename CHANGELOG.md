@@ -1,4 +1,19 @@
 # Change Log
+## [2.1.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.3) (14 Nov. 2019)
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.2...2.1.3)
+
+* CONJS-109 Missing mysql only collation definition
+* CONJS-108 typescript escape/escapeId definition
+* CONJS-107 Change user callback function not called when no option is set and changing collation only if collation option is correct
+* CONJS-106 properly escape boolean parameter false
+* CONJS-105 Typecast provided date function erroneous parsing
+* CONJS-104 Pam authentication must permit to provide multiple passwords
+
+misc:
+
+* better cluster error when pool is full
+* adding test coverage
+
 
 ## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (17 Oct. 2019)
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
