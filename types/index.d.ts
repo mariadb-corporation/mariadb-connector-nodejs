@@ -576,6 +576,11 @@ export interface Pool {
    * @param identifier identifier
    */
   escapeId(identifier: string): string;
+
+  on(ev: 'acquire', callback: (conn: Connection) => void): Pool;
+  on(ev: 'connection', callback: (conn: Connection) => void): Pool;
+  on(ev: 'enqueue', callback: () => void): Pool;
+  on(ev: 'release', callback: (conn: Connection) => void): Pool;
 }
 
 export interface FilteredPoolCluster {

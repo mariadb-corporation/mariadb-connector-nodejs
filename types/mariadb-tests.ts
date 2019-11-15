@@ -1,5 +1,5 @@
 import mariadb = require('..');
-import { FieldInfo, Types } from '..';
+import { Connection, FieldInfo, Types } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -164,6 +164,13 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  function displayConn(conn: Connection): void {
+    console.log(conn);
+  }
+  pool.on('acquire', displayConn).on('acquire', displayConn);
+  pool.on('connection', displayConn).on('connection', displayConn);
+  pool.on('enqueue', () => {}).on('enqueue', () => {});
+  pool.on('release', displayConn).on('release', displayConn);
 
   const rows = await pool.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
