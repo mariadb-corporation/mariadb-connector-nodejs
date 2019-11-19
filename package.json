@@ -46,11 +46,11 @@
   "license": "LGPL-2.1+",
   "dependencies": {
     "@types/geojson": "^7946.0.7",
-    "@types/node": "^12.7.5",
+    "@types/node": "^12.12.9",
     "denque": "^1.4.1",
     "iconv-lite": "^0.5.0",
     "long": "^4.0.0",
-    "moment-timezone": "^0.5.26"
+    "moment-timezone": "^0.5.27"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.1.0",
