@@ -299,7 +299,10 @@ describe('Pool', () => {
     pool.getConnection().then(conn => {
       conn.end().then(() => {
         const reflect = p =>
-          p.then(v => ({ v, status: 'resolved' }), e => ({ e, status: 'rejected' }));
+          p.then(
+            v => ({ v, status: 'resolved' }),
+            e => ({ e, status: 'rejected' })
+          );
 
         const requests = [];
         for (let i = 0; i < 10000; i++) {
@@ -743,7 +746,10 @@ describe('Pool', () => {
     const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
     pool.query('CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
     pool
-      .batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [[1, 'john'], [2, 'jack']])
+      .batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [
+        [1, 'john'],
+        [2, 'jack']
+      ])
       .then(res => {
         assert.equal(res.affectedRows, 2);
         return pool.query('select * from `parse`');

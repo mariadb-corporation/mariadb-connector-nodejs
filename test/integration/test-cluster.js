@@ -1380,7 +1380,10 @@ describe('cluster', function() {
         .query('SELECT @node')
         .then(row => {
           nodeName = row[0]['@node'];
-          return conn.batch('INSERT INTO clusterInsert VALUES (?,?)', [[1, 'TOM'], [2, 'JERRY']]);
+          return conn.batch('INSERT INTO clusterInsert VALUES (?,?)', [
+            [1, 'TOM'],
+            [2, 'JERRY']
+          ]);
         })
         .then(res => {
           assert.equal(res.affectedRows, 2);

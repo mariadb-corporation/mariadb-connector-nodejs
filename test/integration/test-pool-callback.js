@@ -469,7 +469,10 @@ describe('Pool callback', () => {
     pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
     pool.batch(
       'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
-      [[1, 'john'], [2, 'jack']],
+      [
+        [1, 'john'],
+        [2, 'jack']
+      ],
       (err, res) => {
         if (err) {
           done(err);

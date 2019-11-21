@@ -275,7 +275,10 @@ describe('connection option', () => {
         conn
           .query('SELECT * FROM t1, t2')
           .then(rows => {
-            assert.deepEqual(rows, [{ t1_a: 'bla', t2_b: 'bou' }, { t1_a: 'bla2', t2_b: 'bou' }]);
+            assert.deepEqual(rows, [
+              { t1_a: 'bla', t2_b: 'bou' },
+              { t1_a: 'bla2', t2_b: 'bou' }
+            ]);
             return conn.end();
           })
           .then(() => {
@@ -297,7 +300,10 @@ describe('connection option', () => {
         conn
           .query('SELECT * FROM t1, t2')
           .then(rows => {
-            assert.deepEqual(rows, [['bla', 'bou'], ['bla2', 'bou']]);
+            assert.deepEqual(rows, [
+              ['bla', 'bou'],
+              ['bla2', 'bou']
+            ]);
             return conn.end();
           })
           .then(() => {
@@ -319,7 +325,10 @@ describe('connection option', () => {
         conn
           .query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' })
           .then(rows => {
-            assert.deepEqual(rows, [['bla', 'bou'], ['bla2', 'bou']]);
+            assert.deepEqual(rows, [
+              ['bla', 'bou'],
+              ['bla2', 'bou']
+            ]);
             return conn.end();
           })
           .then(() => {
@@ -366,7 +375,10 @@ describe('connection option', () => {
         conn
           .query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' })
           .then(rows => {
-            assert.deepEqual(rows, [{ t1_a: 'bla', t2_b: 'bou' }, { t1_a: 'bla2', t2_b: 'bou' }]);
+            assert.deepEqual(rows, [
+              { t1_a: 'bla', t2_b: 'bou' },
+              { t1_a: 'bla2', t2_b: 'bou' }
+            ]);
             return conn.end();
           })
           .then(() => {

@@ -223,7 +223,10 @@ describe('batch', () => {
               sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
               maxAllowedPacket: 1048576
             },
-            [[1, new Date('2001-12-31 23:59:58')], [2, new Date('2001-12-31 23:59:58')]]
+            [
+              [1, new Date('2001-12-31 23:59:58')],
+              [2, new Date('2001-12-31 23:59:58')]
+            ]
           )
           .then(res => {
             assert.equal(res.affectedRows, 2);
@@ -278,13 +281,19 @@ describe('batch', () => {
         conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
         conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
         conn
-          .batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [['john', 2], ['©°', 3]])
+          .batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [
+            ['john', 2],
+            ['©°', 3]
+          ])
           .then(res => {
             assert.equal(res.affectedRows, 2);
             conn
               .query('select * from `simpleBatchCP1251`')
               .then(res => {
-                assert.deepEqual(res, [{ id: 2, t: 'john' }, { id: 3, t: '©°' }]);
+                assert.deepEqual(res, [
+                  { id: 2, t: 'john' },
+                  { id: 3, t: '©°' }
+                ]);
                 conn
                   .query('DROP TABLE simpleBatchCP1251')
                   .then(res => {
@@ -435,7 +444,10 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
         conn
-          .batch('SELECT ? as id, ? as t', [[1, 'john'], [2, 'jack']])
+          .batch('SELECT ? as id, ? as t', [
+            [1, 'john'],
+            [2, 'jack']
+          ])
           .then(res => {
             clearTimeout(timeout);
             if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
@@ -943,7 +955,10 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
         conn
-          .batch('SELECT :id2 as id, :id1 as t', [{ id2: 1, id1: 'john' }, { id1: 'jack', id2: 2 }])
+          .batch('SELECT :id2 as id, :id1 as t', [
+            { id2: 1, id1: 'john' },
+            { id1: 'jack', id2: 2 }
+          ])
           .then(res => {
             conn.end();
             if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
@@ -1264,7 +1279,10 @@ describe('batch', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
         conn
-          .batch('INSERT INTO `blabla` values (?, ?)', [[1, 2], [1, undefined]])
+          .batch('INSERT INTO `blabla` values (?, ?)', [
+            [1, 2],
+            [1, undefined]
+          ])
           .then(res => {
             conn.end();
             done(new Error('expect an error !'));
@@ -1498,7 +1516,10 @@ describe('batch', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
         conn
-          .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1, undefined]])
+          .batch('INSERT INTO `blabla` values (?,?)', [
+            [1, 2],
+            [1, undefined]
+          ])
           .then(res => {
             conn.end();
             done(new Error('expect an error !'));

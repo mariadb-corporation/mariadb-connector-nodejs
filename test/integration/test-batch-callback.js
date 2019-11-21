@@ -229,7 +229,10 @@ describe('batch callback', () => {
           sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
           maxAllowedPacket: 1048576
         },
-        [[1, new Date('2001-12-31 23:59:58')], [2, new Date('2001-12-31 23:59:58')]],
+        [
+          [1, new Date('2001-12-31 23:59:58')],
+          [2, new Date('2001-12-31 23:59:58')]
+        ],
         (err, res) => {
           if (err) {
             return conn.end(() => {
@@ -287,7 +290,10 @@ describe('batch callback', () => {
       conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
       conn.batch(
         'INSERT INTO `simpleBatchCP1251` values (?, ?)',
-        [['john', 2], ['©°', 3]],
+        [
+          ['john', 2],
+          ['©°', 3]
+        ],
         (err, res) => {
           assert.equal(res.affectedRows, 2);
           conn.query('select * from `simpleBatchCP1251`', (err, res) => {
@@ -296,7 +302,10 @@ describe('batch callback', () => {
                 done(err);
               });
             }
-            assert.deepEqual(res, [{ id: 2, t: 'john' }, { id: 3, t: '©°' }]);
+            assert.deepEqual(res, [
+              { id: 2, t: 'john' },
+              { id: 3, t: '©°' }
+            ]);
             conn.query('DROP TABLE simpleBatchCP1251', (err, res) => {
               if (err) return done(err);
               clearTimeout(timeout);
@@ -327,7 +336,10 @@ describe('batch callback', () => {
       }, 25000);
       conn.batch(
         'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)',
-        [[1, 'john'], [2, 'jack']],
+        [
+          [1, 'john'],
+          [2, 'jack']
+        ],
         err => {
           if (!err) {
             return conn.end(() => {
@@ -451,44 +463,51 @@ describe('batch callback', () => {
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
       }, 25000);
-      conn.batch('SELECT ? as id, ? as t', [[1, 'john'], [2, 'jack']], (err, res) => {
-        conn.end(() => {
-          clearTimeout(timeout);
-          if (err) {
-            if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
-              assert.isTrue(
-                err.message.includes(
-                  'This command is not supported in the prepared statement protocol yet'
-                ),
-                err.message
-              );
-              done();
+      conn.batch(
+        'SELECT ? as id, ? as t',
+        [
+          [1, 'john'],
+          [2, 'jack']
+        ],
+        (err, res) => {
+          conn.end(() => {
+            clearTimeout(timeout);
+            if (err) {
+              if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+                assert.isTrue(
+                  err.message.includes(
+                    'This command is not supported in the prepared statement protocol yet'
+                  ),
+                  err.message
+                );
+                done();
+              } else {
+                done(err);
+              }
             } else {
-              done(err);
+              if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
+                done(new Error('Must have thrown an error'));
+              } else {
+                assert.deepEqual(res, [
+                  [
+                    {
+                      id: 1,
+                      t: 'john'
+                    }
+                  ],
+                  [
+                    {
+                      id: 2,
+                      t: 'jack'
+                    }
+                  ]
+                ]);
+                done();
+              }
             }
-          } else {
-            if (useBulk && conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
-              done(new Error('Must have thrown an error'));
-            } else {
-              assert.deepEqual(res, [
-                [
-                  {
-                    id: 1,
-                    t: 'john'
-                  }
-                ],
-                [
-                  {
-                    id: 2,
-                    t: 'jack'
-                  }
-                ]
-              ]);
-              done();
-            }
-          }
-        });
-      });
+          });
+        }
+      );
     });
   };
 
@@ -549,7 +568,10 @@ describe('batch callback', () => {
       );
       conn.batch(
         'INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)',
-        [[1, stream1, 99], [2, stream2, 98]],
+        [
+          [1, stream1, 99],
+          [2, stream2, 98]
+        ],
         (err, res) => {
           if (err) {
             return conn.end(() => {
@@ -607,7 +629,10 @@ describe('batch callback', () => {
       }, 25000);
       conn.batch(
         'INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)',
-        [[1, stream1, 99], [2, stream2, 98]],
+        [
+          [1, stream1, 99],
+          [2, stream2, 98]
+        ],
         err => {
           if (!err) {
             return conn.end(() => {
@@ -650,7 +675,10 @@ describe('batch callback', () => {
       );
       conn.batch(
         'INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)',
-        [{ param_1: 1, param_2: 'john' }, { param_1: 2, param_2: 'jack' }],
+        [
+          { param_1: 1, param_2: 'john' },
+          { param_1: 2, param_2: 'jack' }
+        ],
         (err, res) => {
           if (err) {
             return conn.end(() => {
@@ -705,7 +733,10 @@ describe('batch callback', () => {
       }, 25000);
       conn.batch(
         'INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)',
-        [{ param_1: 1, param_2: 'john' }, { param_1: 2, param_2: 'jack' }],
+        [
+          { param_1: 1, param_2: 'john' },
+          { param_1: 2, param_2: 'jack' }
+        ],
         err => {
           if (!err) {
             return conn.end(() => {
@@ -744,7 +775,10 @@ describe('batch callback', () => {
       }, 25000);
       conn.batch(
         'SELECT :id2 as id, :id1 as t',
-        [{ id2: 1, id1: 'john' }, { id1: 'jack', id2: 2 }],
+        [
+          { id2: 1, id1: 'john' },
+          { id1: 'jack', id2: 2 }
+        ],
         (err, res) => {
           if (err) {
             conn.end();
@@ -806,7 +840,10 @@ describe('batch callback', () => {
       );
       conn.batch(
         'INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)',
-        [{ id1: 1, id3: stream1, id4: 99, id5: 6 }, { id1: 2, id3: stream2, id4: 98 }],
+        [
+          { id1: 1, id3: stream1, id4: 99, id5: 6 },
+          { id1: 2, id3: stream2, id4: 98 }
+        ],
         (err, res) => {
           if (err) {
             conn.end();
@@ -862,7 +899,10 @@ describe('batch callback', () => {
       }, 25000);
       conn.batch(
         'INSERT INTO blabla values (1, :id1, 2, :id3, :id7, 3)',
-        [{ id1: 1, id3: stream1, id4: 99, id5: 6 }, { id1: 2, id3: stream2, id4: 98 }],
+        [
+          { id1: 1, id3: stream1, id4: 99, id5: 6 },
+          { id1: 2, id3: stream2, id4: 98 }
+        ],
         err => {
           if (!err) {
             conn.end();
@@ -922,7 +962,10 @@ describe('batch callback', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
         conn
-          .batch('INSERT INTO `blabla` values (?, ?)', [[1, 2], [1, undefined]])
+          .batch('INSERT INTO `blabla` values (?, ?)', [
+            [1, 2],
+            [1, undefined]
+          ])
           .then(res => {
             conn.end();
             done(new Error('expect an error !'));
@@ -1079,7 +1122,10 @@ describe('batch callback', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
         conn
-          .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1, undefined]])
+          .batch('INSERT INTO `blabla` values (?,?)', [
+            [1, 2],
+            [1, undefined]
+          ])
           .then(res => {
             conn.end();
             done(new Error('expect an error !'));

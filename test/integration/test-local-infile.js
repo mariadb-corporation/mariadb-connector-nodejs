@@ -156,7 +156,10 @@ describe('local-infile', () => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
               .then(rows => {
-                assert.deepEqual(rows, [{ id: 1, test: 'hello' }, { id: 2, test: 'world' }]);
+                assert.deepEqual(rows, [
+                  { id: 1, test: 'hello' },
+                  { id: 2, test: 'world' }
+                ]);
                 conn.end();
                 done();
               })
@@ -197,7 +200,10 @@ describe('local-infile', () => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
               .then(rows => {
-                assert.deepEqual(rows, [{ id: 1, test: 'hello' }, { id: 2, test: 'world' }]);
+                assert.deepEqual(rows, [
+                  { id: 1, test: 'hello' },
+                  { id: 2, test: 'world' }
+                ]);
                 conn.end();
                 done();
               })

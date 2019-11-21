@@ -5,7 +5,11 @@ const { assert } = require('chai');
 
 describe('parse', () => {
   describe('basic placeholder', () => {
-    const values = [{ id1: 1, id2: 2 }, { id3: 3, id2: 4 }, { id2: 5, id1: 6 }];
+    const values = [
+      { id1: 1, id2: 2 },
+      { id3: 3, id2: 4 },
+      { id2: 5, id1: 6 }
+    ];
 
     it('select', () => {
       const res = Parse.searchPlaceholder(
@@ -15,7 +19,11 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         sql: 'select \'\\\'\' as a, ? as b, "\\"" as c, ? as d',
-        values: [[2, 1], [4, null], [5, 6]]
+        values: [
+          [2, 1],
+          [4, null],
+          [5, 6]
+        ]
       });
     });
 
@@ -28,7 +36,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         sql:
           'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=col2+10',
-        values: [[2, 1], [4, null], [5, 6]]
+        values: [
+          [2, 1],
+          [4, null],
+          [5, 6]
+        ]
       });
     });
 
@@ -66,7 +78,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         sql:
           'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=?',
-        values: [[2, 1, null], [4, null, 3], [5, 6, null]]
+        values: [
+          [2, 1, null],
+          [4, null, 3],
+          [5, 6, null]
+        ]
       });
     });
 
@@ -78,7 +94,11 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         sql: 'INSERT INTO TABLE(col1,col2) VALUES (?, ?), (?, ?)',
-        values: [[2, null, 1, null], [4, 3, null, null], [5, null, 6, null]]
+        values: [
+          [2, null, 1, null],
+          [4, 3, null, null],
+          [5, null, 6, null]
+        ]
       });
     });
 
@@ -86,7 +106,11 @@ describe('parse', () => {
       const res = Parse.searchPlaceholder('CALL dsdssd(:id1,:id2)', null, values);
       assert.deepEqual(res, {
         sql: 'CALL dsdssd(?,?)',
-        values: [[1, 2], [null, 4], [6, 5]]
+        values: [
+          [1, 2],
+          [null, 4],
+          [6, 5]
+        ]
       });
     });
 
@@ -98,7 +122,11 @@ describe('parse', () => {
       );
       assert.deepEqual(res, {
         sql: "UPDATE MultiTestt4 SET test = ? #comm :id3\n WHERE s='\\\\' and test = ?",
-        values: [[1, 2], [null, 4], [6, 5]]
+        values: [
+          [1, 2],
+          [null, 4],
+          [6, 5]
+        ]
       });
     });
 
@@ -462,7 +490,11 @@ describe('parse', () => {
   });
 
   describe('named parameter batch rewrite', () => {
-    const values = [{ id1: 1, id2: 2 }, { id3: 3, id2: 4 }, { id2: 5, id1: 6 }];
+    const values = [
+      { id1: 1, id2: 2 },
+      { id3: 3, id2: 4 },
+      { id2: 5, id1: 6 }
+    ];
 
     it('select', () => {
       const res = Parse.splitRewritableNamedParameterQuery(
@@ -472,7 +504,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ["select '\\'' as a, ", '', ' as b, "\\"" as c, ', '', ' as d'],
-        values: [[2, 1], [4, null], [5, 6]],
+        values: [
+          [2, 1],
+          [4, null],
+          [5, 6]
+        ],
         reWritable: false
       });
     });
@@ -501,7 +537,11 @@ describe('parse', () => {
           ', 8)',
           ' ON DUPLICATE KEY UPDATE col2=col2+10'
         ],
-        values: [[2, 1], [4, null], [5, 6]],
+        values: [
+          [2, 1],
+          [4, null],
+          [5, 6]
+        ],
         reWritable: true
       });
     });
@@ -548,7 +588,11 @@ describe('parse', () => {
           '',
           ''
         ],
-        values: [[2, 1, null], [4, null, 3], [5, 6, null]],
+        values: [
+          [2, 1, null],
+          [4, null, 3],
+          [5, 6, null]
+        ],
         reWritable: false
       });
     });
@@ -561,7 +605,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['INSERT INTO TABLE(col1,col2) VALUES', ' (', ', ', '), (', ', ', ')', ''],
-        values: [[2, null, 1, null], [4, 3, null, null], [5, null, 6, null]],
+        values: [
+          [2, null, 1, null],
+          [4, 3, null, null],
+          [5, null, 6, null]
+        ],
         reWritable: false
       });
     });
@@ -571,7 +619,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['CALL dsdssd(', '', ',', ')', ''],
-        values: [[1, 2], [null, 4], [6, 5]],
+        values: [
+          [1, 2],
+          [null, 4],
+          [6, 5]
+        ],
         reWritable: false
       });
     });
@@ -584,7 +636,11 @@ describe('parse', () => {
       assert.deepEqual(res, {
         multipleQueries: true,
         partList: ['UPDATE MultiTestt4 SET test = ', '', ' WHERE test = ', '', ''],
-        values: [[1, 2], [null, 4], [6, 5]],
+        values: [
+          [1, 2],
+          [null, 4],
+          [6, 5]
+        ],
         reWritable: false
       });
     });
