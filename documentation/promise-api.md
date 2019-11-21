@@ -279,7 +279,7 @@ Specific options for pools are :
 | **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
-| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (MariaDB >=10.2.4 / MySQL >= 5.7.3). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true|
+| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (only for MariaDB version >= 10.2.22 /10.3.13). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true|
 
 ## `createPoolCluster(options) → PoolCluster`
 
