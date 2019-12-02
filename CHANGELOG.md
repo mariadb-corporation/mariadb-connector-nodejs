@@ -1,4 +1,12 @@
 # Change Log
+## [2.1.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.4) (02 Dec. 2019)
+[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.3...2.1.4)
+
+* CONJS-112 use pool reset only for corrected COM_RESET_CONNECTION
+* CONJS-111 missing pool event definition
+* dependencies update
+
+
 ## [2.1.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.3) (14 Nov. 2019)
 [Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.2...2.1.3)
 
