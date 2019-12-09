@@ -1,14 +1,14 @@
 # Change Log
-## [2.1.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.4) (02 Dec. 2019)
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.3...2.1.4)
+## [2.1.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.4) (02 Dec. 2019)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.3...2.1.4)
 
 * CONJS-112 use pool reset only for corrected COM_RESET_CONNECTION
 * CONJS-111 missing pool event definition
 * dependencies update
 
 
-## [2.1.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.3) (14 Nov. 2019)
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.2...2.1.3)
+## [2.1.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.3) (14 Nov. 2019)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.2...2.1.3)
 
 * CONJS-109 Missing mysql only collation definition
 * CONJS-108 typescript escape/escapeId definition
@@ -23,8 +23,8 @@ misc:
 * adding test coverage
 
 
-## [2.1.2](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.2) (17 Oct. 2019)
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
+## [2.1.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.2) (17 Oct. 2019)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.1...2.1.2)
 
 Implemented enhancements:
 * CONJS-101	Escape functions API
@@ -39,9 +39,9 @@ Fixed bugs:
 * CONJS-99	Improve documentation for best practice concerning credential
 * CONJS-97	Remove coverage comment on github pull request
 
-## [2.1.1](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.1) (06 Sep. 2019)
+## [2.1.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.1) (06 Sep. 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.1.0...2.1.1)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.0...2.1.1)
 
 * node.je v12 CI testing
 * cluster ordered selector bug fix on failover (thanks to @kkx)
@@ -50,9 +50,9 @@ Fixed bugs:
 * connection.reset() error message improvement (and documentation)
 * small performance improvement when debug not enable
 
-## [2.1.0](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.1.0) (11 Jul. 2019)
+## [2.1.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.0) (11 Jul. 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.5...2.1.0)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.0.5...2.1.0)
 
 * [CONJS-19]	implement Ed25519 plugin		
 * [CONJS-57]	Multiple alternative authentication methods for the same user		
@@ -76,15 +76,15 @@ New Options
 | **`permitConnectionWhenExpired`** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
 
 
-## [2.0.5](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.5) (10 May 2019)
+## [2.0.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.0.5) (10 May 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.4...2.0.5)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.0.4...2.0.5)
 
 * [CONJS-71] TypeScript definition is not exported
 
-## [2.0.4](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.4) (07 May 2019)
+## [2.0.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.0.4) (07 May 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.3...2.0.4)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.0.3...2.0.4)
 
 * [CONJS-69] permit set numeric parameter bigger than javascript 2^53-1 limitation
 * [CONJS-68] error when reading datetime data and timezone option is set
@@ -111,9 +111,9 @@ Pool handle connection creation automatically, with now some delayed after faili
 Authentication error in pool have now a better handling.
 
 
-## [2.0.3](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.3) (30 Jan. 2019)
+## [2.0.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.0.3) (30 Jan. 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.2-rc...2.0.3)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.0.2-rc...2.0.3)
 
 * [CONJS-56] TypeError: Cannot read property 'totalConnections' of undefined
 * [CONJS-59] pool now throw `ER_ACCESS_DENIED_ERROR` in place of basic timeout error
@@ -122,9 +122,9 @@ Authentication error in pool have now a better handling.
 
 
 #### 2.0.2-rc - 11-12-2018 
-## [2.0.2-rc](https://github.com/MariaDB/mariadb-connector-nodejs/tree/2.0.2-rc) (30 Jan. 2019)
+## [2.0.2-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.0.2-rc) (30 Jan. 2019)
 
-[Full Changelog](https://github.com/MariaDB/mariadb-connector-nodejs/compare/2.0.1-beta...2.0.2-rc)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.0.1-beta...2.0.2-rc)
 
 ##### Changes
 

@@ -19,9 +19,9 @@ MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, compatibl
 
 ## Documentation
 
-See [promise documentation](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API. 
+See [promise documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API. 
 
-[Callback documentation](https://github.com/MariaDB/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
+[Callback documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
    
 ## Why a New Client?
 
