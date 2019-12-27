@@ -43,7 +43,7 @@
     "node": ">= 6.0"
   },
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
-  "license": "LGPL-2.1+",
+  "license": "LGPL-2.1-or-later",
   "dependencies": {
     "@types/geojson": "^7946.0.7",
     "@types/node": "^12.12.11",
