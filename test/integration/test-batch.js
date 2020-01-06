@@ -351,6 +351,34 @@ describe('batch', () => {
       .catch(done);
   };
 
+  const noValueBatch = (compression, useBulk, done) => {
+    base
+      .createConnection({ trace: true, bulk: useBulk })
+      .then(conn => {
+        conn.query('DROP TABLE IF EXISTS noValueBatch');
+        conn.query('CREATE TABLE noValueBatch(id int not null primary key auto_increment)');
+        const timeout = setTimeout(() => {
+          console.log(conn.info.getLastPackets());
+        }, 2000);
+        conn
+          .batch('INSERT INTO noValueBatch values ()', [])
+          .then(() => {
+            return conn.query('SELECT COUNT(*) as nb FROM noValueBatch');
+          })
+          .then(res => {
+            assert.equal(res[0].nb, 1);
+            conn.end();
+            done();
+          })
+          .catch(err => {
+            conn.end();
+            clearTimeout(timeout);
+            done(err);
+          });
+      })
+      .catch(done);
+  };
+
   const simpleBatchErrorSplit = (useCompression, useBulk, timezone, done) => {
     base
       .createConnection({
@@ -1258,6 +1286,12 @@ describe('batch', () => {
       simpleBatchWithOptions(useCompression, true, done);
     });
 
+    it('batch without value', function(done) {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      noValueBatch(useCompression, true, done);
+    });
+
     it('batch without parameter', function(done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
@@ -1407,6 +1441,12 @@ describe('batch', () => {
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
+    it('batch without value', function(done) {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      noValueBatch(useCompression, true, done);
+    });
+
     it('non rewritable batch', function(done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
@@ -1494,7 +1534,7 @@ describe('batch', () => {
 
     it('batch with erroneous parameter', function(done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: false }).then(conn => {
         conn
           .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]])
           .then(res => {
@@ -1512,9 +1552,14 @@ describe('batch', () => {
       });
     });
 
+    it('batch without value', function(done) {
+      this.timeout(30000);
+      noValueBatch(useCompression, false, done);
+    });
+
     it('batch with undefined parameter', function(done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: false }).then(conn => {
         conn
           .batch('INSERT INTO `blabla` values (?,?)', [
             [1, 2],
@@ -1672,6 +1717,10 @@ describe('batch', () => {
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
+    it('batch without value', function(done) {
+      this.timeout(30000);
+      noValueBatch(useCompression, false, done);
+    });
     it('simple batch error message truncated', function(done) {
       this.timeout(30000);
       displayError(80, done);

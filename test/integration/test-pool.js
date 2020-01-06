@@ -779,6 +779,35 @@ describe('Pool', () => {
       .catch(done);
   });
 
+  it('pool batch single array', function(done) {
+    const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
+    pool.query('CREATE TEMPORARY TABLE singleBatchArray(id int)');
+    pool
+      .batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3])
+      .then(res => {
+        assert.equal(res.affectedRows, 3);
+        return pool.query('select * from `singleBatchArray`');
+      })
+      .then(res => {
+        assert.deepEqual(res, [
+          {
+            id: 1
+          },
+          {
+            id: 2
+          },
+          {
+            id: 3
+          }
+        ]);
+        return pool.end();
+      })
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
   it("ensure pipe ending doesn't stall connection", function(done) {
     //sequence engine only exist in MariaDB
     if (!shareConn.info.isMariaDB()) this.skip();

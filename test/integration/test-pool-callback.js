@@ -521,6 +521,35 @@ describe('Pool callback', () => {
     });
   });
 
+  it('pool batch single array', function(done) {
+    const pool = base.createPoolCallback({
+      connectionLimit: 1,
+      resetAfterUse: false
+    });
+    pool.query('CREATE TEMPORARY TABLE singleBatchArrayCallback(id int)');
+    pool.batch('INSERT INTO `singleBatchArrayCallback` values (?)', [1, 2, 3], (err, res) => {
+      if (err) {
+        done(err);
+      } else {
+        pool.query('select * from `singleBatchArrayCallback`', (err, res) => {
+          assert.deepEqual(res, [
+            {
+              id: 1
+            },
+            {
+              id: 2
+            },
+            {
+              id: 3
+            }
+          ]);
+          pool.end();
+          done();
+        });
+      }
+    });
+  });
+
   it('test minimum idle decrease', function(done) {
     this.timeout(30000);
     const pool = base.createPoolCallback({
