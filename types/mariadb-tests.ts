@@ -1,25 +1,23 @@
 import mariadb = require('..');
-import { Connection, FieldInfo, Types } from '..';
+import { Connection, FieldInfo, Types, ConnectionConfig, PoolConfig } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { baseConfig } = require('../test/conf.js');
 
-function createConnection(options?: unknown): Promise<mariadb.Connection> {
+function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection> {
   return mariadb.createConnection({
     host: baseConfig.host,
-    user: baseConfig.user,
-    password: baseConfig.password,
-    ...options
+    user: option.user,
+    password: baseConfig.password
   });
 }
 
-function createPoolConfig(options?: unknown): mariadb.PoolConfig {
+function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
   return {
     host: baseConfig.host,
     user: baseConfig.user,
-    password: baseConfig.password,
-    ...options
+    password: baseConfig.password
   };
 }
 
@@ -71,14 +69,14 @@ async function testMisc(): Promise<void> {
   let currRow = 0;
   connection
     .queryStream('SELECT * from mysql.user')
-    .on('error', err => {
+    .on('error', (err: Error) => {
       throw err;
     })
-    .on('fields', meta => {
+    .on('fields', (meta: any) => {
       console.log(meta);
       metaReceived = true;
     })
-    .on('data', row => {
+    .on('data', (row: any) => {
       console.log(row.length > 1);
       currRow++;
     })
@@ -169,7 +167,13 @@ async function testPool(): Promise<void> {
   }
   pool.on('acquire', displayConn).on('acquire', displayConn);
   pool.on('connection', displayConn).on('connection', displayConn);
-  pool.on('enqueue', () => {}).on('enqueue', () => {});
+  pool
+    .on('enqueue', () => {
+      console.log('enqueue');
+    })
+    .on('enqueue', () => {
+      console.log('enqueue');
+    });
   pool.on('release', displayConn).on('release', displayConn);
 
   const rows = await pool.query('SELECT 1 + 1 AS solution');
