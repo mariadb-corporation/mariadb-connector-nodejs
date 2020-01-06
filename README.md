@@ -142,8 +142,8 @@ If you would like to contribute to the MariaDB Node.js Connector, please follow 
 To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
 
 
-[travis-image]:https://travis-ci.org/MariaDB/mariadb-connector-nodejs.svg?branch=master
-[travis-url]:https://travis-ci.org/MariaDB/mariadb-connector-nodejs
+[travis-image]:https://travis-ci.org/mariadb-corporation/mariadb-connector-nodejs.svg?branch=master
+[travis-url]:https://travis-ci.org/mariadb-corporation/mariadb-connector-nodejs
 [npm-image]:https://img.shields.io/npm/v/mariadb.svg
 [npm-url]:http://npmjs.org/package/mariadb
 [appveyor-image]:https://ci.appveyor.com/api/projects/status/bcg7yy4iy9viq08t/branch/master?svg=true

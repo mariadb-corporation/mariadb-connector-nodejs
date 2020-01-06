@@ -3,7 +3,7 @@
 const basePromise = require("../promise");
 const Conf = require('../test/conf');
 
-let decrement = 30;
+let decrement = 60;
 
 const checkConnection = function() {
   decrement-=1;
@@ -14,7 +14,7 @@ const checkConnection = function() {
       console.log("docker db server up");
     })
     .catch((err) => {
-        console.error("Error connecting docker server (connection try " + (30 - decrement) + " of 30)");
+        console.error("Error connecting docker server (connection try " + (60 - decrement) + " of 60)");
         if (decrement === 0) {
           throw err;
         } else {
