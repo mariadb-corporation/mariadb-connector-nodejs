@@ -11,121 +11,127 @@ describe('ssl', function() {
   let sslEnable = false;
 
   before(function(done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
-    if (
-      tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
-      ((process.platform === 'win32' &&
-        shareConn.info.isMariaDB() &&
-        !shareConn.info.hasMinVersion(10, 4, 0)) ||
-        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
-    ) {
-      //TLSv1.2 is supported on windows only since MariaDB 10.4
-      //TLSv1.2 is supported in MySQL only since 8.0 (unix/windows)
-      //so if testing with Node.js 12, force possible TLS1.1
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0)) {
-        //MySQL 5.5 and MySQL 5.6 needs TLSv1
-        tls.DEFAULT_MIN_VERSION = 'TLSv1';
-      } else {
-        tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
-      }
-    }
-
-    if (process.env.TEST_SSL_CA_FILE) {
-      const caFileName = process.env.TEST_SSL_CA_FILE;
-      ca = [fs.readFileSync(caFileName, 'utf8')];
+    if (process.env.MAXSCALE_VERSION) {
+      done();
     } else {
-      ca = [fs.readFileSync(__dirname + '/../certificats/server.crt', 'utf8')];
-    }
+      if (
+        tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
+        ((process.platform === 'win32' &&
+          shareConn.info.isMariaDB() &&
+          !shareConn.info.hasMinVersion(10, 4, 0)) ||
+          (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
+      ) {
+        //TLSv1.2 is supported on windows only since MariaDB 10.4
+        //TLSv1.2 is supported in MySQL only since 8.0 (unix/windows)
+        //so if testing with Node.js 12, force possible TLS1.1
+        if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0)) {
+          //MySQL 5.5 and MySQL 5.6 needs TLSv1
+          tls.DEFAULT_MIN_VERSION = 'TLSv1';
+        } else {
+          tls.DEFAULT_MIN_VERSION = 'TLSv1.1';
+        }
+      }
 
-    shareConn.query("DROP USER 'sslTestUser'@'%'").catch(err => {});
-    shareConn.query("DROP USER 'X509testUser'@'%'").catch(err => {});
+      if (process.env.TEST_SSL_CA_FILE) {
+        const caFileName = process.env.TEST_SSL_CA_FILE;
+        ca = [fs.readFileSync(caFileName, 'utf8')];
+      } else {
+        ca = [fs.readFileSync(__dirname + '/../certificats/server.crt', 'utf8')];
+      }
 
-    shareConn
-      .query(
-        "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
-          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-            ? ' REQUIRE SSL'
-            : '')
-      )
-      .then(() => {
-        return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE SSL'
-              : '')
-        );
-      })
-      .then(() => {
-        return shareConn.query(
-          "CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
+      shareConn.query("DROP USER 'sslTestUser'@'%'").catch(err => {});
+      shareConn.query("DROP USER 'X509testUser'@'%'").catch(err => {});
+
+      shareConn
+        .query(
+          "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
             ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE X509'
+              ? ' REQUIRE SSL'
               : '')
-        );
-      })
-      .then(() => {
-        return shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' " +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE X509'
-              : '')
-        );
-      })
-      .then(() => {
-        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
+        )
+        .then(() => {
           return shareConn.query(
-            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'ytoKS@ç%ùed5'"
+            "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+              ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
+              (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
+                ? ' REQUIRE SSL'
+                : '')
           );
-        }
-        return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('ytoKS@ç%ùed5')");
-      })
-      .then(() => {
-        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
+        })
+        .then(() => {
           return shareConn.query(
-            "ALTER USER 'X509testUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'éà@d684SQpl¨^'"
+            "CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
+              ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+              (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+                ? ' REQUIRE X509'
+                : '')
           );
-        }
-        return shareConn.query("SET PASSWORD FOR 'X509testUser'@'%' = PASSWORD('éà@d684SQpl¨^')");
-      })
-      .then(() => {
-        return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
-      })
-      .then(rows => {
-        if (rows[0].Value === 'YES') {
-          sslEnable = true;
-          done();
-        } else {
-          //ssl is not enable on database, skipping test.
-          shareConn
-            .query("SHOW VARIABLES LIKE '%ssl%'")
-            .then(rows => {
-              // console.log("ssl is not enable on database, skipping test :");
-              // for (let i = 0; i < rows.length; i++) {
-              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
-              // }
-              done();
-            })
-            .catch(done);
-        }
-      })
-      .catch(done);
+        })
+        .then(() => {
+          return shareConn.query(
+            "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' " +
+              ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
+              (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
+                ? ' REQUIRE X509'
+                : '')
+          );
+        })
+        .then(() => {
+          if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
+            return shareConn.query(
+              "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'ytoKS@ç%ùed5'"
+            );
+          }
+          return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('ytoKS@ç%ùed5')");
+        })
+        .then(() => {
+          if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
+            return shareConn.query(
+              "ALTER USER 'X509testUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'éà@d684SQpl¨^'"
+            );
+          }
+          return shareConn.query("SET PASSWORD FOR 'X509testUser'@'%' = PASSWORD('éà@d684SQpl¨^')");
+        })
+        .then(() => {
+          return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
+        })
+        .then(rows => {
+          if (rows[0].Value === 'YES') {
+            sslEnable = true;
+            done();
+          } else {
+            //ssl is not enable on database, skipping test.
+            shareConn
+              .query("SHOW VARIABLES LIKE '%ssl%'")
+              .then(rows => {
+                // console.log("ssl is not enable on database, skipping test :");
+                // for (let i = 0; i < rows.length; i++) {
+                //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
+                // }
+                done();
+              })
+              .catch(done);
+          }
+        })
+        .catch(done);
+    }
   });
 
   after(function(done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
-    shareConn
-      .query("DROP USER 'sslTestUser'@'%'")
-      .then(() => {
-        return shareConn.query("DROP USER 'X509testUser'@'%'");
-      })
-      .then(() => {
-        done();
-      })
-      .catch(done);
+    if (process.env.MAXSCALE_VERSION) {
+      done();
+    } else {
+      shareConn
+        .query("DROP USER 'sslTestUser'@'%'")
+        .then(() => {
+          return shareConn.query("DROP USER 'X509testUser'@'%'");
+        })
+        .then(() => {
+          done();
+        })
+        .catch(done);
+    }
   });
 
   it('signed certificate error ', function(done) {
