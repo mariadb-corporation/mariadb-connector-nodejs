@@ -1,4 +1,13 @@
 # Change Log
+## [2.1.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.5) (07 Jan. 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.4...2.1.5)
+
+* CONJS-115 Batch improvement 
+  - supporting array of parameters if only one parameter per query, not only array of array
+  - supporting empty array for query without parameters
+* correction on licence tag: LGPL-2.1-or-later (was tag LGPL-2.1+ that is deprecated)
+* dependencies update
+
 ## [2.1.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.4) (02 Dec. 2019)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.3...2.1.4)
 
