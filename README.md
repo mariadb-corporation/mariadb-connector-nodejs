@@ -150,5 +150,5 @@ To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/
 [appveyor-url]:https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs
 [licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square
 [licence-url]:http://opensource.org/licenses/LGPL-2.1
-[codecov-image]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs/branch/master/graph/badge.svg
-[codecov-url]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs
+[codecov-image]:https://codecov.io/gh/mariadb-corporation/mariadb-connector-nodejs/branch/master/graph/badge.svg
+[codecov-url]:https://codecov.io/gh/mariadb-corporation/mariadb-connector-nodejs
