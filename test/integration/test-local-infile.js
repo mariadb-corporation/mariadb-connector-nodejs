@@ -35,7 +35,7 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch(err => {
-            assert.equal(err.errno, 1148);
+            assert.isTrue(err.errno == 1148 || err.errno == 3948);
             assert.equal(err.sqlState, '42000');
             assert(!err.fatal);
             conn.end();
@@ -55,7 +55,7 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch(err => {
-            assert.equal(err.errno, 1148);
+            assert.isTrue(err.errno == 1148 || err.errno == 3948);
             assert.equal(err.sqlState, '42000');
             assert(!err.fatal);
             conn.end();
@@ -76,7 +76,7 @@ describe('local-infile', () => {
           })
           .catch(err => {
             assert(err != null);
-            assert.equal(err.errno, 1148);
+            assert.isTrue(err.errno == 1148 || err.errno == 3948);
             assert.equal(err.sqlState, '42000');
             assert(!err.fatal);
             conn.end();
