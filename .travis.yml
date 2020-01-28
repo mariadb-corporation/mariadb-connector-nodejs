@@ -61,8 +61,6 @@ matrix:
   - node_js: "12"
     env: DB=mariadb:5.5 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.0 SKIP_LEAK=1
-  - node_js: "12"
     env: DB=mariadb:10.1 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.2 SKIP_LEAK=1
