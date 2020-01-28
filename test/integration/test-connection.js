@@ -117,7 +117,7 @@ describe('connection', () => {
     const conn = base.createCallbackConnection({ connectTimeout: 100 });
     conn.connect(err => {
       if (!err) done(new Error('must have throw an error!'));
-      assert.isTrue(err.message.includes('Connection timeout'));
+      assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
       done();
     });
     process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket()));
@@ -388,7 +388,11 @@ describe('connection', () => {
       connectTimeout: 1000
     });
     conn.connect(err => {
-      assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
+      assert.isTrue(
+        err.message.includes(
+          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+        )
+      );
       assert.isTrue(
         Date.now() - initTime >= 990,
         'expected > 990, but was ' + (Date.now() - initTime)
@@ -480,7 +484,11 @@ describe('connection', () => {
         done(new Error('must have thrown error'));
       })
       .catch(err => {
-        assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
+        assert.isTrue(
+          err.message.includes(
+            '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+          )
+        );
         assert.isTrue(
           Date.now() - initTime >= 990,
           'expected > 990, but was ' + (Date.now() - initTime)
@@ -496,7 +504,11 @@ describe('connection', () => {
   it('connection timeout error (wrong url)', function(done) {
     const initTime = Date.now();
     base.createConnection({ host: 'www.google.fr', connectTimeout: 1000 }).catch(err => {
-      assert.strictEqual(err.message, '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout');
+      assert.isTrue(
+        err.message.includes(
+          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+        )
+      );
       assert.isTrue(
         Date.now() - initTime >= 990,
         'expected > 990, but was ' + (Date.now() - initTime)

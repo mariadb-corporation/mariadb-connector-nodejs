@@ -413,6 +413,80 @@ describe('Pool', () => {
     });
   });
 
+  it('pool leakDetectionTimeout timeout', function(done) {
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 200,
+      leakDetectionTimeout: 300
+    });
+    pool
+      .getConnection()
+      .then(conn => {
+        conn
+          .query('SELECT SLEEP(1)')
+          .then(() => {
+            //must have log 2 message to console.
+            conn.release();
+            pool.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('pool getConnection timeout recovery', function(done) {
+    this.timeout(5000);
+    const pool = base.createPool({
+      connectionLimit: 10,
+      acquireTimeout: 800,
+      leakDetectionTimeout: 1050,
+      debug: true
+    });
+    let errorThrown = false;
+    for (let i = 0; i < 10; i++) {
+      pool.query('SELECT SLEEP(1)').catch(err => {
+        console.log('SLEEP ERROR');
+        console.log(err);
+        done(err);
+      });
+    }
+
+    for (let i = 0; i < 10; i++) {
+      pool.getConnection().catch(err => {
+        assert(err.message.includes('retrieve connection from pool timeout'));
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.errno, 45028);
+        assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+        errorThrown = true;
+      });
+    }
+    for (let i = 0; i < 100; i++) {
+      setTimeout(() => {
+        pool
+          .getConnection()
+          .then(conn => {
+            conn.release();
+          })
+          .catch(err => {
+            console.log(err);
+            done(err);
+          });
+      }, 1100);
+    }
+    setTimeout(() => {
+      pool
+        .getConnection()
+        .then(conn => {
+          assert.isOk(errorThrown);
+          conn.release();
+          pool.end();
+          done();
+        })
+        .catch(done);
+    }, 1200);
+  });
+
   it('pool query timeout', function(done) {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
