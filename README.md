@@ -146,9 +146,9 @@ To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/
 [travis-url]:https://travis-ci.org/mariadb-corporation/mariadb-connector-nodejs
 [npm-image]:https://img.shields.io/npm/v/mariadb.svg
 [npm-url]:http://npmjs.org/package/mariadb
-[appveyor-image]:https://ci.appveyor.com/api/projects/status/bcg7yy4iy9viq08t/branch/master?svg=true
-[appveyor-url]:https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs
+[appveyor-image]:https://ci.appveyor.com/api/projects/status/558kpv0j1r545pgq/branch/master?svg=true
+[appveyor-url]:https://ci.appveyor.com/project/rusher/mariadb-connector-nodejs-w8k25
 [licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square
 [licence-url]:http://opensource.org/licenses/LGPL-2.1
-[codecov-image]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs/branch/master/graph/badge.svg
-[codecov-url]:https://codecov.io/gh/MariaDB/mariadb-connector-nodejs
+[codecov-image]:https://codecov.io/gh/mariadb-corporation/mariadb-connector-nodejs/branch/master/graph/badge.svg
+[codecov-url]:https://codecov.io/gh/mariadb-corporation/mariadb-connector-nodejs
