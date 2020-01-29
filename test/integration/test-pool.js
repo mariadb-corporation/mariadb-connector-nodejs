@@ -440,51 +440,52 @@ describe('Pool', () => {
     const pool = base.createPool({
       connectionLimit: 10,
       acquireTimeout: 800,
-      leakDetectionTimeout: 1050,
-      debug: true
+      leakDetectionTimeout: 1250
     });
     let errorThrown = false;
-    for (let i = 0; i < 10; i++) {
-      pool.query('SELECT SLEEP(1)').catch(err => {
-        console.log('SLEEP ERROR');
-        console.log(err);
-        done(err);
-      });
-    }
+    setTimeout(() => {
+      for (let i = 0; i < 10; i++) {
+        pool.query('SELECT SLEEP(1)').catch(err => {
+          console.log('SLEEP ERROR');
+          console.log(err);
+          done(err);
+        });
+      }
 
-    for (let i = 0; i < 10; i++) {
-      pool.getConnection().catch(err => {
-        assert(err.message.includes('retrieve connection from pool timeout'));
-        assert.equal(err.sqlState, 'HY000');
-        assert.equal(err.errno, 45028);
-        assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
-        errorThrown = true;
-      });
-    }
-    for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 10; i++) {
+        pool.getConnection().catch(err => {
+          assert(err.message.includes('retrieve connection from pool timeout'));
+          assert.equal(err.sqlState, 'HY000');
+          assert.equal(err.errno, 45028);
+          assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+          errorThrown = true;
+        });
+      }
+      for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+          pool
+            .getConnection()
+            .then(conn => {
+              conn.release();
+            })
+            .catch(err => {
+              console.log(err);
+              done(err);
+            });
+        }, 1100);
+      }
       setTimeout(() => {
         pool
           .getConnection()
           .then(conn => {
+            assert.isOk(errorThrown);
             conn.release();
+            pool.end();
+            done();
           })
-          .catch(err => {
-            console.log(err);
-            done(err);
-          });
-      }, 1100);
-    }
-    setTimeout(() => {
-      pool
-        .getConnection()
-        .then(conn => {
-          assert.isOk(errorThrown);
-          conn.release();
-          pool.end();
-          done();
-        })
-        .catch(done);
-    }, 1200);
+          .catch(done);
+      }, 1200);
+    }, 1000);
   });
 
   it('pool query timeout', function(done) {
