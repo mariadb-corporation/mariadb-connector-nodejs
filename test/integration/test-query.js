@@ -278,11 +278,11 @@ describe('basic query', () => {
       })
       .catch(testTimeout.bind(this, done, initTime));
   });
+
   const testTimeout = (done, initTime, err) => {
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
-        console.log(err);
       const elapse = Date.now() - initTime;
-      assert.isOk(elapse < 200, 'elapse time was ' + elapse + ' but must be less than 200');
+      assert.isOk(elapse < 3000, 'elapse time was ' + elapse + ' but must be less around 100');
       assert.isTrue(
         err.message.includes('Query execution was interrupted (max_statement_time exceeded)')
       );

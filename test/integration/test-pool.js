@@ -930,7 +930,8 @@ describe('Pool', () => {
     const pool = base.createPool({
       connectionLimit: 10,
       minimumIdle: 4,
-      idleTimeout: 2
+      idleTimeout: 2,
+      acquireTimeout: 20000
     });
 
     const requests = [];
