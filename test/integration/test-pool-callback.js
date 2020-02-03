@@ -600,4 +600,19 @@ describe('Pool callback', () => {
       done();
     }, 4000);
   });
+
+  it('pool immediate error', function(done) {
+    const pool = base.createPoolCallback({});
+    pool.getConnection((err, conn) => {
+      if (err) {
+        assert(err.message.includes('Cannot create new connection to pool, pool closed'));
+        assert.equal(err.sqlState, '08S01');
+        assert.equal(err.errno, 45035);
+        done();
+      } else {
+        done(new Error('must have thrown an Exception'));
+      }
+    });
+    pool.end();
+  });
 });
