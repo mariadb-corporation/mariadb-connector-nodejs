@@ -1,5 +1,5 @@
 import mariadb = require('..');
-import { Connection, FieldInfo, Types, ConnectionConfig, PoolConfig } from '..';
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -14,11 +14,14 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
 }
 
 function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
-  return {
-    host: baseConfig.host,
-    user: baseConfig.user,
-    password: baseConfig.password
-  };
+  return Object.assign(
+    {
+      host: baseConfig.host,
+      user: baseConfig.user,
+      password: baseConfig.password
+    },
+    options
+  );
 }
 
 function createPool(options?: unknown): mariadb.Pool {
@@ -72,11 +75,11 @@ async function testMisc(): Promise<void> {
     .on('error', (err: Error) => {
       throw err;
     })
-    .on('fields', (meta: any) => {
+    .on('fields', meta => {
       console.log(meta);
       metaReceived = true;
     })
-    .on('data', (row: any) => {
+    .on('data', row => {
       console.log(row.length > 1);
       currRow++;
     })
