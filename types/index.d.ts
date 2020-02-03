@@ -94,6 +94,12 @@ export interface QueryConfig {
   pipelining?: boolean;
 
   /**
+   * Force server version check by explicitly using SELECT VERSION(), not relying on server initial handshake
+   * information
+   */
+  forceVersionCheck?: boolean;
+
+  /**
    * Allows the use of LOAD DATA INFILE statements.
    * Loading data from a file from the client may be a security issue, as a man-in-the-middle proxy server can change
    * the actual file the server loads. Being able to execute a query on the client gives you access to files on

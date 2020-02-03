@@ -388,4 +388,20 @@ describe('connection option', () => {
       })
       .catch(done);
   });
+
+  it('force version check', function(done) {
+    base
+      .createConnection({ forceVersionCheck: true })
+      .then(conn => {
+        conn
+          .query('SELECT 1')
+          .then(rows => {
+            assert.deepEqual(rows, [{ '1': 1 }]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 });
