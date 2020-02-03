@@ -252,4 +252,57 @@ describe('basic query', () => {
       });
     });
   });
+
+  it('timeout', function(done) {
+    const initTime = Date.now();
+    const query =
+      'select * from information_schema.columns as c1, ' +
+      'information_schema.tables, information_schema.tables as t2'; //takes more than 20s
+    shareConn
+      .query({ sql: query, timeout: 100 })
+      .then(res => {
+        done(new Error('must have thrown an error'));
+      })
+      .catch(testTimeout.bind(this, done, initTime));
+  });
+
+  it('timeout with parameter', function(done) {
+    const initTime = Date.now();
+    const query =
+      'select * from information_schema.columns as c1, ' +
+      'information_schema.tables, information_schema.tables as t2 WHERE 1 = ?'; //takes more than 20s
+    shareConn
+      .query({ sql: query, timeout: 100 }, [1])
+      .then(res => {
+        done(new Error('must have thrown an error'));
+      })
+      .catch(testTimeout.bind(this, done, initTime));
+  });
+  const testTimeout = (done, initTime, err) => {
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
+        console.log(err);
+      const elapse = Date.now() - initTime;
+      assert.isOk(elapse < 200, 'elapse time was ' + elapse + ' but must be less than 200');
+      assert.isTrue(
+        err.message.includes('Query execution was interrupted (max_statement_time exceeded)')
+      );
+      assert.equal(err.errno, 1969);
+      assert.equal(err.sqlState, 70100);
+      assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
+    } else {
+      if (shareConn.info.isMariaDB()) {
+        assert.isTrue(
+          err.message.includes(
+            'Cannot use timeout for MariaDB server before 10.1.2. timeout value:'
+          )
+        );
+      } else {
+        assert.isTrue(err.message.includes('Cannot use timeout for MySQL server. timeout value:'));
+      }
+      assert.equal(err.errno, 45038);
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');
+    }
+    done();
+  };
 });

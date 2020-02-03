@@ -452,6 +452,7 @@ connection.query('select * from animals')
 
 ### Query options
 
+* [`timeout`](#timeout)
 * [`namedPlaceholders`](#namedPlaceholders)
 * [`typeCast`](#typeCast)
 * [`rowsAsArray`](#rowsAsArray)
@@ -461,6 +462,45 @@ connection.query('select * from animals')
 * [`bigNumberStrings`](#bigNumberStrings)
 
 Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 
+
+
+#### `timeout`
+
+*number, timeout in ms*
+
+This option is only permitted for MariaDB server >= 10.1.2. 
+
+This set a timeout to query operation. 
+Driver internally use `SET STATEMENT max_statement_time=<timeout> FOR <command>` permitting to cancel operation when timeout is reached, 
+
+Implementation of max_statement_time is engine dependent, so there might be some differences: For example, with Galera engine, a commits will ensure replication to other nodes to be done, possibly then exceeded timeout, to ensure proper server state. 
+
+
+```javascript
+//query that takes more than 20s
+connection
+  .query({sql: 'information_schema.tables, information_schema.tables as t2', timeout: 100 })
+  .then(...)
+  .catch(err => {
+          // SQLError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
+          // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
+          // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
+          // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)
+          // at Query.readResponsePacket (C:\projets\mariadb-connector-nodejs.git\lib\cmd\resultset.js:46:28)
+          // at PacketInputStream.receivePacketBasic (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:104:9)
+          // at PacketInputStream.onData (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:160:20)
+          // at Socket.emit (events.js:210:5)
+          // at addChunk (_stream_readable.js:309:12)
+          // at readableAddChunk (_stream_readable.js:290:11)
+          // at Socket.Readable.push (_stream_readable.js:224:10)
+          // at TCP.onStreamRead (internal/stream_base_commons.js:182:23) {
+          //     fatal: true,
+          //         errno: 1969,
+          //         sqlState: '70100',
+          //         code: 'ER_STATEMENT_TIMEOUT'
+          // }
+  });
+```
 
 #### `namedPlaceholders`
 
