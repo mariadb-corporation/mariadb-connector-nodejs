@@ -96,7 +96,9 @@ describe('sql template strings', () => {
       })
       .then(res => {
         assert.strictEqual(res[0].t, value);
-        pool.query('drop table pool_parse');
+        return pool.query('drop table pool_parse');
+      })
+      .then(() => {
         pool.end();
         done();
       })
@@ -116,7 +118,9 @@ describe('sql template strings', () => {
       })
       .then(res => {
         assert.strictEqual(res[0].t, value);
-        pool.query('drop table pool_parse_batch');
+        return pool.query('drop table pool_parse_batch');
+      })
+      .then(() => {
         pool.end();
         done();
       })
@@ -135,9 +139,10 @@ describe('sql template strings', () => {
               done(err);
             } else {
               assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_parse_call');
-              pool.end();
-              done();
+              pool.query('drop table pool_parse_call', () => {
+                pool.end();
+                done();
+              });
             }
           }
         );
@@ -147,19 +152,20 @@ describe('sql template strings', () => {
 
   it('pool callback batch with parameters', done => {
     const pool = base.createPoolCallback();
-    pool.query('drop table pool_parse_call', err => {});
-    pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
-      pool.batch({ sql: 'INSERT INTO pool_parse_call value (?)', values: [value] }, (err, res) => {
+    pool.query('drop table pool_batch_call', err => {});
+    pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {
+      pool.batch({ sql: 'INSERT INTO pool_batch_call value (?)', values: [value] }, (err, res) => {
         pool.query(
-          { sql: 'select * from pool_parse_call where t = ?', values: [value] },
+          { sql: 'select * from pool_batch_call where t = ?', values: [value] },
           (err, res) => {
             if (err) {
               done(err);
             } else {
               assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_parse_call');
-              pool.end();
-              done();
+              pool.query('drop table pool_batch_call', () => {
+                pool.end();
+                done();
+              });
             }
           }
         );
