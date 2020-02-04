@@ -1,4 +1,44 @@
 # Change Log
+## [2.2.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.2.0) (03 Feb. 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.5...2.2.0)
+
+    
+##### CONJS-119	Add an option to detect Server version using a dedicated SELECT @@version
+
+    Azure is using a proxy that will return a MySQL handshake not reflecting real server.
+    A new option `forceVersionCheck` is added to permit issuing a new `SELECT @@Version` command on connection creation, 
+    to retrieve the correct server version. Connector will then act according to that server version.
+
+##### CONJS-20 add query timeout implementation
+
+    This option is only permitted for MariaDB server >= 10.1.2, and permits to set a timeout to query operation. 
+    Driver internally use `SET STATEMENT max_statement_time=<timeout> FOR <command>` permitting to cancel operation when timeout is reached, 
+   
+    Implementation of max_statement_time is engine dependent, so there might be some differences: For example, with Galera engine, a commits will ensure replication to other nodes to be done, possibly then exceeded timeout, to ensure proper server state.
+     
+#####  CONJS-110 fast-authentication improvement: 
+
+      * add mysql_native_password to fast-authentication path
+      * plugin 'mysql_native_password' is used by default if default server plugin is unknown
+      * unexpected packet type during handshake result will throw a good error.
+      
+##### CONJS-117 Implement a pool leak detection
+
+    A new option `leakDetection` permits to indicate a timeout to log connection borrowed from pool.
+    When a connection is borrowed from pool and this timeout is reached, a message will be logged to console indicating a possible connection leak.
+    Another message will tell if the possible logged leak has been released.
+    A value of 0 (default) meaning Leak detection is disable   
+    Additionally, some error messages have improved:
+    - Connection timeout now indicate that this correspond to socket failing to establish
+    - differentiate timeout error when closing pool to standard connection retrieving timeout
+
+
+misc:
+* CONJS-120 Permit values in SQL object to permits compatibility with mysql/mysql2
+* CONJS-118 missing import for Error when asking for connection when pool is closed. Thanks to @WayneMDB
+* correcting typescript import of @types/node to version >8 thanks to @SimonSchick
+* dependencies update
+
 ## [2.1.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.1.5) (07 Jan. 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.4...2.1.5)
 
