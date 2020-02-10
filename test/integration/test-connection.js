@@ -760,7 +760,7 @@ describe('connection', () => {
   });
 
   it('API escapeId', function() {
-    assert.equal(shareConn.escapeId('good_$one'), 'good_$one');
+    assert.equal(shareConn.escapeId('good_$one'), '`good_$one`');
     assert.equal(shareConn.escapeId('f:a'), '`f:a`');
     assert.equal(shareConn.escapeId('good_`è`one'), '`good_``è``one`');
   });
