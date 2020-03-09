@@ -8,6 +8,9 @@ const tls = require('tls');
 
 describe('ssl', function() {
   let ca = null;
+  let clientKey = null;
+  let clientCert = null;
+  let clientKeystore = null;
   let sslEnable = false;
 
   before(function(done) {
@@ -32,12 +35,28 @@ describe('ssl', function() {
         }
       }
 
-      if (process.env.TEST_SSL_CA_FILE) {
-        const caFileName = process.env.TEST_SSL_CA_FILE;
-        ca = [fs.readFileSync(caFileName, 'utf8')];
-      } else {
-        ca = [fs.readFileSync(__dirname + '/../certificats/server.crt', 'utf8')];
+      let serverCaFile = process.env.TEST_SSL_CA_FILE;
+      let clientKeyFileName = process.env.TEST_SSL_CLIENT_KEY_FILE;
+      let clientCertFileName = process.env.TEST_SSL_CLIENT_CERT_FILE;
+      let clientKeystoreFileName = process.env.TEST_SSL_CLIENT_KEYSTORE_FILE;
+
+      if (!serverCaFile) {
+        try {
+          if (fs.existsSync('../ssl')) {
+            serverCaFile = '../ssl/server.crt';
+            clientKeyFileName = '../ssl/client.key';
+            clientCertFileName = '../ssl/client.crt';
+            clientKeystoreFileName = '../ssl/fullclient-keystore.p12';
+          }
+        } catch (err) {
+          console.error(err);
+        }
       }
+
+      if (serverCaFile) ca = [fs.readFileSync(serverCaFile, 'utf8')];
+      if (clientKeyFileName) clientKey = [fs.readFileSync(clientKeyFileName, 'utf8')];
+      if (clientCertFileName) clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
+      if (clientKeystoreFileName) clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
 
       shareConn.query("DROP USER 'sslTestUser'@'%'").catch(err => {});
       shareConn.query("DROP USER 'X509testUser'@'%'").catch(err => {});
@@ -213,7 +232,12 @@ describe('ssl', function() {
 
   it('TLSv1 working', function(done) {
     if (!sslEnable) this.skip();
-    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) this.skip();
+
+    if (
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
+    )
+      this.skip();
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
@@ -228,7 +252,11 @@ describe('ssl', function() {
 
   it('TLSv1.1 working', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() &&
+      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
+    )
+      this.skip();
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' }
@@ -243,7 +271,11 @@ describe('ssl', function() {
 
   it('TLSv1.1 with permit cipher', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() &&
+      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
+    )
+      this.skip();
     base
       .createConnection({
         ssl: {
@@ -263,7 +295,11 @@ describe('ssl', function() {
 
   it('TLSv1.1 no common cipher', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() &&
+      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
+    )
+      this.skip();
     base
       .createConnection({
         ssl: {
@@ -283,7 +319,11 @@ describe('ssl', function() {
 
   it('TLSv1.1 wrong cipher', function(done) {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() &&
+      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
+    )
+      this.skip();
     base
       .createConnection({
         ssl: {
@@ -441,14 +481,8 @@ describe('ssl', function() {
 
   it('Mutual authentication providing client certificate', function(done) {
     if (!sslEnable) this.skip();
-    if (!ca) this.skip();
+    if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
-    const clientKeyFileName =
-      process.env.TEST_SSL_CLIENT_KEY_FILE || __dirname + '/../certificats/client.key';
-    const clientCertFileName =
-      process.env.TEST_SSL_CLIENT_CERT_FILE || __dirname + '/../certificats/client.crt';
-    const clientKey = [fs.readFileSync(clientKeyFileName, 'utf8')];
-    const clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
 
     base
       .createConnection({
@@ -470,12 +504,8 @@ describe('ssl', function() {
 
   it('Mutual authentication providing client keystore', function(done) {
     if (!sslEnable) this.skip();
-    if (!ca) this.skip();
+    if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
-    const clientKeystoreFileName =
-      process.env.TEST_SSL_CLIENT_KEYSTORE_FILE ||
-      __dirname + '/../certificats/client-keystore.p12';
-    const clientKeystore = fs.readFileSync(clientKeystoreFileName);
 
     base
       .createConnection({
