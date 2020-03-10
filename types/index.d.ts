@@ -515,7 +515,7 @@ export interface Connection {
   escapeId(identifier: string): string;
 
   on(ev: 'end', callback: () => void): Connection;
-  on(ev: 'error', callback: (err: MariaDbError) => void): Connection;
+  on(ev: 'error', callback: (err: SqlError) => void): Connection;
 }
 
 export interface PoolConnection extends Connection {
@@ -611,7 +611,7 @@ export interface UpsertResult {
   warningStatus: number;
 }
 
-export interface MariaDbError extends Error {
+export interface SqlError extends Error {
   /**
    * Either a MySQL server error (e.g. 'ER_ACCESS_DENIED_ERROR'),
    * a node.js error (e.g. 'ECONNREFUSED') or an internal error
