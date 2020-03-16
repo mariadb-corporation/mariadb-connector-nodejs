@@ -404,4 +404,44 @@ describe('connection option', () => {
       })
       .catch(done);
   });
+
+  it('connection timeout', done => {
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
+      base
+        .createConnection({ multipleStatements: true, timeout: 1000 })
+        .then(conn => {
+          conn
+            .query(
+              'SELECT 1;select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+            )
+            .then(() => {
+              conn.end();
+              done(new Error('must have thrown error'));
+            })
+            .catch(err => {
+              console.log(err);
+              conn.close();
+              done();
+            });
+        })
+        .catch(done);
+    } else {
+      base
+        .createConnection({ multipleStatements: true, timeout: 1000 })
+        .then(conn => {
+          done(new Error('must have thrown error'));
+        })
+        .catch(err => {
+          assert.isTrue(
+            err.message.includes(
+              'Can only use timeout for MariaDB server after 10.1.1. timeout value:'
+            )
+          );
+          assert.equal(err.errno, 45038);
+          assert.equal(err.sqlState, 'HY000');
+          assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');
+          done();
+        });
+    }
+  });
 });
