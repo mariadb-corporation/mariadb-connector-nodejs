@@ -16,48 +16,48 @@ environment:
       MEM: "21"
       nodejs_version: "8"
 
-    - DB: '10.4.6'
+    - DB: '10.4.12'
       MEM: "21"
       nodejs_version: "10"
 
-    - DB: '10.4.6'
+    - DB: '10.4.12'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.4.6'
+    - DB: '10.4.12'
       nodejs_version: "12"
       MEM: "21"
       TEST_ZIP: 1
       SKIP_LEAK: "1"
 
-    - DB: '10.4.6'
+    - DB: '10.4.12'
       nodejs_version: "12"
       MEM: "21"
       BENCH: "1"
       SKIP_LEAK: "1"
 
-    - DB: '10.5.0'
+    - DB: '10.5.1'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.3.16'
+    - DB: '10.3.22'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.2.25'
+    - DB: '10.2.31'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.1.40'
+    - DB: '10.1.44'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '5.5.64'
+    - DB: '5.5.67'
       MEM: "5"
       nodejs_version: "12"
       SKIP_LEAK: "1"
