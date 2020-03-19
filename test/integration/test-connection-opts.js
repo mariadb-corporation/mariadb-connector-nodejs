@@ -405,7 +405,8 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('connection timeout', done => {
+  it('connection timeout', function(done) {
+    this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
         .createConnection({ multipleStatements: true, timeout: 1000 })
@@ -422,7 +423,7 @@ describe('connection option', () => {
               assert.equal(err.errno, 1969);
               assert.equal(err.sqlState, '70100');
               assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
-              conn.close();
+              conn.end();
               done();
             });
         })
@@ -431,6 +432,7 @@ describe('connection option', () => {
       base
         .createConnection({ multipleStatements: true, timeout: 1000 })
         .then(conn => {
+          conn.end();
           done(new Error('must have thrown error'));
         })
         .catch(err => {
