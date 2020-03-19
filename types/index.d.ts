@@ -248,6 +248,18 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   logPackets?: boolean;
 
   /**
+   * Force server version check by explicitly using SELECT VERSION(), not relying on server initial packet.
+   * (Default: false)
+   */
+  forceVersionCheck?: boolean;
+
+  /**
+   * indicate to throw an exception if result-set will not contain some data due to having duplicate identifier
+   * (Default: true)
+   */
+  checkDuplicate?: boolean;
+
+  /**
    * When enabled, the update number corresponds to update rows.
    * When disabled, it indicates the real rows changed.
    */
@@ -515,7 +527,7 @@ export interface Connection {
   escapeId(identifier: string): string;
 
   on(ev: 'end', callback: () => void): Connection;
-  on(ev: 'error', callback: (err: MariaDbError) => void): Connection;
+  on(ev: 'error', callback: (err: SqlError) => void): Connection;
 }
 
 export interface PoolConnection extends Connection {
@@ -611,7 +623,7 @@ export interface UpsertResult {
   warningStatus: number;
 }
 
-export interface MariaDbError extends Error {
+export interface SqlError extends Error {
   /**
    * Either a MySQL server error (e.g. 'ER_ACCESS_DENIED_ERROR'),
    * a node.js error (e.g. 'ECONNREFUSED') or an internal error

@@ -61,6 +61,9 @@ function Bench() {
   //standard implementation rollback/reset connection after use
   config.noControlAfterUse = true;
 
+  // default is true, but better to compare the same level of implementation
+  config.checkDuplicate = false;
+
   const poolConfig = Object.assign({ connectionLimit: 4 }, config);
   // config.debug = true;
   // if (!mariasql && process.platform === "win32") {

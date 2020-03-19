@@ -9,7 +9,7 @@ const PoolOptions = require('./lib/config/pool-options');
 const PoolClusterOptions = require('./lib/config/pool-cluster-options');
 
 module.exports.version = require('./package.json').version;
-
+module.exports.SqlError = require('./lib/misc/errors').SqlError;
 module.exports.createConnection = function createConnection(opts) {
   return new ConnectionCallback(new ConnOptions(opts));
 };

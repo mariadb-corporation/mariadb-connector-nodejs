@@ -35,6 +35,134 @@ describe('multi-results', () => {
       .catch(done);
   });
 
+  it('duplicate column', function(done) {
+    base
+      .createConnection()
+      .then(conn => {
+        conn.query('CREATE TEMPORARY TABLE t (i int)');
+        conn.query('INSERT INTO t(i) VALUES (1)');
+        conn
+          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+          .then(res => {
+            conn
+              .query('SELECT i, i FROM t')
+              .then(res => {
+                conn.close();
+                done(new Error('must have thrown an error'));
+              })
+              .catch(err => {
+                assert.isTrue(err.message.includes('Error in results, duplicate field name `i`'));
+                assert.equal(err.errno, 45040);
+                assert.equal(err.sqlState, 42000);
+                assert.equal(err.code, 'ER_DUPLICATE_FIELD');
+                conn.close();
+                done();
+              });
+          })
+          .catch(err => {
+            conn.close();
+            done(err);
+          });
+      })
+      .catch(done);
+  });
+
+  it('duplicate column disabled', function(done) {
+    base
+      .createConnection({ checkDuplicate: false })
+      .then(conn => {
+        conn.query('CREATE TEMPORARY TABLE t (i int)');
+        conn.query('INSERT INTO t(i) VALUES (1)');
+        conn
+          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+          .then(res => {
+            conn
+              .query('SELECT i, i FROM t')
+              .then(res => {
+                assert.deepEqual(res, [
+                  {
+                    i: 1
+                  }
+                ]);
+                conn.close();
+                done();
+              })
+              .catch(done);
+          })
+          .catch(err => {
+            conn.close();
+            done(err);
+          });
+      })
+      .catch(done);
+  });
+
+  it('duplicate column nestTables', function(done) {
+    base
+      .createConnection({ nestTables: true })
+      .then(conn => {
+        conn.query('CREATE TEMPORARY TABLE t (i int)');
+        conn.query('INSERT INTO t(i) VALUES (1)');
+        conn
+          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+          .then(res => {
+            conn
+              .query('SELECT i, i FROM t')
+              .then(res => {
+                conn.close();
+                done(new Error('must have thrown an error'));
+              })
+              .catch(err => {
+                assert.isTrue(
+                  err.message.includes('Error in results, duplicate field name `t`.`i`')
+                );
+                assert.equal(err.errno, 45040);
+                assert.equal(err.sqlState, 42000);
+                assert.equal(err.code, 'ER_DUPLICATE_FIELD');
+                conn.close();
+                done();
+              });
+          })
+          .catch(err => {
+            conn.close();
+            done(err);
+          });
+      })
+      .catch(done);
+  });
+
+  it('duplicate column disabled nestTables', function(done) {
+    base
+      .createConnection({ checkDuplicate: false, nestTables: true })
+      .then(conn => {
+        conn.query('CREATE TEMPORARY TABLE t (i int)');
+        conn.query('INSERT INTO t(i) VALUES (1)');
+        conn
+          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+          .then(res => {
+            conn
+              .query('SELECT i, i FROM t')
+              .then(res => {
+                assert.deepEqual(res, [
+                  {
+                    t: {
+                      i: 1
+                    }
+                  }
+                ]);
+                conn.close();
+                done();
+              })
+              .catch(done);
+          })
+          .catch(err => {
+            conn.close();
+            done(err);
+          });
+      })
+      .catch(done);
+  });
+
   it('simple do 1 with callback', function(done) {
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {
@@ -58,7 +186,7 @@ describe('multi-results', () => {
     });
   });
 
-  it('simple query with sql option andcallback', function(done) {
+  it('simple query with sql option and callback', function(done) {
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect(err => {
       if (err) {

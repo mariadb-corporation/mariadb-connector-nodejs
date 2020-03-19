@@ -89,8 +89,8 @@ describe('debug', () => {
 
               const serverVersion = conn.serverVersion();
               if (process.env.MAXSCALE_VERSION) compress = false;
-              const rangeWithEOF = compress ? [470, 688] : [670, 730];
-              const rangeWithoutEOF = compress ? [470, 500] : [570, 610];
+              const rangeWithEOF = compress ? [900, 1200] : [1900, 2400];
+              const rangeWithoutEOF = compress ? [900, 1200] : [1750, 2000];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
@@ -223,7 +223,7 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              const range = [2800, 4090];
+              const range = [5500, 6500];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +

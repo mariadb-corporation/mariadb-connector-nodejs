@@ -473,6 +473,8 @@ This option is only permitted for MariaDB server >= 10.1.2.
 This set a timeout to query operation. 
 Driver internally use `SET STATEMENT max_statement_time=<timeout> FOR <command>` permitting to cancel operation when timeout is reached, 
 
+limitation: when use for multiple-queries (option `multipleStatements` set), only the first query will be timeout !!! 
+
 Implementation of max_statement_time is engine dependent, so there might be some differences: For example, with Galera engine, a commits will ensure replication to other nodes to be done, possibly then exceeded timeout, to ensure proper server state. 
 
 
@@ -482,7 +484,7 @@ connection
   .query({sql: 'information_schema.tables, information_schema.tables as t2', timeout: 100 })
   .then(...)
   .catch(err => {
-          // SQLError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
+          // SqlError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
           // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
           // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
           // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)

@@ -51,7 +51,7 @@ describe('Pool', () => {
       const arr = ["let'g'o😊", false, null, fctStr];
       assert.equal(pool.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
 
-      assert.equal(pool.escapeId('good_$one'), 'good_$one');
+      assert.equal(pool.escapeId('good_$one'), '`good_$one`');
       assert.equal(pool.escape(''), "''");
       assert.equal(pool.escapeId('f:a'), '`f:a`');
       assert.equal(pool.escapeId('`f:a`'), '`f:a`');
@@ -64,7 +64,7 @@ describe('Pool', () => {
   it('pool escape on init', function() {
     const pool = base.createPool({ connectionLimit: 1 });
     assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
-    assert.equal(pool.escapeId('good_$one'), 'good_$one');
+    assert.equal(pool.escapeId('good_$one'), '`good_$one`');
     assert.equal(pool.escapeId('f:a'), '`f:a`');
     assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
 
