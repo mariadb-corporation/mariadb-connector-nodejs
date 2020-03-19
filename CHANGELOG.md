@@ -1,4 +1,18 @@
 # Change Log
+## [2.3.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.3.0) (19 Mar. 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.2.0...2.3.0)
+* CONJS-127 - Resultset with same identifier skip data. Now an error will be thrown.
+* CONJS-126 - permit setting session query timeout per option
+* CONJS-124 - Force connection.escapeId to emit backtick #101
+* CONJS-123 - exporting SqlError class to permit instanceOf checks #100
+* CONJS-122 - fix undefined localTz with timezone: 'Z' issue #92
+* CONJS-121 - Connection.escapeId must always quote value to permit reserved words
+
+misc:
+* appveyor testing server version upgrade
+* better debug logging trace format
+* correct ssl test
+
 ## [2.2.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.2.0) (03 Feb. 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.1.5...2.2.0)
 
