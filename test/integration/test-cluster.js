@@ -552,7 +552,7 @@ describe('cluster', function() {
       const filteredCluster = poolCluster.of(/^node2/);
       filteredCluster
         .query(
-          'SET STATEMENT max_statement_time=1 FOR select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
+          'SET STATEMENT max_statement_time=1 FOR select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
         )
         .catch(err => {
           //dismiss error

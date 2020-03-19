@@ -412,14 +412,16 @@ describe('connection option', () => {
         .then(conn => {
           conn
             .query(
-              'SELECT 1;select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+              'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
             )
             .then(() => {
               conn.end();
               done(new Error('must have thrown error'));
             })
             .catch(err => {
-              console.log(err);
+              assert.equal(err.errno, 1969);
+              assert.equal(err.sqlState, '70100');
+              assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
               conn.close();
               done();
             });

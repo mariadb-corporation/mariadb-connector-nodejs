@@ -366,7 +366,7 @@ describe('connection', () => {
       //launch very long query
       conn
         .query(
-          'select * from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
+          'select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
         )
         .then(() => done(new Error('expected error !')))
         .catch(err => {

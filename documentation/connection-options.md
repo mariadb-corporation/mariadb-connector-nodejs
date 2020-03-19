@@ -355,6 +355,7 @@ mariadb.createConnection({
 | **bulk** | disabled bulk command in batch|*boolean* |
 | **permitConnectionWhenExpired** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
 | **forceVersionCheck** | Force server version check by explicitly using SELECT VERSION(), not relying on server initial packet. |*boolean* |false|
+| **checkDuplicate** | indicate to throw an exception if result-set will not contain some data due to having duplicate identifier|*boolean* | true |
 
 
 

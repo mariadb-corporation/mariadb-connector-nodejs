@@ -246,7 +246,19 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * (Default: false)
    */
   logPackets?: boolean;
-
+  
+  /**
+   * Force server version check by explicitly using SELECT VERSION(), not relying on server initial packet.
+   * (Default: false)
+   */
+  forceVersionCheck?: boolean;
+  
+  /**
+   * indicate to throw an exception if result-set will not contain some data due to having duplicate identifier
+   * (Default: true)
+   */
+  checkDuplicate?: boolean;
+  
   /**
    * When enabled, the update number corresponds to update rows.
    * When disabled, it indicates the real rows changed.

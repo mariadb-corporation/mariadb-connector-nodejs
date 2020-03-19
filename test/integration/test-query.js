@@ -256,7 +256,7 @@ describe('basic query', () => {
   it('timeout', function(done) {
     const initTime = Date.now();
     const query =
-      'select * from information_schema.columns as c1, ' +
+      'select c1.* from information_schema.columns as c1, ' +
       'information_schema.tables, information_schema.tables as t2'; //takes more than 20s
     shareConn
       .query({ sql: query, timeout: 100 })
@@ -269,7 +269,7 @@ describe('basic query', () => {
   it('timeout with parameter', function(done) {
     const initTime = Date.now();
     const query =
-      'select * from information_schema.columns as c1, ' +
+      'select c1.* from information_schema.columns as c1, ' +
       'information_schema.tables, information_schema.tables as t2 WHERE 1 = ?'; //takes more than 20s
     shareConn
       .query({ sql: query, timeout: 100 }, [1])
