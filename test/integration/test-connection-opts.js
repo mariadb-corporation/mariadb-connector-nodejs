@@ -409,7 +409,7 @@ describe('connection option', () => {
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
-        .createConnection({ multipleStatements: true, timeout: 1000 })
+        .createConnection({ multipleStatements: true, queryTimeout: 1000 })
         .then(conn => {
           conn
             .query(
@@ -446,6 +446,34 @@ describe('connection option', () => {
           assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');
           done();
         });
+    }
+  });
+
+  it('connection timeout superseded', function(done) {
+    this.timeout(10000);
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
+      base
+        .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
+        .then(conn => {
+          conn
+            .query({
+              timeout: 1000,
+              sql:
+                'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+            })
+            .then(() => {
+              conn.end();
+              done(new Error('must have thrown error'));
+            })
+            .catch(err => {
+              assert.equal(err.errno, 1969);
+              assert.equal(err.sqlState, '70100');
+              assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
+              conn.end();
+              done();
+            });
+        })
+        .catch(done);
     }
   });
 });

@@ -4,6 +4,7 @@ const basePromise = require('../promise');
 const baseCallback = require('../callback');
 const Conf = require('./conf');
 const Collations = require('../lib/const/collations.js');
+const { assert } = require('chai');
 
 //*****************************************************************
 // initialize share connection

@@ -1,4 +1,9 @@
 # Change Log
+## [2.3.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.3.1) (19 Mar. 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.3.0...2.3.1)
+
+Corrective release of 2.3.0, changing new connection option `timeout` to `queryTimeout` to avoid any confusion.
+
 ## [2.3.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.3.0) (19 Mar. 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.2.0...2.3.0)
 * CONJS-127 - Resultset with same identifier skip data. Now an error will be thrown.
