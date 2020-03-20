@@ -254,7 +254,7 @@ describe('basic query', () => {
   });
 
   it('timeout', function(done) {
-    this.timeout(10000);
+    this.timeout(20000);
     const initTime = Date.now();
     const query =
       'select c1.* from information_schema.columns as c1, ' +
@@ -268,7 +268,7 @@ describe('basic query', () => {
   });
 
   it('timeout with parameter', function(done) {
-    this.timeout(10000);
+    this.timeout(20000);
     const initTime = Date.now();
     const query =
       'select c1.* from information_schema.columns as c1, ' +
@@ -284,7 +284,7 @@ describe('basic query', () => {
   const testTimeout = (done, initTime, err) => {
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       const elapse = Date.now() - initTime;
-      assert.isOk(elapse < 3000, 'elapse time was ' + elapse + ' but must be less around 100');
+      assert.isOk(elapse < 5000, 'elapse time was ' + elapse + ' but must be less around 100');
       assert.isTrue(
         err.message.includes('Query execution was interrupted (max_statement_time exceeded)')
       );
