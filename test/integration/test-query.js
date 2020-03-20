@@ -254,6 +254,7 @@ describe('basic query', () => {
   });
 
   it('timeout', function(done) {
+    this.timeout(10000);
     const initTime = Date.now();
     const query =
       'select c1.* from information_schema.columns as c1, ' +
@@ -267,6 +268,7 @@ describe('basic query', () => {
   });
 
   it('timeout with parameter', function(done) {
+    this.timeout(10000);
     const initTime = Date.now();
     const query =
       'select c1.* from information_schema.columns as c1, ' +
