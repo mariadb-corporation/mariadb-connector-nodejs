@@ -58,7 +58,6 @@ matrix:
     env: DB=mariadb:10.4 BENCH=1 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.4 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2 SKIP_LEAK=1
-
   - node_js: "12"
     env: DB=mariadb:10.1 SKIP_LEAK=1
   - node_js: "12"
@@ -70,7 +69,7 @@ matrix:
   - node_js: "12"
     env: DB=mysql:5.7 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mysql:8.0 SKIP_LEAK=1
+    env: DB=mysql:8.0 SKIP_LEAK=1 ADDITIONAL_CONF=--default-authentication-plugin=mysql_native_password
 
 notifications:
   email: false

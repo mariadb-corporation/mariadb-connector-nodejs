@@ -438,7 +438,7 @@ describe('connection option', () => {
         .catch(err => {
           assert.isTrue(
             err.message.includes(
-              'Can only use timeout for MariaDB server after 10.1.1. timeout value:'
+              'Can only use queryTimeout for MariaDB server after 10.1.1. queryTimeout value:'
             )
           );
           assert.equal(err.errno, 45038);

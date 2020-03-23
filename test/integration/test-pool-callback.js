@@ -21,7 +21,11 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
+              err.errno === 1524 ||
+                err.errno === 1045 ||
+                err.errno === 1698 ||
+                err.errno === 45028 ||
+                err.errno === 45025,
               err.message
             );
             pool.end();
@@ -41,7 +45,9 @@ describe('Pool callback', () => {
     this.timeout(10000);
     const pool = base.createPoolCallback({
       connectionLimit: 3,
-      user: 'wrongAuthentication'
+      user: 'wrongAuthentication',
+      acquireTimeout: 4000,
+      initializationTimeout: 2000
     });
     pool.getConnection(err => {
       if (!err) {
@@ -53,8 +59,12 @@ describe('Pool callback', () => {
             done(new Error('must have thrown error'));
           } else {
             assert.isTrue(
-              err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45028,
-              err.message
+              err.errno === 1524 ||
+                err.errno === 1045 ||
+                err.errno === 1698 ||
+                err.errno === 45028 ||
+                err.errno === 45025,
+              err.errno + ' - ' + err.message
             );
             done();
           }
