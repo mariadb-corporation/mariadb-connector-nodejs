@@ -16,6 +16,35 @@ describe('Pool', () => {
       //eat
     });
   });
+  
+  it('pool metaAsArray', function(done) {
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1
+    });
+    pool
+        .query({
+          sql:
+              'DROP TABLE IF EXISTS t; ' +
+              'CREATE TABLE t (i int);\n' +
+              'INSERT INTO t(i) VALUES (1);\n' +
+              'SELECT i FROM t; ',
+          timeout: 3000
+        })
+        .then(res => {
+          assert.equal(2, res.length);
+          assert.equal(4, res[0].length);
+          assert.equal(4, res[1].length);
+          assert.equal('i', res[1][3][0].name());
+          pool.end();
+          done();
+        })
+        .catch(err => {
+          pool.end();
+          done(err);
+        });
+  });
 
   it('pool escape', function() {
     if (!base.utf8Collation()) this.skip();
