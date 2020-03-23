@@ -58,16 +58,13 @@ matrix:
     env: DB=mariadb:10.4 BENCH=1 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.4 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2 SKIP_LEAK=1
-  - node_js: "12"
-    env: DB=mariadb:5.5 SKIP_LEAK=1
+
   - node_js: "12"
     env: DB=mariadb:10.1 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.2 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.3 SKIP_LEAK=1
-  - node_js: "12"
-    env: DB=mysql:5.5 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mysql:5.6 SKIP_LEAK=1
   - node_js: "12"
