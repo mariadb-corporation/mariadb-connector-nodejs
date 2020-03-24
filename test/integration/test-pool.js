@@ -24,14 +24,11 @@ describe('Pool', () => {
       connectionLimit: 1
     });
     pool
-        .query({
-          sql:
-              'DROP TABLE IF EXISTS t; ' +
+        .query('DROP TABLE IF EXISTS t; ' +
               'CREATE TABLE t (i int);\n' +
               'INSERT INTO t(i) VALUES (1);\n' +
-              'SELECT i FROM t; ',
-          timeout: 3000
-        })
+              'SELECT i FROM t; '
+        )
         .then(res => {
           assert.equal(2, res.length);
           assert.equal(4, res[0].length);
