@@ -451,7 +451,7 @@ describe('connection option', () => {
 
   it('connection timeout superseded', function(done) {
     this.timeout(10000);
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base
       .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
       .then(conn => {
