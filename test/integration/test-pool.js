@@ -16,7 +16,7 @@ describe('Pool', () => {
       //eat
     });
   });
-  
+
   it('pool metaAsArray', function(done) {
     const pool = base.createPool({
       metaAsArray: true,
@@ -24,23 +24,24 @@ describe('Pool', () => {
       connectionLimit: 1
     });
     pool
-        .query('DROP TABLE IF EXISTS t; ' +
-              'CREATE TABLE t (i int);\n' +
-              'INSERT INTO t(i) VALUES (1);\n' +
-              'SELECT i FROM t; '
-        )
-        .then(res => {
-          assert.equal(2, res.length);
-          assert.equal(4, res[0].length);
-          assert.equal(4, res[1].length);
-          assert.equal('i', res[1][3][0].name());
-          pool.end();
-          done();
-        })
-        .catch(err => {
-          pool.end();
-          done(err);
-        });
+      .query(
+        'DROP TABLE IF EXISTS t; ' +
+          'CREATE TABLE t (i int);\n' +
+          'INSERT INTO t(i) VALUES (1);\n' +
+          'SELECT i FROM t; '
+      )
+      .then(res => {
+        assert.equal(2, res.length);
+        assert.equal(4, res[0].length);
+        assert.equal(4, res[1].length);
+        assert.equal('i', res[1][3][0].name());
+        pool.end();
+        done();
+      })
+      .catch(err => {
+        pool.end();
+        done(err);
+      });
   });
 
   it('pool escape', function() {
