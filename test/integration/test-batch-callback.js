@@ -13,7 +13,7 @@ describe('batch callback', () => {
 
   let maxAllowedSize, bigBuf, timezoneParam;
 
-  before(function(done) {
+  before(function (done) {
     const hourOffset = Math.round((-1 * new Date().getTimezoneOffset()) / 60);
 
     if (hourOffset < 0) {
@@ -32,7 +32,7 @@ describe('batch callback', () => {
 
     shareConn
       .query('SELECT @@max_allowed_packet as t')
-      .then(row => {
+      .then((row) => {
         maxAllowedSize = row[0].t;
         if (testSize < maxAllowedSize) {
           bigBuf = Buffer.alloc(testSize);
@@ -41,7 +41,7 @@ describe('batch callback', () => {
           }
         }
         const buf = Buffer.from('abcdefghijkflmnopqrtuvwxyz🤘💪');
-        fs.writeFile(fileName, buf, 'utf8', function(err) {
+        fs.writeFile(fileName, buf, 'utf8', function (err) {
           if (err) {
             done(err);
           } else {
@@ -52,7 +52,7 @@ describe('batch callback', () => {
       .catch(done);
   });
 
-  beforeEach(function(done) {
+  beforeEach(function (done) {
     //just to ensure shared connection is not closed by server due to inactivity
     shareConn
       .ping()
@@ -62,8 +62,8 @@ describe('batch callback', () => {
       .catch(done);
   });
 
-  after(function() {
-    fs.unlink(fileName, err => {});
+  after(function () {
+    fs.unlink(fileName, (err) => {});
   });
 
   const simpleBatch = (useCompression, useBulk, timezone, done) => {
@@ -72,7 +72,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       timezone: timezone
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
 
       const timeout = setTimeout(() => {
@@ -212,7 +212,7 @@ describe('batch callback', () => {
       compress: useCompression,
       bulk: useBulk
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -280,7 +280,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       collation: 'CP1251_GENERAL_CI'
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -329,7 +329,7 @@ describe('batch callback', () => {
 
   const simpleBatchErrorMsg = (compression, useBulk, done) => {
     const conn = base.createCallbackConnection({ trace: true, bulk: useBulk });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -340,7 +340,7 @@ describe('batch callback', () => {
           [1, 'john'],
           [2, 'jack']
         ],
-        err => {
+        (err) => {
           if (!err) {
             return conn.end(() => {
               done(new Error('must have thrown error !'));
@@ -371,7 +371,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       timezone: timezone
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -458,7 +458,7 @@ describe('batch callback', () => {
       compress: useCompression,
       bulk: useBulk
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -517,7 +517,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -557,7 +557,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -622,7 +622,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -633,7 +633,7 @@ describe('batch callback', () => {
           [1, stream1, 99],
           [2, stream2, 98]
         ],
-        err => {
+        (err) => {
           if (!err) {
             return conn.end(() => {
               done(new Error('must have thrown error !'));
@@ -664,7 +664,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -726,7 +726,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -737,7 +737,7 @@ describe('batch callback', () => {
           { param_1: 1, param_2: 'john' },
           { param_1: 2, param_2: 'jack' }
         ],
-        err => {
+        (err) => {
           if (!err) {
             return conn.end(() => {
               done(new Error('must have thrown error !'));
@@ -768,7 +768,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -829,7 +829,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -892,7 +892,7 @@ describe('batch callback', () => {
       bulk: useBulk,
       logPackets: true
     });
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) return done(err);
       const timeout = setTimeout(() => {
         console.log(conn.info.getLastPackets());
@@ -903,7 +903,7 @@ describe('batch callback', () => {
           { id1: 1, id3: stream1, id4: 99, id5: 6 },
           { id1: 2, id3: stream2, id4: 98 }
         ],
-        err => {
+        (err) => {
           if (!err) {
             conn.end();
             done(new Error('must have thrown error !'));
@@ -928,29 +928,29 @@ describe('batch callback', () => {
 
   describe('standard question mark using bulk', () => {
     const useCompression = false;
-    it('simple batch, local date', function(done) {
+    it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
-    it('simple batch with option', function(done) {
+    it('simple batch with option', function (done) {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatchWithOptions(useCompression, true, done);
     });
 
-    it('batch without parameter', function(done) {
+    it('batch without parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
         conn
           .batch('INSERT INTO `blabla` values (?)')
-          .then(res => {
+          .then((res) => {
             conn.end();
             done(new Error('expect an error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.message.includes('Batch must have values set'), err.message);
             conn.end();
             done();
@@ -958,19 +958,19 @@ describe('batch callback', () => {
       });
     });
 
-    it('batch with erroneous parameter', function(done) {
+    it('batch with erroneous parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
         conn
           .batch('INSERT INTO `blabla` values (?, ?)', [
             [1, 2],
             [1, undefined]
           ])
-          .then(res => {
+          .then((res) => {
             conn.end();
             done(new Error('expect an error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(
               err.message.includes('Parameter at position 2 is undefined for values 1', err.message)
             );
@@ -980,47 +980,47 @@ describe('batch callback', () => {
       });
     });
 
-    it('simple batch offset date', function(done) {
+    it('simple batch offset date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
-    it('simple batch encoding CP1251', function(done) {
+    it('simple batch encoding CP1251', function (done) {
       this.timeout(30000);
       simpleBatchEncodingCP1251(useCompression, true, 'local', done);
     });
 
-    it('simple batch error message ', function(done) {
+    it('simple batch error message ', function (done) {
       this.timeout(30000);
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
-    it('simple batch error message packet split', function(done) {
+    it('simple batch error message packet split', function (done) {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatchErrorSplit(useCompression, true, 'local', done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
 
-    it('16M+ error batch', function(done) {
+    it('16M+ error batch', function (done) {
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
       bigBatchError(useCompression, true, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
 
-    it('batch error with streams', function(done) {
+    it('batch error with streams', function (done) {
       this.timeout(30000);
       batchErrorWithStream(useCompression, true, done);
     });
@@ -1029,43 +1029,43 @@ describe('batch callback', () => {
   describe('standard question mark and compress with bulk', () => {
     const useCompression = true;
 
-    it('simple batch, local date', function(done) {
+    it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
-    it('simple batch offset date', function(done) {
+    it('simple batch offset date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
-    it('simple batch error message ', function(done) {
+    it('simple batch error message ', function (done) {
       this.timeout(30000);
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
 
-    it('16M+ error batch', function(done) {
+    it('16M+ error batch', function (done) {
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
       bigBatchError(useCompression, true, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, true, done);
     });
 
-    it('batch error with streams', function(done) {
+    it('batch error with streams', function (done) {
       this.timeout(30000);
       batchErrorWithStream(useCompression, true, done);
     });
@@ -1074,23 +1074,23 @@ describe('batch callback', () => {
   describe('standard question mark using rewrite', () => {
     const useCompression = false;
 
-    it('simple batch, local date', function(done) {
+    it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
-    it('batch without parameter', function(done) {
+    it('batch without parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: false }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: false }).then((conn) => {
         conn
           .batch('INSERT INTO `blabla` values (?)')
-          .then(res => {
+          .then((res) => {
             conn.end();
             done(new Error('expect an error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.message.includes('Batch must have values set'), err.message);
             conn.end();
             done();
@@ -1098,16 +1098,16 @@ describe('batch callback', () => {
       });
     });
 
-    it('batch with erroneous parameter', function(done) {
+    it('batch with erroneous parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
         conn
           .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]])
-          .then(res => {
+          .then((res) => {
             conn.end();
             done(new Error('expect an error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(
               err.message.includes('Parameter at position 2 is not set for values 1'),
               err.message
@@ -1118,19 +1118,19 @@ describe('batch callback', () => {
       });
     });
 
-    it('batch with undefined parameter', function(done) {
+    it('batch with undefined parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then(conn => {
+      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
         conn
           .batch('INSERT INTO `blabla` values (?,?)', [
             [1, 2],
             [1, undefined]
           ])
-          .then(res => {
+          .then((res) => {
             conn.end();
             done(new Error('expect an error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(
               err.message.includes('Parameter at position 2 is undefined for values 1'),
               err.message
@@ -1141,30 +1141,30 @@ describe('batch callback', () => {
       });
     });
 
-    it('simple batch offset date', function(done) {
+    it('simple batch offset date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 
-    it('simple batch error message ', function(done) {
+    it('simple batch error message ', function (done) {
       this.timeout(30000);
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, false, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
 
-    it('batch error with streams', function(done) {
+    it('batch error with streams', function (done) {
       this.timeout(30000);
       batchErrorWithStream(useCompression, false, done);
     });
@@ -1173,87 +1173,87 @@ describe('batch callback', () => {
   describe('standard question mark and compress with rewrite', () => {
     const useCompression = true;
 
-    it('simple batch, local date', function(done) {
+    it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
-    it('simple batch offset date', function(done) {
+    it('simple batch offset date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
 
-    it('simple batch error message ', function(done) {
+    it('simple batch error message ', function (done) {
       this.timeout(30000);
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableBatch(useCompression, false, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       batchWithStream(useCompression, false, done);
     });
 
-    it('batch error with streams', function(done) {
+    it('batch error with streams', function (done) {
       this.timeout(30000);
       batchErrorWithStream(useCompression, false, done);
     });
   });
 
   describe('named parameter with bulk', () => {
-    it('simple batch', function(done) {
+    it('simple batch', function (done) {
       this.timeout(30000);
       simpleNamedPlaceHolders(true, done);
     });
 
-    it('simple batch error', function(done) {
+    it('simple batch error', function (done) {
       this.timeout(30000);
       simpleNamedPlaceHoldersErr(true, done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableHoldersErr(true, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(true, done);
     });
 
-    it('batch error with streams', function(done) {
+    it('batch error with streams', function (done) {
       this.timeout(30000);
       streamErrorNamedPlaceHolders(true, done);
     });
   });
 
   describe('named parameter with rewrite', () => {
-    it('simple batch', function(done) {
+    it('simple batch', function (done) {
       this.timeout(30000);
       simpleNamedPlaceHolders(false, done);
     });
 
-    it('simple batch error', function(done) {
+    it('simple batch error', function (done) {
       this.timeout(30000);
       simpleNamedPlaceHoldersErr(false, done);
     });
 
-    it('non rewritable batch', function(done) {
+    it('non rewritable batch', function (done) {
       this.timeout(30000);
       nonRewritableHoldersErr(false, done);
     });
 
-    it('batch with streams', function(done) {
+    it('batch with streams', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       streamNamedPlaceHolders(false, done);

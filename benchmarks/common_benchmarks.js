@@ -39,14 +39,14 @@ function Bench() {
   this.driverLen = 2;
 
   this.ready = 0;
-  this.suiteReady = function() {
+  this.suiteReady = function () {
     this.ready++;
     if (this.ready === 2) {
       this.suite.run();
     }
   };
 
-  const dbReady = function(name, driverLen) {
+  const dbReady = function (name, driverLen) {
     bench.dbReady++;
     console.log('driver for ' + name + ' connected (' + bench.dbReady + '/' + driverLen + ')');
     if (bench.dbReady === driverLen) {
@@ -81,19 +81,19 @@ function Bench() {
     connList['PROMISE_MYSQL'] = { desc: 'promise-mysql', promise: true };
     promiseMysql
       .createConnection(config)
-      .then(conn => {
+      .then((conn) => {
         promiseMysql
           .createPool(poolConfig)
-          .then(pool => {
+          .then((pool) => {
             connList['PROMISE_MYSQL'].drv = conn;
             connList['PROMISE_MYSQL'].pool = pool;
             dbReady('promise-mysql', this.driverLen);
           })
-          .catch(err => {
+          .catch((err) => {
             throw err;
           });
       })
-      .catch(err => {
+      .catch((err) => {
         throw err;
       });
   }
@@ -102,9 +102,9 @@ function Bench() {
     this.driverLen++;
     connList['MYSQL'] = { desc: 'mysql', promise: false };
     const conn = mysql.createConnection(config);
-    conn.connect(err => {
+    conn.connect((err) => {
       connList['MYSQL'].drv = conn;
-      conn.on('error', err => console.log('driver mysql error :' + err));
+      conn.on('error', (err) => console.log('driver mysql error :' + err));
       dbReady('mysql', this.driverLen);
     });
   }
@@ -115,7 +115,7 @@ function Bench() {
     const conn = mysql2.createConnection(config);
     conn.connect(() => {
       connList['MYSQL2'].drv = conn;
-      conn.on('error', err => console.log('driver mysql2 error :' + err));
+      conn.on('error', (err) => console.log('driver mysql2 error :' + err));
       dbReady('mysql2', this.driverLen);
     });
   }
@@ -125,13 +125,13 @@ function Bench() {
     connList['PROMISE_MYSQL2'] = { desc: 'promise mysql2', promise: true };
     promiseMysql2
       .createConnection(config)
-      .then(conn => {
+      .then((conn) => {
         connList['PROMISE_MYSQL2'].drv = conn;
-        conn.on('error', err => console.log('driver mysql2 promise error :' + err));
+        conn.on('error', (err) => console.log('driver mysql2 promise error :' + err));
         connList['PROMISE_MYSQL2'].pool = promiseMysql2.createPool(poolConfig);
         dbReady('promise mysql2', this.driverLen);
       })
-      .catch(err => {
+      .catch((err) => {
         throw err;
       });
   }
@@ -140,20 +140,20 @@ function Bench() {
   connList['MARIADB'] = { desc: 'mariadb', promise: true };
   mariaConn.connect(() => {
     connList['MARIADB'].drv = mariaConn;
-    mariaConn.on('error', err => console.log('driver mariadb error :' + err));
+    mariaConn.on('error', (err) => console.log('driver mariadb error :' + err));
     dbReady('mariadb', this.driverLen);
   });
 
   connList['PROMISE_MARIADB'] = { desc: 'promise mariadb', promise: false };
   mariadb
     .createConnection(config)
-    .then(conn => {
+    .then((conn) => {
       connList['PROMISE_MARIADB'].drv = conn;
-      conn.on('error', err => console.log('driver mariadb promise error :' + err));
+      conn.on('error', (err) => console.log('driver mariadb promise error :' + err));
       connList['PROMISE_MARIADB'].pool = mariadb.createPool(poolConfig);
       dbReady('promise-mariadb', this.driverLen);
     })
-    .catch(err => {
+    .catch((err) => {
       throw err;
     });
 
@@ -171,11 +171,11 @@ function Bench() {
     connList['PROMISE_MARIASQL'] = { desc: 'promise mariasql', promise: false };
     promiseMariasql
       .createConnection(config)
-      .then(conn => {
+      .then((conn) => {
         connList['PROMISE_MARIASQL'].drv = conn;
         dbReady('promise-mariasql', this.driverLen);
       })
-      .catch(err => {
+      .catch((err) => {
         throw err;
       });
   }
@@ -184,7 +184,7 @@ function Bench() {
     this.driverLen++;
     connList['MARIASQL'] = { desc: 'mariasql', drv: conn, promise: true };
     const conn = mariasql.createConnection(config);
-    conn.connect(err => {
+    conn.connect((err) => {
       connList['MARIASQL'].drv = conn;
       dbReady('mariasql', this.driverLen);
     });
@@ -196,7 +196,7 @@ function Bench() {
 
   this.suite = new Benchmark.Suite('foo', {
     // called when the suite starts running
-    onStart: function() {
+    onStart: function () {
       console.log('start : init test : ' + bench.initFcts.length);
       for (let i = 0; i < bench.initFcts.length; i++) {
         console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
@@ -212,7 +212,7 @@ function Bench() {
     },
 
     // called between running benchmarks
-    onCycle: function(event) {
+    onCycle: function (event) {
       this.currentNb++;
       if (this.currentNb < this.length) pingAll(connList);
       //to avoid mysql2 taking all the server memory
@@ -237,14 +237,14 @@ function Bench() {
       }
     },
     // called when the suite completes running
-    onComplete: function() {
+    onComplete: function () {
       console.log('completed');
       bench.end(bench);
     }
   });
 }
 
-Bench.prototype.end = function(bench) {
+Bench.prototype.end = function (bench) {
   console.log('ending connectors');
   this.endConnection(this.CONN.MARIADB);
   this.endConnection(this.CONN.PROMISE_MARIADB);
@@ -258,7 +258,7 @@ Bench.prototype.end = function(bench) {
   bench.displayReport();
 };
 
-Bench.prototype.endConnection = function(conn) {
+Bench.prototype.endConnection = function (conn) {
   try {
     //using destroy, because MySQL driver fail when using end() for windows named pipe
     conn.drv.destroy();
@@ -267,15 +267,15 @@ Bench.prototype.endConnection = function(conn) {
     console.log(err);
   }
   if (conn.pool) {
-    if (conn.pool.on) conn.pool.on('error', err => {});
-    conn.pool.end().catch(err => {
+    if (conn.pool.on) conn.pool.on('error', (err) => {});
+    conn.pool.end().catch((err) => {
       console.log("ending error for pool '" + conn.desc + "'");
       console.log(err);
     });
   }
 };
 
-Bench.prototype.displayReport = function() {
+Bench.prototype.displayReport = function () {
   const simpleFormat = new Intl.NumberFormat('en-EN', {
     maximumFractionDigits: 1
   });
@@ -338,7 +338,7 @@ Bench.prototype.displayReport = function() {
   }
 };
 
-Bench.prototype.fill = function(val, length, right) {
+Bench.prototype.fill = function (val, length, right) {
   if (right) {
     while (val.length < length) {
       val += ' ';
@@ -351,7 +351,7 @@ Bench.prototype.fill = function(val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, usePool, conn) {
+Bench.prototype.add = function (title, displaySql, fct, onComplete, isPromise, usePool, conn) {
   const self = this;
   const addTest = getAddTest(
     self,
@@ -405,11 +405,11 @@ Bench.prototype.add = function(title, displaySql, fct, onComplete, isPromise, us
   }
 };
 
-const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
-  return function(conn, name) {
+const getAddTest = function (self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
+  return function (conn, name) {
     suite.add({
       name: title + ' - ' + name,
-      fn: function(deferred) {
+      fn: function (deferred) {
         fct.call(self, usePool ? conn.pool : conn.drv, deferred, conn);
       },
       onComplete: () => {
@@ -424,19 +424,19 @@ const getAddTest = function(self, suite, fct, minSamples, title, displaySql, onC
   };
 };
 
-const pingAll = function(conns) {
+const pingAll = function (conns) {
   let keys = Object.keys(conns);
   for (let k = 0; k < keys.length; ++k) {
     conns[keys[k]].drv.ping();
     if (conns[keys[k]].pool) {
       for (let i = 0; i < 4; i++) {
-        conns[keys[k]].pool.getConnection().then(conn => {
+        conns[keys[k]].pool.getConnection().then((conn) => {
           conn
             .ping()
             .then(() => {
               conn.release();
             })
-            .catch(err => {
+            .catch((err) => {
               conn.release();
             });
         });

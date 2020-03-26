@@ -5,25 +5,25 @@ const { assert } = require('chai');
 const moment = require('moment-timezone');
 
 describe('connection option', () => {
-  it('with undefined collation', function(done) {
+  it('with undefined collation', function (done) {
     base
       .createConnection({ charset: 'unknown' })
       .then(() => {
         done(new Error('must have thrown error!'));
       })
-      .catch(err => {
+      .catch((err) => {
         assert(err.message.includes('Unknown charset'));
         done();
       });
   });
 
-  it('wrong IANA timezone', function(done) {
+  it('wrong IANA timezone', function (done) {
     base
       .createConnection({ timezone: 'unknown' })
       .then(() => {
         done(new Error('must have thrown error'));
       })
-      .catch(err => {
+      .catch((err) => {
         assert.isTrue(err.message.includes("Unknown IANA timezone 'unknown'"));
         assert.equal(err.errno, 45033);
         assert.equal(err.sqlState, '08S01');
@@ -32,11 +32,11 @@ describe('connection option', () => {
       });
   });
 
-  it('automatic timezone', function(done) {
+  it('automatic timezone', function (done) {
     let mustFail = true;
     shareConn
       .query('SELECT @@system_time_zone stz, @@time_zone tz')
-      .then(res => {
+      .then((res) => {
         const serverTimezone = res[0].tz === 'SYSTEM' ? res[0].stz : res[0].tz;
         const serverZone = moment.tz.zone(serverTimezone);
         if (serverZone) {
@@ -45,7 +45,7 @@ describe('connection option', () => {
 
         base
           .createConnection({ timezone: 'auto' })
-          .then(conn => {
+          .then((conn) => {
             conn.end();
             if (mustFail) {
               done(new Error('must have thrown error'));
@@ -53,7 +53,7 @@ describe('connection option', () => {
               done();
             }
           })
-          .catch(err => {
+          .catch((err) => {
             if (mustFail) {
               assert.isTrue(err.message.includes('Automatic timezone setting fails'));
               assert.equal(err.errno, 45036);
@@ -68,14 +68,14 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('timezone Z', function(done) {
+  it('timezone Z', function (done) {
     base
       .createConnection({ timezone: 'Z' })
-      .then(conn => {
+      .then((conn) => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
-          .then(res => {
+          .then((res) => {
             // = 1999-12-31T23:00:00.000Z
             assert.deepEqual(res[0].tt, 946681200);
             return conn.query(
@@ -83,7 +83,7 @@ describe('connection option', () => {
               [new Date('2000-01-01T00:00:00Z')]
             );
           })
-          .then(res => {
+          .then((res) => {
             assert.deepEqual(res[0].tt1, new Date('2003-12-31T13:00:00+01:00'));
             assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
             return conn.end();
@@ -96,21 +96,21 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('timezone +2h', function(done) {
+  it('timezone +2h', function (done) {
     base
       .createConnection({ timezone: '+02' })
-      .then(conn => {
+      .then((conn) => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
-          .then(res => {
+          .then((res) => {
             assert.deepEqual(res[0].tt, 946688400);
             return conn.query(
               "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
               [new Date('2000-01-01T00:00:00Z')]
             );
           })
-          .then(res => {
+          .then((res) => {
             assert.deepEqual(res[0].tt1, new Date('2003-12-31T11:00:00+01:00'));
             assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
             return conn.end();
@@ -123,14 +123,14 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('timezone +2h00', function(done) {
+  it('timezone +2h00', function (done) {
     base
       .createConnection({ timezone: '+02:00' })
-      .then(conn => {
+      .then((conn) => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')])
-          .then(res => {
+          .then((res) => {
             //946688400 => 2000-01-01T01:00:00.000Z
             assert.deepEqual(res[0].tt, 946688400);
             return conn.end();
@@ -143,14 +143,14 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('timezone +1h', function(done) {
+  it('timezone +1h', function (done) {
     base
       .createConnection({ timezone: '+01:00' })
-      .then(conn => {
+      .then((conn) => {
         conn.query("SET SESSION time_zone = '+01:00'");
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
-          .then(res => {
+          .then((res) => {
             assert.deepEqual(res[0].tt, 946681200);
             return conn.end();
           })
@@ -162,14 +162,14 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('timezone -1h', function(done) {
+  it('timezone -1h', function (done) {
     base
       .createConnection({ timezone: '-01:00' })
-      .then(conn => {
+      .then((conn) => {
         conn.query("SET SESSION time_zone = '-01:00'");
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
-          .then(res => {
+          .then((res) => {
             assert.deepEqual(res[0].tt, 946681200);
             return conn.end();
           })
@@ -181,13 +181,13 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('wrong timezone format', function(done) {
+  it('wrong timezone format', function (done) {
     base
       .createConnection({ timezone: '+e:00' })
-      .then(conn => {
+      .then((conn) => {
         done(new Error('Must have thrown exception'));
       })
-      .catch(err => {
+      .catch((err) => {
         assert.isTrue(err.message.includes("Unknown IANA timezone '+e:00'"));
         assert.equal(err.errno, 45033);
         assert.equal(err.sqlState, '08S01');
@@ -196,40 +196,40 @@ describe('connection option', () => {
       });
   });
 
-  it('IANA local tz', function(done) {
+  it('IANA local tz', function (done) {
     const localTz = moment.tz.guess();
     base
       .createConnection({ timezone: localTz })
-      .then(conn => {
+      .then((conn) => {
         conn.end();
         done();
       })
       .catch(done);
   });
 
-  it('IANA tz links', function(done) {
+  it('IANA tz links', function (done) {
     moment.tz.link(moment.tz.guess() + '|myLink');
     base
       .createConnection({ timezone: 'myLink' })
-      .then(conn => {
+      .then((conn) => {
         conn.end();
         done();
       })
       .catch(done);
   });
 
-  it('Server with different tz', function(done) {
+  it('Server with different tz', function (done) {
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
     base
       .createConnection({ timezone: 'Etc/GMT+5' })
-      .then(conn => {
+      .then((conn) => {
         const now = new Date();
         conn.query("SET SESSION time_zone = '-05:00'");
         conn.query('CREATE TEMPORARY TABLE t1 (a timestamp(6))');
         conn.query('INSERT INTO t1 values (?)', now);
-        conn.query('SELECT NOW() as b, t1.a FROM t1').then(res => {
+        conn.query('SELECT NOW() as b, t1.a FROM t1').then((res) => {
           assert.deepEqual(res[0].a, now);
           assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
           conn.end();
@@ -239,17 +239,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('nestTables results boolean', function(done) {
+  it('nestTables results boolean', function (done) {
     base
       .createConnection({ nestTables: true })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query('SELECT * FROM t1, t2')
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               { t1: { a: 'bla' }, t2: { b: 'bou' } },
               { t1: { a: 'bla2' }, t2: { b: 'bou' } }
@@ -264,17 +264,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('nestTables results string', function(done) {
+  it('nestTables results string', function (done) {
     base
       .createConnection({ nestTables: '_' })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query('SELECT * FROM t1, t2')
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               { t1_a: 'bla', t2_b: 'bou' },
               { t1_a: 'bla2', t2_b: 'bou' }
@@ -289,17 +289,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('rows as array', function(done) {
+  it('rows as array', function (done) {
     base
       .createConnection({ rowsAsArray: true })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query('SELECT * FROM t1, t2')
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               ['bla', 'bou'],
               ['bla2', 'bou']
@@ -314,17 +314,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('query option rows as array', function(done) {
+  it('query option rows as array', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               ['bla', 'bou'],
               ['bla2', 'bou']
@@ -339,17 +339,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('nestTables results query boolean', function(done) {
+  it('nestTables results query boolean', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query({ nestTables: true, sql: 'SELECT * FROM t1, t2' })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               { t1: { a: 'bla' }, t2: { b: 'bou' } },
               { t1: { a: 'bla2' }, t2: { b: 'bou' } }
@@ -364,17 +364,17 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('nestTables results query string', function(done) {
+  it('nestTables results query string', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
         conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
         conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
         conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
           .query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               { t1_a: 'bla', t2_b: 'bou' },
               { t1_a: 'bla2', t2_b: 'bou' }
@@ -389,13 +389,13 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('force version check', function(done) {
+  it('force version check', function (done) {
     base
       .createConnection({ forceVersionCheck: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT 1')
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [{ '1': 1 }]);
             conn.end();
             done();
@@ -405,12 +405,12 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('connection timeout', function(done) {
+  it('connection timeout', function (done) {
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
         .createConnection({ multipleStatements: true, queryTimeout: 1000 })
-        .then(conn => {
+        .then((conn) => {
           conn
             .query(
               'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
@@ -419,7 +419,7 @@ describe('connection option', () => {
               conn.end();
               done(new Error('must have thrown error'));
             })
-            .catch(err => {
+            .catch((err) => {
               assert.equal(err.errno, 1969);
               assert.equal(err.sqlState, '70100');
               assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
@@ -431,11 +431,11 @@ describe('connection option', () => {
     } else {
       base
         .createConnection({ multipleStatements: true, queryTimeout: 1000 })
-        .then(conn => {
+        .then((conn) => {
           conn.end();
           done(new Error('must have thrown error'));
         })
-        .catch(err => {
+        .catch((err) => {
           assert.isTrue(
             err.message.includes(
               'Can only use queryTimeout for MariaDB server after 10.1.1. queryTimeout value:'
@@ -449,12 +449,12 @@ describe('connection option', () => {
     }
   });
 
-  it('connection timeout superseded', function(done) {
+  it('connection timeout superseded', function (done) {
     this.timeout(10000);
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base
       .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query({
             timeout: 1000,
@@ -465,7 +465,7 @@ describe('connection option', () => {
             conn.end();
             done(new Error('must have thrown error'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.equal(err.errno, 1969);
             assert.equal(err.sqlState, '70100');
             assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');

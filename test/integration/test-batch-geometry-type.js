@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 
 describe('batch geometry type', () => {
-  it('Point format', function(done) {
+  it('Point format', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query('CREATE TEMPORARY TABLE gis_point_batch  (g POINT)');
@@ -53,7 +53,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_point_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -91,7 +91,7 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('LineString insert', function(done) {
+  it('LineString insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query('CREATE TEMPORARY TABLE gis_line_batch (g LINESTRING)');
     shareConn
@@ -127,7 +127,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_line_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
@@ -187,7 +187,7 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('Polygon insert', function(done) {
+  it('Polygon insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query('CREATE TEMPORARY TABLE gis_polygon_batch (g POLYGON)');
     shareConn
@@ -254,7 +254,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_polygon_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
@@ -358,7 +358,7 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('MultiPoint insert', function(done) {
+  it('MultiPoint insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query('CREATE TEMPORARY TABLE gis_multi_point_batch (g MULTIPOINT)');
     shareConn
@@ -381,7 +381,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_point_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
@@ -446,7 +446,7 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('Multi-line insert', function(done) {
+  it('Multi-line insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
     shareConn.query('CREATE TEMPORARY TABLE gis_multi_line_batch (g MULTILINESTRING)');
     shareConn
@@ -487,7 +487,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_line_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
@@ -585,7 +585,7 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('Multi-polygon insert', function(done) {
+  it('Multi-polygon insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query('CREATE TEMPORARY TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
@@ -673,7 +673,7 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_polygon_batch');
       })
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) {
           assert.deepEqual(rows, [
             {
@@ -832,12 +832,12 @@ describe('batch geometry type', () => {
       .catch(done);
   });
 
-  it('Geometry collection insert', function(done) {
+  it('Geometry collection insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)');
         conn
           .batch('INSERT INTO gis_geometrycollection_batch VALUES (?)', [
@@ -946,7 +946,7 @@ describe('batch geometry type', () => {
           .then(() => {
             return conn.query('SELECT * FROM gis_geometrycollection_batch');
           })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               {
                 g: {
@@ -1054,7 +1054,7 @@ describe('batch geometry type', () => {
             conn.end();
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             conn.end();
             done(err);
           });

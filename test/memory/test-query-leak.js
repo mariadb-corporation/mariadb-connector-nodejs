@@ -11,7 +11,7 @@ try {
 const { assert } = require('chai');
 
 describe('leaks', () => {
-  it('1000 select leaking test', function(done) {
+  it('1000 select leaking test', function (done) {
     if (!memwatch) this.skip();
     this.timeout(20000);
     const hd = new memwatch.HeapDiff();
@@ -22,7 +22,7 @@ describe('leaks', () => {
       .catch(done);
   });
 
-  it('1000 select pipeline leaking test', function(done) {
+  it('1000 select pipeline leaking test', function (done) {
     if (!memwatch) this.skip();
     this.timeout(20000);
 
@@ -38,9 +38,9 @@ describe('leaks', () => {
   });
 });
 
-const queryUsers = queryCount => {
+const queryUsers = (queryCount) => {
   if (queryCount > 0) {
-    shareConn.query('SELECT * FROM mysql.user').then(rows => {
+    shareConn.query('SELECT * FROM mysql.user').then((rows) => {
       return queryUsers(--queryCount);
     });
   }
@@ -69,7 +69,7 @@ const handleDiff = (hd, done) => {
   }
 };
 
-const queryPipelineUsers = queryCount => {
+const queryPipelineUsers = (queryCount) => {
   const queries = [];
   for (let i = 0; i < queryCount; i++) {
     queries.push(shareConn.query('SELECT * FROM mysql.user'));
@@ -80,7 +80,7 @@ const queryPipelineUsers = queryCount => {
       // disturbing results
       return Promise.resolve();
     })
-    .catch(err => {
+    .catch((err) => {
       return Promise.reject(err);
     });
 };

@@ -9,11 +9,11 @@ const path = require('path');
 const os = require('os');
 
 describe('Pool callback event', () => {
-  it('pool connection creation', function(done) {
+  it('pool connection creation', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback();
     let connectionNumber = 0;
-    pool.on('connection', conn => {
+    pool.on('connection', (conn) => {
       assert.isTrue(conn !== undefined);
       connectionNumber++;
     });
@@ -24,7 +24,7 @@ describe('Pool callback event', () => {
     }, 2000);
   });
 
-  it('pool connection acquire', function(done) {
+  it('pool connection acquire', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     let acquireNumber = 0;
     pool.on('acquire', () => {
@@ -42,7 +42,7 @@ describe('Pool callback event', () => {
     });
   });
 
-  it('pool connection enqueue', function(done) {
+  it('pool connection enqueue', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     let enqueueNumber = 0;
@@ -50,7 +50,7 @@ describe('Pool callback event', () => {
     pool.on('enqueue', () => {
       enqueueNumber++;
     });
-    pool.on('release', conn => {
+    pool.on('release', (conn) => {
       assert.isTrue(conn !== undefined);
       releaseNumber++;
     });

@@ -5,7 +5,7 @@ const { assert } = require('chai');
 const Long = require('long');
 
 describe('integer with big value', () => {
-  before(done => {
+  before((done) => {
     shareConn
       .query('CREATE TEMPORARY TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)')
       .then(() => {
@@ -14,7 +14,7 @@ describe('integer with big value', () => {
       .catch(done);
   });
 
-  it('int escape', function(done) {
+  it('int escape', function (done) {
     const buf = 19925;
     assert.equal(shareConn.escape(buf), '19925');
     const maxValue = Long.fromString('18446744073709551615', true);
@@ -22,31 +22,31 @@ describe('integer with big value', () => {
 
     shareConn
       .query(' SELECT ' + shareConn.escape(buf) + ' t')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ t: buf }]);
         done();
       })
       .catch(done);
   });
 
-  it('bigint format', done => {
+  it('bigint format', (done) => {
     shareConn
       .query('INSERT INTO testBigint values (127), (128)')
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.insertId, 128);
         return shareConn.query(
           'INSERT INTO testBigint values (-9007199254740991), (9007199254740991)'
         );
       })
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.insertId, 9007199254740991);
         return shareConn.query('INSERT INTO testBigint values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.insertId.toNumber(), 9007199254740992);
         return shareConn.query('SELECT * FROM testBigint');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.length, 5);
         assert.strictEqual(rows[0].v, -9007199254740991);
         assert.strictEqual(rows[1].v, 127);
@@ -59,7 +59,7 @@ describe('integer with big value', () => {
           sql: 'SELECT * FROM testBigint'
         });
       })
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.length, 5);
         assert.strictEqual(rows[0].v, -9007199254740991);
         assert.strictEqual(rows[1].v, 127);
@@ -72,7 +72,7 @@ describe('integer with big value', () => {
           sql: 'SELECT * FROM testBigint'
         });
       })
-      .then(rows => {
+      .then((rows) => {
         assert.strictEqual(rows.length, 5);
         assert.strictEqual(rows[0].v, -9007199254740991);
         assert.strictEqual(rows[1].v, 127);
@@ -85,11 +85,11 @@ describe('integer with big value', () => {
       .catch(done);
   });
 
-  it('bigint format null ', done => {
+  it('bigint format null ', (done) => {
     shareConn.query('CREATE TEMPORARY TABLE testBigintNull (v BIGINT)');
     shareConn.query('INSERT INTO testBigintNull values (127), (null)');
 
-    const checkResult = rows => {
+    const checkResult = (rows) => {
       assert.strictEqual(rows.length, 2);
       assert.strictEqual(rows[0].v, 127);
       assert.strictEqual(rows[1].v, null);
@@ -99,13 +99,15 @@ describe('integer with big value', () => {
     shareConn
       .query({ supportBigNumbers: true, sql: 'SELECT * FROM testBigintNull' })
       .then(checkResult);
-    shareConn.query({ bigNumberStrings: true, sql: 'SELECT * FROM testBigintNull' }).then(rows => {
-      checkResult(rows);
-      done();
-    });
+    shareConn
+      .query({ bigNumberStrings: true, sql: 'SELECT * FROM testBigintNull' })
+      .then((rows) => {
+        checkResult(rows);
+        done();
+      });
   });
 
-  it('numeric fields conversion to int', done => {
+  it('numeric fields conversion to int', (done) => {
     shareConn.query(
       'CREATE TEMPORARY TABLE intAllField (' +
         't1 TINYINT(1), t2 SMALLINT(1), t3 MEDIUMINT(1), t4 INT(1), t5 BIGINT(1), t6 DECIMAL(1), t7 FLOAT, t8 DOUBLE)'
@@ -119,7 +121,7 @@ describe('integer with big value', () => {
 
     shareConn
       .query('SELECT * FROM intAllField')
-      .then(res => {
+      .then((res) => {
         assert.deepEqual(res, [
           {
             t1: null,
@@ -140,16 +142,16 @@ describe('integer with big value', () => {
       .catch(done);
   });
 
-  it('using very big number', function(done) {
+  it('using very big number', function (done) {
     const maxValue = Long.fromString('18446744073709551615', true);
-    base.createConnection({ supportBigNumbers: true }).then(conn => {
+    base.createConnection({ supportBigNumbers: true }).then((conn) => {
       conn.query('CREATE TEMPORARY TABLE BIG_NUMBER (val BIGINT unsigned)');
       conn
         .query('INSERT INTO BIG_NUMBER values (?), (?)', [10, maxValue])
         .then(() => {
           return conn.query('SELECT * FROM BIG_NUMBER LIMIT ?', [maxValue]);
         })
-        .then(res => {
+        .then((res) => {
           assert.deepEqual(res, [{ val: 10 }, { val: maxValue }]);
           conn.end();
           done();

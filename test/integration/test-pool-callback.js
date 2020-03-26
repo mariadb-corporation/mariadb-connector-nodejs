@@ -5,18 +5,18 @@ const { assert } = require('chai');
 const Conf = require('../conf');
 
 describe('Pool callback', () => {
-  it('pool with wrong authentication', function(done) {
+  it('pool with wrong authentication', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
       user: 'wrongAuthentication'
     });
-    pool.query('SELECT 1', err => {
+    pool.query('SELECT 1', (err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
-        pool.query('SELECT 3', err => {
+        pool.query('SELECT 3', (err) => {
           if (!err) {
             done(new Error('must have thrown error'));
           } else {
@@ -34,14 +34,14 @@ describe('Pool callback', () => {
         });
       }
     });
-    pool.query('SELECT 2', err => {
+    pool.query('SELECT 2', (err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       }
     });
   });
 
-  it('pool with wrong authentication connection', function(done) {
+  it('pool with wrong authentication connection', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback({
       connectionLimit: 3,
@@ -49,11 +49,11 @@ describe('Pool callback', () => {
       acquireTimeout: 4000,
       initializationTimeout: 2000
     });
-    pool.getConnection(err => {
+    pool.getConnection((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
-        pool.getConnection(err => {
+        pool.getConnection((err) => {
           pool.end();
           if (!err) {
             done(new Error('must have thrown error'));
@@ -71,14 +71,14 @@ describe('Pool callback', () => {
         });
       }
     });
-    pool.getConnection(err => {
+    pool.getConnection((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       }
     });
   });
 
-  it('create pool', function(done) {
+  it('create pool', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     const initTime = Date.now();
@@ -91,14 +91,14 @@ describe('Pool callback', () => {
       conn.query('SELECT SLEEP(1)', () => {
         assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
         conn.release();
-        pool.end(err => {
+        pool.end((err) => {
           done();
         });
       });
     });
   });
 
-  it('create pool with noControlAfterUse', function(done) {
+  it('create pool with noControlAfterUse', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -114,30 +114,30 @@ describe('Pool callback', () => {
       conn.query('SELECT SLEEP(1)', () => {
         assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
         conn.release();
-        pool.end(err => {
+        pool.end((err) => {
           done();
         });
       });
     });
   });
 
-  it('pool wrong query', function(done) {
+  it('pool wrong query', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
-    pool.query('wrong query', err => {
+    pool.query('wrong query', (err) => {
       assert(err.message.includes('You have an error in your SQL syntax'));
       assert.equal(err.sqlState, '42000');
       assert.equal(err.code, 'ER_PARSE_ERROR');
-      pool.end(err => {
+      pool.end((err) => {
         done();
       });
     });
   });
 
-  it('pool getConnection after close', function(done) {
+  it('pool getConnection after close', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     pool.end(() => {
-      pool.getConnection(err => {
+      pool.getConnection((err) => {
         assert(err.message.includes('pool is closed'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45027);
@@ -147,10 +147,10 @@ describe('Pool callback', () => {
     });
   });
 
-  it('pool query after close', function(done) {
+  it('pool query after close', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     pool.end(() => {
-      pool.query('select ?', 1, err => {
+      pool.query('select ?', 1, (err) => {
         assert(err.message.includes('pool is closed'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45027);
@@ -160,23 +160,23 @@ describe('Pool callback', () => {
     });
   });
 
-  it('pool getConnection timeout', function(done) {
+  it('pool getConnection timeout', function (done) {
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       acquireTimeout: 200
     });
     let errorThrown = false;
-    pool.query('SELECT SLEEP(1)', err => {
+    pool.query('SELECT SLEEP(1)', (err) => {
       if (err) {
         done(err);
       } else {
-        pool.end(err => {
+        pool.end((err) => {
           assert.isOk(errorThrown);
           done();
         });
       }
     });
-    pool.getConnection(err => {
+    pool.getConnection((err) => {
       assert(err.message.includes('retrieve connection from pool timeout'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
@@ -185,7 +185,7 @@ describe('Pool callback', () => {
     });
   });
 
-  it('pool query timeout', function(done) {
+  it('pool query timeout', function (done) {
     this.timeout(5000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -201,7 +201,7 @@ describe('Pool callback', () => {
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
     });
-    pool.query('SELECT 2', err => {
+    pool.query('SELECT 2', (err) => {
       assert(err.message.includes('retrieve connection from pool timeout'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
@@ -213,7 +213,7 @@ describe('Pool callback', () => {
       );
     });
     setTimeout(() => {
-      pool.query('SELECT 3', err => {
+      pool.query('SELECT 3', (err) => {
         assert(err.message.includes('retrieve connection from pool timeout'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45028);
@@ -228,7 +228,7 @@ describe('Pool callback', () => {
     }, 200);
   });
 
-  it('pool grow', function(done) {
+  it('pool grow', function (done) {
     this.timeout(20000);
     const pool = base.createPoolCallback({ connectionLimit: 10 });
     setTimeout(() => {
@@ -269,7 +269,7 @@ describe('Pool callback', () => {
     }, 8000);
   });
 
-  it('connection fail handling', function(done) {
+  it('connection fail handling', function (done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
@@ -291,7 +291,7 @@ describe('Pool callback', () => {
           assert.equal(pool.idleConnections(), 1);
           assert.equal(pool.taskQueueSize(), 0);
 
-          conn.query('KILL CONNECTION_ID()', err => {
+          conn.query('KILL CONNECTION_ID()', (err) => {
             assert.equal(err.sqlState, 70100);
             assert.equal(pool.activeConnections(), 1);
             assert.equal(pool.totalConnections(), 2);
@@ -310,7 +310,7 @@ describe('Pool callback', () => {
     }, 500);
   });
 
-  it('query fail handling', function(done) {
+  it('query fail handling', function (done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
@@ -323,7 +323,7 @@ describe('Pool callback', () => {
       assert.equal(pool.idleConnections(), 2);
       assert.equal(pool.taskQueueSize(), 0);
 
-      pool.query('KILL CONNECTION_ID()', err => {
+      pool.query('KILL CONNECTION_ID()', (err) => {
         assert.equal(err.sqlState, 70100);
         setImmediate(() => {
           assert.equal(pool.taskQueueSize(), 0);
@@ -348,7 +348,7 @@ describe('Pool callback', () => {
     }, 500);
   });
 
-  it('connection end', function(done) {
+  it('connection end', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -378,7 +378,7 @@ describe('Pool callback', () => {
     }, 500);
   });
 
-  it('connection release alias', function(done) {
+  it('connection release alias', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -408,7 +408,7 @@ describe('Pool callback', () => {
     }, 500);
   });
 
-  it('connection destroy', function(done) {
+  it('connection destroy', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -438,7 +438,7 @@ describe('Pool callback', () => {
     }, 500);
   });
 
-  it('pool rollback on connection return', function(done) {
+  it('pool rollback on connection return', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     pool.getConnection((err, conn) => {
       if (err) {
@@ -449,7 +449,7 @@ describe('Pool callback', () => {
             conn.query('set autocommit = 0', (err, res) => {
               conn.beginTransaction((err, res) => {
                 conn.query("INSERT INTO rollbackTable value ('test')", (err, res) => {
-                  conn.release(err => {
+                  conn.release((err) => {
                     pool.getConnection((err, conn) => {
                       conn.query('SELECT * FROM rollbackTable', (err, res) => {
                         assert.equal(res.length, 0);
@@ -470,7 +470,7 @@ describe('Pool callback', () => {
     });
   });
 
-  it('pool batch', function(done) {
+  it('pool batch', function (done) {
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       resetAfterUse: false
@@ -515,7 +515,7 @@ describe('Pool callback', () => {
     );
   });
 
-  it('pool batch without parameters', function(done) {
+  it('pool batch without parameters', function (done) {
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       resetAfterUse: false
@@ -531,7 +531,7 @@ describe('Pool callback', () => {
     });
   });
 
-  it('pool batch single array', function(done) {
+  it('pool batch single array', function (done) {
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       resetAfterUse: false
@@ -560,7 +560,7 @@ describe('Pool callback', () => {
     });
   });
 
-  it('test minimum idle decrease', function(done) {
+  it('test minimum idle decrease', function (done) {
     this.timeout(30000);
     const pool = base.createPoolCallback({
       connectionLimit: 10,
@@ -571,7 +571,7 @@ describe('Pool callback', () => {
     for (let i = 0; i < 15000; i++) {
       pool.query('SELECT ' + i);
     }
-    pool.query('SELECT 15000', [], err => {
+    pool.query('SELECT 15000', [], (err) => {
       if (err) {
         pool.end();
         done(err);
@@ -593,7 +593,7 @@ describe('Pool callback', () => {
     });
   });
 
-  it('test minimum idle', function(done) {
+  it('test minimum idle', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback({
       connectionLimit: 10,
@@ -611,7 +611,7 @@ describe('Pool callback', () => {
     }, 4000);
   });
 
-  it('pool immediate error', function(done) {
+  it('pool immediate error', function (done) {
     const pool = base.createPoolCallback({});
     pool.getConnection((err, conn) => {
       if (err) {

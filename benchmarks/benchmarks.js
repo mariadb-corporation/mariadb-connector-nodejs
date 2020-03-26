@@ -2,8 +2,8 @@
 
 const fs = require('fs');
 const Bench = require('./common_benchmarks');
-const launchBenchs = function(path) {
-  fs.readdir(path, function(err, list) {
+const launchBenchs = function (path) {
+  fs.readdir(path, function (err, list) {
     if (err) {
       console.error(err);
       return;
@@ -19,9 +19,9 @@ const launchBenchs = function(path) {
     bench.suiteReady();
   });
 };
-fs.access('./benchs', function(err) {
+fs.access('./benchs', function (err) {
   if (err) {
-    fs.access('./benchmarks/benchs', function(err) {
+    fs.access('./benchmarks/benchs', function (err) {
       if (err) return;
       launchBenchs('./benchmarks/benchs');
     });

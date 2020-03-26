@@ -46,15 +46,15 @@
   "license": "LGPL-2.1-or-later",
   "dependencies": {
     "@types/geojson": "^7946.0.7",
-    "@types/node": ">=8.0.0",
+    "@types/node": "^13.9.3",
     "denque": "^1.4.1",
     "iconv-lite": "^0.5.1",
     "long": "^4.0.0",
     "moment-timezone": "^0.5.27"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.18.0",
-    "@typescript-eslint/parser": "^2.18.0",
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "codecov": "^3.6.4",
@@ -62,13 +62,13 @@
     "dom-parser": "^0.1.6",
     "error-stack-parser": "^2.0.6",
     "eslint": "^6.6.0",
-    "eslint-config-prettier": "^6.10.0",
+    "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-markdown": "^1.0.1",
     "eslint-plugin-prettier": "^3.1.0",
-    "mocha": "^7.0.1",
+    "mocha": "^7.1.1",
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^15.0.0",
-    "prettier": "^1.19.1",
+    "prettier": "^2.0.2",
     "typescript": "^3.7.5"
   },
   "bugs": {

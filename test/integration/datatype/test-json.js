@@ -4,20 +4,20 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('json', () => {
-  it('json escape', function(done) {
+  it('json escape', function (done) {
     const buf = { id: 2, val: "t'est" };
     assert.equal(shareConn.escape(buf), '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\'');
 
     shareConn
       .query(' SELECT ' + shareConn.escape(buf) + ' t')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ t: '{"id":2,"val":"t\'est"}' }]);
         done();
       })
       .catch(done);
   });
 
-  it('insert json format', function(done) {
+  it('insert json format', function (done) {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
@@ -42,7 +42,7 @@ describe('json', () => {
   function validateJSON(tableName, done) {
     shareConn
       .query('SELECT * FROM `' + tableName + '`')
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB()) {
           const val1 = JSON.parse(rows[0].val1);
           const val2 = JSON.parse(rows[1].val1);
@@ -61,7 +61,7 @@ describe('json', () => {
       .catch(done);
   }
 
-  it('select json format', function(done) {
+  it('select json format', function (done) {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
@@ -87,7 +87,7 @@ describe('json', () => {
 
     shareConn
       .query('SELECT * FROM `test-json-return-type`')
-      .then(rows => {
+      .then((rows) => {
         if (shareConn.info.isMariaDB()) {
           assert.equal(rows[0].val1, jsonString);
         } else {

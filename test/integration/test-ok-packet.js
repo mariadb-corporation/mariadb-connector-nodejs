@@ -4,105 +4,105 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('ok packet', () => {
-  it('insertId', function(done) {
+  it('insertId', function (done) {
     shareConn
       .query('CREATE TEMPORARY TABLE autoInc (id BIGINT not null primary key auto_increment)')
       .then(() => {
         return shareConn.query('INSERT INTO autoInc values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 1);
         return shareConn.query('INSERT INTO autoInc values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 2);
         return shareConn.query('INSERT INTO autoInc values (245)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 245);
         return shareConn.query('INSERT INTO autoInc values (32767)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 32767);
         return shareConn.query('INSERT INTO autoInc values (65535)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 65535);
         return shareConn.query('INSERT INTO autoInc values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 65536);
         return shareConn.query('INSERT INTO autoInc values (16777215)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 16777215);
         return shareConn.query('INSERT INTO autoInc values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 16777216);
         return shareConn.query('INSERT INTO autoInc values (4294967295)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 4294967295);
         return shareConn.query('INSERT INTO autoInc values ()');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, 4294967296);
         return shareConn.query('INSERT INTO autoInc values (9007199254740992)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId.toString(10), '9007199254740992');
         done();
       })
       .catch(done);
   });
 
-  it('negative insertId', function(done) {
+  it('negative insertId', function (done) {
     shareConn
       .query('CREATE TEMPORARY TABLE negAutoInc (id BIGINT not null primary key auto_increment)')
       .then(() => {
         return shareConn.query('INSERT INTO negAutoInc values (-9007199254740990)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -9007199254740990);
         return shareConn.query('INSERT INTO negAutoInc values (-9007199254740989)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -9007199254740989);
         return shareConn.query('INSERT INTO negAutoInc values (-2147483648)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -2147483648);
         return shareConn.query('INSERT INTO negAutoInc values (-2147483647)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -2147483647);
         return shareConn.query('INSERT INTO negAutoInc values (-8388608)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -8388608);
         return shareConn.query('INSERT INTO negAutoInc values (-8388607)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -8388607);
         return shareConn.query('INSERT INTO negAutoInc values (-32768)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -32768);
         return shareConn.query('INSERT INTO negAutoInc values (-245)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId, -245);
         return shareConn.query('INSERT INTO negAutoInc values (-9007199254740992)');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.insertId.toString(10), '-9007199254740992');
         done();
       })
       .catch(done);
   });
 
-  it('basic insert result', function(done) {
+  it('basic insert result', function (done) {
     shareConn.query(
       'CREATE TEMPORARY TABLE insertResultSet1(' +
         'id int(11) unsigned NOT NULL AUTO_INCREMENT,' +
@@ -112,7 +112,7 @@ describe('ok packet', () => {
 
     shareConn
       .query('INSERT INTO insertResultSet1(val) values (?)', ['t'])
-      .then(rows => {
+      .then((rows) => {
         assert.ok(!Array.isArray(rows));
         assert.strictEqual(typeof rows, 'object');
         assert.strictEqual(rows.insertId, 1);
@@ -123,10 +123,10 @@ describe('ok packet', () => {
       .catch(done);
   });
 
-  it('multiple insert result', function(done) {
+  it('multiple insert result', function (done) {
     base
       .createConnection({ multipleStatements: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query(
             'CREATE TEMPORARY TABLE multiple_insert_result(' +
@@ -141,7 +141,7 @@ describe('ok packet', () => {
               ['t1', 't3']
             );
           })
-          .then(rows => {
+          .then((rows) => {
             assert.ok(Array.isArray(rows));
             assert.strictEqual(rows.length, 3);
             assert.strictEqual(rows[0].insertId, 1);
@@ -161,7 +161,7 @@ describe('ok packet', () => {
       .catch(done);
   });
 
-  it('update result text', function(done) {
+  it('update result text', function (done) {
     shareConn
       .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
       .then(() => {
@@ -170,7 +170,7 @@ describe('ok packet', () => {
       .then(() => {
         return shareConn.query('UPDATE updateResultSet1 set id = 1');
       })
-      .then(res => {
+      .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
         assert.strictEqual(res.insertId, 0);
@@ -178,7 +178,7 @@ describe('ok packet', () => {
         assert.strictEqual(res.warningStatus, 0);
         return shareConn.query('UPDATE updateResultSet1 set id = 1');
       })
-      .then(res => {
+      .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
         assert.strictEqual(res.insertId, 0);
@@ -189,10 +189,10 @@ describe('ok packet', () => {
       .catch(done);
   });
 
-  it('update result text changedRows', function(done) {
+  it('update result text changedRows', function (done) {
     base
       .createConnection({ foundRows: false })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
           .then(() => {
@@ -201,7 +201,7 @@ describe('ok packet', () => {
           .then(() => {
             return conn.query('UPDATE updateResultSet1 set id = 1');
           })
-          .then(res => {
+          .then((res) => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
             assert.strictEqual(res.insertId, 0);
@@ -209,7 +209,7 @@ describe('ok packet', () => {
             assert.strictEqual(res.warningStatus, 0);
             return conn.query('UPDATE updateResultSet1 set id = 1');
           })
-          .then(res => {
+          .then((res) => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
             assert.strictEqual(res.insertId, 0);

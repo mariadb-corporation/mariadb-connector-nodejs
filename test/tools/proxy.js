@@ -24,7 +24,7 @@ function Proxy(args) {
 
   this.start = () => {
     const sockets = [];
-    server = net.createServer(socket => {
+    server = net.createServer((socket) => {
       let ended = false;
       sockets.push(socket);
       if (stop) {
@@ -32,32 +32,32 @@ function Proxy(args) {
       } else {
         if (log) console.log('  ** START **');
         const remoteSocket = new net.Socket();
-        remoteSocket.connect(REMOTE_PORT, REMOTE_ADDR, function() {});
+        remoteSocket.connect(REMOTE_PORT, REMOTE_ADDR, function () {});
 
-        remoteSocket.on('data', function(data) {
+        remoteSocket.on('data', function (data) {
           if (log) console.log('<< ', data.toString());
           socket.write(data);
         });
 
-        remoteSocket.on('end', function() {
+        remoteSocket.on('end', function () {
           if (log) console.log('<< remote end (' + ended + ')');
           if (!ended) socket.end();
           ended = true;
         });
 
-        remoteSocket.on('error', function(err) {
+        remoteSocket.on('error', function (err) {
           if (log) console.log('<< remote error (' + ended + ')');
           if (!ended) socket.destroy(err);
           ended = true;
         });
 
-        socket.on('error', function(err) {
+        socket.on('error', function (err) {
           if (log) console.log('>> socket error (' + ended + ')');
           if (!ended) remoteSocket.destroy(err);
           ended = true;
         });
 
-        socket.on('data', function(msg) {
+        socket.on('data', function (msg) {
           if (!stop) {
             remoteSocket.write(msg);
             if (log) console.log('>> ', msg.toString());
@@ -71,13 +71,13 @@ function Proxy(args) {
         });
       }
     });
-    server.on('error', err => {
+    server.on('error', (err) => {
       if (log) console.log('proxy server error : ' + err);
       throw err;
     });
     server.on('close', () => {
       if (log) console.log('closing proxy server');
-      sockets.forEach(socket => {
+      sockets.forEach((socket) => {
         if (socket) socket.end();
       });
     });

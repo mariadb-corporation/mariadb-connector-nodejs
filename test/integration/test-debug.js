@@ -12,13 +12,13 @@ describe('debug', () => {
   let initialStdOut;
   let permitLocalInfile = true;
 
-  before(done => {
+  before((done) => {
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         permitLocalInfile = rows[0]['@@local_infile'] === 1;
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -34,33 +34,33 @@ describe('debug', () => {
   });
 
   //ensure that debug from previous test are written to console
-  afterEach(done => {
+  afterEach((done) => {
     setTimeout(() => {
       done();
     }, 1000);
   });
 
-  after(done => {
+  after((done) => {
     fs.unlink(smallFileName, done);
   });
 
-  it('select request debug', function(done) {
+  it('select request debug', function (done) {
     testQueryDebug(false, done);
   });
 
-  it('select request debug compress', function(done) {
+  it('select request debug compress', function (done) {
     testQueryDebug(true, done);
   });
 
   function testQueryDebug(compress, done) {
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
     base
       .createConnection({ compress: compress })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT 1')
           .then(() => {
@@ -135,11 +135,11 @@ describe('debug', () => {
       .catch(done);
   }
 
-  it('select big request (compressed data) debug', function(done) {
+  it('select big request (compressed data) debug', function (done) {
     if (process.env.MAXSCALE_VERSION) this.skip();
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
 
@@ -147,10 +147,10 @@ describe('debug', () => {
 
     base
       .createConnection({ compress: true, debugCompress: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT ?', buf)
-          .then(rows => {
+          .then((rows) => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               conn
@@ -183,12 +183,12 @@ describe('debug', () => {
       .catch(done);
   });
 
-  it('load local infile debug', function(done) {
+  it('load local infile debug', function (done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(false, done);
   });
 
-  it('load local infile debug compress', function(done) {
+  it('load local infile debug compress', function (done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(true, done);
   });
@@ -196,7 +196,7 @@ describe('debug', () => {
   function testLocalInfileDebug(compress, done) {
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
 
@@ -206,7 +206,7 @@ describe('debug', () => {
         debug: true,
         compress: compress
       })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
         conn
           .query(
@@ -246,13 +246,13 @@ describe('debug', () => {
       .catch(done);
   }
 
-  it('log debug packets', function(done) {
+  it('log debug packets', function (done) {
     base
       .createConnection({ logPackets: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT 1')
-          .then(rows => {
+          .then((rows) => {
             assert.isTrue(conn.info.getLastPackets().length > 570);
             conn.end();
             done();

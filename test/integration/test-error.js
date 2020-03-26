@@ -4,25 +4,25 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('Error', () => {
-  after(done => {
+  after((done) => {
     shareConn
       .query('SELECT 1')
-      .then(row => {
+      .then((row) => {
         done();
       })
       .catch(done);
   });
 
-  it('query error with trace', function(done) {
+  it('query error with trace', function (done) {
     base
       .createConnection({ trace: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('wrong query')
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
@@ -37,9 +37,9 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query callback error with trace', function(done) {
+  it('query callback error with trace', function (done) {
     const conn = base.createCallbackConnection({ trace: true });
-    conn.connect(err1 => {
+    conn.connect((err1) => {
       conn.query('wrong query', (err, rows, meta) => {
         if (!err) {
           done(new Error('must have thrown error !'));
@@ -58,16 +58,16 @@ describe('Error', () => {
     });
   });
 
-  it('query error sql length', function(done) {
+  it('query error sql length', function (done) {
     base
       .createConnection({ debugLen: 10 })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('wrong query /*comments*/ ?', ['par'])
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
             assert.isTrue(err.message.includes('sql: wrong quer...'));
             assert.equal(err.errno, 1064);
@@ -80,16 +80,16 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query error parameter length', function(done) {
+  it('query error parameter length', function (done) {
     base
       .createConnection({ debugLen: 55 })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('wrong query ?, ?', [123456789, 'long parameter that must be truncated'])
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
             assert.isTrue(
               err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
@@ -104,7 +104,7 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query error check parameter type', function(done) {
+  it('query error check parameter type', function (done) {
     class strangeParam {
       constructor(par) {
         this.param = par;
@@ -115,7 +115,7 @@ describe('Error', () => {
       }
     }
     const o = new Object();
-    o.toString = function() {
+    o.toString = function () {
       return 'objectValue';
     };
 
@@ -132,7 +132,7 @@ describe('Error', () => {
       .then(() => {
         done(new Error('must have thrown error !'));
       })
-      .catch(err => {
+      .catch((err) => {
         assert.isTrue(err.message.includes('You have an error in your SQL syntax'), err.message);
         assert.isTrue(
           err.message.includes(
@@ -146,10 +146,10 @@ describe('Error', () => {
       });
   });
 
-  it('query error parameter length using namedPlaceholders', function(done) {
+  it('query error parameter length using namedPlaceholders', function (done) {
     base
       .createConnection({ debugLen: 55, namedPlaceholders: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('wrong query :par1, :par2', {
             par1: 'some param',
@@ -158,7 +158,7 @@ describe('Error', () => {
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
             assert.isTrue(
               err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
@@ -173,16 +173,16 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query error without trace', function(done) {
+  it('query error without trace', function (done) {
     base
       .createConnection({ trace: false })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('wrong query')
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(!err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
@@ -197,10 +197,10 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query after connection ended', function(done) {
+  it('query after connection ended', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn
           .end()
           .then(() => {
@@ -209,7 +209,7 @@ describe('Error', () => {
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
             assert.isTrue(err.message.includes('sql: DO 1 - parameters:[]'));
@@ -221,7 +221,7 @@ describe('Error', () => {
               .then(() => {
                 done(new Error('must have thrown error !'));
               })
-              .catch(err => {
+              .catch((err) => {
                 assert.isTrue(err != null);
                 assert.isTrue(
                   err.message.includes('Cannot execute new commands: connection closed')
@@ -237,10 +237,10 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('transaction after connection ended', function(done) {
+  it('transaction after connection ended', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn
           .end()
           .then(() => {
@@ -249,7 +249,7 @@ describe('Error', () => {
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
             assert.isTrue(err.message.includes('sql: START TRANSACTION - parameters:[]'));
@@ -262,16 +262,16 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('server close connection without warning', function(done) {
+  it('server close connection without warning', function (done) {
     //removed for maxscale, since wait_timeout will be set to other connections
     if (process.env.MAXSCALE_VERSION) this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('set @@wait_timeout = 1');
-        conn.on('error', err => {
+        conn.on('error', (err) => {
           if (!err.message.includes('ECONNRESET')) {
             assert.isTrue(err.message.includes('socket has unexpectedly been closed'));
             assert.equal(err.sqlState, '08S01');
@@ -279,13 +279,13 @@ describe('Error', () => {
           }
           connectionErr = true;
         });
-        setTimeout(function() {
+        setTimeout(function () {
           conn
             .query('SELECT 2')
             .then(() => {
               done(new Error('must have thrown error !'));
             })
-            .catch(err => {
+            .catch((err) => {
               assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
@@ -297,7 +297,7 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('server close connection - no connection error event', function(done) {
+  it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
     if (process.env.MAXSCALE_VERSION) this.skip();
     // Remove Mocha's error listener
@@ -305,10 +305,10 @@ describe('Error', () => {
     process.removeListener('uncaughtException', originalException);
 
     // Add your own error listener to check for unhandled exceptions
-    process.once('uncaughtException', function(err) {
+    process.once('uncaughtException', function (err) {
       const recordedError = err;
 
-      process.nextTick(function() {
+      process.nextTick(function () {
         process.listeners('uncaughtException').push(originalException);
         assert.isTrue(
           recordedError.message.includes('socket has unexpectedly been closed') ||
@@ -321,15 +321,15 @@ describe('Error', () => {
 
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('set @@wait_timeout = 1');
-        setTimeout(function() {
+        setTimeout(function () {
           conn
             .query('SELECT 2')
             .then(() => {
               done(new Error('must have thrown error !'));
             })
-            .catch(err => {
+            .catch((err) => {
               assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
@@ -339,19 +339,19 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('server close connection during query', function(done) {
+  it('server close connection during query', function (done) {
     // if (process.env.MAXSCALE_VERSION) this.skip();
     this.timeout(20000);
     base
       .createConnection()
-      .then(conn => {
-        conn.on('error', err => {});
+      .then((conn) => {
+        conn.on('error', (err) => {});
         conn
           .query('SELECT SLEEP(5)')
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             if (process.env.MAXSCALE_VERSION) {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
@@ -365,18 +365,18 @@ describe('Error', () => {
             }
             done();
           });
-        setTimeout(function() {
+        setTimeout(function () {
           shareConn.query('KILL ' + conn.threadId);
         }, 20);
       })
       .catch(done);
   });
 
-  it('end connection query error', function(done) {
+  it('end connection query error', function (done) {
     // if (process.env.MAXSCALE_VERSION) this.skip();
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn
           .query(
             'select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
@@ -384,7 +384,7 @@ describe('Error', () => {
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert.isTrue(
               err.message.includes('close forced') ||
                 err.message.includes('socket has unexpectedly been closed')
@@ -398,8 +398,8 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query parameters logged in error', function(done) {
-    const handleResult = function(err) {
+  it('query parameters logged in error', function (done) {
+    const handleResult = function (err) {
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
@@ -426,15 +426,15 @@ describe('Error', () => {
 
     shareConn
       .query('SELECT 1')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ '1': 1 }]);
         done();
       })
       .catch(done);
   });
 
-  it('query undefined parameter', function(done) {
-    const handleResult = function(err) {
+  it('query undefined parameter', function (done) {
+    const handleResult = function (err) {
       assert.equal(err.errno, 45017);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.code, 'ER_PARAMETER_UNDEFINED');
@@ -457,15 +457,15 @@ describe('Error', () => {
 
     shareConn
       .query('SELECT 1')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ '1': 1 }]);
         done();
       })
       .catch(done);
   });
 
-  it('query missing parameter', function(done) {
-    const handleResult = function(err) {
+  it('query missing parameter', function (done) {
+    const handleResult = function (err) {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -486,15 +486,15 @@ describe('Error', () => {
       .catch(handleResult);
     shareConn
       .query('SELECT 1')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ '1': 1 }]);
         done();
       })
       .catch(done);
   });
 
-  it('query missing parameter with compression', function(done) {
-    const handleResult = function(err) {
+  it('query missing parameter with compression', function (done) {
+    const handleResult = function (err) {
       assert.equal(err.errno, 45016);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -508,7 +508,7 @@ describe('Error', () => {
     };
     base
       .createConnection({ compress: true })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)');
         conn
           .query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3])
@@ -518,7 +518,7 @@ describe('Error', () => {
           .catch(handleResult);
         conn
           .query('SELECT 1')
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [{ '1': 1 }]);
             conn.end();
             done();
@@ -528,14 +528,14 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query no parameter', function(done) {
+  it('query no parameter', function (done) {
     shareConn.query('CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)');
     shareConn
       .query('INSERT INTO execute_no_parameter values (?, ?, ?)', [])
       .then(() => {
         done(new Error('must have thrown error !'));
       })
-      .catch(err => {
+      .catch((err) => {
         assert.equal(err.errno, 45016);
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -549,14 +549,14 @@ describe('Error', () => {
       });
     shareConn
       .query('SELECT 1')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ '1': 1 }]);
         done();
       })
       .catch(done);
   });
 
-  it('query to much parameter', function(done) {
+  it('query to much parameter', function (done) {
     shareConn.query('CREATE TEMPORARY TABLE to_much_parameters (id int, id2 int, id3 int)');
     shareConn
       .query('INSERT INTO to_much_parameters values (?, ?, ?) ', [1, 2, 3, 4])

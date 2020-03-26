@@ -4,27 +4,27 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('string', () => {
-  it('String escape', function(done) {
+  it('String escape', function (done) {
     assert.equal(shareConn.escape(null), 'NULL');
     assert.equal(shareConn.escape("let'g'o😊"), "'let\\'g\\'o😊'");
     const buf = "a'\nb\tc\rd\\e%_\u001a";
     assert.equal(shareConn.escape(buf), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
     shareConn
       .query(' SELECT ' + shareConn.escape('\u0000\u001a') + ' t')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ t: '\u0000\u001a' }]);
       })
       .catch(done);
     shareConn
       .query(' SELECT ' + shareConn.escape(buf) + ' t')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [{ t: buf }]);
         done();
       })
       .catch(done);
   });
 
-  it('utf8 buffer verification', function(done) {
+  it('utf8 buffer verification', function (done) {
     if (!base.utf8Collation()) this.skip();
 
     shareConn.query(
@@ -34,7 +34,7 @@ describe('string', () => {
     shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', buf);
     shareConn
       .query("SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars")
-      .then(results => {
+      .then((results) => {
         assert.equal(results[0].t1, '🤘💪');
         assert.equal(results[0].t2, '🤘💪');
         assert.equal(results[0].tt, '🤘💪');
@@ -43,7 +43,7 @@ describe('string', () => {
       .then(() => {
         return shareConn.query('SELECT ? t2, tt FROM buf_utf8_chars', ['🤖']);
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows[0].tt, '🤘💪');
         assert.equal(rows[0].t2, '🤖');
         assert.equal(rows[1].tt, '🤘🤖');
@@ -53,7 +53,7 @@ describe('string', () => {
       .catch(done);
   });
 
-  it('utf8 strings', function(done) {
+  it('utf8 strings', function (done) {
     if (!base.utf8Collation()) this.skip();
 
     shareConn.query(
@@ -76,14 +76,14 @@ describe('string', () => {
 
     shareConn
       .query('SELECT * from buf_utf8_string')
-      .then(rows => {
+      .then((rows) => {
         checkUtf8String(rows);
         done();
       })
       .catch(done);
   });
 
-  const checkUtf8String = res => {
+  const checkUtf8String = (res) => {
     assert.equal(res[0].tt, "hel'lo");
     assert.equal(res[1].tt, '您好 (chinese)');
     assert.equal(res[2].tt, 'नमस्ते (Hindi)');
@@ -91,16 +91,16 @@ describe('string', () => {
     assert.equal(res[4].tt, '😎🌶🎤🥂');
   };
 
-  it('connection encoding', done => {
+  it('connection encoding', (done) => {
     const value = '©°';
     const encodings = ['KOI8R_GENERAL_CI', 'UTF8_GENERAL_CI', 'CP850_BIN', 'CP1251_GENERAL_CI'];
     for (let i = 0; i < encodings.length; i++) {
       base
         .createConnection({ collation: encodings[i] })
-        .then(conn => {
+        .then((conn) => {
           conn
             .query('select ? as t', value)
-            .then(res => {
+            .then((res) => {
               assert.strictEqual(res[0].t, value);
               conn.end();
               if (i === encodings.length - 1) done();
@@ -111,7 +111,7 @@ describe('string', () => {
     }
   });
 
-  it('table encoding not affecting query', function(done) {
+  it('table encoding not affecting query', function (done) {
     if (!base.utf8Collation()) this.skip();
     const str = '財團法人資訊工業策進會';
     shareConn.query('CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8');
@@ -120,35 +120,35 @@ describe('string', () => {
     shareConn.query('INSERT INTO big5_encoding_table values (?)', [str]);
     shareConn
       .query('SELECT * from utf8_encoding_table, big5_encoding_table')
-      .then(res => {
+      .then((res) => {
         assert.deepEqual(res, [{ t1: str, t2: str }]);
         done();
       })
       .catch(done);
   });
 
-  it('string escape', done => {
+  it('string escape', (done) => {
     shareConn.query('CREATE TEMPORARY TABLE escape_utf8_string(tt text) CHARSET utf8');
     shareConn.query('INSERT INTO escape_utf8_string values (?)', ['a \'b\\"c']);
     shareConn
       .query('SELECT * from escape_utf8_string')
-      .then(res => {
+      .then((res) => {
         assert.deepEqual(res, [{ tt: 'a \'b\\"c' }]);
         done();
       })
       .catch(done);
   });
 
-  it('wrong surrogate', function(done) {
+  it('wrong surrogate', function (done) {
     if (!base.utf8Collation()) this.skip();
 
     const wrongString = 'a\ue800\ud800b\udc01c\ud800';
-    base.createConnection().then(conn => {
+    base.createConnection().then((conn) => {
       conn.query('CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');
       conn.query('INSERT INTO wrong_utf8_string values (?)', [wrongString]);
       conn
         .query('SELECT * from wrong_utf8_string')
-        .then(res => {
+        .then((res) => {
           assert.deepEqual(res, [{ tt: 'a?b?c?' }]);
           conn.end();
           done();

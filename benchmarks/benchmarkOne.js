@@ -4,7 +4,7 @@ const fs = require('fs');
 const Bench = require('./common_benchmarks');
 let bench;
 
-const launchBenchs = function(path) {
+const launchBenchs = function (path) {
   bench = new Bench();
 
   const test = 'bench_promise_select_one_user.js';
@@ -15,9 +15,9 @@ const launchBenchs = function(path) {
   bench.suiteReady();
 };
 
-fs.access('../benchs', function(err) {
+fs.access('../benchs', function (err) {
   if (err) {
-    fs.access('../benchmarks/benchs', function(err) {
+    fs.access('../benchmarks/benchs', function (err) {
       launchBenchs('../benchmarks/benchs');
     });
   } else {
