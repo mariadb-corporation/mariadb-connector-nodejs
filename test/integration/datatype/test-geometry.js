@@ -211,10 +211,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           }
         ]);
         done();
@@ -332,10 +338,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'LineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'LineString' }
+                : null
           }
         ]);
         done();
@@ -509,10 +521,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Polygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Polygon' }
+                : null
           }
         ]);
         done();
@@ -630,10 +648,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPoint' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPoint' }
+                : null
           }
         ]);
         done();
@@ -797,13 +821,22 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           }
         ]);
         done();
@@ -1067,16 +1100,28 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           }
         ]);
         done();

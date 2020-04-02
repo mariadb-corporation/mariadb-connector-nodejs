@@ -43,7 +43,7 @@ describe('json', () => {
     shareConn
       .query('SELECT * FROM `' + tableName + '`')
       .then((rows) => {
-        if (shareConn.info.isMariaDB()) {
+        if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) {
           const val1 = JSON.parse(rows[0].val1);
           const val2 = JSON.parse(rows[1].val1);
           assert.equal(val1.id, 2);
@@ -89,7 +89,11 @@ describe('json', () => {
       .query('SELECT * FROM `test-json-return-type`')
       .then((rows) => {
         if (shareConn.info.isMariaDB()) {
-          assert.equal(rows[0].val1, jsonString);
+          if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)) {
+            assert.deepEqual(rows[0].val1, obj);
+          } else {
+            assert.equal(rows[0].val1, jsonString);
+          }
         } else {
           assert.equal(rows[0].val1.id, 2);
           assert.equal(rows[0].val1.val, 'test');
@@ -99,5 +103,42 @@ describe('json', () => {
         done();
       })
       .catch(done);
+  });
+
+  it('disable json format', function (done) {
+    //server permit JSON format
+    if (
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
+      !shareConn.info.isMariaDB()
+    ) {
+      this.skip();
+    }
+    base.createConnection({ autoJsonMap: false }).then((conn) => {
+      conn.query(
+        'CREATE TEMPORARY TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)'
+      );
+      const obj = { id: 2, val: 'test' };
+      const jsonString = JSON.stringify(obj);
+      conn.query(
+        "INSERT INTO `test-json-return-type` values ('" +
+          jsonString +
+          "','" +
+          jsonString +
+          "','" +
+          jsonString +
+          "')"
+      );
+
+      conn
+        .query('SELECT * FROM `test-json-return-type`')
+        .then((rows) => {
+          assert.equal(rows[0].val1, jsonString);
+          assert.equal(rows[0].val2, jsonString);
+          assert.equal(rows[0].val3, jsonString);
+          conn.close();
+          done();
+        })
+        .catch(done);
+    });
   });
 });

@@ -11,7 +11,7 @@ const readline = require('readline');
 const os = require('os');
 const path = require('path');
 
-const version = '10.4';
+const version = '10.5';
 const extendedUrl =
   'https://raw.githubusercontent.com/MariaDB/server/' + version + '/sql/share/errmsg-utf8.txt';
 const baseUrl =

@@ -35,8 +35,13 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();
@@ -55,8 +60,13 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();
@@ -76,8 +86,13 @@ describe('local-infile', () => {
           })
           .catch((err) => {
             assert(err != null);
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();

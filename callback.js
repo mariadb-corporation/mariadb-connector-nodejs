@@ -1,4 +1,6 @@
 'use strict';
+const pkg = require('./package.json')
+require('please-upgrade-node')(pkg)
 
 const ConnectionCallback = require('./lib/connection-callback');
 const PoolClusterCallback = require('./lib/pool-cluster-callback');

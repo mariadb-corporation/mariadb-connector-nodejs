@@ -80,10 +80,16 @@ describe('batch geometry type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           }
         ]);
         done();
@@ -153,7 +159,10 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: null
+              g:
+                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                  ? { type: 'LineString' }
+                  : null
             }
           ]);
         } else {
@@ -293,7 +302,10 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: null
+              g:
+                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                  ? { type: 'Polygon' }
+                  : null
             },
             {
               g: {
@@ -302,7 +314,10 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: null
+              g:
+                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                  ? { type: 'Polygon' }
+                  : null
             }
           ]);
         } else {

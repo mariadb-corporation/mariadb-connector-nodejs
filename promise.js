@@ -1,5 +1,8 @@
 'use strict';
 
+const pkg = require('./package.json')
+require('please-upgrade-node')(pkg)
+
 const Connection = require('./lib/connection');
 const PoolPromise = require('./lib/pool-promise');
 const PoolCluster = require('./lib/pool-cluster');

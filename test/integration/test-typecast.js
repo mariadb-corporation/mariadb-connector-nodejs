@@ -238,7 +238,12 @@ describe('TypeCast', () => {
                   coordinates: [20, 10]
                 }
               },
-              { b1: null }
+              {
+                b1:
+                  shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                    ? { type: 'Point' }
+                    : null
+              }
             ]);
             conn.end();
             done();
