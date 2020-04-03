@@ -57,12 +57,6 @@ function Bench() {
   const config = conf.baseConfig;
   config.charsetNumber = 224;
   config.trace = false;
-  //To benchmark same pool implementation than mysql/mysql2
-  //standard implementation rollback/reset connection after use
-  config.noControlAfterUse = true;
-
-  // default is true, but better to compare the same level of implementation
-  config.checkDuplicate = false;
 
   const poolConfig = Object.assign({ connectionLimit: 4 }, config);
   // config.debug = true;
@@ -80,7 +74,7 @@ function Bench() {
     this.driverLen++;
     connList['PROMISE_MYSQL'] = { desc: 'promise-mysql', promise: true };
     promiseMysql
-      .createConnection(config)
+      .createConnection(Object.assign({}, config))
       .then((conn) => {
         promiseMysql
           .createPool(poolConfig)
@@ -101,7 +95,7 @@ function Bench() {
   if (mysql) {
     this.driverLen++;
     connList['MYSQL'] = { desc: 'mysql', promise: false };
-    const conn = mysql.createConnection(config);
+    const conn = mysql.createConnection(Object.assign({}, config));
     conn.connect((err) => {
       connList['MYSQL'].drv = conn;
       conn.on('error', (err) => console.log('driver mysql error :' + err));
@@ -112,7 +106,7 @@ function Bench() {
   if (mysql2) {
     this.driverLen++;
     connList['MYSQL2'] = { desc: 'mysql2', promise: false };
-    const conn = mysql2.createConnection(config);
+    const conn = mysql2.createConnection(Object.assign({}, config));
     conn.connect(() => {
       connList['MYSQL2'].drv = conn;
       conn.on('error', (err) => console.log('driver mysql2 error :' + err));
@@ -124,7 +118,7 @@ function Bench() {
     this.driverLen++;
     connList['PROMISE_MYSQL2'] = { desc: 'promise mysql2', promise: true };
     promiseMysql2
-      .createConnection(config)
+      .createConnection(Object.assign({}, config))
       .then((conn) => {
         connList['PROMISE_MYSQL2'].drv = conn;
         conn.on('error', (err) => console.log('driver mysql2 promise error :' + err));
@@ -136,7 +130,12 @@ function Bench() {
       });
   }
 
-  const mariaConn = callbackMariadb.createConnection(config);
+  //To benchmark same things with mysql/mysql2, 2 options are changed compared to default values:
+  // * checkDuplicate = false => normally, driver check there isn't some missing field if same identifier
+  // * noControlAfterUse = true => pool normally reset connection after use.
+  const mariaConn = callbackMariadb.createConnection(
+    Object.assign({ checkDuplicate: false }, config)
+  );
   connList['MARIADB'] = { desc: 'mariadb', promise: true };
   mariaConn.connect(() => {
     connList['MARIADB'].drv = mariaConn;
@@ -146,11 +145,13 @@ function Bench() {
 
   connList['PROMISE_MARIADB'] = { desc: 'promise mariadb', promise: false };
   mariadb
-    .createConnection(config)
+    .createConnection(Object.assign({ checkDuplicate: false }, config))
     .then((conn) => {
       connList['PROMISE_MARIADB'].drv = conn;
       conn.on('error', (err) => console.log('driver mariadb promise error :' + err));
-      connList['PROMISE_MARIADB'].pool = mariadb.createPool(poolConfig);
+      connList['PROMISE_MARIADB'].pool = mariadb.createPool(
+        Object.assign({ noControlAfterUse: true, checkDuplicate: false }, poolConfig)
+      );
       dbReady('promise-mariadb', this.driverLen);
     })
     .catch((err) => {
@@ -170,7 +171,7 @@ function Bench() {
     this.driverLen++;
     connList['PROMISE_MARIASQL'] = { desc: 'promise mariasql', promise: false };
     promiseMariasql
-      .createConnection(config)
+      .createConnection(configC)
       .then((conn) => {
         connList['PROMISE_MARIASQL'].drv = conn;
         dbReady('promise-mariasql', this.driverLen);
@@ -183,7 +184,7 @@ function Bench() {
   if (mariasql) {
     this.driverLen++;
     connList['MARIASQL'] = { desc: 'mariasql', drv: conn, promise: true };
-    const conn = mariasql.createConnection(config);
+    const conn = mariasql.createConnection(configC);
     conn.connect((err) => {
       connList['MARIASQL'].drv = conn;
       dbReady('mariasql', this.driverLen);
