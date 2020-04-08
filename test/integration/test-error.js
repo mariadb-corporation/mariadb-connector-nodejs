@@ -25,11 +25,21 @@ describe('Error', () => {
           .catch((err) => {
             assert.isTrue(err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
-            assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
-            assert.equal(err.code, 'ER_PARSE_ERROR');
+            if (err.errno === 1141) {
+              // SKYSQL ERROR
+              assert.isTrue(
+                err.message.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+              assert.equal(err.errno, 1064);
+              assert.equal(err.sqlState, 42000);
+              assert.equal(err.code, 'ER_PARSE_ERROR');
+            }
             conn.end();
             done();
           });
@@ -46,11 +56,21 @@ describe('Error', () => {
         } else {
           assert.isTrue(err.stack.includes('test-error.js'));
           assert.isTrue(err != null);
-          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-          assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
-          assert.equal(err.errno, 1064);
-          assert.equal(err.sqlState, 42000);
-          assert.equal(err.code, 'ER_PARSE_ERROR');
+          if (err.errno === 1141) {
+            // SKYSQL ERROR
+            assert.isTrue(
+              err.message.includes(
+                'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+              )
+            );
+            assert.equal(err.sqlState, 'HY000');
+          } else {
+            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+            assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+            assert.equal(err.errno, 1064);
+            assert.equal(err.sqlState, 42000);
+            assert.equal(err.code, 'ER_PARSE_ERROR');
+          }
           conn.end();
           done();
         }
@@ -68,11 +88,21 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('sql: wrong quer...'));
-            assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
-            assert.equal(err.code, 'ER_PARSE_ERROR');
+            if (err.errno === 1141) {
+              // SKYSQL ERROR
+              assert.isTrue(
+                err.message.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.message.includes('sql: wrong quer...'));
+              assert.equal(err.errno, 1064);
+              assert.equal(err.sqlState, 42000);
+              assert.equal(err.code, 'ER_PARSE_ERROR');
+            }
             conn.end();
             done();
           });
@@ -90,13 +120,23 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(
-              err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
-            );
-            assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
-            assert.equal(err.code, 'ER_PARSE_ERROR');
+            if (err.errno === 1141) {
+              // SKYSQL ERROR
+              assert.isTrue(
+                err.message.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(
+                err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
+              );
+              assert.equal(err.errno, 1064);
+              assert.equal(err.sqlState, 42000);
+              assert.equal(err.code, 'ER_PARSE_ERROR');
+            }
             conn.end();
             done();
           });
@@ -133,15 +173,25 @@ describe('Error', () => {
         done(new Error('must have thrown error !'));
       })
       .catch((err) => {
-        assert.isTrue(err.message.includes('You have an error in your SQL syntax'), err.message);
+        if (err.errno === 1141) {
+          // SKYSQL ERROR
+          assert.isTrue(
+            err.message.includes(
+              'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+            )
+          );
+          assert.equal(err.sqlState, 'HY000');
+        } else {
+          assert.equal(err.errno, 1064);
+          assert.equal(err.sqlState, 42000);
+          assert.equal(err.code, 'ER_PARSE_ERROR');
+          assert.isTrue(err.message.includes('You have an error in your SQL syntax'), err.message);
+        }
         assert.isTrue(
           err.message.includes(
             'wrong query ?, ?, ?, ?, ?, ?, ? - parameters:[addon-bla,true,123,456.5,\'long parameter that must be truncated\',{"bla":4,"blou":"t"},{}]'
           )
         );
-        assert.equal(err.errno, 1064);
-        assert.equal(err.sqlState, 42000);
-        assert.equal(err.code, 'ER_PARSE_ERROR');
         done();
       });
   });
@@ -159,13 +209,23 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+            if (err.errno === 1141) {
+              // SKYSQL ERROR
+              assert.isTrue(
+                err.message.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.equal(err.errno, 1064);
+              assert.equal(err.sqlState, 42000);
+              assert.equal(err.code, 'ER_PARSE_ERROR');
+            }
             assert.isTrue(
               err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
             );
-            assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
-            assert.equal(err.code, 'ER_PARSE_ERROR');
             conn.end();
             done();
           });
@@ -185,11 +245,21 @@ describe('Error', () => {
           .catch((err) => {
             assert.isTrue(!err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
-            assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
-            assert.equal(err.code, 'ER_PARSE_ERROR');
+            if (err.errno === 1141) {
+              // SKYSQL ERROR
+              assert.isTrue(
+                err.message.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+              assert.equal(err.errno, 1064);
+              assert.equal(err.sqlState, 42000);
+              assert.equal(err.code, 'ER_PARSE_ERROR');
+            }
             conn.end();
             done();
           });
@@ -272,10 +342,15 @@ describe('Error', () => {
       .then((conn) => {
         conn.query('set @@wait_timeout = 1');
         conn.on('error', (err) => {
-          if (!err.message.includes('ECONNRESET')) {
-            assert.isTrue(err.message.includes('socket has unexpectedly been closed'));
-            assert.equal(err.sqlState, '08S01');
-            assert.equal(err.code, 'ER_SOCKET_UNEXPECTED_CLOSE');
+          if (err.errno === 1927) {
+            // SKYSQL ERROR
+            assert.equal(err.code, 'ER_CONNECTION_KILLED');
+          } else {
+            if (!err.message.includes('ECONNRESET')) {
+              assert.isTrue(err.message.includes('socket has unexpectedly been closed'));
+              assert.equal(err.sqlState, '08S01');
+              assert.equal(err.code, 'ER_SOCKET_UNEXPECTED_CLOSE');
+            }
           }
           connectionErr = true;
         });
@@ -299,7 +374,7 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -340,7 +415,7 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    // if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.SKYSQL) this.skip();
     this.timeout(20000);
     base
       .createConnection()

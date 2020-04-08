@@ -64,7 +64,11 @@ describe('debug', () => {
         conn
           .query('SELECT 1')
           .then(() => {
-            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+            if (
+              compress &&
+              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.SKYSQL == undefined
+            ) {
               conn.debugCompress(true);
             } else {
               conn.debug(true);
@@ -72,7 +76,11 @@ describe('debug', () => {
             return conn.query('SELECT 2');
           })
           .then(() => {
-            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+            if (
+              compress &&
+              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.SKYSQL == undefined
+            ) {
               conn.debugCompress(false);
             } else {
               conn.debug(false);
@@ -88,13 +96,14 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              if (process.env.MAXSCALE_VERSION) compress = false;
-              const rangeWithEOF = compress ? [900, 1200] : [1900, 2400];
+              if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) compress = false;
+              const rangeWithEOF = compress ? [900, 1200] : [1800, 2400];
               const rangeWithoutEOF = compress ? [900, 1200] : [1750, 2000];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
-                !process.env.MAXSCALE_VERSION
+                !process.env.MAXSCALE_VERSION &&
+                !process.env.SKYSQL
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -136,7 +145,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     initialStdOut = console.log;
     let data = '';
     console.log = function () {
@@ -223,7 +232,7 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              const range = [5500, 6500];
+              const range = [5500, 6800];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +

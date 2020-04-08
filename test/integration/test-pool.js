@@ -11,6 +11,10 @@ const os = require('os');
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
 
+  before(function () {
+    if (process.env.SKYSQL) this.skip();
+  });
+
   after(function () {
     fs.unlink(fileName, (err) => {
       //eat
@@ -18,6 +22,7 @@ describe('Pool', () => {
   });
 
   it('pool metaAsArray', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       metaAsArray: true,
       multipleStatements: true,
@@ -243,6 +248,7 @@ describe('Pool', () => {
   });
 
   it('create pool with multipleStatement', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 5,
@@ -417,9 +423,19 @@ describe('Pool', () => {
         done(new Error('must have thrown error !'));
       })
       .catch((err) => {
-        assert(err.message.includes(' You have an error in your SQL syntax'));
-        assert.equal(err.sqlState, '42000');
-        assert.equal(err.code, 'ER_PARSE_ERROR');
+        if (err.errno === 1141) {
+          // SKYSQL ERROR
+          assert.isTrue(
+            err.message.includes(
+              'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+            )
+          );
+          assert.equal(err.sqlState, 'HY000');
+        } else {
+          assert(err.message.includes(' You have an error in your SQL syntax'));
+          assert.equal(err.sqlState, '42000');
+          assert.equal(err.code, 'ER_PARSE_ERROR');
+        }
         return pool.end();
       })
       .then(() => {
@@ -454,6 +470,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
     let errorThrown = false;
     pool
@@ -477,6 +494,7 @@ describe('Pool', () => {
   });
 
   it('pool leakDetectionTimeout timeout', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 1,
       acquireTimeout: 200,
@@ -499,6 +517,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout recovery', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -658,7 +677,7 @@ describe('Pool', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -702,7 +721,7 @@ describe('Pool', () => {
   });
 
   it('query fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -989,6 +1008,7 @@ describe('Pool', () => {
   });
 
   it('test minimum idle decrease', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(30000);
     const pool = base.createPool({
       connectionLimit: 10,

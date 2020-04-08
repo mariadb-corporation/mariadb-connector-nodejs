@@ -5,7 +5,8 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('stored procedure', () => {
-  before((done) => {
+  before(function (done) {
+    if (process.env.SKYSQL) this.skip();
     shareConn
       .query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end')
       .then(() => {

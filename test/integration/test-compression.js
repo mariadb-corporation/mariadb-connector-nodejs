@@ -49,6 +49,7 @@ describe('Compression', function () {
   });
 
   it('multiple packet result (multiple rows)', function (done) {
+    if (process.env.SKYSQL) this.skip();
     //using sequence engine
     if (!conn.info.isMariaDB() || !conn.info.hasMinVersion(10, 1)) this.skip();
     conn

@@ -406,6 +406,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -450,6 +451,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(10000);
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base

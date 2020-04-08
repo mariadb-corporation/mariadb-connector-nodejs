@@ -7,10 +7,19 @@ const Conf = require('../conf');
 
 describe('change user', () => {
   before((done) => {
+    shareConn.query("DROP USER ChangeUser@'%'").catch((err) => {});
+    shareConn.query("DROP USER ChangeUser2@'%'").catch((err) => {});
+    shareConn.query('CREATE DATABASE IF NOT EXISTS test');
     shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
+    shareConn.query(
+      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
+    );
     shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
-    shareConn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser2@'%' with grant option");
+    shareConn.query(
+      'GRANT SELECT,EXECUTE ON `' +
+        Conf.baseConfig.database +
+        "`.* TO ChangeUser2@'%' with grant option"
+    );
     shareConn
       .query('FLUSH PRIVILEGES')
       .then(() => done())
@@ -280,16 +289,17 @@ describe('change user', () => {
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
             assert.equal(conn.info.database, Conf.baseConfig.database);
-            return conn.query('USE mysql');
+            return conn.query('USE test');
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
             if (
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 2, 2) &&
-              !process.env.MAXSCALE_VERSION
+              !process.env.MAXSCALE_VERSION &&
+              !process.env.SKYSQL
             ) {
-              assert.equal(conn.info.database, 'mysql');
+              assert.equal(conn.info.database, 'test');
             }
             return conn.changeUser({
               user: 'ChangeUser',

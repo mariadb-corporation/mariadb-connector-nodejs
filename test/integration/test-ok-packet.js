@@ -124,6 +124,7 @@ describe('ok packet', () => {
   });
 
   it('multiple insert result', function (done) {
+    if (process.env.SKYSQL) this.skip();
     base
       .createConnection({ multipleStatements: true })
       .then((conn) => {

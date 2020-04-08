@@ -182,6 +182,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
+    if (process.env.SKYSQL) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -202,6 +203,7 @@ describe('connection', () => {
   });
 
   it('connection error event socket failed', function (done) {
+    if (process.env.SKYSQL) this.skip();
     base
       .createConnection({ socketTimeout: 100 })
       .then((conn) => {
@@ -356,7 +358,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     this.timeout(10000);
 
     base.createConnection().then((conn) => {
@@ -522,7 +524,8 @@ describe('connection', () => {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
       (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
-      process.env.MAXSCALE_VERSION
+      process.env.MAXSCALE_VERSION ||
+      process.env.SKYSQL
     ) {
       //session tracking not implemented
       this.skip();
@@ -703,7 +706,8 @@ describe('connection', () => {
         if (
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
-          !process.env.MAXSCALE_VERSION
+          !process.env.MAXSCALE_VERSION &&
+          !process.env.SKYSQL
         ) {
           //ok packet contain meta change
           assert.equal(shareConn.info.database, 'changedb');
@@ -777,7 +781,8 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.MAXSCALE_VERSION
+      process.env.MAXSCALE_VERSION ||
+      process.env.SKYSQL
     ) {
       //session tracking not implemented
       this.skip();
@@ -817,7 +822,8 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.MAXSCALE_VERSION
+      process.env.MAXSCALE_VERSION ||
+      process.env.SKYSQL
     ) {
       //session tracking not implemented
       this.skip();

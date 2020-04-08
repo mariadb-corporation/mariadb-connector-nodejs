@@ -249,7 +249,6 @@ describe('local-infile', () => {
       })
       .then(() => {
         fs.chmodSync(nonReadableFile, 0o222);
-        console.log;
         base
           .createConnection({ permitLocalInfile: true })
           .then((conn) => {

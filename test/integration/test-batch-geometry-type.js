@@ -2,12 +2,15 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-
+const Conf = require('../conf');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 describe('batch geometry type', () => {
+
+  const useBulk = Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk;
+
   it('Point format', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -153,16 +156,13 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: {
-                type: 'LineString',
-                coordinates: []
-              }
+              g: useBulk ? {
+                "coordinates": [],
+                "type": "LineString"
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'LineString' } : null)
             },
             {
-              g:
-                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
-                  ? { type: 'LineString' }
-                  : null
+              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'LineString' } : null
             }
           ]);
         } else {
@@ -302,22 +302,16 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g:
-                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
-                  ? { type: 'Polygon' }
-                  : null
+              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'Polygon',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null)
             },
             {
-              g:
-                shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
-                  ? { type: 'Polygon' }
-                  : null
+              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null
             }
           ]);
         } else {
@@ -417,16 +411,16 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPoint',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPoint' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPoint',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPoint' } : null)
             }
           ]);
         } else {
@@ -535,22 +529,22 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiLineString',
                 coordinates: [[]]
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiLineString' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiLineString',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiLineString' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiLineString',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiLineString' } : null)
             }
           ]);
         } else {
@@ -747,28 +741,28 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPolygon',
                 coordinates: [[[]]]
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPolygon' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPolygon',
                 coordinates: [[]]
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPolygon' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPolygon',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPolygon' } : null)
             },
             {
-              g: {
+              g: useBulk ? {
                 type: 'MultiPolygon',
                 coordinates: []
-              }
+              } : (shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'MultiPolygon' } : null)
             }
           ]);
         } else {

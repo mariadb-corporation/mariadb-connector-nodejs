@@ -4,36 +4,39 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('multi-results', () => {
-  let conn;
+  let multiStmtConn;
 
   before(function (done) {
     base
       .createConnection({ multipleStatements: true })
       .then((con) => {
-        conn = con;
+        multiStmtConn = con;
         done();
       })
-      .catch(done);
+      .catch((err) => {
+        console.log(err);
+        done();
+      });
   });
 
   after(function () {
-    shareConn.query('DROP PROCEDURE myProc');
-    conn.end();
+    shareConn.query('DROP PROCEDURE IF EXISTS myProc').catch((err) => {});
+    if (multiStmtConn) multiStmtConn.end();
   });
 
-  it('simple do 1', function (done) {
-    shareConn
-      .query('DO 1')
-      .then((rows) => {
-        assert.deepEqual(rows, {
-          affectedRows: 0,
-          insertId: 0,
-          warningStatus: 0
-        });
-        done();
-      })
-      .catch(done);
-  });
+  // it('simple do 1', function (done) {
+  //   shareConn
+  //     .query('DO 1')
+  //     .then((rows) => {
+  //       assert.deepEqual(rows, {
+  //         affectedRows: 0,
+  //         insertId: 0,
+  //         warningStatus: 0
+  //       });
+  //       done();
+  //     })
+  //     .catch(done);
+  // });
 
   it('duplicate column', function (done) {
     base
@@ -47,7 +50,7 @@ describe('multi-results', () => {
             conn
               .query('SELECT i, i FROM t')
               .then((res) => {
-                conn.close();
+                conn.end();
                 done(new Error('must have thrown an error'));
               })
               .catch((err) => {
@@ -55,12 +58,12 @@ describe('multi-results', () => {
                 assert.equal(err.errno, 45040);
                 assert.equal(err.sqlState, 42000);
                 assert.equal(err.code, 'ER_DUPLICATE_FIELD');
-                conn.close();
+                conn.end();
                 done();
               });
           })
           .catch((err) => {
-            conn.close();
+            conn.end();
             done(err);
           });
       })
@@ -84,13 +87,13 @@ describe('multi-results', () => {
                     i: 1
                   }
                 ]);
-                conn.close();
+                conn.end();
                 done();
               })
               .catch(done);
           })
           .catch((err) => {
-            conn.close();
+            conn.end();
             done(err);
           });
       })
@@ -109,7 +112,7 @@ describe('multi-results', () => {
             conn
               .query('SELECT i, i FROM t')
               .then((res) => {
-                conn.close();
+                conn.end();
                 done(new Error('must have thrown an error'));
               })
               .catch((err) => {
@@ -119,12 +122,12 @@ describe('multi-results', () => {
                 assert.equal(err.errno, 45040);
                 assert.equal(err.sqlState, 42000);
                 assert.equal(err.code, 'ER_DUPLICATE_FIELD');
-                conn.close();
+                conn.end();
                 done();
               });
           })
           .catch((err) => {
-            conn.close();
+            conn.end();
             done(err);
           });
       })
@@ -150,13 +153,13 @@ describe('multi-results', () => {
                     }
                   }
                 ]);
-                conn.close();
+                conn.end();
                 done();
               })
               .catch(done);
           })
           .catch((err) => {
-            conn.close();
+            conn.end();
             done(err);
           });
       })
@@ -254,6 +257,7 @@ describe('multi-results', () => {
   });
 
   it('query result with option metaPromiseAsArray multiple', function (done) {
+    if (process.env.SKYSQL) this.skip();
     base.createConnection({ metaAsArray: true, multipleStatements: true }).then((conn) => {
       conn
         .query('select 1; select 2')
@@ -288,7 +292,8 @@ describe('multi-results', () => {
   });
 
   it('multiple selects', function (done) {
-    conn
+    if (process.env.SKYSQL) this.skip();
+    multiStmtConn
       .query('SELECT 1 as t; SELECT 2 as t2; SELECT 3 as t3')
       .then((rows) => {
         assert.equal(rows.length, 3);
@@ -301,6 +306,7 @@ describe('multi-results', () => {
   });
 
   it('multiple selects with callbacks', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const callbackConn = base.createCallbackConnection({
       multipleStatements: true
     });
@@ -325,7 +331,8 @@ describe('multi-results', () => {
   });
 
   it('multiple result type', function (done) {
-    conn
+    if (process.env.SKYSQL) this.skip();
+    multiStmtConn
       .query('SELECT 1 as t; DO 1')
       .then((rows) => {
         assert.equal(rows.length, 2);
@@ -341,6 +348,7 @@ describe('multi-results', () => {
   });
 
   it('multiple result type with callback', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const callbackConn = base.createCallbackConnection({
       multipleStatements: true
     });
@@ -368,9 +376,10 @@ describe('multi-results', () => {
   });
 
   it('multiple result type with multiple rows', function (done) {
+    if (process.env.SKYSQL) this.skip();
     //using sequence engine
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1)) this.skip();
-    conn
+    multiStmtConn
       .query('select * from seq_1_to_2; DO 1;select * from seq_2_to_3')
       .then((rows) => {
         assert.equal(rows.length, 3);
@@ -387,6 +396,7 @@ describe('multi-results', () => {
   });
 
   it('multiple result from procedure', function (done) {
+    if (process.env.SKYSQL) this.skip();
     shareConn.query('CREATE PROCEDURE myProc () BEGIN  SELECT 1; SELECT 2; END');
     shareConn
       .query('call myProc()')

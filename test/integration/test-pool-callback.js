@@ -5,6 +5,12 @@ const { assert } = require('chai');
 const Conf = require('../conf');
 
 describe('Pool callback', () => {
+
+  before(function () {
+    if (process.env.SKYSQL) this.skip();
+  });
+
+
   it('pool with wrong authentication', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback({
@@ -79,6 +85,7 @@ describe('Pool callback', () => {
   });
 
   it('create pool', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     const initTime = Date.now();
@@ -99,6 +106,7 @@ describe('Pool callback', () => {
   });
 
   it('create pool with noControlAfterUse', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -125,9 +133,19 @@ describe('Pool callback', () => {
     this.timeout(5000);
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     pool.query('wrong query', (err) => {
-      assert(err.message.includes('You have an error in your SQL syntax'));
-      assert.equal(err.sqlState, '42000');
-      assert.equal(err.code, 'ER_PARSE_ERROR');
+      if (err.errno === 1141) {
+        // SKYSQL ERROR
+        assert.isTrue(
+          err.message.includes(
+            'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+          )
+        );
+        assert.equal(err.sqlState, 'HY000');
+      } else {
+        assert(err.message.includes('You have an error in your SQL syntax'));
+        assert.equal(err.sqlState, '42000');
+        assert.equal(err.code, 'ER_PARSE_ERROR');
+      }
       pool.end((err) => {
         done();
       });
@@ -161,6 +179,7 @@ describe('Pool callback', () => {
   });
 
   it('pool getConnection timeout', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       acquireTimeout: 200
@@ -186,6 +205,7 @@ describe('Pool callback', () => {
   });
 
   it('pool query timeout', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -270,7 +290,7 @@ describe('Pool callback', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -311,7 +331,7 @@ describe('Pool callback', () => {
   });
 
   it('query fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -349,6 +369,7 @@ describe('Pool callback', () => {
   });
 
   it('connection end', function (done) {
+    if (process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -561,6 +582,7 @@ describe('Pool callback', () => {
   });
 
   it('test minimum idle decrease', function (done) {
+    if (process.env.SKYSQL) this.skip();
     this.timeout(30000);
     const pool = base.createPoolCallback({
       connectionLimit: 10,

@@ -10,7 +10,7 @@ const os = require('os');
 
 describe('Pool callback event', () => {
   it('pool connection creation', function (done) {
-    this.timeout(5000);
+    this.timeout(10000);
     const pool = base.createPoolCallback();
     let connectionNumber = 0;
     pool.on('connection', (conn) => {
@@ -21,7 +21,7 @@ describe('Pool callback event', () => {
       assert.equal(connectionNumber, 10);
       pool.end();
       done();
-    }, 2000);
+    }, 7000);
   });
 
   it('pool connection acquire', function (done) {
@@ -43,8 +43,9 @@ describe('Pool callback event', () => {
   });
 
   it('pool connection enqueue', function (done) {
-    this.timeout(5000);
-    const pool = base.createPoolCallback({ connectionLimit: 2 });
+    if (process.env.SKYSQL) this.skip();
+    this.timeout(20000);
+    const pool = base.createPoolCallback({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;
     let releaseNumber = 0;
     pool.on('enqueue', () => {
@@ -61,13 +62,13 @@ describe('Pool callback event', () => {
         requests.push(pool.query('SELECT ' + i));
       }
       pool.query('SELECT 499', (err, res) => {
-        assert.isTrue(enqueueNumber <= 498);
-        assert.isTrue(enqueueNumber > 490);
+        assert.isTrue(enqueueNumber <= 499, enqueueNumber);
+        assert.isTrue(enqueueNumber > 490, enqueueNumber);
         setTimeout(() => {
-          assert.equal(releaseNumber, 500);
+          assert.equal(releaseNumber, 500, releaseNumber);
           pool.end();
           done();
-        }, 10);
+        }, 1000);
       });
     }, 500);
   });

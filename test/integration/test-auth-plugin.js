@@ -33,7 +33,11 @@ describe('authentication plugin', () => {
                   );
                 })
                 .then(() => {
-                  return shareConn.query("GRANT ALL on *.* to verificationEd25519AuthPlugin@'%'");
+                  return shareConn.query(
+                    'GRANT SELECT on  `' +
+                      Conf.baseConfig.database +
+                      "`.* to verificationEd25519AuthPlugin@'%'"
+                  );
                 })
                 .then(() => {
                   base
@@ -90,7 +94,7 @@ describe('authentication plugin', () => {
           shareConn
             .query('CREATE USER ' + windowsUser + " IDENTIFIED VIA named_pipe using 'test'")
             .then(() => {
-              return shareConn.query('GRANT ALL on *.* to ' + windowsUser);
+              return shareConn.query('GRANT SELECT on *.* to ' + windowsUser);
             })
             .then(() => {
               return shareConn.query('select @@version_compile_os,@@socket soc');
@@ -139,7 +143,7 @@ describe('authentication plugin', () => {
           )
           .catch((err) => {});
         shareConn
-          .query("GRANT ALL on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'")
+          .query("GRANT SELECT on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'")
           .then(() => {
             base
               .createConnection({ user: null, socketPath: res[0].soc })
@@ -165,7 +169,7 @@ describe('authentication plugin', () => {
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch((err) => {});
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch((err) => {});
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
-    shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
+    shareConn.query("GRANT SELECT ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
     shareConn.query('FLUSH PRIVILEGES');
 
     //password is unix password "myPwd"
@@ -195,7 +199,7 @@ describe('authentication plugin', () => {
     shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch((err) => {});
     shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch((err) => {});
     shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
-    shareConn.query("GRANT ALL ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
+    shareConn.query("GRANT SELECT ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
     shareConn.query('FLUSH PRIVILEGES');
 
     //password is unix password "myPwd"
@@ -217,9 +221,9 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
-    shareConn.query("drop user IF EXISTS mysqltest1@'%'");
+    shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
     shareConn
       .query(
         "CREATE USER mysqltest1@'%' IDENTIFIED " +
@@ -227,7 +231,9 @@ describe('authentication plugin', () => {
           " OR mysql_native_password as password('!Passw0rd3Works')"
       )
       .then(() => {
-        return shareConn.query("grant all on *.* to mysqltest1@'%'");
+        return shareConn.query(
+          'grant SELECT on `' + Conf.baseConfig.database + "`.*  to mysqltest1@'%'"
+        );
       })
       .then(() => {
         return base.createConnection({

@@ -7,7 +7,7 @@ const Conf = require('../conf');
 const tls = require('tls');
 
 describe('ssl', function () {
-  let ca = null;
+  let ca = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? Conf.baseConfig.ssl.ca : null;
   let clientKey = null;
   let clientCert = null;
   let clientKeystore = null;
@@ -35,12 +35,15 @@ describe('ssl', function () {
         }
       }
 
-      let serverCaFile = process.env.TEST_SSL_CA_FILE;
+      let serverCaFile = (Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca) ? null : process.env.TEST_SSL_CA_FILE;
       let clientKeyFileName = process.env.TEST_SSL_CLIENT_KEY_FILE;
       let clientCertFileName = process.env.TEST_SSL_CLIENT_CERT_FILE;
       let clientKeystoreFileName = process.env.TEST_SSL_CLIENT_KEYSTORE_FILE;
 
-      if (!serverCaFile) {
+      if (
+        !serverCaFile &&
+        (Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')
+      ) {
         try {
           if (fs.existsSync('../ssl')) {
             serverCaFile = '../ssl/server.crt';
@@ -71,7 +74,7 @@ describe('ssl', function () {
         )
         .then(() => {
           return shareConn.query(
-            "GRANT ALL PRIVILEGES ON *.* TO 'sslTestUser'@'%' " +
+            "GRANT SELECT ON *.* TO 'sslTestUser'@'%' " +
               ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
               (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
                 ? ' REQUIRE SSL'
@@ -89,7 +92,7 @@ describe('ssl', function () {
         })
         .then(() => {
           return shareConn.query(
-            "GRANT ALL PRIVILEGES ON *.* TO 'X509testUser'@'%' " +
+            "GRANT SELECT ON *.* TO 'X509testUser'@'%' " +
               ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
               (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
                 ? ' REQUIRE X509'
@@ -270,6 +273,7 @@ describe('ssl', function () {
   });
 
   it('TLSv1.1 with permit cipher', function (done) {
+    if (process.env.SKYSQL) this.skip();
     if (!sslEnable) this.skip();
     if (
       !shareConn.info.isMariaDB() &&
@@ -290,7 +294,10 @@ describe('ssl', function () {
         conn.end();
         done();
       })
-      .catch(done);
+      .catch((err) => {
+        console.log(err);
+        done(err);
+      });
   });
 
   it('TLSv1.1 no common cipher', function (done) {
@@ -437,6 +444,8 @@ describe('ssl', function () {
   });
 
   it('CA provided with matching cn', function (done) {
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
+      this.skip();
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
@@ -480,6 +489,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', function (done) {
+    if (process.env.SKYSQL) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -503,6 +513,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
+    if (process.env.SKYSQL) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -536,8 +547,8 @@ describe('ssl', function () {
         conn = con;
         conn.query("DROP USER IF EXISTS ChangeUser@'%'").catch((err) => {});
         conn.query('FLUSH PRIVILEGES');
-        conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mySupPassw@rd'");
-        conn.query("GRANT ALL PRIVILEGES ON *.* TO ChangeUser@'%' with grant option");
+        conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mySupPassw@rd2'");
+        conn.query("GRANT SELECT ON *.* TO ChangeUser@'%' with grant option");
         return conn.query('FLUSH PRIVILEGES');
       })
       .then(() => {
@@ -547,7 +558,7 @@ describe('ssl', function () {
             currUser = res[0]['CURRENT_USER'];
             return conn.changeUser({
               user: 'ChangeUser',
-              password: 'mySupPassw@rd',
+              password: 'mySupPassw@rd2',
               connectAttributes: { par1: 'bouh', par2: 'bla' }
             });
           })
