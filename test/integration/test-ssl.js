@@ -35,7 +35,8 @@ describe('ssl', function () {
         }
       }
 
-      let serverCaFile = (Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca) ? null : process.env.TEST_SSL_CA_FILE;
+      let serverCaFile =
+        Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : process.env.TEST_SSL_CA_FILE;
       let clientKeyFileName = process.env.TEST_SSL_CLIENT_KEY_FILE;
       let clientCertFileName = process.env.TEST_SSL_CLIENT_CERT_FILE;
       let clientKeystoreFileName = process.env.TEST_SSL_CLIENT_KEYSTORE_FILE;

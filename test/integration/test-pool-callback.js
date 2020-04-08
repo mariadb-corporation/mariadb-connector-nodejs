@@ -5,11 +5,9 @@ const { assert } = require('chai');
 const Conf = require('../conf');
 
 describe('Pool callback', () => {
-
   before(function () {
     if (process.env.SKYSQL) this.skip();
   });
-
 
   it('pool with wrong authentication', function (done) {
     this.timeout(10000);
