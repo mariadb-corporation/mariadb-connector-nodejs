@@ -3,12 +3,17 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const Capabilities = require('../../lib/const/capabilities');
 
 describe('batch geometry type', () => {
-  const useBulk = Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk;
+  let supportBulk;
+  before(function () {
+    supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
+      ? (shareConn.info.serverCapabilities.high &
+          Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) >
+        0
+      : false;
+  });
 
   it('Point format', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
@@ -155,7 +160,7 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     coordinates: [],
                     type: 'LineString'
@@ -308,7 +313,7 @@ describe('batch geometry type', () => {
               g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'Polygon',
                     coordinates: []
@@ -418,7 +423,7 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPoint',
                     coordinates: []
@@ -428,7 +433,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPoint',
                     coordinates: []
@@ -544,7 +549,7 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiLineString',
                     coordinates: [[]]
@@ -554,7 +559,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiLineString',
                     coordinates: []
@@ -564,7 +569,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiLineString',
                     coordinates: []
@@ -768,7 +773,7 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPolygon',
                     coordinates: [[[]]]
@@ -778,7 +783,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPolygon',
                     coordinates: [[]]
@@ -788,7 +793,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPolygon',
                     coordinates: []
@@ -798,7 +803,7 @@ describe('batch geometry type', () => {
                 : null
             },
             {
-              g: useBulk
+              g: supportBulk
                 ? {
                     type: 'MultiPolygon',
                     coordinates: []

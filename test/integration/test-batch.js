@@ -2,11 +2,11 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-
+const Capabilities = require('../../lib/const/capabilities');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-
+const Conf = require('../conf');
 const str = base.utf8Collation()
   ? "abcdefghijkflmn'opqrtuvwx🤘💪"
   : 'abcdefghijkflmn\'opqrtuvwxyz"';
@@ -16,10 +16,14 @@ describe('batch', () => {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
 
   let maxAllowedSize, bigBuf, timezoneParam;
-
+  let supportBulk;
   before(function (done) {
     timezoneParam = 'America/New_York';
-
+    supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
+      ? (shareConn.info.serverCapabilities.high &
+          Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) >
+        0
+      : false;
     shareConn
       .query('SELECT @@max_allowed_packet as t')
       .then((row) => {
@@ -1372,7 +1376,7 @@ describe('batch', () => {
     });
 
     it('non rewritable batch', function (done) {
-      if (process.env.SKYSQL) this.skip();
+      if (process.env.SKYSQL || !supportBulk) this.skip();
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
@@ -1471,7 +1475,7 @@ describe('batch', () => {
     });
 
     it('non rewritable batch', function (done) {
-      if (process.env.SKYSQL) this.skip();
+      if (process.env.SKYSQL || !supportBulk) this.skip();
       this.timeout(30000);
       nonRewritableBatch(useCompression, true, done);
     });
@@ -1870,7 +1874,7 @@ describe('batch', () => {
     });
 
     it('non rewritable batch', function (done) {
-      if (process.env.SKYSQL) this.skip();
+      if (process.env.SKYSQL || !supportBulk) this.skip();
       this.timeout(30000);
       nonRewritableHoldersErr(true, done);
     });
