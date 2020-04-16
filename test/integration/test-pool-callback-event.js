@@ -9,6 +9,10 @@ const path = require('path');
 const os = require('os');
 
 describe('Pool callback event', () => {
+  before(function () {
+    if (process.env.SKYSQL != null) this.skip();
+  });
+
   it('pool connection creation', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback();

@@ -514,7 +514,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL != null) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
