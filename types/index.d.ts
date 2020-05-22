@@ -649,18 +649,18 @@ export interface SqlError extends Error {
 
 interface SqlErrorConstructor extends ErrorConstructor {
   new (
-      msg: string,
-      fatal?: boolean,
-      info?: { threadId?: number },
-      sqlState?: string | null,
-      errno?: number,
-      additionalStack?: string,
-      addHeader?: boolean,
+    msg: string,
+    fatal?: boolean,
+    info?: { threadId?: number },
+    sqlState?: string | null,
+    errno?: number,
+    additionalStack?: string,
+    addHeader?: boolean
   ): SqlError;
   readonly prototype: SqlError;
 }
 
-declare var SqlError: SqlErrorConstructor;
+declare const SqlError: SqlErrorConstructor;
 
 export const enum TypeNumbers {
   DECIMAL = 0,
