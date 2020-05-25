@@ -78,7 +78,7 @@ describe('mapping', () => {
     Buffer.from([0x01]) //VARBINARY(10)
   ];
 
-  before(done => {
+  before((done) => {
     shareConn.query(
       'CREATE TEMPORARY TABLE nullMappingTable(' +
         't1 BIT(1) NULL,' +
@@ -173,7 +173,7 @@ describe('mapping', () => {
     }
   });
 
-  it('query mapping field', function(done) {
+  it('query mapping field', function (done) {
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();
@@ -181,7 +181,7 @@ describe('mapping', () => {
 
     shareConn
       .query('SELECT * FROM mappingTable')
-      .then(rows => {
+      .then((rows) => {
         for (let i = 0; i < initValue.length; i++) {
           assert.deepStrictEqual(rows[0]['t' + (i + 1)], initValue[i]);
         }
@@ -193,10 +193,10 @@ describe('mapping', () => {
       .catch(done);
   });
 
-  it('query null mapping field', done => {
+  it('query null mapping field', (done) => {
     shareConn
       .query('SELECT * FROM nullMappingTable')
-      .then(rows => {
+      .then((rows) => {
         for (let i = 0; i < 27; i++) {
           assert.equal(rows[0]['t' + (i + 1)], null);
         }
@@ -205,14 +205,14 @@ describe('mapping', () => {
       .catch(done);
   });
 
-  it('dataType with null', done => {
+  it('dataType with null', (done) => {
     shareConn.query(
       'CREATE TEMPORARY TABLE dataTypeWithNull (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
     );
     shareConn.query("insert into dataTypeWithNull values(null, 'a','b','c')");
     shareConn
       .query('SELECT * FROM dataTypeWithNull')
-      .then(rows => {
+      .then((rows) => {
         assert.ok(Buffer.isBuffer(rows[0].test));
         assert.ok(Buffer.isBuffer(rows[0].test2));
         assert.ok(

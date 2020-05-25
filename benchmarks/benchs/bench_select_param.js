@@ -3,7 +3,7 @@ const assert = require('assert');
 module.exports.title = 'select number';
 module.exports.displaySql = 'select ?';
 module.exports.promise = false;
-module.exports.benchFct = function(conn, deferred) {
+module.exports.benchFct = function (conn, deferred) {
   conn.query('select ?', [100000000], (err, rows) => {
     if (err) {
       throw err;

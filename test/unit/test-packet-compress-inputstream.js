@@ -15,7 +15,7 @@ describe('test compress PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
   const info = new ConnectionInformation();
-  const unexpectedPacket = packet => {
+  const unexpectedPacket = (packet) => {
     throw new Error('unexpected packet');
   };
 
@@ -39,24 +39,24 @@ describe('test compress PacketInputStream data', () => {
     }
   });
 
-  it('small complete packet', done => {
+  it('small complete packet', (done) => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it('small complete packet - 2 separate header packets', done => {
+  it('small complete packet - 2 separate header packets', (done) => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9]));
     cis.onData(Buffer.from([0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it('small complete packet - 2 other separate header packets', done => {
+  it('small complete packet - 2 other separate header packets', (done) => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0, 0, 0]));
     cis.onData(Buffer.from([0, 0, 0, 5, 0, 0, 0, 1, 2, 3, 4, 5]));
   });
 
-  it('small complete packet - many separate header packets', done => {
+  it('small complete packet - many separate header packets', (done) => {
     const cis = createCompressObj(done, Buffer.from([1, 2, 3, 4, 5]));
     cis.onData(Buffer.from([9, 0]));
     cis.onData(Buffer.from([0, 0]));
@@ -68,7 +68,7 @@ describe('test compress PacketInputStream data', () => {
     cis.onData(Buffer.from([4, 5]));
   });
 
-  it('big packet multi part data', done => {
+  it('big packet multi part data', (done) => {
     const cis = createCompressObj(done, buf);
 
     const compressChunk1 = ZLib.deflateSync(
@@ -104,7 +104,7 @@ describe('test compress PacketInputStream data', () => {
   function createCompressObj(done, expectedBuf) {
     const queue = new Queue();
     queue.push(
-      new EmptyCmd(packet => {
+      new EmptyCmd((packet) => {
         assert.deepEqual(expectedBuf, packet.buf);
         done();
       })

@@ -12,10 +12,10 @@ describe('local-infile', () => {
   const bigFileName = path.join(os.tmpdir(), 'bigLocalInfile.txt');
   let conn;
 
-  after(function() {
-    fs.unlink(smallFileName, err => {});
-    fs.unlink(nonReadableFile, err => {});
-    fs.unlink(bigFileName, err => {});
+  after(function () {
+    fs.unlink(smallFileName, (err) => {});
+    fs.unlink(nonReadableFile, (err) => {});
+    fs.unlink(bigFileName, (err) => {});
   });
 
   afterEach(() => {
@@ -25,18 +25,23 @@ describe('local-infile', () => {
     }
   });
 
-  it('local infile disable when permitLocalInfile option is set', function(done) {
+  it('local infile disable when permitLocalInfile option is set', function (done) {
     base
       .createConnection({ permitLocalInfile: false })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)")
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+          .catch((err) => {
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();
@@ -45,18 +50,23 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('local infile disable when pipelining option is set', function(done) {
+  it('local infile disable when pipelining option is set', function (done) {
     base
       .createConnection({ pipelining: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)")
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+          .catch((err) => {
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();
@@ -65,19 +75,24 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('local infile disable using default options', function(done) {
+  it('local infile disable using default options', function (done) {
     base
       .createConnection({ pipelining: undefined, permitLocalInfile: undefined })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)")
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(err => {
+          .catch((err) => {
             assert(err != null);
-            assert.isTrue(err.errno == 1148 || err.errno == 3948);
-            assert.equal(err.sqlState, '42000');
+            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
+              assert.equal(err.errno, 4166);
+              assert.equal(err.sqlState, 'HY000');
+            } else {
+              assert.isTrue(err.errno == 1148 || err.errno == 3948);
+              assert.equal(err.sqlState, '42000');
+            }
             assert(!err.fatal);
             conn.end();
             done();
@@ -86,17 +101,17 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('file error missing', function(done) {
+  it('file error missing', function (done) {
     const self = this;
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         if (rows[0]['@@local_infile'] === 0) {
           self.skip();
         }
         base
           .createConnection({ permitLocalInfile: true })
-          .then(conn => {
+          .then((conn) => {
             conn
               .query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))')
               .then(() => {
@@ -109,7 +124,7 @@ describe('local-infile', () => {
               .then(() => {
                 done(new Error('must have thrown error !'));
               })
-              .catch(err => {
+              .catch((err) => {
                 assert(
                   err.message.includes(
                     'LOCAL INFILE command failed: ENOENT: no such file or directory'
@@ -126,16 +141,16 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('small local infile', function(done) {
+  it('small local infile', function (done) {
     const self = this;
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         if (rows[0]['@@local_infile'] === 0) {
           self.skip();
         }
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -144,7 +159,7 @@ describe('local-infile', () => {
       .then(() => {
         base
           .createConnection({ permitLocalInfile: true })
-          .then(conn => {
+          .then((conn) => {
             conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
             conn
               .query(
@@ -155,7 +170,7 @@ describe('local-infile', () => {
               .then(() => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
-              .then(rows => {
+              .then((rows) => {
                 assert.deepEqual(rows, [
                   { id: 1, test: 'hello' },
                   { id: 2, test: 'world' }
@@ -170,16 +185,16 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('small local infile with non supported node.js encoding', function(done) {
+  it('small local infile with non supported node.js encoding', function (done) {
     const self = this;
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         if (rows[0]['@@local_infile'] === 0) {
           self.skip();
         }
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -188,7 +203,7 @@ describe('local-infile', () => {
       .then(() => {
         base
           .createConnection({ permitLocalInfile: true, charset: 'big5' })
-          .then(conn => {
+          .then((conn) => {
             conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
             conn
               .query(
@@ -199,7 +214,7 @@ describe('local-infile', () => {
               .then(() => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
-              .then(rows => {
+              .then((rows) => {
                 assert.deepEqual(rows, [
                   { id: 1, test: 'hello' },
                   { id: 2, test: 'world' }
@@ -214,19 +229,19 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('non readable local infile', function(done) {
+  it('non readable local infile', function (done) {
     //on windows, fs.chmodSync doesn't remove read access.
     if (process.platform === 'win32') this.skip();
 
     const self = this;
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         if (rows[0]['@@local_infile'] === 0) {
           self.skip();
         }
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -234,10 +249,9 @@ describe('local-infile', () => {
       })
       .then(() => {
         fs.chmodSync(nonReadableFile, 0o222);
-        console.log;
         base
           .createConnection({ permitLocalInfile: true })
-          .then(conn => {
+          .then((conn) => {
             conn.query('CREATE TEMPORARY TABLE nonReadableFile(id int, test varchar(100))');
             conn
               .query(
@@ -249,7 +263,7 @@ describe('local-infile', () => {
                 conn.end();
                 done('must have thrown error');
               })
-              .catch(err => {
+              .catch((err) => {
                 assert.equal(err.sqlState, '22000');
                 assert(!err.fatal);
                 conn.end();
@@ -261,19 +275,19 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('big local infile', function(done) {
+  it('big local infile', function (done) {
     this.timeout(180000);
     let size;
     const self = this;
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         if (rows[0]['@@local_infile'] === 0) {
           self.skip();
         }
         return shareConn.query('SELECT @@max_allowed_packet as t');
       })
-      .then(rows => {
+      .then((rows) => {
         const maxAllowedSize = rows[0].t;
         size = Math.round((maxAllowedSize - 100) / 16);
         const header = '"a","b"\n';
@@ -283,8 +297,8 @@ describe('local-infile', () => {
         for (let i = 0; i < size; i++) {
           buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16 + headerLen);
         }
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(bigFileName, buf, function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(bigFileName, buf, function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -293,7 +307,7 @@ describe('local-infile', () => {
       .then(() => {
         base
           .createConnection({ permitLocalInfile: true })
-          .then(conn => {
+          .then((conn) => {
             conn.query('CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
             conn
               .query(
@@ -307,7 +321,7 @@ describe('local-infile', () => {
               .then(() => {
                 return conn.query('SELECT * FROM bigLocalInfile');
               })
-              .then(rows => {
+              .then((rows) => {
                 assert.equal(rows.length, size);
                 for (let i = 0; i < size; i++) {
                   if (rows[i].t1 !== 'a' + padStartZero(i, 8) && rows[i].t2 !== 'b') {

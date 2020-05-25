@@ -9,11 +9,15 @@ const path = require('path');
 const os = require('os');
 
 describe('Pool callback event', () => {
-  it('pool connection creation', function(done) {
-    this.timeout(5000);
+  before(function () {
+    if (process.env.SKYSQL != null) this.skip();
+  });
+
+  it('pool connection creation', function (done) {
+    this.timeout(10000);
     const pool = base.createPoolCallback();
     let connectionNumber = 0;
-    pool.on('connection', conn => {
+    pool.on('connection', (conn) => {
       assert.isTrue(conn !== undefined);
       connectionNumber++;
     });
@@ -21,10 +25,10 @@ describe('Pool callback event', () => {
       assert.equal(connectionNumber, 10);
       pool.end();
       done();
-    }, 2000);
+    }, 7000);
   });
 
-  it('pool connection acquire', function(done) {
+  it('pool connection acquire', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     let acquireNumber = 0;
     pool.on('acquire', () => {
@@ -42,15 +46,16 @@ describe('Pool callback event', () => {
     });
   });
 
-  it('pool connection enqueue', function(done) {
-    this.timeout(5000);
-    const pool = base.createPoolCallback({ connectionLimit: 2 });
+  it('pool connection enqueue', function (done) {
+    if (process.env.SKYSQL) this.skip();
+    this.timeout(20000);
+    const pool = base.createPoolCallback({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;
     let releaseNumber = 0;
     pool.on('enqueue', () => {
       enqueueNumber++;
     });
-    pool.on('release', conn => {
+    pool.on('release', (conn) => {
       assert.isTrue(conn !== undefined);
       releaseNumber++;
     });
@@ -61,13 +66,13 @@ describe('Pool callback event', () => {
         requests.push(pool.query('SELECT ' + i));
       }
       pool.query('SELECT 499', (err, res) => {
-        assert.isTrue(enqueueNumber <= 498);
-        assert.isTrue(enqueueNumber > 490);
+        assert.isTrue(enqueueNumber <= 499, enqueueNumber);
+        assert.isTrue(enqueueNumber > 490, enqueueNumber);
         setTimeout(() => {
-          assert.equal(releaseNumber, 500);
+          assert.equal(releaseNumber, 500, releaseNumber);
           pool.end();
           done();
-        }, 10);
+        }, 1000);
       });
     }, 500);
   });

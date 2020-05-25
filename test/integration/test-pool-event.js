@@ -9,11 +9,15 @@ const path = require('path');
 const os = require('os');
 
 describe('Pool event', () => {
-  it('pool connection creation', function(done) {
+  before(function () {
+    if (process.env.SKYSQL) this.skip();
+  });
+
+  it('pool connection creation', function (done) {
     this.timeout(5000);
     const pool = base.createPool();
     let connectionNumber = 0;
-    pool.on('connection', conn => {
+    pool.on('connection', (conn) => {
       assert.isTrue(conn !== undefined);
       connectionNumber++;
     });
@@ -24,7 +28,7 @@ describe('Pool event', () => {
     }, 2000);
   });
 
-  it('pool connection acquire', function(done) {
+  it('pool connection acquire', function (done) {
     const pool = base.createPool({ connectionLimit: 2 });
     let acquireNumber = 0;
     pool.on('acquire', () => {
@@ -33,11 +37,11 @@ describe('Pool event', () => {
 
     pool
       .query('SELECT 1')
-      .then(res => {
+      .then((res) => {
         assert.equal(acquireNumber, 1);
         return pool.getConnection();
       })
-      .then(conn => {
+      .then((conn) => {
         assert.equal(acquireNumber, 2);
         conn.release();
         pool.end();
@@ -46,15 +50,15 @@ describe('Pool event', () => {
       .catch(done);
   });
 
-  it('pool connection enqueue', function(done) {
-    this.timeout(5000);
-    const pool = base.createPool({ connectionLimit: 2 });
+  it('pool connection enqueue', function (done) {
+    this.timeout(20000);
+    const pool = base.createPool({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;
     let releaseNumber = 0;
     pool.on('enqueue', () => {
       enqueueNumber++;
     });
-    pool.on('release', conn => {
+    pool.on('release', (conn) => {
       assert.isTrue(conn !== undefined);
       releaseNumber++;
     });
@@ -66,13 +70,13 @@ describe('Pool event', () => {
       }
       Promise.all(requests)
         .then(() => {
-          assert.isTrue(enqueueNumber <= 498);
-          assert.isTrue(enqueueNumber > 490);
+          assert.isTrue(enqueueNumber <= 498, enqueueNumber);
+          assert.isTrue(enqueueNumber > 490, enqueueNumber);
           setTimeout(() => {
-            assert.equal(releaseNumber, 500);
+            assert.equal(releaseNumber, 500, releaseNumber);
             pool.end();
             done();
-          }, 10);
+          }, 1000);
         })
         .catch(done);
     }, 500);

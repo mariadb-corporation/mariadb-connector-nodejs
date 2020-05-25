@@ -4,10 +4,10 @@ const fs = require('fs');
 const Bench = require('./common_benchmarks');
 let bench;
 
-const launchBenchs = function(path) {
+const launchBenchs = function (path) {
   bench = new Bench();
 
-  const test = 'bench_promise_select_one_user.js';
+  const test = 'bench_promise_select_param.js';
   const m = require(path + '/' + test);
   bench.initFcts.push([m.initFct, m.promise]);
   bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.promise, m.pool); //, bench.CONN.MYSQL);
@@ -15,9 +15,9 @@ const launchBenchs = function(path) {
   bench.suiteReady();
 };
 
-fs.access('../benchs', function(err) {
+fs.access('../benchs', function (err) {
   if (err) {
-    fs.access('../benchmarks/benchs', function(err) {
+    fs.access('../benchmarks/benchs', function (err) {
       launchBenchs('../benchmarks/benchs');
     });
   } else {

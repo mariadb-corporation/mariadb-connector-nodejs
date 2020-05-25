@@ -11,7 +11,7 @@ const readline = require('readline');
 const os = require('os');
 const path = require('path');
 
-const version = '10.4';
+const version = '10.5';
 const extendedUrl =
   'https://raw.githubusercontent.com/MariaDB/server/' + version + '/sql/share/errmsg-utf8.txt';
 const baseUrl =
@@ -20,16 +20,16 @@ const fileName = path.join(os.tmpdir(), 'mariadb_errmsg.txt');
 const fileNameBase = path.join(os.tmpdir(), 'my_base.h');
 const destFileName = path.join(__dirname, '/../lib/const/error-code.js');
 
-const download = function(url, dest, cb) {
+const download = function (url, dest, cb) {
   const file = fs.createWriteStream(dest);
   https
-    .get(url, function(response) {
+    .get(url, function (response) {
       response.pipe(file);
-      file.on('finish', function() {
+      file.on('finish', function () {
         file.close(cb);
       });
     })
-    .on('error', function(err) {
+    .on('error', function (err) {
       // Handle errors
       fs.unlink(dest);
       if (cb) cb(err.message);
@@ -40,8 +40,8 @@ let counter = 1;
 let pause = true;
 const maria_errors = [];
 
-const writeFile = function() {
-  fs.unlink(destFileName, err => {});
+const writeFile = function () {
+  fs.unlink(destFileName, (err) => {});
   const writer = fs.createWriteStream(destFileName);
 
   const header =
@@ -64,13 +64,13 @@ const writeFile = function() {
   console.log('finished');
 };
 
-const parseExtended = function(err) {
+const parseExtended = function (err) {
   if (err) return console.log(err);
   const lineReader = readline.createInterface({
     input: fs.createReadStream(fileName)
   });
 
-  lineReader.on('line', function(line) {
+  lineReader.on('line', function (line) {
     if (line.length > 0) {
       let car;
       switch ((car = line.charAt(0))) {
@@ -93,20 +93,20 @@ const parseExtended = function(err) {
     }
   });
 
-  lineReader.on('close', function() {
+  lineReader.on('close', function () {
     pause = true;
     download(baseUrl, fileNameBase, parseBase);
   });
 };
 
-const parseBase = function(err) {
+const parseBase = function (err) {
   if (err) return console.log(err);
   const lineReader = readline.createInterface({
     input: fs.createReadStream(fileNameBase)
   });
 
   const re = /(^(#define\s)([A-Z_]+)(\s|\t)+([0-9]+))/i;
-  lineReader.on('line', function(line) {
+  lineReader.on('line', function (line) {
     if (line.length > 0) {
       if (line.includes('#define HA_ERR_FIRST')) {
         pause = false;
@@ -121,7 +121,7 @@ const parseBase = function(err) {
     }
   });
 
-  lineReader.on('close', function() {
+  lineReader.on('close', function () {
     writeFile();
   });
 };

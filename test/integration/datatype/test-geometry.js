@@ -4,7 +4,7 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('geometry data type', () => {
-  it('Point format', function(done) {
+  it('Point format', function (done) {
     //MySQL 5.5 doesn't have ST_PointFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     shareConn.query('CREATE TEMPORARY TABLE gis_point  (g POINT)');
@@ -19,7 +19,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_point');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -51,7 +51,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('geometry escape', function() {
+  it('geometry escape', function () {
     let prefix =
       shareConn.info &&
       ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 4)) ||
@@ -173,7 +173,7 @@ describe('geometry data type', () => {
     );
   });
 
-  it('Point Insert', function(done) {
+  it('Point Insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -196,7 +196,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_point_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -211,10 +211,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Point' }
+                : null
           }
         ]);
         done();
@@ -222,7 +228,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('LineString format', function(done) {
+  it('LineString format', function (done) {
     //MySQL 5.5 doesn't have ST_LineFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
@@ -237,7 +243,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_line');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -276,7 +282,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('LineString insert', function(done) {
+  it('LineString insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     shareConn.query('CREATE TEMPORARY TABLE gis_line_insert  (g LINESTRING)');
@@ -313,7 +319,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_line_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -332,10 +338,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'LineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'LineString' }
+                : null
           }
         ]);
         done();
@@ -343,7 +355,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Polygon format', function(done) {
+  it('Polygon format', function (done) {
     //MySQL 5.5 doesn't have ST_PolygonFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
@@ -358,7 +370,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_polygon');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -414,7 +426,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Polygon insert', function(done) {
+  it('Polygon insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -471,7 +483,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_polygon_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -509,10 +521,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Polygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'Polygon' }
+                : null
           }
         ]);
         done();
@@ -520,7 +538,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('MultiPoint format', function(done) {
+  it('MultiPoint format', function (done) {
     //ST_MultiPointFromText alias doesn't exist before 10.1.4 / 5.7.6
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
@@ -536,7 +554,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_point');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -575,7 +593,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('MultiPoint insert', function(done) {
+  it('MultiPoint insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -610,7 +628,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_point_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -630,10 +648,16 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPoint' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPoint' }
+                : null
           }
         ]);
         done();
@@ -641,7 +665,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Multi-line String format', function(done) {
+  it('Multi-line String format', function (done) {
     //ST_MultiLineStringFromText alias doesn't exist before 10.1.4 / 5.7.6
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
@@ -657,7 +681,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_line');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -710,7 +734,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Multi-line insert', function(done) {
+  it('Multi-line insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -765,7 +789,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_line_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -797,13 +821,22 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiLineString' }
+                : null
           }
         ]);
         done();
@@ -811,7 +844,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Multi-polygon format', function(done) {
+  it('Multi-polygon format', function (done) {
     //ST_MultiPolygonFromText alias doesn't exist before 10.1.4 / 5.7.6
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
@@ -827,7 +860,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_polygon');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -914,7 +947,7 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Multi-polygon insert', function(done) {
+  it('Multi-polygon insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -1009,7 +1042,7 @@ describe('geometry data type', () => {
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_polygon_insert');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           {
             g: {
@@ -1067,16 +1100,28 @@ describe('geometry data type', () => {
             }
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           },
           {
-            g: null
+            g:
+              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                ? { type: 'MultiPolygon' }
+                : null
           }
         ]);
         done();
@@ -1084,14 +1129,14 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Geometry collection format', function(done) {
+  it('Geometry collection format', function (done) {
     //ST_GeomCollFromText alias doesn't exist before 10.1.4 / 5.7.6
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 6)) this.skip();
     if (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 1, 4)) this.skip();
 
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE gis_geometrycollection (g GEOMETRYCOLLECTION)');
         conn
           .query(
@@ -1106,7 +1151,7 @@ describe('geometry data type', () => {
           .then(() => {
             return conn.query('SELECT * FROM gis_geometrycollection');
           })
-          .then(rows => {
+          .then((rows) => {
             let expectedValue = [
               {
                 g: {
@@ -1201,7 +1246,7 @@ describe('geometry data type', () => {
             conn.end();
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             conn.end();
             done(err);
           });
@@ -1209,13 +1254,13 @@ describe('geometry data type', () => {
       .catch(done);
   });
 
-  it('Geometry collection insert', function(done) {
+  it('Geometry collection insert', function (done) {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE gis_geometrycollection_ins (g GEOMETRYCOLLECTION)');
         conn
           .query('INSERT INTO gis_geometrycollection_ins VALUES (?)', [
@@ -1323,7 +1368,7 @@ describe('geometry data type', () => {
           .then(() => {
             return conn.query('SELECT * FROM gis_geometrycollection_ins');
           })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [
               {
                 g: {
@@ -1425,7 +1470,7 @@ describe('geometry data type', () => {
             conn.end();
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             conn.end();
             done(err);
           });

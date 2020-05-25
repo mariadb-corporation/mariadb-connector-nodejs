@@ -3,14 +3,14 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 
-describe('Big query', function() {
+describe('Big query', function () {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
   let maxAllowedSize, buf;
 
-  before(function(done) {
+  before(function (done) {
     shareConn
       .query('SELECT @@max_allowed_packet as t')
-      .then(row => {
+      .then((row) => {
         maxAllowedSize = row[0].t;
         if (testSize < maxAllowedSize) {
           buf = Buffer.alloc(testSize);
@@ -23,7 +23,7 @@ describe('Big query', function() {
       .catch(done);
   });
 
-  it('parameter bigger than 16M packet size', function(done) {
+  it('parameter bigger than 16M packet size', function (done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
     shareConn.query('CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)');
@@ -32,15 +32,15 @@ describe('Big query', function() {
       .then(() => {
         return shareConn.query('SELECT * from bigParameterBigParam');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows[0].b, buf);
         done();
       })
       .catch(done);
   });
 
-  it('int8 buffer overflow', function(done) {
-    base.createConnection({ collation: 'latin1_swedish_ci' }).then(conn => {
+  it('int8 buffer overflow', function (done) {
+    base.createConnection({ collation: 'latin1_swedish_ci' }).then((conn) => {
       conn.query('CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
       const buf = Buffer.alloc(979, '0');
       conn
@@ -48,7 +48,7 @@ describe('Big query', function() {
         .then(() => {
           return conn.query('SELECT * from bigParameterInt8');
         })
-        .then(rows => {
+        .then((rows) => {
           assert.deepEqual(rows[0].a, buf.toString());
           assert.deepEqual(rows[0].b, 'test');
           conn.end();
@@ -58,23 +58,23 @@ describe('Big query', function() {
     });
   });
 
-  it('buffer growing', function(done) {
+  it('buffer growing', function (done) {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         bufferGrowing(conn, done);
       })
       .catch(done);
   });
 
-  it('buffer growing compression', function(done) {
+  it('buffer growing compression', function (done) {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
     base
       .createConnection({ compress: true })
-      .then(conn => {
+      .then((conn) => {
         bufferGrowing(conn, done);
       })
       .catch(done);
@@ -99,7 +99,7 @@ describe('Big query', function() {
       .then(() => {
         return conn.query('SELECT * from bigParameter');
       })
-      .then(rows => {
+      .then((rows) => {
         for (let i = 0; i < 10; i++) {
           assert.deepEqual(rows[0]['a' + i], params[i]);
         }

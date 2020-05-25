@@ -3,7 +3,7 @@ const assert = require('assert');
 module.exports.title = 'select one mysql.user and 1 integer using callback';
 module.exports.displaySql = 'select <all mysql.user fields>, 1 from mysql.user u LIMIT 1';
 module.exports.promise = false;
-module.exports.benchFct = function(conn, deferred) {
+module.exports.benchFct = function (conn, deferred) {
   conn.query(
     'select u.Host,\n' +
       'u.User,\n' +

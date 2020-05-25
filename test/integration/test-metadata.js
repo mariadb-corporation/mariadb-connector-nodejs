@@ -6,7 +6,7 @@ const Collations = require('../../lib/const/collations.js');
 const FieldType = require('../../lib/const/field-type');
 
 describe('metadata', () => {
-  it('result metadata values', function(done) {
+  it('result metadata values', function (done) {
     shareConn
       .query(
         'CREATE TEMPORARY TABLE metadatatable (id BIGINT not null primary key auto_increment, ' +
@@ -22,7 +22,7 @@ describe('metadata', () => {
           'SELECT id as id1, t as t1, d as d1, ds as d2, d2 as d3, ds2 as d4 FROM metadatatable as tm'
         );
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(rows.meta.length, 6);
 
         assert.equal(rows.meta[0].db(), 'testn');

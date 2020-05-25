@@ -23,7 +23,7 @@ module.exports.title =
 module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
 const iterations = 100;
 module.exports.promise = true;
-module.exports.benchFct = function(conn, deferred, connType) {
+module.exports.benchFct = function (conn, deferred, connType) {
   const params = [randomString(100)];
   // console.log(connType.desc);
   if (!connType.desc.includes('mariadb')) {
@@ -32,14 +32,14 @@ module.exports.benchFct = function(conn, deferred, connType) {
     for (let i = 0; i < iterations; i++) {
       conn
         .query(sqlInsert, params)
-        .then(rows => {
+        .then((rows) => {
           // let val = Array.isArray(rows) ? rows[0] : rows;
           // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
           if (++ended === iterations) {
             deferred.resolve();
           }
         })
-        .catch(err => {
+        .catch((err) => {
           throw err;
         });
     }
@@ -51,35 +51,35 @@ module.exports.benchFct = function(conn, deferred, connType) {
     }
     conn
       .batch(sqlInsert, totalParams)
-      .then(rows => {
+      .then((rows) => {
         deferred.resolve();
       })
-      .catch(err => {
+      .catch((err) => {
         throw err;
       });
   }
 };
 
-module.exports.initFct = function(conn) {
+module.exports.initFct = function (conn) {
   return Promise.all([
     conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
     conn.query("INSTALL SONAME 'ha_blackhole'"),
     conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
   ])
-    .catch(err => {
+    .catch((err) => {
       return Promise.all([
         conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
         conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
       ]);
     })
-    .catch(e => {
+    .catch((e) => {
       console.log(e);
       throw e;
     });
 };
 
-module.exports.onComplete = function(conn) {
-  conn.query('TRUNCATE TABLE testn.perfTestTextPipe').catch(e => {
+module.exports.onComplete = function (conn) {
+  conn.query('TRUNCATE TABLE testn.perfTestTextPipe').catch((e) => {
     console.log(e);
     throw e;
   });

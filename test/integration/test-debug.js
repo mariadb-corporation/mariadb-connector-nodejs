@@ -12,13 +12,13 @@ describe('debug', () => {
   let initialStdOut;
   let permitLocalInfile = true;
 
-  before(done => {
+  before((done) => {
     shareConn
       .query('select @@local_infile')
-      .then(rows => {
+      .then((rows) => {
         permitLocalInfile = rows[0]['@@local_infile'] === 1;
-        return new Promise(function(resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function(err) {
+        return new Promise(function (resolve, reject) {
+          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
             else resolve();
           });
@@ -34,37 +34,41 @@ describe('debug', () => {
   });
 
   //ensure that debug from previous test are written to console
-  afterEach(done => {
+  afterEach((done) => {
     setTimeout(() => {
       done();
     }, 1000);
   });
 
-  after(done => {
+  after((done) => {
     fs.unlink(smallFileName, done);
   });
 
-  it('select request debug', function(done) {
+  it('select request debug', function (done) {
     testQueryDebug(false, done);
   });
 
-  it('select request debug compress', function(done) {
+  it('select request debug compress', function (done) {
     testQueryDebug(true, done);
   });
 
   function testQueryDebug(compress, done) {
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
     base
       .createConnection({ compress: compress })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT 1')
           .then(() => {
-            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+            if (
+              compress &&
+              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.SKYSQL == undefined
+            ) {
               conn.debugCompress(true);
             } else {
               conn.debug(true);
@@ -72,7 +76,11 @@ describe('debug', () => {
             return conn.query('SELECT 2');
           })
           .then(() => {
-            if (compress && process.env.MAXSCALE_VERSION == undefined) {
+            if (
+              compress &&
+              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.SKYSQL == undefined
+            ) {
               conn.debugCompress(false);
             } else {
               conn.debug(false);
@@ -88,13 +96,14 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              if (process.env.MAXSCALE_VERSION) compress = false;
-              const rangeWithEOF = compress ? [900, 1200] : [1900, 2400];
+              if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) compress = false;
+              const rangeWithEOF = compress ? [900, 1200] : [1800, 2400];
               const rangeWithoutEOF = compress ? [900, 1200] : [1750, 2000];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
-                !process.env.MAXSCALE_VERSION
+                !process.env.MAXSCALE_VERSION &&
+                !process.env.SKYSQL
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -135,11 +144,11 @@ describe('debug', () => {
       .catch(done);
   }
 
-  it('select big request (compressed data) debug', function(done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+  it('select big request (compressed data) debug', function (done) {
+    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
 
@@ -147,10 +156,10 @@ describe('debug', () => {
 
     base
       .createConnection({ compress: true, debugCompress: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT ?', buf)
-          .then(rows => {
+          .then((rows) => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               conn
@@ -183,12 +192,12 @@ describe('debug', () => {
       .catch(done);
   });
 
-  it('load local infile debug', function(done) {
+  it('load local infile debug', function (done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(false, done);
   });
 
-  it('load local infile debug compress', function(done) {
+  it('load local infile debug compress', function (done) {
     if (!permitLocalInfile) this.skip();
     testLocalInfileDebug(true, done);
   });
@@ -196,7 +205,7 @@ describe('debug', () => {
   function testLocalInfileDebug(compress, done) {
     initialStdOut = console.log;
     let data = '';
-    console.log = function() {
+    console.log = function () {
       data += util.format.apply(null, arguments) + '\n';
     };
 
@@ -206,7 +215,7 @@ describe('debug', () => {
         debug: true,
         compress: compress
       })
-      .then(conn => {
+      .then((conn) => {
         conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
         conn
           .query(
@@ -223,7 +232,7 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              const range = [5500, 6500];
+              const range = [5500, 6800];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +
@@ -246,13 +255,13 @@ describe('debug', () => {
       .catch(done);
   }
 
-  it('log debug packets', function(done) {
+  it('log debug packets', function (done) {
     base
       .createConnection({ logPackets: true })
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('SELECT 1')
-          .then(rows => {
+          .then((rows) => {
             assert.isTrue(conn.info.getLastPackets().length > 570);
             conn.end();
             done();

@@ -75,11 +75,11 @@ async function testMisc(): Promise<void> {
     .on('error', (err: Error) => {
       throw err;
     })
-    .on('fields', meta => {
+    .on('fields', (meta) => {
       console.log(meta);
       metaReceived = true;
     })
-    .on('data', row => {
+    .on('data', (row) => {
       console.log(row.length > 1);
       currRow++;
     })

@@ -12,10 +12,6 @@ environment:
   TEST_LOG_PACKETS: true
   matrix:
 
-    - DB: '10.4.6'
-      MEM: "21"
-      nodejs_version: "8"
-
     - DB: '10.4.12'
       MEM: "21"
       nodejs_version: "10"
@@ -95,6 +91,6 @@ build: off
 test_script:
   - node --version
   - if "%SKIP_LEAK%" == "" npm install node-memwatch
-  - if "%BENCH%" == "1" ( npm install microtime ) else ( npm test )
+  - if "%BENCH%" == "1" ( npm install microtime ) else ( npm run test )
   - if "%BENCH%" == "1" ( npm install promise-mysql mysql2 )
   - if "%BENCH%" == "1" ( node c:\projects\mariadb-connector-nodejs\benchmarks\benchmarks.js )

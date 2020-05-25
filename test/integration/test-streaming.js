@@ -14,7 +14,7 @@ describe('streaming', () => {
   const buf2 = Buffer.alloc(size / 2);
   let maxAllowedSize;
 
-  before(function(done) {
+  before(function (done) {
     this.timeout(20000);
     shareConn
       .query(
@@ -23,20 +23,20 @@ describe('streaming', () => {
       .then(() => {
         return shareConn.query('SELECT @@max_allowed_packet as t');
       })
-      .then(rows => {
+      .then((rows) => {
         maxAllowedSize = rows[0].t;
         createTmpFiles(done);
       })
       .catch(done);
   });
 
-  after(function() {
+  after(function () {
     //create
-    fs.unlink(fileName, err => {});
-    fs.unlink(halfFileName, err => {});
+    fs.unlink(fileName, (err) => {});
+    fs.unlink(halfFileName, (err) => {});
   });
 
-  it('Streaming url content', function(done) {
+  it('Streaming url content', function (done) {
     this.timeout(30000);
     shareConn
       .query(
@@ -47,11 +47,11 @@ describe('streaming', () => {
         const https = require('https');
         https.get(
           'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.3.0/mariadb-java-client-2.3.0.jar',
-          readableStream => {
+          (readableStream) => {
             shareConn
               .query('INSERT INTO StreamingContent (b, c) VALUE (?, ?)', [readableStream, null])
               .then(() => shareConn.query('SELECT * FROM StreamingContent'))
-              .then(rows => {
+              .then((rows) => {
                 done();
               })
               .catch(done);
@@ -60,7 +60,7 @@ describe('streaming', () => {
       });
   });
 
-  it('Streaming single parameter', function(done) {
+  it('Streaming single parameter', function (done) {
     if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(fileName);
@@ -72,7 +72,7 @@ describe('streaming', () => {
       .then(() => {
         return shareConn.query('SELECT b from Streaming');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(size, rows[0].b.length);
         assert.deepEqual(rows, [{ b: buf }]);
         done();
@@ -80,7 +80,7 @@ describe('streaming', () => {
       .catch(done);
   });
 
-  it('Streaming multiple parameter', function(done) {
+  it('Streaming multiple parameter', function (done) {
     this.timeout(20000);
     if (maxAllowedSize < size) this.skip();
     const r = fs.createReadStream(halfFileName);
@@ -98,7 +98,7 @@ describe('streaming', () => {
       .then(() => {
         return shareConn.query('SELECT * from Streaming');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(size / 2, rows[0].b.length);
         assert.equal(size / 2, rows[0].d.length);
         assert.deepEqual(rows, [{ id: 1, b: buf2, c: 't1', d: buf2, e: 't2' }]);
@@ -107,7 +107,7 @@ describe('streaming', () => {
       .catch(done);
   });
 
-  it('Streaming multiple parameter begin no stream', function(done) {
+  it('Streaming multiple parameter begin no stream', function (done) {
     if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
@@ -125,7 +125,7 @@ describe('streaming', () => {
       .then(() => {
         return shareConn.query('SELECT * from Streaming');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(size / 2, rows[0].b.length);
         assert.equal(size / 2, rows[0].d.length);
         assert.deepEqual(rows, [{ id: 1, b: buf2, c: 't1', d: buf2, e: 't2' }]);
@@ -134,7 +134,7 @@ describe('streaming', () => {
       .catch(done);
   });
 
-  it('Streaming multiple parameter ensure max callstack', function(done) {
+  it('Streaming multiple parameter ensure max callstack', function (done) {
     if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
@@ -159,7 +159,7 @@ describe('streaming', () => {
       .then(() => {
         return shareConn.query('SELECT * from Streaming2');
       })
-      .then(rows => {
+      .then((rows) => {
         assert.equal(size / 2, rows[0].b.length);
         assert.deepEqual(rows[0].b, buf2);
         for (let i = 0; i < max; i++) {
@@ -176,14 +176,14 @@ describe('streaming', () => {
     }
 
     //create
-    fs.writeFile(fileName, buf, 'utf8', function(err) {
+    fs.writeFile(fileName, buf, 'utf8', function (err) {
       if (err) {
         done(err);
       } else {
         for (let i = 0; i < buf2.length; i++) {
           buf2[i] = 97 + (i % 10);
         }
-        fs.writeFile(halfFileName, buf2, 'utf8', function(err) {
+        fs.writeFile(halfFileName, buf2, 'utf8', function (err) {
           if (err) {
             done(err);
           } else {

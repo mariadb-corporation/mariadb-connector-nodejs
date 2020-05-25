@@ -14,7 +14,10 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, compatible with Node.js 6+, with the Promise API.
+MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the Promise API.
+
+version before 2.4 is compatible with Node.js 6+
+version after 2.4 is compatible with Node.js 10+
 
 
 ## Documentation

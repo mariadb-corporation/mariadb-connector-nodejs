@@ -4,7 +4,7 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('enum', () => {
-  it('enum type verification', done => {
+  it('enum type verification', (done) => {
     shareConn.query(
       'CREATE TEMPORARY TABLE fruits (\n' +
         '  id INT NOT NULL auto_increment PRIMARY KEY,\n' +
@@ -17,7 +17,7 @@ describe('enum', () => {
     shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [null, 120]);
     shareConn
       .query('SELECT * FROM fruits')
-      .then(rows => {
+      .then((rows) => {
         assert.deepEqual(rows, [
           { id: 1, fruit: 'pear', bushels: 20 },
           { id: 2, fruit: 'apple', bushels: 100 },

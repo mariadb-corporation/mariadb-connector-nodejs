@@ -5,23 +5,23 @@ const { assert } = require('chai');
 const ServerStatus = require('../../lib/const/server-status');
 
 describe('reset connection', () => {
-  it('reset user variable', function(done) {
+  it('reset user variable', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn
           .query("set @youhou='test'")
           .then(() => {
             return conn.query('select @youhou');
           })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, [{ '@youhou': 'test' }]);
             return conn.reset();
           })
           .then(() => {
             return conn.query('select @youhou');
           })
-          .then(rows => {
+          .then((rows) => {
             conn.end();
             if (
               (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
@@ -33,7 +33,7 @@ describe('reset connection', () => {
               done(new Error('must have thrown an error'));
             }
           })
-          .catch(err => {
+          .catch((err) => {
             if (
               (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
               (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
@@ -48,26 +48,26 @@ describe('reset connection', () => {
       .catch(done);
   });
 
-  it('reset temporary tables', function(done) {
+  it('reset temporary tables', function (done) {
     base
       .createConnection()
-      .then(conn => {
+      .then((conn) => {
         conn
           .query('CREATE TEMPORARY TABLE resetTemporaryTable(t varchar(128))')
           .then(() => {
             return conn.query('select * from resetTemporaryTable');
           })
-          .then(rows => {
+          .then((rows) => {
             assert.deepEqual(rows, []);
             return conn.reset();
           })
           .then(() => {
             return conn.query('select * from resetTemporaryTable');
           })
-          .then(rows => {
+          .then((rows) => {
             done(new Error('temporary table must not exist !'));
           })
-          .catch(err => {
+          .catch((err) => {
             if (
               (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
               (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
@@ -81,13 +81,13 @@ describe('reset connection', () => {
       .catch(done);
   });
 
-  it('reset transaction in progress', function(done) {
+  it('reset transaction in progress', function (done) {
     shareConn.query('DROP TABLE IF EXISTS resetTransaction');
     shareConn.query('CREATE TABLE resetTransaction(firstName varchar(32))');
     shareConn
       .query("INSERT INTO resetTransaction values ('john')")
-      .then(res => {
-        base.createConnection().then(conn => {
+      .then((res) => {
+        base.createConnection().then((conn) => {
           conn
             .beginTransaction()
             .then(() => {
@@ -110,7 +110,7 @@ describe('reset connection', () => {
                 done(new Error('must have thrown an error'));
               }
             })
-            .catch(err => {
+            .catch((err) => {
               if (
                 (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
                 (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))

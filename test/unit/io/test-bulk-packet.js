@@ -18,7 +18,7 @@ describe('bulk packet', () => {
   const getStream = () => {
     const stream = new Object();
     stream.bufs = [];
-    stream.writeBuf = buf => {
+    stream.writeBuf = (buf) => {
       stream.bufs.push(buf);
     };
     stream.reset = () => {
@@ -301,13 +301,13 @@ describe('bulk packet', () => {
   });
 
   const baseSt = 'abcdefghij';
-  const generateString = len => {
+  const generateString = (len) => {
     let str = '';
     for (let i = 0; i < len / 10; i++) str += baseSt;
     return str;
   };
 
-  it('writeDefaultLengthEncodedString', function() {
+  it('writeDefaultLengthEncodedString', function () {
     if (!base.utf8Collation()) this.skip();
     const conOpts = Object.assign(new EventEmitter(), new ConnOptions(baseOpts));
     let out = new PacketOutputStream(conOpts, new ConnectionInformation());
