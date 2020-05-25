@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "2.4.0-SNAPSHOT",
+  "version": "2.4.0",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -50,7 +50,7 @@
     "denque": "^1.4.1",
     "iconv-lite": "^0.5.1",
     "long": "^4.0.0",
-    "moment-timezone": "^0.5.27",
+    "moment-timezone": "^0.5.31",
     "please-upgrade-node": "^3.2.0"
   },
   "devDependencies": {
