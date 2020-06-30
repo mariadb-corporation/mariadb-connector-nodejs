@@ -4,8 +4,9 @@ function Proxy(args) {
   const LOCAL_PORT = args.proxyPort || 6512;
   const REMOTE_PORT = args.port;
   const REMOTE_ADDR = args.host;
-  const log = false;
+  let log = args.log || false;
   let server;
+  let remoteSocket;
   let stop = false;
 
   this.close = () => {
@@ -17,6 +18,14 @@ function Proxy(args) {
     stop = true;
   };
 
+  this.suspendRemote = () => {
+    server.emit('suspendRemote');
+  };
+
+  this.resumeRemote = () => {
+    server.emit('resumeRemote');
+  };
+
   this.resume = () => {
     stop = false;
     server.listen(LOCAL_PORT);
@@ -24,6 +33,9 @@ function Proxy(args) {
 
   this.start = () => {
     const sockets = [];
+    const remoteSockets = [];
+    let stopRemote = false;
+
     server = net.createServer((socket) => {
       let ended = false;
       sockets.push(socket);
@@ -31,8 +43,10 @@ function Proxy(args) {
         process.nextTick(socket.destroy.bind(socket));
       } else {
         if (log) console.log('  ** START **');
-        const remoteSocket = new net.Socket();
+        remoteSocket = new net.Socket();
         remoteSocket.connect(REMOTE_PORT, REMOTE_ADDR, function () {});
+        remoteSockets.push(remoteSocket);
+        if (stopRemote) remoteSocket.pause();
 
         remoteSocket.on('data', function (data) {
           if (log) console.log('<< ', data.toString());
@@ -81,6 +95,23 @@ function Proxy(args) {
         if (socket) socket.end();
       });
     });
+
+    server.on('suspendRemote', () => {
+      if (log) console.log('suspend proxy server');
+      remoteSockets.forEach((socket) => {
+        if (socket) socket.pause();
+      });
+      stopRemote = true;
+    });
+
+    server.on('resumeRemote', () => {
+      if (log) console.log('resume proxy server');
+      remoteSockets.forEach((socket) => {
+        if (socket) socket.resume();
+      });
+      stopRemote = false;
+    });
+
     server.listen(LOCAL_PORT);
     if (log) console.log('TCP server accepting connection on port: ' + LOCAL_PORT);
   };

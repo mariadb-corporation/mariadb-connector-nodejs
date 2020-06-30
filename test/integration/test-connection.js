@@ -289,8 +289,45 @@ describe('connection', () => {
   });
 
   it('connection.ping()', function (done) {
-    shareConn.ping();
-    shareConn.ping().then(done).catch(done);
+    const conn = new Connection(new ConnOptions(Conf.baseConfig));
+    conn.connect().then(() => {
+      conn.ping();
+      conn
+        .ping()
+        .then(() => {
+          conn
+            .ping(-2)
+            .then(() => {
+              done(new Error('must have thrown error'));
+            })
+            .catch((err) => {
+              assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
+              conn
+                .ping(200)
+                .then(() => {
+                  conn.query('SELECT SLEEP(1)');
+                  const initTime = Date.now();
+                  conn
+                    .ping(200)
+                    .then(() => {
+                      done(new Error('must have thrown error after ' + (Date.now() - initTime)));
+                    })
+                    .catch((err) => {
+                      assert.isTrue(
+                        Date.now() - initTime > 195,
+                        'expected > 195, without waiting for SLEEP to finish, but was ' +
+                          (Date.now() - initTime)
+                      );
+                      assert.isTrue(err.message.includes('Ping timeout'));
+                      assert.isFalse(conn.isValid());
+                      done();
+                    });
+                })
+                .catch(done);
+            });
+        })
+        .catch(done);
+    });
   });
 
   it('connection.ping() with callback', function (done) {
@@ -298,9 +335,39 @@ describe('connection', () => {
     conn.connect((err) => {
       conn.ping();
       conn.ping((err) => {
-        conn.end();
-        if (err) done(err);
-        done();
+        if (err) {
+          done(err);
+        } else {
+          conn.ping(-2, (err) => {
+            if (!err) {
+              done(new Error('must have thrown error'));
+            } else {
+              assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
+              conn.ping(200, (err) => {
+                if (err) {
+                  done(err);
+                } else {
+                  conn.query('SELECT SLEEP(1)');
+                  const initTime = Date.now();
+                  conn.ping(200, (err) => {
+                    if (!err) {
+                      done(new Error('must have thrown error'));
+                    } else {
+                      assert.isTrue(
+                        Date.now() - initTime > 195,
+                        'expected > 195, without waiting for SLEEP to finish, but was ' +
+                          (Date.now() - initTime)
+                      );
+                      assert.isTrue(err.message.includes('Ping timeout'));
+                      assert.isFalse(conn.isValid());
+                      done();
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
       });
     });
   });
