@@ -235,70 +235,75 @@ describe('ssl', function () {
   });
 
   it('TLSv1 working', function (done) {
-    if (!sslEnable) this.skip();
-
     if (
+      !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
-    )
+    ) {
       this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
-      })
-      .then((conn) => {
-        checkProtocol(conn, 'TLSv1');
-        conn.end();
-        done();
-      })
-      .catch(done);
+    } else {
+      base
+        .createConnection({
+          ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
+        })
+        .then((conn) => {
+          checkProtocol(conn, 'TLSv1');
+          conn.end();
+          done();
+        })
+        .catch(done);
+    }
   });
 
   it('TLSv1.1 working', function (done) {
-    if (!sslEnable) this.skip();
     if (
-      !shareConn.info.isMariaDB() &&
-      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+      !sslEnable ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
+    ) {
       this.skip();
-    base
-      .createConnection({
-        ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' }
-      })
-      .then((conn) => {
-        checkProtocol(conn, 'TLSv1.1');
-        conn.end();
-        done();
-      })
-      .catch(done);
+    } else {
+      base
+        .createConnection({
+          ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' }
+        })
+        .then((conn) => {
+          checkProtocol(conn, 'TLSv1.1');
+          conn.end();
+          done();
+        })
+        .catch(done);
+    }
   });
 
   it('TLSv1.1 with permit cipher', function (done) {
-    if (process.env.SKYSQL) this.skip();
-    if (!sslEnable) this.skip();
     if (
-      !shareConn.info.isMariaDB() &&
-      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+      !sslEnable ||
+      process.env.SKYSQL ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
+    ) {
       this.skip();
-    base
-      .createConnection({
-        ssl: {
-          rejectUnauthorized: false,
-          secureProtocol: 'TLSv1_1_method',
-          ciphers:
-            'DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
-        }
-      })
-      .then((conn) => {
-        checkProtocol(conn, 'TLSv1.1');
-        conn.end();
-        done();
-      })
-      .catch((err) => {
-        console.log(err);
-        done(err);
-      });
+    } else {
+      base
+        .createConnection({
+          ssl: {
+            rejectUnauthorized: false,
+            secureProtocol: 'TLSv1_1_method',
+            ciphers:
+              'DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
+          }
+        })
+        .then((conn) => {
+          checkProtocol(conn, 'TLSv1.1');
+          conn.end();
+          done();
+        })
+        .catch((err) => {
+          console.log(err);
+          done(err);
+        });
+    }
   });
 
   it('TLSv1.1 no common cipher', function (done) {
