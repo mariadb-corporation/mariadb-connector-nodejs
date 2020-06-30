@@ -237,7 +237,7 @@ describe('ssl', function () {
   it('TLSv1 working', function (done) {
     if (
       !sslEnable ||
-      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
     ) {
       this.skip();
