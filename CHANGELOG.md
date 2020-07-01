@@ -1,4 +1,17 @@
 # Change Log
+## [2.4.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.0) (24 May 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.3.1...2.4.0)
+
+This version remove compatibility with Node.js 6, needing 10+ version !
+
+* CONJS-86  - Support extension type format
+* CONJS-128	- Error when using multipleStatements with metaAsArray
+* CONJS-129	- Support 10.5 pluggable type
+* CONJS-131	- checkDuplicate option is indicated in error when having dupplicate
+* CONJS-132	- performance improvement
+* CONJS-136	- typescript SqlError interface
+	
+
 ## [2.3.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.3.1) (19 Mar. 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.3.0...2.3.1)
 
