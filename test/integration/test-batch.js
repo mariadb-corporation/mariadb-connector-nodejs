@@ -1278,7 +1278,7 @@ describe('batch', () => {
   describe('standard question mark using bulk', () => {
     const useCompression = false;
     it('simple batch, local date', function (done) {
-      if (process.env.SKYSQL || !base.utf8Collation())  {
+      if (process.env.SKYSQL || !base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1288,7 +1288,7 @@ describe('batch', () => {
     });
 
     it('simple batch with option', function (done) {
-      if (process.env.SKYSQL)  {
+      if (process.env.SKYSQL) {
         this.skip();
         return;
       }
@@ -1298,7 +1298,7 @@ describe('batch', () => {
     });
 
     it('batch without value', function (done) {
-      if (process.env.SKYSQL)  {
+      if (process.env.SKYSQL) {
         this.skip();
         return;
       }
@@ -1308,7 +1308,10 @@ describe('batch', () => {
     });
 
     it('batch without parameter', function (done) {
-      if (process.env.SKYSQL || (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))) {
+      if (
+        process.env.SKYSQL ||
+        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      ) {
         this.skip();
         return;
       }
@@ -1328,7 +1331,10 @@ describe('batch', () => {
     });
 
     it('batch with erroneous parameter', function (done) {
-      if (process.env.SKYSQL) || (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))) {
+      if (
+        process.env.SKYSQL ||
+        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
+      ) {
         this.skip();
         return;
       }
@@ -1353,7 +1359,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', function (done) {
-      if (process.env.SKYSQL || !base.utf8Collation())  {
+      if (process.env.SKYSQL || !base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1363,7 +1369,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date Z ', function (done) {
-      if (process.env.SKYSQL||!base.utf8Collation())  {
+      if (process.env.SKYSQL || !base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1373,7 +1379,7 @@ describe('batch', () => {
     });
 
     it('simple batch encoding CP1251', function (done) {
-      if (process.env.SKYSQL)  {
+      if (process.env.SKYSQL) {
         this.skip();
         return;
       }
@@ -1430,7 +1436,7 @@ describe('batch', () => {
     it('16M+ error batch', function (done) {
       if (process.env.SKYSQL || maxAllowedSize <= testSize) {
         this.skip();
-      }else {
+      } else {
         this.timeout(360000);
         bigBatchError(useCompression, true, done);
       }
@@ -1439,7 +1445,7 @@ describe('batch', () => {
     it('16M+ single insert batch with no maxAllowedPacket set', function (done) {
       if (process.env.SKYSQL || !process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
-      }else{
+      } else {
         this.timeout(360000);
         singleBigInsertWithoutMaxAllowedPacket(useCompression, true, done);
       }
@@ -1448,7 +1454,7 @@ describe('batch', () => {
     it('batch with streams', function (done) {
       if (process.env.SKYSQL || !base.utf8Collation()) {
         this.skip();
-      } else{
+      } else {
         this.timeout(30000);
         batchWithStream(useCompression, true, done);
       }
@@ -1457,7 +1463,7 @@ describe('batch', () => {
     it('batch error with streams', function (done) {
       if (process.env.SKYSQL) {
         this.skip();
-      }else {
+      } else {
         this.timeout(30000);
         batchErrorWithStream(useCompression, true, done);
       }
@@ -1785,7 +1791,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', function (done) {
-      if (!base.utf8Collation())  {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1853,7 +1859,7 @@ describe('batch', () => {
     });
 
     it('16M+ batch with 16M max_allowed_packet', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize)  {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1862,7 +1868,7 @@ describe('batch', () => {
     });
 
     it('16M+ batch with max_allowed_packet set to 4M', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= 4 * 1024 * 1024)  {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= 4 * 1024 * 1024) {
         this.skip();
         return;
       }
@@ -1871,7 +1877,7 @@ describe('batch', () => {
     });
 
     it('16M+ error batch', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize)  {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1880,7 +1886,7 @@ describe('batch', () => {
     });
 
     it('16M+ single insert batch with no maxAllowedPacket set', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize)  {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1889,7 +1895,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', function (done) {
-      if (!base.utf8Collation())  {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1903,7 +1909,7 @@ describe('batch', () => {
     });
 
     it('16M+ batch with streams', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize)   {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1912,7 +1918,7 @@ describe('batch', () => {
     });
 
     it('16M+ error batch with streams', function (done) {
-      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize)   {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
