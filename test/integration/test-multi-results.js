@@ -24,19 +24,19 @@ describe('multi-results', () => {
     if (multiStmtConn) multiStmtConn.end();
   });
 
-  // it('simple do 1', function (done) {
-  //   shareConn
-  //     .query('DO 1')
-  //     .then((rows) => {
-  //       assert.deepEqual(rows, {
-  //         affectedRows: 0,
-  //         insertId: 0,
-  //         warningStatus: 0
-  //       });
-  //       done();
-  //     })
-  //     .catch(done);
-  // });
+  it('simple do 1', function (done) {
+    shareConn
+      .query('DO 1')
+      .then((rows) => {
+        assert.deepEqual(rows, {
+          affectedRows: 0,
+          insertId: 0,
+          warningStatus: 0
+        });
+        done();
+      })
+      .catch(done);
+  });
 
   it('duplicate column', function (done) {
     base
@@ -58,8 +58,16 @@ describe('multi-results', () => {
                 assert.equal(err.errno, 45040);
                 assert.equal(err.sqlState, 42000);
                 assert.equal(err.code, 'ER_DUPLICATE_FIELD');
-                conn.end();
-                done();
+                conn
+                  .rollback()
+                  .then(() => {
+                    conn.end();
+                    done();
+                  })
+                  .catch((err) => {
+                    conn.end();
+                    done(err);
+                  });
               });
           })
           .catch((err) => {

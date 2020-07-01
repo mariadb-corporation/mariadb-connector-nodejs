@@ -7,6 +7,7 @@ const stream = require('stream');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const Proxy = require('../tools/proxy');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -551,7 +552,6 @@ describe('Pool', () => {
               conn.release();
             })
             .catch((err) => {
-              console.log(err);
               done(err);
             });
         }, 1100);
@@ -1083,5 +1083,58 @@ describe('Pool', () => {
         done();
       });
     pool.end();
+  });
+
+  it('pool server defect timeout', function (done) {
+    this.timeout(5000);
+    const proxy = new Proxy({
+      port: Conf.baseConfig.port,
+      proxyPort: 4000,
+      host: Conf.baseConfig.host
+    });
+
+    const initTime = Date.now();
+    const pool = base.createPool({
+      port: 4000,
+      acquireTimeout: 1000,
+      minDelayValidation: 0,
+      connectionLimit: 1,
+      noControlAfterUse: true
+    });
+
+    // test use proxy that stop answer for 1.5s,
+    // with pool.getConnection with 1s timeout.
+    // (minDelayValidation is set to 0, to ensure ping is done each time for existing connection)
+    pool
+      .getConnection()
+      .then((conn) => {
+        proxy.suspendRemote();
+        setTimeout(() => {
+          proxy.resumeRemote();
+        }, 1500);
+        conn.release();
+
+        pool
+          .getConnection()
+          .then(() => {
+            done(new Error('must have thrown error !' + (Date.now() - initTime)));
+          })
+          .catch((err) => {
+            assert.isTrue(
+              Date.now() - initTime > 995,
+              'expected > 1000, but was ' + (Date.now() - initTime)
+            );
+            pool
+              .getConnection()
+              .then((conn2) => {
+                conn2.release();
+                pool.end();
+                proxy.close();
+                done();
+              })
+              .catch(done);
+          });
+      })
+      .catch(done);
   });
 });

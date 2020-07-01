@@ -65,6 +65,35 @@ describe('basic query', () => {
       })
       .catch(done);
   });
+
+  it('array parameter with null value', function (done) {
+    base
+      .createConnection()
+      .then((conn) => {
+        conn.query('CREATE TEMPORARY TABLE arrayParam (id int, val varchar(10))');
+        conn.query('INSERT INTO arrayParam VALUES ?', [[1, null]]);
+        conn.query('INSERT INTO arrayParam VALUES ?', [[2, 'a']]);
+        conn
+          .query('SELECT * FROM arrayParam')
+          .then((rows) => {
+            assert.deepEqual(rows, [
+              {
+                id: 1,
+                val: null
+              },
+              {
+                id: 2,
+                val: 'a'
+              }
+            ]);
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it('permitSetMultiParamEntries set', (done) => {
     const jsonValue = { id: 1, val: 'test' };
     base

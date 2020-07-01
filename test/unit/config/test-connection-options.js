@@ -100,6 +100,18 @@ describe('test connection options', () => {
     assert.equal(result.collation.index, 200);
   });
 
+  it('URL decoding test', () => {
+    const result = new ConnOptions(
+      'mariadb://root%C3%A5:p%40ssword@example.com:3307/%D1%88db?connectAttributes=%7B"par1":"bouh","par2":"bla"%7D'
+    );
+    assert.equal(result.database, 'шdb');
+    assert.equal(result.host, 'example.com');
+    assert.equal(result.password, 'p@ssword');
+    assert.equal(result.port, 3307);
+    assert.equal(result.user, 'rootå');
+    assert.deepEqual(result.connectAttributes, { par1: 'bouh', par2: 'bla' });
+  });
+
   it('unknown option', () => {
     const result = new ConnOptions(
       'mariadb://root:pass@example.com:3307/db?wrongOption=false&ssl=true&dateStrings=true'

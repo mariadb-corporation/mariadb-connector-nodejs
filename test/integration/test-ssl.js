@@ -235,13 +235,15 @@ describe('ssl', function () {
   });
 
   it('TLSv1 working', function (done) {
-    if (!sslEnable) this.skip();
-
     if (
-      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))
-    )
+      !sslEnable ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      shareConn.info.serverVersion.raw.includes('focal')
+    ) {
       this.skip();
+      return;
+    }
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' }
@@ -255,12 +257,15 @@ describe('ssl', function () {
   });
 
   it('TLSv1.1 working', function (done) {
-    if (!sslEnable) this.skip();
     if (
-      !shareConn.info.isMariaDB() &&
-      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+      !sslEnable ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      shareConn.info.serverVersion.raw.includes('focal')
+    ) {
       this.skip();
+      return;
+    }
     base
       .createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' }
@@ -274,13 +279,16 @@ describe('ssl', function () {
   });
 
   it('TLSv1.1 with permit cipher', function (done) {
-    if (process.env.SKYSQL) this.skip();
-    if (!sslEnable) this.skip();
     if (
-      !shareConn.info.isMariaDB() &&
-      (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+      !sslEnable ||
+      process.env.SKYSQL ||
+      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      shareConn.info.serverVersion.raw.includes('focal')
+    ) {
       this.skip();
+      return;
+    }
     base
       .createConnection({
         ssl: {
@@ -306,8 +314,10 @@ describe('ssl', function () {
     if (
       !shareConn.info.isMariaDB() &&
       (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+    ) {
       this.skip();
+      return;
+    }
     base
       .createConnection({
         ssl: {
@@ -330,8 +340,11 @@ describe('ssl', function () {
     if (
       !shareConn.info.isMariaDB() &&
       (!shareConn.info.hasMinVersion(5, 7, 10) || shareConn.info.hasMinVersion(8, 0, 0))
-    )
+    ) {
       this.skip();
+      return;
+    }
+
     base
       .createConnection({
         ssl: {

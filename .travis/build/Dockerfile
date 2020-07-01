@@ -79,7 +79,6 @@ RUN dpkg -R --unpack /root/
 RUN apt-get install -f -y
 
 RUN rm -rf /var/lib/apt/lists/* \
-    	&& sed -ri 's/^user\s/#&/' /etc/mysql/my.cnf /etc/mysql/conf.d/* \
     	&& rm -rf /var/lib/mysql && mkdir -p /var/lib/mysql /var/run/mysqld \
     	&& chown -R mysql:mysql /var/lib/mysql /var/run/mysqld \
     	&& chmod 777 /var/run/mysqld \

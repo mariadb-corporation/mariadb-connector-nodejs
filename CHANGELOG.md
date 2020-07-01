@@ -1,4 +1,13 @@
 # Change Log
+## [2.4.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.1) (01 Jul 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.0...2.4.1)
+
+* CONJS-138 - pool.getConnection() might not timeout even with acquireTimeout set
+* CONJS-139 - createConnection(string)` does not support URL-encoded credentials
+* CONJS-140	- Support passing null values in array when doing queries. thanks to @koendeschacht
+* CONJS-141 - set default value of option `restoreNodeTimeout` to 1000 to avoid using blacklisted pool in cluster
+
+	
 ## [2.4.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.0) (24 May 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.3.1...2.4.0)
 

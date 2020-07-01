@@ -85,9 +85,12 @@ describe('sql template strings', () => {
 
   it('pool query with parameters', (done) => {
     const pool = base.createPool();
-    pool.query('drop table pool_parse').catch((err) => {});
     pool
-      .query('CREATE TABLE pool_parse(t varchar(128))')
+      .query('drop table IF EXISTS pool_parse')
+      .catch((err) => {})
+      .then(() => {
+        return pool.query('CREATE TABLE pool_parse(t varchar(128))');
+      })
       .then(() => {
         return pool.query({ sql: 'INSERT INTO pool_parse value (?)', values: [value] });
       })
@@ -107,9 +110,11 @@ describe('sql template strings', () => {
 
   it('pool batch with parameters', (done) => {
     const pool = base.createPool();
-    pool.query('drop table pool_parse_batch').catch((err) => {});
     pool
-      .query('CREATE TABLE pool_parse_batch(t varchar(128))')
+      .query('DROP TABLE IF EXISTS pool_parse_batch')
+      .then(() => {
+        return pool.query('CREATE TABLE pool_parse_batch(t varchar(128))');
+      })
       .then(() => {
         return pool.batch({ sql: 'INSERT INTO pool_parse_batch value (?)', values: [value] });
       })
@@ -129,21 +134,25 @@ describe('sql template strings', () => {
 
   it('pool callback query with parameters', (done) => {
     const pool = base.createPoolCallback();
-    pool.query('drop table pool_parse_call', (err) => {});
-    pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
-      pool.query({ sql: 'INSERT INTO pool_parse_call value (?)', values: [value] }, (err, res) => {
+    pool.query('drop table IF EXISTS pool_parse_call', (err, res) => {
+      pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
         pool.query(
-          { sql: 'select * from pool_parse_call where t = ?', values: [value] },
+          { sql: 'INSERT INTO pool_parse_call value (?)', values: [value] },
           (err, res) => {
-            if (err) {
-              done(err);
-            } else {
-              assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_parse_call', () => {
-                pool.end();
-                done();
-              });
-            }
+            pool.query(
+              { sql: 'select * from pool_parse_call where t = ?', values: [value] },
+              (err, res) => {
+                if (err) {
+                  done(err);
+                } else {
+                  assert.strictEqual(res[0].t, value);
+                  pool.query('drop table pool_parse_call', () => {
+                    pool.end();
+                    done();
+                  });
+                }
+              }
+            );
           }
         );
       });
@@ -152,21 +161,25 @@ describe('sql template strings', () => {
 
   it('pool callback batch with parameters', (done) => {
     const pool = base.createPoolCallback();
-    pool.query('drop table pool_batch_call', (err) => {});
-    pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {
-      pool.batch({ sql: 'INSERT INTO pool_batch_call value (?)', values: [value] }, (err, res) => {
-        pool.query(
-          { sql: 'select * from pool_batch_call where t = ?', values: [value] },
+    pool.query('drop table pool_batch_call', (err) => {
+      pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {
+        pool.batch(
+          { sql: 'INSERT INTO pool_batch_call value (?)', values: [value] },
           (err, res) => {
-            if (err) {
-              done(err);
-            } else {
-              assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_batch_call', () => {
-                pool.end();
-                done();
-              });
-            }
+            pool.query(
+              { sql: 'select * from pool_batch_call where t = ?', values: [value] },
+              (err, res) => {
+                if (err) {
+                  done(err);
+                } else {
+                  assert.strictEqual(res[0].t, value);
+                  pool.query('drop table pool_batch_call', () => {
+                    pool.end();
+                    done();
+                  });
+                }
+              }
+            );
           }
         );
       });
