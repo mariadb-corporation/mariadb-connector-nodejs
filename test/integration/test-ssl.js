@@ -239,7 +239,7 @@ describe('ssl', function () {
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      shareConn.info.serverVersion.raw.includes("focal")
+      shareConn.info.serverVersion.raw.includes('focal')
     ) {
       this.skip();
       return;
@@ -261,7 +261,7 @@ describe('ssl', function () {
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      shareConn.info.serverVersion.raw.includes("focal")
+      shareConn.info.serverVersion.raw.includes('focal')
     ) {
       this.skip();
       return;
@@ -284,7 +284,8 @@ describe('ssl', function () {
       process.env.SKYSQL ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      shareConn.info.serverVersion.raw.includes("focal")) {
+      shareConn.info.serverVersion.raw.includes('focal')
+    ) {
       this.skip();
       return;
     }
@@ -343,7 +344,7 @@ describe('ssl', function () {
       this.skip();
       return;
     }
-      
+
     base
       .createConnection({
         ssl: {
