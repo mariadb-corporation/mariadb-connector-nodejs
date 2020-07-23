@@ -1,4 +1,11 @@
 # Change Log
+
+## [2.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.2) (23 Jul 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.1...2.4.2)
+
+* CONJS-142 - Number parsing loss of precision
+
+
 ## [2.4.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.1) (01 Jul 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.0...2.4.1)
 

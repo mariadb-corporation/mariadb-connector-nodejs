@@ -975,7 +975,10 @@ const myTable = "table:a"
 const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
 // cmd value will be:
 // "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
-
+// using template literals:
+con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar])
+  .then(res => { ... })
+  .catch(err=> { ... }); 
 ```
 
 

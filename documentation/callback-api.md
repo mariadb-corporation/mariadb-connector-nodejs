@@ -668,6 +668,16 @@ Value will be enclosed by '`' character if content doesn't satisfy:
 * ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)
 * Extended: U+0080 .. U+FFFF
 and escaping '`' character if needed. 
+```javascript
+const myColVar = "let'go";
+const myTable = "table:a"
+const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
+// cmd value will be:
+// "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+
+// using template literals:
+con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar], (err, rows) => { });
+```
 
 
 ## `connection.pause()`
