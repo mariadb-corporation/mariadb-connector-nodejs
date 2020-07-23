@@ -29,6 +29,24 @@ describe('integer with big value', () => {
       .catch(done);
   });
 
+  it('decimal value without truncation', function (done) {
+    shareConn
+      .query('CREATE TEMPORARY TABLE floatTest (t DOUBLE, t2 DECIMAL(32,16))')
+      .then(() => {
+        return shareConn
+          .query('INSERT INTO floatTest VALUES (-0.9999237060546875, 9999237060546875.9999237060546875)')
+      })
+      .then(() => {
+        shareConn
+          .query(' SELECT * FROM floatTest')
+          .then((rows) => {
+            assert.deepEqual(rows, [{t: -0.9999237060546875, t2: 9999237060546875.9999237060546875}]);
+            done();
+          })
+      })
+      .catch(done);
+  });
+
   it('bigint format', (done) => {
     shareConn
       .query('INSERT INTO testBigint values (127), (128)')
