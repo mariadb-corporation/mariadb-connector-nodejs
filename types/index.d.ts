@@ -228,9 +228,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   multipleStatements?: boolean;
 
   /**
-   * object with ssl parameters or a string containing name of ssl profile
+   * object with ssl parameters or a boolean to enable ssl without setting any other ssl option.
+   * see
+   * https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/connection-options.md#ssl
+   * for more information
    */
-  ssl?: string | (tls.SecureContextOptions & { rejectUnauthorized?: boolean });
+  ssl?: boolean | (tls.SecureContextOptions & { rejectUnauthorized?: boolean });
 
   /**
    * Compress exchanges with database using gzip.

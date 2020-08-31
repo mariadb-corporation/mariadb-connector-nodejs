@@ -24,8 +24,30 @@ function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
   );
 }
 
+function createPoolConfigWithSSl(options?: PoolConfig): mariadb.PoolConfig {
+  Object.assign(
+    {
+      host: baseConfig.host,
+      user: baseConfig.user,
+      password: baseConfig.password,
+      ssl: true
+    },
+    options
+  );
+  return Object.assign(
+    {
+      host: baseConfig.host,
+      user: baseConfig.user,
+      password: baseConfig.password,
+      ssl: { ca: 'fff' }
+    },
+    options
+  );
+}
+
 function createPool(options?: unknown): mariadb.Pool {
-  return mariadb.createPool(createPoolConfig(options));
+  mariadb.createPool(createPoolConfig(options));
+  return mariadb.createPool(createPoolConfigWithSSl(options));
 }
 
 async function testMisc(): Promise<void> {
