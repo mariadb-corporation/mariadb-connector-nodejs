@@ -9,17 +9,17 @@ set -e
 
 if [ -n "$SKYSQL" ] ; then
 
-  if [ -z "$SKYSQL_TEST_HOST" ] ; then
+  if [ -z "$SKYSQL_HOST" ] ; then
     echo "No SkySQL configuration found !"
-    exit 1
+    exit 0
+  else
+    export TEST_USER=$SKYSQL_USER
+    export TEST_HOST=$SKYSQL_HOST
+    export TEST_PASSWORD=$SKYSQL_PASSWORD
+    export TEST_PORT=$SKYSQL_PORT
+    export TEST_SSL_CA=$SKYSQL_SSL_CA
+    export TEST_BULK=false
   fi
-
-  export TEST_USER=$SKYSQL_TEST_USER
-  export TEST_HOST=$SKYSQL_TEST_HOST
-  export TEST_PASSWORD=$SKYSQL_TEST_PASSWORD
-  export TEST_PORT=$SKYSQL_TEST_PORT
-  export TEST_SSL_CA=$SKYSQL_TEST_SSL_CA
-  export TEST_BULK=false
 
 else
 
