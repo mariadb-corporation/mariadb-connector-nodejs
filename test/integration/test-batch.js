@@ -200,7 +200,7 @@ describe('batch', () => {
         conn
           .query('select 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
           })
           .catch(done);
       })
@@ -263,7 +263,7 @@ describe('batch', () => {
         conn
           .query('select 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
           })
           .catch(done);
       })
@@ -314,7 +314,7 @@ describe('batch', () => {
         conn
           .query('select 2')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '2': 2 }]);
+            assert.deepEqual(rows, [{ 2: 2 }]);
           })
           .catch(done);
       })
@@ -461,7 +461,7 @@ describe('batch', () => {
         conn
           .query('select 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
           })
           .catch(done);
       })
@@ -655,7 +655,7 @@ describe('batch', () => {
             conn
               .query('select 1')
               .then((rows) => {
-                assert.deepEqual(rows, [{ '1': 1 }]);
+                assert.deepEqual(rows, [{ 1: 1 }]);
                 clearTimeout(timeout);
                 conn.end();
                 done();
@@ -885,7 +885,7 @@ describe('batch', () => {
             conn
               .query('select 1')
               .then((rows) => {
-                assert.deepEqual(rows, [{ '1': 1 }]);
+                assert.deepEqual(rows, [{ 1: 1 }]);
                 conn.end();
                 clearTimeout(timeout);
                 done();
@@ -1613,6 +1613,27 @@ describe('batch', () => {
           });
       });
     });
+    
+    it('rewrite split for maxAllowedPacket', function (done) {
+      const t = makeid(100);
+      base
+        .createConnection({ bulk: false, maxAllowedPacket: 150 })
+        .then((conn) => {
+          conn.query('CREATE TEMPORARY TABLE my_table(id int, val LONGTEXT)');
+          conn
+            .batch("INSERT INTO my_table(id,val) VALUES( ?, ?) ", [[1,t], [2, t]])
+            .then((res) => {
+              return conn.query('SELECT * FROM my_table');
+            })
+            .then((res) => {
+              assert.deepEqual(res, [{id:1, val:t}, {id:2, val:t}]);
+              conn.end();
+              done();
+            })
+            .catch(done);
+        })
+        .catch(done);
+    });
 
     it('batch with erroneous parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -2034,3 +2055,13 @@ describe('batch', () => {
     });
   });
 });
+
+function makeid(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
