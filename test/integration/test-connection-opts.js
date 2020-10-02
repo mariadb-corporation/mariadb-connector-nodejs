@@ -396,7 +396,7 @@ describe('connection option', () => {
         conn
           .query('SELECT 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             conn.end();
             done();
           })

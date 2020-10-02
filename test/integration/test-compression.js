@@ -42,7 +42,7 @@ describe('Compression', function () {
     conn
       .query('SELECT 1')
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -56,13 +56,13 @@ describe('Compression', function () {
       .query('select 1; DO 1;select 2')
       .then((rows) => {
         assert.equal(rows.length, 3);
-        assert.deepEqual(rows[0], [{ '1': 1 }]);
+        assert.deepEqual(rows[0], [{ 1: 1 }]);
         assert.deepEqual(rows[1], {
           affectedRows: 0,
           insertId: 0,
           warningStatus: 0
         });
-        assert.deepEqual(rows[2], [{ '2': 2 }]);
+        assert.deepEqual(rows[2], [{ 2: 2 }]);
         done();
       })
       .catch(done);

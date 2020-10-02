@@ -11,7 +11,7 @@ describe('basic query', () => {
         conn
           .query('select 1', [2])
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             conn.end();
             done();
           })

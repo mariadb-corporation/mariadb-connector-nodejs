@@ -50,7 +50,7 @@ describe('Placeholder', () => {
         { 'param-3': 30, 'param-1': 10, 'param-2': 20 }
       )
       .then((rows) => {
-        assert.deepEqual(rows, [{ val1: 10, val3: 30, '20': 20 }]);
+        assert.deepEqual(rows, [{ val1: 10, val3: 30, 20: 20 }]);
         done();
       })
       .catch(done);
@@ -238,7 +238,7 @@ describe('Placeholder', () => {
         conn
           .query('select 1', [2])
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             conn.end();
             done();
           })

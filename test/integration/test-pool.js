@@ -259,7 +259,7 @@ describe('Pool', () => {
       .query('select 1; select 2')
       .then((results) => {
         //select 1 results
-        assert.deepEqual(results, [[{ '1': 1 }], [{ '2': 2 }]]);
+        assert.deepEqual(results, [[{ 1: 1 }], [{ 2: 2 }]]);
         pool.end();
         done();
       })

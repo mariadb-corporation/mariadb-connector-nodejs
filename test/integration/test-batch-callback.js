@@ -207,7 +207,7 @@ describe('batch callback', () => {
       );
       conn.query('select 1', (err, rows) => {
         if (err) return done(err);
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -274,7 +274,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -327,7 +327,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '2': 2 }]);
+        assert.deepEqual(rows, [{ 2: 2 }]);
       });
     });
   };
@@ -453,7 +453,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -543,7 +543,7 @@ describe('batch callback', () => {
                 done(err);
               });
             }
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             clearTimeout(timeout);
             return conn.end(() => {
               done();

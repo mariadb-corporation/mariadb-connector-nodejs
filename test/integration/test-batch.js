@@ -1613,7 +1613,7 @@ describe('batch', () => {
           });
       });
     });
-    
+
     it('rewrite split for maxAllowedPacket', function (done) {
       const t = makeid(100);
       base
@@ -1621,12 +1621,18 @@ describe('batch', () => {
         .then((conn) => {
           conn.query('CREATE TEMPORARY TABLE my_table(id int, val LONGTEXT)');
           conn
-            .batch("INSERT INTO my_table(id,val) VALUES( ?, ?) ", [[1,t], [2, t]])
+            .batch('INSERT INTO my_table(id,val) VALUES( ?, ?) ', [
+              [1, t],
+              [2, t]
+            ])
             .then((res) => {
               return conn.query('SELECT * FROM my_table');
             })
             .then((res) => {
-              assert.deepEqual(res, [{id:1, val:t}, {id:2, val:t}]);
+              assert.deepEqual(res, [
+                { id: 1, val: t },
+                { id: 2, val: t }
+              ]);
               conn.end();
               done();
             })
@@ -2057,10 +2063,10 @@ describe('batch', () => {
 });
 
 function makeid(length) {
-  var result           = '';
-  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var result = '';
+  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   var charactersLength = characters.length;
-  for ( var i = 0; i < length; i++ ) {
+  for (var i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;

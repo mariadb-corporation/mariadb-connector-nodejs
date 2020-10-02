@@ -234,7 +234,7 @@ describe('multi-results', () => {
     shareConn
       .query('SELECT 1')
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -244,7 +244,7 @@ describe('multi-results', () => {
     shareConn
       .query('select 1', (err, rows) => {})
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -256,7 +256,7 @@ describe('multi-results', () => {
         .query('select 1')
         .then((obj) => {
           assert.equal(obj.length, 2);
-          assert.deepEqual(obj[0], [{ '1': 1 }]);
+          assert.deepEqual(obj[0], [{ 1: 1 }]);
           conn.end();
           done();
         })
@@ -272,7 +272,7 @@ describe('multi-results', () => {
         .then((obj) => {
           assert.equal(obj[0].length, 2);
           assert.equal(obj[1].length, 2);
-          assert.deepEqual(obj[0], [[{ '1': 1 }], [{ '2': 2 }]]);
+          assert.deepEqual(obj[0], [[{ 1: 1 }], [{ 2: 2 }]]);
           conn.end();
           done();
         })
@@ -290,7 +290,7 @@ describe('multi-results', () => {
           if (err) {
             done(err);
           } else {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             callbackConn.end();
             done();
           }
@@ -410,8 +410,8 @@ describe('multi-results', () => {
       .query('call myProc()')
       .then((rows) => {
         assert.equal(rows.length, 3);
-        assert.deepEqual(rows[0], [{ '1': 1 }]);
-        assert.deepEqual(rows[1], [{ '2': 2 }]);
+        assert.deepEqual(rows[0], [{ 1: 1 }]);
+        assert.deepEqual(rows[1], [{ 2: 2 }]);
         assert.deepEqual(rows[2], {
           affectedRows: 0,
           insertId: 0,
