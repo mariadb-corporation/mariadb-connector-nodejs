@@ -1098,6 +1098,24 @@ describe('batch callback', () => {
   describe('standard question mark using rewrite', () => {
     const useCompression = false;
 
+    it('immediate batch after callback', function (done) {
+      let conn = base.createCallbackConnection();
+      conn.batch(
+        'INSERT INTO contacts(first_name, last_name, email) VALUES(?, ?, ?)',
+        ['John', 'Smith', 'js@example.com'],
+        (err, res, meta) => {
+          conn.end();
+          if (err) {
+            if (err.message.includes('Parameter at position 1 is not set for values 0')) {
+              done();
+            } else done(err);
+          } else {
+            done(new Error('Must have throw error'));
+          }
+        }
+      );
+    });
+
     it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
@@ -1133,7 +1151,7 @@ describe('batch callback', () => {
           })
           .catch((err) => {
             assert.isTrue(
-              err.message.includes('Parameter at position 2 is not set for values 1'),
+              err.message.includes('Parameter at position 1 is not set for values 1'),
               err.message
             );
             conn.end();

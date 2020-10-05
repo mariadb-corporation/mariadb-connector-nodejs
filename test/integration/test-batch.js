@@ -1652,7 +1652,7 @@ describe('batch', () => {
           })
           .catch((err) => {
             assert.isTrue(
-              err.message.includes('Parameter at position 2 is not set for values 1'),
+              err.message.includes('Parameter at position 1 is not set for values 1'),
               err.message
             );
             conn.end();
