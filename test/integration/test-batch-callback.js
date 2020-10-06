@@ -15,9 +15,7 @@ describe('batch callback', () => {
   let supportBulk;
   before(function (done) {
     supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
-      ? (shareConn.info.serverCapabilities.high &
-          Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) >
-        0
+      ? (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) > 0
       : false;
     const hourOffset = Math.round((-1 * new Date().getTimezoneOffset()) / 60);
 

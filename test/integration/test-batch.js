@@ -20,9 +20,7 @@ describe('batch', () => {
   before(function (done) {
     timezoneParam = 'America/New_York';
     supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
-      ? (shareConn.info.serverCapabilities.high &
-          Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) >
-        0
+      ? (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) > 0
       : false;
     shareConn
       .query('SELECT @@max_allowed_packet as t')
