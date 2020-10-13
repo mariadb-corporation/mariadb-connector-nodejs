@@ -3,6 +3,7 @@
 ## [2.5.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.0) (??)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.2...2.5.0)
 
+* CONJS-148 - permit setting socket keep alive (option `keepAliveDelay`)
 * CONJS-145 - batch rewrite error when packet reach maxAllowedPacket
 * CONJS-146 - Using callback API, batch, avoid return error if connection not established
 * CONJS-144 - TypeScript type ssl wrong definitions
