@@ -6,6 +6,7 @@
 * CONJS-145 - batch rewrite error when packet reach maxAllowedPacket
 * CONJS-146 - Using callback API, batch, avoid return error if connection not established
 * CONJS-144 - TypeScript type ssl wrong definitions
+* CONJS-143 - Array parameter escaping differ from mysql/mysql2
 * CONJS-133	- Support ES2020 BigInt object (option `supportBigInt`)
 
 ## [2.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.2) (23 Jul 2020)

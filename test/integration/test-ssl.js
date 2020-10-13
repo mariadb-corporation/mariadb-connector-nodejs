@@ -159,7 +159,6 @@ describe('ssl', function () {
         done(new Error('Must have thrown an exception !'));
       })
       .catch((err) => {
-        console.log(err);
         assert(err.message.includes('self signed certificate'));
         done();
       });

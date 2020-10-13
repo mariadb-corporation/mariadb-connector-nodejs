@@ -64,7 +64,7 @@ describe('basic query', () => {
             );
           })
           .then(() => {
-            return conn.query('SELECT * FROM arrayParam WHERE val IN ?', [['b', 'c', 1]]);
+            return conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', 1]]);
           })
           .then((rows) => {
             assert.deepEqual(rows, [
@@ -98,13 +98,53 @@ describe('basic query', () => {
             return conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
           })
           .then(() => {
-            return conn.query('INSERT INTO arrayParamNull VALUES ?', [[1, null]]);
+            return conn.query('INSERT INTO arrayParamNull VALUES (?)', [[1, null]]);
           })
           .then(() => {
-            return conn.query('INSERT INTO arrayParamNull VALUES ?', [[2, 'a']]);
+            return conn.query('INSERT INTO arrayParamNull VALUES (?)', [[2, 'a']]);
           })
           .then(() => {
             return conn.query('SELECT * FROM arrayParamNull');
+          })
+          .then((rows) => {
+            assert.deepEqual(rows, [
+              {
+                id: 1,
+                val: null
+              },
+              {
+                id: 2,
+                val: 'a'
+              }
+            ]);
+            conn.end();
+            done();
+          })
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
+      })
+      .catch(done);
+  });
+
+  it('array parameter with null value with parenthesis', function (done) {
+    base
+      .createConnection({ arrayParenthesis: true })
+      .then((conn) => {
+        conn
+          .query('DROP TABLE IF EXISTS arrayParamNullParen')
+          .then(() => {
+            return conn.query('CREATE TABLE arrayParamNullParen (id int, val varchar(10))');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[1, null]]);
+          })
+          .then(() => {
+            return conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[2, 'a']]);
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM arrayParamNullParen');
           })
           .then((rows) => {
             assert.deepEqual(rows, [

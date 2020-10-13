@@ -86,7 +86,6 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            console.log(err);
             assert(err != null);
             if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
               assert.equal(err.errno, 4166);

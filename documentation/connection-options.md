@@ -355,6 +355,9 @@ mariadb.createConnection({
 | **permitConnectionWhenExpired** | Permit a user with expired password to connect. Only possible operation in this case will be to change password ('SET PASSWORD=PASSWORD('XXX')')|*boolean* |false|
 | **forceVersionCheck** | Force server version check by explicitly using SELECT VERSION(), not relying on server initial packet.<br/><i><small>Since version 2.2.0</small></i> |*boolean* |false|
 | **checkDuplicate** | Indicate to throw an exception if result-set will not contain some data due to having duplicate identifier. <br/>JSON cannot have multiple identical key, so query like `SELECT 1 as i, 2 as i` cannot result in { i:1, i:2 }, 'i:1' would be skipped. <br/>When `checkDuplicate` is enable (default) driver will throw an error if some data are skipped. Duplication error can be avoided by multiple ways, like using unique aliases or using options [`rowsAsArray`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#rowsasarray) / [`nestTables`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#nestTables) for example <br/><i><small>Since version 2.3.0</small></i>|*boolean* | true |
+| **arrayParenthesis** | Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5|*boolean* | false |
+| **autoJsonMap** | indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)|*boolean* | true |
+ 
 
 
 
