@@ -6,7 +6,7 @@ const Conf = require('../conf');
 
 describe('authentication plugin', () => {
   it('ed25519 authentication plugin', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
@@ -72,6 +72,7 @@ describe('authentication plugin', () => {
 
   it('name pipe authentication plugin', function (done) {
     if (process.platform !== 'win32') this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
@@ -161,8 +162,8 @@ describe('authentication plugin', () => {
   });
 
   it('dialog authentication plugin', function (done) {
-    //pam is set using .travis/entrypoint/pam.sh
-    if (!process.env.TRAVIS || process.env.MAXSCALE_VERSION) this.skip();
+    //pam is set using .travis/sql/pam.sh
+    if (!process.env.TRAVIS || process.env.MAXSCALE_TEST_DISABLE) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
@@ -191,8 +192,8 @@ describe('authentication plugin', () => {
   });
 
   it('dialog authentication plugin multiple password', function (done) {
-    //pam is set using .travis/entrypoint/pam.sh
-    if (!process.env.TRAVIS || process.env.MAXSCALE_VERSION) this.skip();
+    //pam is set using .travis/sql/pam.sh
+    if (!process.env.TRAVIS || process.env.MAXSCALE_TEST_DISABLE) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
@@ -221,7 +222,7 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
     shareConn

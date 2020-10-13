@@ -7,7 +7,7 @@ const Conf = require('../conf');
 describe('test socket', () => {
   it('named pipe', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (process.env.MUST_USE_TCPIP) this.skip();
+    if (process.env.MUST_USE_TCPIP || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
     const test = this;

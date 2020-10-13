@@ -1,20 +1,8 @@
 version: '2.1'
 services:
-  maxscale:
-    depends_on:
-      - db
-    ports:
-      - 4006:4006
-      - 4007:4007
-      - 4008:4008
-    build:
-      context: .
-      dockerfile: maxscale/Dockerfile
-      args:
-        MAXSCALE_VERSION: $MAXSCALE_VERSION
   db:
     image: $DB
-    command: --max-connections=500 --max-allowed-packet=40m --innodb-log-file-size=400m --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0
+    command: --innodb-log-file-size=400m --max-allowed-packet=40m  --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0 $ADDITIONAL_CONF
     ports:
       - 3305:3306
     volumes:
@@ -23,3 +11,26 @@ services:
     environment:
       MYSQL_DATABASE: testn
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    healthcheck:
+      test: ["CMD", "mysql", "--protocol=tcp", "-ubob", "-h127.0.0.1"]
+      timeout: 50s
+      retries: 10
+      interval: 5s
+
+  maxscale:
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - "db:database"
+    ports:
+      - 4006:4006
+      - 4008:4008
+      - 4009:4009
+    volumes:
+      - $SSLCERT:/etc/sslcert
+    build:
+      context: .
+      dockerfile: maxscale/Dockerfile
+      args:
+        MAXSCALE_VERSION: $MAXSCALE_VERSION

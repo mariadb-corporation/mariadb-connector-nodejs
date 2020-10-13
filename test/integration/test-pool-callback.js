@@ -6,10 +6,11 @@ const Conf = require('../conf');
 
 describe('Pool callback', () => {
   before(function () {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
   });
 
   it('pool with wrong authentication', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip(); //to avoid host beeing blocked
     this.timeout(10000);
     const pool = base.createPoolCallback({
       acquireTimeout: 4000,
@@ -256,10 +257,14 @@ describe('Pool callback', () => {
       assert.equal(pool.idleConnections(), 10);
       assert.equal(pool.taskQueueSize(), 0);
       let closed = false;
+      let doneSend = false;
       for (let i = 0; i < 10000; i++) {
         pool.query('SELECT ? as a', [i], (err, rows) => {
           if (err) {
-            if (!closed) done(err);
+            if (!doneSend) {
+              doneSend = true;
+              done(err);
+            }
           } else {
             assert.deepEqual(rows, [{ a: i }]);
           }
@@ -290,7 +295,7 @@ describe('Pool callback', () => {
               assert.equal(pool.idleConnections(), 0);
               assert.equal(pool.taskQueueSize(), 0);
             }
-            done();
+            if (!doneSend) done();
           });
         }, 5000);
       });
@@ -298,7 +303,7 @@ describe('Pool callback', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -339,7 +344,7 @@ describe('Pool callback', () => {
   });
 
   it('query fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -438,6 +443,7 @@ describe('Pool callback', () => {
   });
 
   it('connection destroy', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -504,44 +510,49 @@ describe('Pool callback', () => {
       connectionLimit: 1,
       resetAfterUse: false
     });
-    pool.query('DROP TABLE IF EXISTS parse');
-    pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
-    pool.batch(
-      'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
-      [
-        [1, 'john'],
-        [2, 'jack']
-      ],
-      (err, res) => {
-        if (err) {
-          done(err);
-        } else {
-          assert.equal(res.affectedRows, 2);
-          pool.query('select * from `parse`', (err2, res2) => {
-            assert.deepEqual(res2, [
-              {
-                id: 1,
-                id2: 1,
-                id3: 2,
-                t: 'john',
-                id4: 3
-              },
-              {
-                id: 1,
-                id2: 2,
-                id3: 2,
-                t: 'jack',
-                id4: 3
+    pool.query('DROP TABLE IF EXISTS parse', (err, res) => {
+      pool.query(
+        'CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)',
+        (err, res) => {
+          pool.batch(
+            'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
+            [
+              [1, 'john'],
+              [2, 'jack']
+            ],
+            (err, res) => {
+              if (err) {
+                done(err);
+              } else {
+                assert.equal(res.affectedRows, 2);
+                pool.query('select * from `parse`', (err2, res2) => {
+                  assert.deepEqual(res2, [
+                    {
+                      id: 1,
+                      id2: 1,
+                      id3: 2,
+                      t: 'john',
+                      id4: 3
+                    },
+                    {
+                      id: 1,
+                      id2: 2,
+                      id3: 2,
+                      t: 'jack',
+                      id4: 3
+                    }
+                  ]);
+                  pool.query('DROP TABLE parse');
+                  pool.end(() => {
+                    done();
+                  });
+                });
               }
-            ]);
-            pool.query('DROP TABLE parse');
-            pool.end(() => {
-              done();
-            });
-          });
+            }
+          );
         }
-      }
-    );
+      );
+    });
   });
 
   it('pool batch without parameters', function (done) {
@@ -565,25 +576,43 @@ describe('Pool callback', () => {
       connectionLimit: 1,
       resetAfterUse: false
     });
-    pool.query('CREATE TEMPORARY TABLE singleBatchArrayCallback(id int)');
-    pool.batch('INSERT INTO `singleBatchArrayCallback` values (?)', [1, 2, 3], (err, res) => {
+    pool.query('DROP TABLE IF EXISTS singleBatchArrayCallback', (err, res) => {
       if (err) {
+        pool.end();
         done(err);
       } else {
-        pool.query('select * from `singleBatchArrayCallback`', (err, res) => {
-          assert.deepEqual(res, [
-            {
-              id: 1
-            },
-            {
-              id: 2
-            },
-            {
-              id: 3
-            }
-          ]);
-          pool.end();
-          done();
+        pool.query('CREATE TABLE singleBatchArrayCallback(id int)', (err, res) => {
+          if (err) {
+            pool.end();
+            done(err);
+          } else {
+            pool.batch(
+              'INSERT INTO `singleBatchArrayCallback` values (?)',
+              [1, 2, 3],
+              (err, res) => {
+                if (err) {
+                  pool.end();
+                  done(err);
+                } else {
+                  pool.query('select * from `singleBatchArrayCallback`', (err, res) => {
+                    assert.deepEqual(res, [
+                      {
+                        id: 1
+                      },
+                      {
+                        id: 2
+                      },
+                      {
+                        id: 3
+                      }
+                    ]);
+                    pool.end();
+                    done();
+                  });
+                }
+              }
+            );
+          }
         });
       }
     });
@@ -595,32 +624,34 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({
       connectionLimit: 10,
       minimumIdle: 4,
-      idleTimeout: 2
+      idleTimeout: 2,
+      acquireTimeout: 20000
     });
-
-    for (let i = 0; i < 15000; i++) {
-      pool.query('SELECT ' + i);
-    }
-    pool.query('SELECT 15000', [], (err) => {
-      if (err) {
-        pool.end();
-        done(err);
-      } else {
-        setTimeout(() => {
-          assert.equal(pool.totalConnections(), 10);
-          assert.equal(pool.idleConnections(), 10);
-        }, 5);
-
-        setTimeout(() => {
-          //minimumIdle-1 is possible after reaching idleTimeout and connection
-          // is still not recreated
-          assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
-          assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
-          pool.end();
-          done();
-        }, 7000);
+    setTimeout(() => {
+      for (let i = 0; i < 5000; i++) {
+        pool.query('SELECT ' + i);
       }
-    });
+      pool.query('SELECT 5000', [], (err) => {
+        if (err) {
+          pool.end();
+          done(err);
+        } else {
+          setTimeout(() => {
+            assert.equal(pool.totalConnections(), 10);
+            assert.equal(pool.idleConnections(), 10);
+          }, 5);
+
+          setTimeout(() => {
+            //minimumIdle-1 is possible after reaching idleTimeout and connection
+            // is still not recreated
+            assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+            assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
+            pool.end();
+            done();
+          }, 7000);
+        }
+      });
+    }, 4000);
   });
 
   it('test minimum idle', function (done) {
@@ -628,7 +659,8 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({
       connectionLimit: 10,
       minimumIdle: 4,
-      idleTimeout: 2
+      idleTimeout: 2,
+      acquireTimeout: 20000
     });
 
     setTimeout(() => {

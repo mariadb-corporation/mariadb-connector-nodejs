@@ -57,7 +57,10 @@ describe('datetime', () => {
 
   it('standard date', function (done) {
     //using distant server, time might be different
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
+    if (
+      (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
+      process.env.MAXSCALE_TEST_DISABLE
+    )
       this.skip();
 
     shareConn

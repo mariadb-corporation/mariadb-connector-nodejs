@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Type definitions for mariadb 2.0
+// Type definitions for mariadb 2.5
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
 // Definitions by:  Diego Dupin <https://github.com/rusher>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped

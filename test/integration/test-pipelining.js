@@ -69,9 +69,15 @@ describe('pipelining', () => {
     this.timeout(60000);
     let diff, pipelineDiff;
     conn1
-      .query('CREATE TEMPORARY TABLE pipeline1 (test int)')
+      .query('DROP TABLE IF EXISTS pipeline1')
       .then(() => {
-        return conn2.query('CREATE TEMPORARY TABLE pipeline2 (test int)');
+        return conn2.query('DROP TABLE IF EXISTS pipeline2');
+      })
+      .then(() => {
+        return conn1.query('CREATE TABLE pipeline1 (test int)');
+      })
+      .then(() => {
+        return conn2.query('CREATE TABLE pipeline2 (test int)');
       })
       .then(() => {
         return insertBulk(conn1, 'pipeline1');

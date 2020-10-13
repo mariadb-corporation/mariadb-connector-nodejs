@@ -22,39 +22,48 @@ if [ -n "$SKYSQL" ] ; then
   fi
 
 else
+  export TEST_USER=boby
+  export TEST_PASSWORD=heyPassw0@rd
+  export TEST_HOST=mariadb.example.com
+  export COMPOSE_FILE=.travis/docker-compose.yml
+  export ENTRYPOINT=$PROJ_PATH/.travis/sql
 
   if [ "$DB" = "build" ] ; then
     .travis/build/build.sh
     docker build -t build:latest --label build .travis/build/
   fi
 
-  export ENTRYPOINT=$PROJ_PATH/.travis/entrypoint
   if [ -n "$MAXSCALE_VERSION" ] ; then
     ###################################################################################################################
     # launch Maxscale with one server
     ###################################################################################################################
     export COMPOSE_FILE=.travis/maxscale-compose.yml
-    export ENTRYPOINT=$PROJ_PATH/.travis/sql
+
     docker-compose -f ${COMPOSE_FILE} build
-    docker-compose -f ${COMPOSE_FILE} up -d
-  else
-    docker-compose -f .travis/docker-compose.yml up -d
+    export TEST_PORT=4006
+    export TEST_SSL_PORT=4009
   fi
+
+  docker-compose -f ${COMPOSE_FILE} up -d
 
   if [ -z "$SKIP_LEAK" ] ; then npm install node-memwatch; fi
 
   node .travis/wait-for-docker-up.js
-
-  if [ -z "$MAXSCALE_VERSION" ] ; then
-    docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
-    sleep 1
-    docker-compose -f .travis/docker-compose.yml stop db
-    sleep 1
-    docker-compose -f .travis/docker-compose.yml up -d
-    docker-compose -f .travis/docker-compose.yml logs db
-    node --version
-    node .travis/wait-for-docker-up.js
+  docker-compose -f ${COMPOSE_FILE} logs
+  if [ -n "$MAXSCALE_VERSION" ] ; then
+      docker-compose -f ${COMPOSE_FILE} exec maxscale tail -n 500 /var/log/maxscale/maxscale.log
   fi
+
+#  if [ -z "$MAXSCALE_VERSION" ] ; then
+#    docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
+#    sleep 1
+#    docker-compose -f .travis/docker-compose.yml stop db
+#    sleep 1
+#    docker-compose -f .travis/docker-compose.yml up -d
+#    docker-compose -f .travis/docker-compose.yml logs db
+#    node --version
+#    node .travis/wait-for-docker-up.js
+#  fi
 fi
 
 if [ -n "$LINT" ] ; then npm run test:lint; fi

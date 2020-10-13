@@ -27,9 +27,14 @@ describe('buffer', () => {
         ? "_binary'let\\'s rocks\\n😊 🤘'"
         : "_binary'let\\'s rocks\\nmore simple'"
     );
-    shareConn.query('CREATE TEMPORARY TABLE BufEscape(b blob)');
     shareConn
-      .query(' SELECT ' + shareConn.escape(buf) + ' t')
+      .query('DROP TABLE IF EXISTS BufEscape')
+      .then(() => {
+        return shareConn.query('CREATE TABLE BufEscape(b blob)');
+      })
+      .then(() => {
+        return shareConn.query(' SELECT ' + shareConn.escape(buf) + ' t');
+      })
       .then((rows) => {
         assert.deepEqual(rows, [{ t: buf }]);
         return shareConn.query('INSERT INTO BufEscape VALUE (' + shareConn.escape(buf) + ')');
@@ -49,15 +54,26 @@ describe('buffer', () => {
 
   it('text multi bytes characters', function (done) {
     if (!base.utf8Collation()) this.skip();
-    shareConn.query(
-      'CREATE TEMPORARY TABLE BlobTeststreamtest2 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
-    );
     const toInsert1 = '\u00D8bbcdefgh\njklmn"';
     const toInsert2 = '\u00D8abcdefgh\njklmn"';
 
-    shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [2, toInsert1, toInsert2]);
     shareConn
-      .query('select * from BlobTeststreamtest2')
+      .query('DROP TABLE IF EXISTS BlobTeststreamtest2')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE BlobTeststreamtest2 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
+        );
+      })
+      .then(() => {
+        return shareConn.query('insert into BlobTeststreamtest2 values(?, ?, ?)', [
+          2,
+          toInsert1,
+          toInsert2
+        ]);
+      })
+      .then(() => {
+        return shareConn.query('select * from BlobTeststreamtest2');
+      })
       .then((rows) => {
         assert.deepEqual(rows, [{ id: 2, st: toInsert1, strm: toInsert2 }]);
         done();
@@ -76,12 +92,19 @@ describe('buffer', () => {
   });
 
   it('blobs to buffer type', function (done) {
-    shareConn.query(
-      'CREATE TEMPORARY TABLE blobToBuff (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
-    );
-    shareConn.query("insert into blobToBuff values(null, 'a','b','c')");
     shareConn
-      .query('SELECT * FROM blobToBuff', [buf])
+      .query('DROP TABLE IF EXISTS blobToBuff')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE blobToBuff (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
+        );
+      })
+      .then(() => {
+        return shareConn.query("insert into blobToBuff values(null, 'a','b','c')");
+      })
+      .then(() => {
+        return shareConn.query('SELECT * FROM blobToBuff', [buf]);
+      })
       .then((rows) => {
         assert.strictEqual(rows.length, 1);
         assert.strictEqual(rows[0].id, 1);
@@ -94,13 +117,23 @@ describe('buffer', () => {
   });
 
   it('blob empty and null', function (done) {
-    shareConn.query('CREATE TEMPORARY TABLE blobEmpty (val LONGBLOB)');
-    shareConn.query('insert into blobEmpty values (?)', ['']);
-    shareConn.query('insert into blobEmpty values (?)', ['hello']);
-    shareConn.query('insert into blobEmpty values (?)', [null]);
-
     shareConn
-      .query('select * from blobEmpty')
+      .query('DROP TABLE IF EXISTS blobEmpty')
+      .then(() => {
+        return shareConn.query('CREATE TABLE blobEmpty (val LONGBLOB)');
+      })
+      .then(() => {
+        return shareConn.query('insert into blobEmpty values (?)', ['']);
+      })
+      .then(() => {
+        return shareConn.query('insert into blobEmpty values (?)', ['hello']);
+      })
+      .then(() => {
+        return shareConn.query('insert into blobEmpty values (?)', [null]);
+      })
+      .then(() => {
+        return shareConn.query('select * from blobEmpty');
+      })
       .then((rows) => {
         assert.deepEqual(rows, [
           { val: Buffer.from('') },

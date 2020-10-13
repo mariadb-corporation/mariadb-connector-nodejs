@@ -26,9 +26,14 @@ describe('Big query', function () {
   it('parameter bigger than 16M packet size', function (done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    shareConn.query('CREATE TEMPORARY TABLE bigParameterBigParam (b longblob)');
     shareConn
-      .query('insert into bigParameterBigParam(b) values(?)', [buf])
+      .query('DROP TABLE IF EXISTS bigParameterBigParam')
+      .then(() => {
+        return shareConn.query('CREATE TABLE bigParameterBigParam (b longblob)');
+      })
+      .then(() => {
+        return shareConn.query('insert into bigParameterBigParam(b) values(?)', [buf]);
+      })
       .then(() => {
         return shareConn.query('SELECT * from bigParameterBigParam');
       })
@@ -40,11 +45,16 @@ describe('Big query', function () {
   });
 
   it('int8 buffer overflow', function (done) {
+    const buf = Buffer.alloc(979, '0');
     base.createConnection({ collation: 'latin1_swedish_ci' }).then((conn) => {
-      conn.query('CREATE TEMPORARY TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
-      const buf = Buffer.alloc(979, '0');
       conn
-        .query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test'])
+        .query('DROP TABLE IF EXISTS bigParameterInt8')
+        .then(() => {
+          return conn.query('CREATE TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
+        })
+        .then(() => {
+          return conn.query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test']);
+        })
         .then(() => {
           return conn.query('SELECT * from bigParameterInt8');
         })
@@ -84,7 +94,7 @@ describe('Big query', function () {
     const st = Buffer.alloc(65536, '0').toString();
     const st2 = Buffer.alloc(1048576, '0').toString();
     const params = [st];
-    let sql = 'CREATE TEMPORARY TABLE bigParameter (a0 MEDIUMTEXT ';
+    let sql = 'CREATE TABLE bigParameter (a0 MEDIUMTEXT ';
     let sqlInsert = 'insert into bigParameter values (?';
     for (let i = 1; i < 10; i++) {
       sql += ',a' + i + ' MEDIUMTEXT ';
@@ -93,9 +103,14 @@ describe('Big query', function () {
     }
     sql += ')';
     sqlInsert += ')';
-    conn.query(sql);
     conn
-      .query(sqlInsert, params)
+      .query('DROP TABLE IF EXISTS bigParameter')
+      .then(() => {
+        return conn.query(sql);
+      })
+      .then(() => {
+        return conn.query(sqlInsert, params);
+      })
       .then(() => {
         return conn.query('SELECT * from bigParameter');
       })
@@ -106,6 +121,9 @@ describe('Big query', function () {
         conn.end();
         done();
       })
-      .catch(done);
+      .catch((err) => {
+        conn.end();
+        done(err);
+      });
   }
 });

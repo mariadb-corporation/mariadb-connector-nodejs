@@ -25,7 +25,7 @@ describe('connection', () => {
   });
 
   it('with medium connection attributes', function (done) {
-    const mediumAttribute = Buffer.alloc(20000, 'a').toString();
+    const mediumAttribute = Buffer.alloc(512, 'a').toString();
     connectWithAttributes({ par1: 'bouh', par2: mediumAttribute }, done);
   });
 
@@ -46,7 +46,7 @@ describe('connection', () => {
   }
 
   it('connection attributes with encoding not supported by node.js', function (done) {
-    const mediumAttribute = Buffer.alloc(20000, 'a').toString();
+    const mediumAttribute = Buffer.alloc(500, 'a').toString();
     base
       .createConnection({
         connectAttributes: { par1: 'bouh', par2: mediumAttribute },
@@ -182,7 +182,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -425,7 +425,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     this.timeout(10000);
 
     base.createConnection().then((conn) => {
@@ -591,7 +591,7 @@ describe('connection', () => {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
       (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
-      process.env.MAXSCALE_VERSION ||
+      process.env.MAXSCALE_TEST_DISABLE ||
       process.env.SKYSQL
     ) {
       //session tracking not implemented
@@ -773,7 +773,7 @@ describe('connection', () => {
         if (
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
-          !process.env.MAXSCALE_VERSION &&
+          !process.env.MAXSCALE_TEST_DISABLE &&
           !process.env.SKYSQL
         ) {
           //ok packet contain meta change
@@ -848,7 +848,7 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.MAXSCALE_VERSION ||
+      process.env.MAXSCALE_TEST_DISABLE ||
       process.env.SKYSQL
     ) {
       //session tracking not implemented
@@ -889,7 +889,7 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.MAXSCALE_VERSION ||
+      process.env.MAXSCALE_TEST_DISABLE ||
       process.env.SKYSQL
     ) {
       //session tracking not implemented

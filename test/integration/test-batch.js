@@ -72,130 +72,130 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
 
-        conn.query('DROP TABLE IF EXISTS simpleBatch');
-        conn.query(
-          'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
-        );
-        const f = {};
-        f.toSqlString = () => {
-          return 'blabla';
-        };
         conn
-          .batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
-            [
-              true,
-              'Ʉjo"h\u000An😎🌶\\\\',
-              new Date('2001-12-31 23:59:58+3'),
-              new Date('2018-01-01 12:30:20.456789+3'),
-              {
-                type: 'Point',
-                coordinates: [10, 10]
-              }
-            ],
-            [
-              true,
-              f,
-              new Date('2001-12-31 23:59:58+3'),
-              new Date('2018-01-01 12:30:20.456789+3'),
-              {
-                type: 'Point',
-                coordinates: [10, 10]
-              }
-            ],
-            [
-              false,
-              { name: 'jack\u000Aमस्', val: 'tt' },
-              null,
-              new Date('2018-01-21 11:30:20.123456+3'),
-              {
-                type: 'Point',
-                coordinates: [10, 20]
-              }
-            ],
-            [
-              0,
-              null,
-              new Date('2020-12-31 23:59:59+3'),
-              new Date('2018-01-21 11:30:20.123456+3'),
-              {
-                type: 'Point',
-                coordinates: [20, 20]
-              }
-            ]
-          ])
+          .query('DROP TABLE IF EXISTS simpleBatch')
+          .then(() => {
+            return conn.query(
+              'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
+            );
+          })
+          .then(() => {
+            const f = {};
+            f.toSqlString = () => {
+              return 'blabla';
+            };
+            return conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+              [
+                true,
+                'Ʉjo"h\u000An😎🌶\\\\',
+                new Date('2001-12-31 23:59:58+3'),
+                new Date('2018-01-01 12:30:20.456789+3'),
+                {
+                  type: 'Point',
+                  coordinates: [10, 10]
+                }
+              ],
+              [
+                true,
+                f,
+                new Date('2001-12-31 23:59:58+3'),
+                new Date('2018-01-01 12:30:20.456789+3'),
+                {
+                  type: 'Point',
+                  coordinates: [10, 10]
+                }
+              ],
+              [
+                false,
+                { name: 'jack\u000Aमस्', val: 'tt' },
+                null,
+                new Date('2018-01-21 11:30:20.123456+3'),
+                {
+                  type: 'Point',
+                  coordinates: [10, 20]
+                }
+              ],
+              [
+                0,
+                null,
+                new Date('2020-12-31 23:59:59+3'),
+                new Date('2018-01-21 11:30:20.123456+3'),
+                {
+                  type: 'Point',
+                  coordinates: [20, 20]
+                }
+              ]
+            ]);
+          })
           .then((res) => {
             assert.equal(res.affectedRows, 4);
-            conn
-              .query('select * from `simpleBatch`')
-              .then((res) => {
-                assert.deepEqual(res, [
-                  {
-                    id: 1,
-                    id2: 1,
-                    id3: 2,
-                    t: 'Ʉjo"h\u000An😎🌶\\\\',
-                    d: new Date('2001-12-31 23:59:58+3'),
-                    d2: new Date('2018-01-01 12:30:20.456789+3'),
-                    g: {
-                      type: 'Point',
-                      coordinates: [10, 10]
-                    },
-                    id4: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 1,
-                    id3: 2,
-                    t: 'blabla',
-                    d: new Date('2001-12-31 23:59:58+3'),
-                    d2: new Date('2018-01-01 12:30:20.456789+3'),
-                    g: {
-                      type: 'Point',
-                      coordinates: [10, 10]
-                    },
-                    id4: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 0,
-                    id3: 2,
-                    t: '{"name":"jack\\nमस्","val":"tt"}',
-                    d: null,
-                    d2: new Date('2018-01-21 11:30:20.123456+3'),
-                    g: {
-                      type: 'Point',
-                      coordinates: [10, 20]
-                    },
-                    id4: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 0,
-                    id3: 2,
-                    t: null,
-                    d: new Date('2020-12-31 23:59:59+3'),
-                    d2: new Date('2018-01-21 11:30:20.123456+3'),
-                    g: {
-                      type: 'Point',
-                      coordinates: [20, 20]
-                    },
-                    id4: 3
-                  }
-                ]);
-                conn
-                  .query('DROP TABLE simpleBatch')
-                  .then((res) => {
-                    clearTimeout(timeout);
-                    conn.end();
-                    done();
-                  })
-                  .catch(done);
-              })
-              .catch((err) => {
-                done(err);
-              });
-          });
-        conn
+            return conn.query('select * from `simpleBatch`');
+          })
+          .then((res) => {
+            assert.deepEqual(res, [
+              {
+                id: 1,
+                id2: 1,
+                id3: 2,
+                t: 'Ʉjo"h\u000An😎🌶\\\\',
+                d: new Date('2001-12-31 23:59:58+3'),
+                d2: new Date('2018-01-01 12:30:20.456789+3'),
+                g: {
+                  type: 'Point',
+                  coordinates: [10, 10]
+                },
+                id4: 3
+              },
+              {
+                id: 1,
+                id2: 1,
+                id3: 2,
+                t: 'blabla',
+                d: new Date('2001-12-31 23:59:58+3'),
+                d2: new Date('2018-01-01 12:30:20.456789+3'),
+                g: {
+                  type: 'Point',
+                  coordinates: [10, 10]
+                },
+                id4: 3
+              },
+              {
+                id: 1,
+                id2: 0,
+                id3: 2,
+                t: '{"name":"jack\\nमस्","val":"tt"}',
+                d: null,
+                d2: new Date('2018-01-21 11:30:20.123456+3'),
+                g: {
+                  type: 'Point',
+                  coordinates: [10, 20]
+                },
+                id4: 3
+              },
+              {
+                id: 1,
+                id2: 0,
+                id3: 2,
+                t: null,
+                d: new Date('2020-12-31 23:59:59+3'),
+                d2: new Date('2018-01-21 11:30:20.123456+3'),
+                g: {
+                  type: 'Point',
+                  coordinates: [20, 20]
+                },
+                id4: 3
+              }
+            ]);
+            return conn.query('DROP TABLE simpleBatch');
+          })
+          .then((res) => {
+            clearTimeout(timeout);
+            conn.end();
+            done();
+          })
+          .catch(done);
+
+        return conn
           .query('select 1')
           .then((rows) => {
             assert.deepEqual(rows, [{ 1: 1 }]);
@@ -213,52 +213,52 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
 
-        conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
-        conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
-        const f = {};
-        f.toSqlString = () => {
-          return 'blabla';
-        };
         conn
-          .batch(
-            {
-              sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
-              maxAllowedPacket: 1048576
-            },
-            [
-              [1, new Date('2001-12-31 23:59:58')],
-              [2, new Date('2001-12-31 23:59:58')]
-            ]
-          )
+          .query('DROP TABLE IF EXISTS simpleBatchWithOptions')
+          .then(() => {
+            return conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
+          })
+          .then(() => {
+            const f = {};
+            f.toSqlString = () => {
+              return 'blabla';
+            };
+            return conn.batch(
+              {
+                sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
+                maxAllowedPacket: 1048576
+              },
+              [
+                [1, new Date('2001-12-31 23:59:58')],
+                [2, new Date('2001-12-31 23:59:58')]
+              ]
+            );
+          })
           .then((res) => {
             assert.equal(res.affectedRows, 2);
-            conn
-              .query('select * from `simpleBatchWithOptions`')
-              .then((res) => {
-                assert.deepEqual(res, [
-                  {
-                    id: 1,
-                    d: new Date('2001-12-31 23:59:58')
-                  },
-                  {
-                    id: 2,
-                    d: new Date('2001-12-31 23:59:58')
-                  }
-                ]);
-                conn
-                  .query('DROP TABLE simpleBatchWithOptions')
-                  .then((res) => {
-                    clearTimeout(timeout);
-                    conn.end();
-                    done();
-                  })
-                  .catch(done);
-              })
-              .catch((err) => {
-                done(err);
-              });
-          });
-        conn
+            return conn.query('select * from `simpleBatchWithOptions`');
+          })
+          .then((res) => {
+            assert.deepEqual(res, [
+              {
+                id: 1,
+                d: new Date('2001-12-31 23:59:58')
+              },
+              {
+                id: 2,
+                d: new Date('2001-12-31 23:59:58')
+              }
+            ]);
+            return conn.query('DROP TABLE simpleBatchWithOptions');
+          })
+          .then((res) => {
+            clearTimeout(timeout);
+            conn.end();
+            done();
+          })
+          .catch(done);
+
+        return conn
           .query('select 1')
           .then((rows) => {
             assert.deepEqual(rows, [{ 1: 1 }]);
@@ -280,39 +280,41 @@ describe('batch', () => {
           console.log(conn.info.getLastPackets());
         }, 25000);
 
-        conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
-        conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
         conn
-          .batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [
-            ['john', 2],
-            ['©°', 3]
-          ])
+          .query('DROP TABLE IF EXISTS simpleBatchCP1251')
+          .then(() => {
+            return conn.query(
+              'CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4'
+            );
+          })
+          .then(() => {
+            return conn.batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [
+              ['john', 2],
+              ['©°', 3]
+            ]);
+          })
           .then((res) => {
             assert.equal(res.affectedRows, 2);
-            conn
-              .query('select * from `simpleBatchCP1251`')
-              .then((res) => {
-                assert.deepEqual(res, [
-                  { id: 2, t: 'john' },
-                  { id: 3, t: '©°' }
-                ]);
-                conn
-                  .query('DROP TABLE simpleBatchCP1251')
-                  .then((res) => {
-                    clearTimeout(timeout);
-                    conn.end();
-                    done();
-                  })
-                  .catch(done);
-              })
-              .catch((err) => {
-                done(err);
-              });
-          });
-        conn
-          .query('select 2')
+            return conn.query('select * from `simpleBatchCP1251`');
+          })
+          .then((res) => {
+            assert.deepEqual(res, [
+              { id: 2, t: 'john' },
+              { id: 3, t: '©°' }
+            ]);
+            return conn.query('DROP TABLE simpleBatchCP1251');
+          })
+          .then((res) => {
+            clearTimeout(timeout);
+            conn.end();
+            done();
+          })
+          .catch(done);
+
+        return conn
+          .query('select 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ 2: 2 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
           })
           .catch(done);
       })
@@ -1617,12 +1619,17 @@ describe('batch', () => {
       base
         .createConnection({ bulk: false, maxAllowedPacket: 150 })
         .then((conn) => {
-          conn.query('CREATE TEMPORARY TABLE my_table(id int, val LONGTEXT)');
           conn
-            .batch('INSERT INTO my_table(id,val) VALUES( ?, ?) ', [
-              [1, t],
-              [2, t]
-            ])
+            .query('DROP TABLE IF EXISTS my_table')
+            .then(() => {
+              return conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
+            })
+            .then(() => {
+              return conn.batch('INSERT INTO my_table(id,val) VALUES( ?, ?) ', [
+                [1, t],
+                [2, t]
+              ]);
+            })
             .then((res) => {
               return conn.query('SELECT * FROM my_table');
             })

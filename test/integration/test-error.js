@@ -334,7 +334,7 @@ describe('Error', () => {
 
   it('server close connection without warning', function (done) {
     //removed for maxscale, since wait_timeout will be set to other connections
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
@@ -374,7 +374,7 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -415,7 +415,7 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(20000);
     base
       .createConnection()
@@ -427,7 +427,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (process.env.MAXSCALE_VERSION) {
+            if (process.env.MAXSCALE_TEST_DISABLE) {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
             } else {
@@ -448,7 +448,7 @@ describe('Error', () => {
   });
 
   it('end connection query error', function (done) {
-    // if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     base
       .createConnection()
       .then((conn) => {
@@ -521,10 +521,18 @@ describe('Error', () => {
         )
       );
     };
-
-    shareConn.query('CREATE TEMPORARY TABLE undefinedParameter (id int, id2 int, id3 int)');
     shareConn
-      .query('INSERT INTO undefinedParameter values (?, ?, ?)', [1, undefined, 3])
+      .query('DROP TABLE IF EXISTS undefinedParameter')
+      .then(() => {
+        return shareConn.query('CREATE TABLE undefinedParameter (id int, id2 int, id3 int)');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [
+          1,
+          undefined,
+          3
+        ]);
+      })
       .then(() => {
         done(new Error('must have thrown error !'));
       })
@@ -552,9 +560,14 @@ describe('Error', () => {
         )
       );
     };
-    shareConn.query('CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)');
     shareConn
-      .query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3])
+      .query('DROP TABLE IF EXISTS execute_missing_parameter')
+      .then(() => {
+        return shareConn.query('CREATE TABLE execute_missing_parameter (id int, id2 int, id3 int)');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3]);
+      })
       .then(() => {
         done(new Error('must have thrown error !'));
       })
@@ -569,44 +582,53 @@ describe('Error', () => {
   });
 
   it('query missing parameter with compression', function (done) {
-    const handleResult = function (err) {
-      assert.equal(err.errno, 45016);
-      assert.equal(err.sqlState, 'HY000');
-      assert.equal(err.code, 'ER_MISSING_PARAMETER');
-      assert.isTrue(!err.fatal);
-      assert.ok(
-        err.message.includes(
-          'Parameter at position 3 is not set\n' +
-            'sql: INSERT INTO execute_missing_parameter values (?, ?, ?) - parameters:[1,3]'
-        )
-      );
-    };
     base
       .createConnection({ compress: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE execute_missing_parameter (id int, id2 int, id3 int)');
         conn
-          .query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3])
+          .query('DROP TABLE IF EXISTS execute_missing_parameter')
+          .then(() => {
+            return conn.query('CREATE TABLE execute_missing_parameter (id int, id2 int, id3 int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3]);
+          })
           .then(() => {
             done(new Error('must have thrown error !'));
           })
-          .catch(handleResult);
-        conn
-          .query('SELECT 1')
-          .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
-            conn.end();
-            done();
-          })
-          .catch(done);
+          .catch((err) => {
+            assert.equal(err.errno, 45016);
+            assert.equal(err.sqlState, 'HY000');
+            assert.equal(err.code, 'ER_MISSING_PARAMETER');
+            assert.isTrue(!err.fatal);
+            assert.ok(
+              err.message.includes(
+                'Parameter at position 3 is not set\n' +
+                  'sql: INSERT INTO execute_missing_parameter values (?, ?, ?) - parameters:[1,3]'
+              )
+            );
+            return conn
+              .query('SELECT 1')
+              .then((rows) => {
+                assert.deepEqual(rows, [{ 1: 1 }]);
+                conn.end();
+                done();
+              })
+              .catch(done);
+          });
       })
       .catch(done);
   });
 
   it('query no parameter', function (done) {
-    shareConn.query('CREATE TEMPORARY TABLE execute_no_parameter (id int, id2 int, id3 int)');
     shareConn
-      .query('INSERT INTO execute_no_parameter values (?, ?, ?)', [])
+      .query('DROP TABLE IF EXISTS execute_no_parameter')
+      .then(() => {
+        return shareConn.query('CREATE TABLE execute_no_parameter (id int, id2 int, id3 int)');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO execute_no_parameter values (?, ?, ?)', []);
+      })
       .then(() => {
         done(new Error('must have thrown error !'));
       })
@@ -632,9 +654,15 @@ describe('Error', () => {
   });
 
   it('query to much parameter', function (done) {
-    shareConn.query('CREATE TEMPORARY TABLE to_much_parameters (id int, id2 int, id3 int)');
     shareConn
-      .query('INSERT INTO to_much_parameters values (?, ?, ?) ', [1, 2, 3, 4])
+      .query('DROP TABLE IF EXISTS to_much_parameters')
+      .then(() => {
+        return shareConn.query('CREATE TABLE to_much_parameters (id int, id2 int, id3 int)');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO to_much_parameters values (?, ?, ?) ', [1, 2, 3, 4]);
+      })
+
       .then(() => done())
       .catch(done);
   });

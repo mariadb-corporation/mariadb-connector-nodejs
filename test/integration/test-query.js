@@ -25,16 +25,26 @@ describe('basic query', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE parse(t varchar(128))');
-        conn.query('INSERT INTO `parse` value (?)', value);
         conn
-          .query('select * from `parse` where t = ?', value)
+          .query('DROP TABLE IF EXISTS parse')
+          .then(() => {
+            return conn.query('CREATE TABLE parse(t varchar(128))');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO `parse` value (?)', value);
+          })
+          .then(() => {
+            return conn.query('select * from `parse` where t = ?', value);
+          })
           .then((res) => {
             assert.strictEqual(res[0].t, value);
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -43,10 +53,19 @@ describe('basic query', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE arrayParam (id int, val varchar(10))');
-        conn.query("INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')");
         conn
-          .query('SELECT * FROM arrayParam WHERE val IN ?', [['b', 'c', 1]])
+          .query('DROP TABLE IF EXISTS arrayParam')
+          .then(() => {
+            return conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
+          })
+          .then(() => {
+            return conn.query(
+              "INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')"
+            );
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM arrayParam WHERE val IN ?', [['b', 'c', 1]]);
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               {
@@ -61,7 +80,10 @@ describe('basic query', () => {
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -70,11 +92,20 @@ describe('basic query', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE arrayParam (id int, val varchar(10))');
-        conn.query('INSERT INTO arrayParam VALUES ?', [[1, null]]);
-        conn.query('INSERT INTO arrayParam VALUES ?', [[2, 'a']]);
         conn
-          .query('SELECT * FROM arrayParam')
+          .query('DROP TABLE IF EXISTS arrayParamNull')
+          .then(() => {
+            return conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO arrayParamNull VALUES ?', [[1, null]]);
+          })
+          .then(() => {
+            return conn.query('INSERT INTO arrayParamNull VALUES ?', [[2, 'a']]);
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM arrayParamNull');
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               {
@@ -89,7 +120,10 @@ describe('basic query', () => {
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -99,16 +133,26 @@ describe('basic query', () => {
     base
       .createConnection({ permitSetMultiParamEntries: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE setTable(id int, val varchar(128))');
-        conn.query('INSERT INTO setTable SET ?', jsonValue);
         conn
-          .query('select * from setTable')
+          .query('DROP TABLE IF EXISTS setTable')
+          .then(() => {
+            return conn.query('CREATE TABLE setTable(id int, val varchar(128))');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO setTable SET ?', jsonValue);
+          })
+          .then(() => {
+            return conn.query('select * from setTable');
+          })
           .then((res) => {
             assert.deepEqual(res[0], jsonValue);
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -191,24 +235,34 @@ describe('basic query', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query(
-          "set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'"
-        );
-        conn.query('create TEMPORARY table h (c1 varchar(5))');
         conn
-          .query("insert into h values ('123456')")
+          .query(
+            "set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'"
+          )
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS h');
+          })
+          .then(() => {
+            return conn.query('create table h (c1 varchar(5))');
+          })
+          .then(() => {
+            return conn.query("insert into h values ('123456')");
+          })
           .then((res) => {
             assert.equal(res.warningStatus, 1);
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
 
   it('255 columns', (done) => {
-    let table = 'CREATE TEMPORARY TABLE myTable(';
+    let table = 'CREATE TABLE myTable(';
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
     for (let i = 0; i < 255; i++) {
@@ -226,26 +280,43 @@ describe('basic query', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query(table);
-        conn.query(insert);
         conn
-          .query('SELECT * FROM myTable')
+          .query('DROP TABLE IF EXISTS myTable')
+          .then(() => {
+            return conn.query(table);
+          })
+          .then(() => {
+            return conn.query(insert);
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM myTable');
+          })
           .then((res) => {
             assert.deepEqual(res[0], expRes);
             conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
 
   it('escape validation', function (done) {
     if (!base.utf8Collation()) this.skip();
-    shareConn.query('CREATE TEMPORARY TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
-    shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
     shareConn
-      .query('SELECT * FROM tt1')
+      .query('DROP TABLE IF EXISTS tt1')
+      .then(() => {
+        return shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
+      })
+      .then(() => {
+        return shareConn.query('SELECT * FROM tt1');
+      })
       .then((res) => {
         assert.equal(res[0].tt, 'jack\nkमस्');
         done();

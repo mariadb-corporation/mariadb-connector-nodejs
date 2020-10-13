@@ -82,9 +82,11 @@ describe('local-infile', () => {
         conn
           .query("LOAD DATA LOCAL INFILE 'dummy.tsv' INTO TABLE t (id, test)")
           .then(() => {
+            conn.end();
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
+            console.log(err);
             assert(err != null);
             if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
               assert.equal(err.errno, 4166);
@@ -112,8 +114,11 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then((conn) => {
-            conn
-              .query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))')
+            shareConn
+              .query('DROP TABLE IF EXISTS smallLocalInfile')
+              .then(() => {
+                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+              })
               .then(() => {
                 return conn.query(
                   "LOAD DATA LOCAL INFILE '" +
@@ -160,13 +165,18 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then((conn) => {
-            conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
-            conn
-              .query(
-                "LOAD DATA LOCAL INFILE '" +
-                  smallFileName.replace(/\\/g, '/') +
-                  "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-              )
+            shareConn
+              .query('DROP TABLE IF EXISTS smallLocalInfile')
+              .then(() => {
+                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+              })
+              .then(() => {
+                return conn.query(
+                  "LOAD DATA LOCAL INFILE '" +
+                    smallFileName.replace(/\\/g, '/') +
+                    "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+                );
+              })
               .then(() => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
@@ -204,13 +214,18 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true, charset: 'big5' })
           .then((conn) => {
-            conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
-            conn
-              .query(
-                "LOAD DATA LOCAL INFILE '" +
-                  smallFileName.replace(/\\/g, '/') +
-                  "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-              )
+            shareConn
+              .query('DROP TABLE IF EXISTS smallLocalInfile')
+              .then(() => {
+                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+              })
+              .then(() => {
+                return conn.query(
+                  "LOAD DATA LOCAL INFILE '" +
+                    smallFileName.replace(/\\/g, '/') +
+                    "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+                );
+              })
               .then(() => {
                 return conn.query('SELECT * FROM smallLocalInfile');
               })
@@ -252,13 +267,18 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then((conn) => {
-            conn.query('CREATE TEMPORARY TABLE nonReadableFile(id int, test varchar(100))');
-            conn
-              .query(
-                "LOAD DATA LOCAL INFILE '" +
-                  nonReadableFile.replace(/\\/g, '/') +
-                  "' INTO TABLE nonReadableFile FIELDS TERMINATED BY ',' (id, test)"
-              )
+            shareConn
+              .query('DROP TABLE IF EXISTS nonReadableFile')
+              .then(() => {
+                return conn.query('CREATE TABLE nonReadableFile(id int, test varchar(100))');
+              })
+              .then(() => {
+                return conn.query(
+                  "LOAD DATA LOCAL INFILE '" +
+                    nonReadableFile.replace(/\\/g, '/') +
+                    "' INTO TABLE nonReadableFile FIELDS TERMINATED BY ',' (id, test)"
+                );
+              })
               .then(() => {
                 conn.end();
                 done('must have thrown error');
@@ -308,16 +328,21 @@ describe('local-infile', () => {
         base
           .createConnection({ permitLocalInfile: true })
           .then((conn) => {
-            conn.query('CREATE TEMPORARY TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
-            conn
-              .query(
-                "LOAD DATA LOCAL INFILE '" +
-                  bigFileName.replace(/\\/g, '/') +
-                  "' INTO TABLE bigLocalInfile " +
-                  "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
-                  "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
-                  '(t1, t2)'
-              )
+            shareConn
+              .query('DROP TABLE IF EXISTS bigLocalInfile')
+              .then(() => {
+                return conn.query('CREATE TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
+              })
+              .then(() => {
+                return conn.query(
+                  "LOAD DATA LOCAL INFILE '" +
+                    bigFileName.replace(/\\/g, '/') +
+                    "' INTO TABLE bigLocalInfile " +
+                    "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
+                    "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
+                    '(t1, t2)'
+                );
+              })
               .then(() => {
                 return conn.query('SELECT * FROM bigLocalInfile');
               })

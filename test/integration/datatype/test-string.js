@@ -27,13 +27,20 @@ describe('string', () => {
   it('utf8 buffer verification', function (done) {
     if (!base.utf8Collation()) this.skip();
 
-    shareConn.query(
-      'CREATE TEMPORARY TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
-    );
     const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
-    shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', buf);
     shareConn
-      .query("SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars")
+      .query('DROP TABLE IF EXISTS buf_utf8_chars')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
+        );
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', buf);
+      })
+      .then(() => {
+        return shareConn.query("SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars");
+      })
       .then((results) => {
         assert.equal(results[0].t1, '🤘💪');
         assert.equal(results[0].t2, '🤘💪');
@@ -55,27 +62,31 @@ describe('string', () => {
 
   it('utf8 strings', function (done) {
     if (!base.utf8Collation()) this.skip();
-
-    shareConn.query(
-      'CREATE TEMPORARY TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
-    );
-
-    //F0 9F 98 8E 😎 unicode 6 smiling face with sunglasses
-    //F0 9F 8C B6 🌶 unicode 7 hot pepper
-    //F0 9F 8E A4 🎤 unicode 8 no microphones
-    //F0 9F A5 82 🥂 unicode 9 champagne glass
-
-    shareConn.query(
-      'INSERT INTO buf_utf8_string values ' +
-        "('hel\\'lo'), " +
-        "('您好 (chinese)'), " +
-        "('नमस्ते (Hindi)'), " +
-        "('привет (Russian)'), " +
-        "('😎🌶🎤🥂')"
-    );
-
     shareConn
-      .query('SELECT * from buf_utf8_string')
+      .query('DROP TABLE IF EXISTS buf_utf8_string')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
+        );
+      })
+      .then(() => {
+        //F0 9F 98 8E 😎 unicode 6 smiling face with sunglasses
+        //F0 9F 8C B6 🌶 unicode 7 hot pepper
+        //F0 9F 8E A4 🎤 unicode 8 no microphones
+        //F0 9F A5 82 🥂 unicode 9 champagne glass
+
+        return shareConn.query(
+          'INSERT INTO buf_utf8_string values ' +
+            "('hel\\'lo'), " +
+            "('您好 (chinese)'), " +
+            "('नमस्ते (Hindi)'), " +
+            "('привет (Russian)'), " +
+            "('😎🌶🎤🥂')"
+        );
+      })
+      .then(() => {
+        return shareConn.query('SELECT * from buf_utf8_string');
+      })
       .then((rows) => {
         checkUtf8String(rows);
         done();
@@ -114,12 +125,26 @@ describe('string', () => {
   it('table encoding not affecting query', function (done) {
     if (!base.utf8Collation()) this.skip();
     const str = '財團法人資訊工業策進會';
-    shareConn.query('CREATE TEMPORARY TABLE utf8_encoding_table(t1 text) CHARSET utf8');
-    shareConn.query('CREATE TEMPORARY TABLE big5_encoding_table(t2 text) CHARSET big5');
-    shareConn.query('INSERT INTO utf8_encoding_table values (?)', [str]);
-    shareConn.query('INSERT INTO big5_encoding_table values (?)', [str]);
     shareConn
-      .query('SELECT * from utf8_encoding_table, big5_encoding_table')
+      .query('DROP TABLE IF EXISTS utf8_encoding_table')
+      .then(() => {
+        return shareConn.query('DROP TABLE IF EXISTS big5_encoding_table');
+      })
+      .then(() => {
+        return shareConn.query('CREATE TABLE utf8_encoding_table(t1 text) CHARSET utf8');
+      })
+      .then(() => {
+        return shareConn.query('CREATE TABLE big5_encoding_table(t2 text) CHARSET big5');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO utf8_encoding_table values (?)', [str]);
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO big5_encoding_table values (?)', [str]);
+      })
+      .then(() => {
+        return shareConn.query('SELECT * from utf8_encoding_table, big5_encoding_table');
+      })
       .then((res) => {
         assert.deepEqual(res, [{ t1: str, t2: str }]);
         done();
@@ -128,10 +153,17 @@ describe('string', () => {
   });
 
   it('string escape', (done) => {
-    shareConn.query('CREATE TEMPORARY TABLE escape_utf8_string(tt text) CHARSET utf8');
-    shareConn.query('INSERT INTO escape_utf8_string values (?)', ['a \'b\\"c']);
     shareConn
-      .query('SELECT * from escape_utf8_string')
+      .query('DROP TABLE IF EXISTS escape_utf8_string')
+      .then(() => {
+        return shareConn.query('CREATE TABLE escape_utf8_string(tt text) CHARSET utf8');
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO escape_utf8_string values (?)', ['a \'b\\"c']);
+      })
+      .then(() => {
+        return shareConn.query('SELECT * from escape_utf8_string');
+      })
       .then((res) => {
         assert.deepEqual(res, [{ tt: 'a \'b\\"c' }]);
         done();
@@ -144,10 +176,17 @@ describe('string', () => {
 
     const wrongString = 'a\ue800\ud800b\udc01c\ud800';
     base.createConnection().then((conn) => {
-      conn.query('CREATE TEMPORARY TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');
-      conn.query('INSERT INTO wrong_utf8_string values (?)', [wrongString]);
       conn
-        .query('SELECT * from wrong_utf8_string')
+        .query('DROP TABLE IF EXISTS wrong_utf8_string')
+        .then(() => {
+          return conn.query('CREATE TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');
+        })
+        .then(() => {
+          return conn.query('INSERT INTO wrong_utf8_string values (?)', [wrongString]);
+        })
+        .then(() => {
+          return conn.query('SELECT * from wrong_utf8_string');
+        })
         .then((res) => {
           assert.deepEqual(res, [{ tt: 'a?b?c?' }]);
           conn.end();

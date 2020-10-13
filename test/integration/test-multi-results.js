@@ -42,10 +42,17 @@ describe('multi-results', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -82,10 +89,17 @@ describe('multi-results', () => {
     base
       .createConnection({ checkDuplicate: false })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -112,10 +126,17 @@ describe('multi-results', () => {
     base
       .createConnection({ nestTables: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -146,10 +167,18 @@ describe('multi-results', () => {
     base
       .createConnection({ checkDuplicate: false, nestTables: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
+
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')

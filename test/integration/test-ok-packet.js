@@ -6,7 +6,12 @@ const { assert } = require('chai');
 describe('ok packet', () => {
   it('insertId', function (done) {
     shareConn
-      .query('CREATE TEMPORARY TABLE autoInc (id BIGINT not null primary key auto_increment)')
+      .query('DROP TABLE IF EXISTS autoInc')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE autoInc (id BIGINT not null primary key auto_increment)'
+        );
+      })
       .then(() => {
         return shareConn.query('INSERT INTO autoInc values ()');
       })
@@ -59,7 +64,12 @@ describe('ok packet', () => {
 
   it('negative insertId', function (done) {
     shareConn
-      .query('CREATE TEMPORARY TABLE negAutoInc (id BIGINT not null primary key auto_increment)')
+      .query('DROP TABLE IF EXISTS negAutoInc')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE negAutoInc (id BIGINT not null primary key auto_increment)'
+        );
+      })
       .then(() => {
         return shareConn.query('INSERT INTO negAutoInc values (-9007199254740990)');
       })
@@ -103,15 +113,19 @@ describe('ok packet', () => {
   });
 
   it('basic insert result', function (done) {
-    shareConn.query(
-      'CREATE TEMPORARY TABLE insertResultSet1(' +
-        'id int(11) unsigned NOT NULL AUTO_INCREMENT,' +
-        'val varchar(256),' +
-        'PRIMARY KEY (id))'
-    );
-
     shareConn
-      .query('INSERT INTO insertResultSet1(val) values (?)', ['t'])
+      .query('DROP TABLE IF EXISTS insertResultSet1')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE insertResultSet1(' +
+            'id int(11) unsigned NOT NULL AUTO_INCREMENT,' +
+            'val varchar(256),' +
+            'PRIMARY KEY (id))'
+        );
+      })
+      .then(() => {
+        return shareConn.query('INSERT INTO insertResultSet1(val) values (?)', ['t']);
+      })
       .then((rows) => {
         assert.ok(!Array.isArray(rows));
         assert.strictEqual(typeof rows, 'object');
@@ -129,11 +143,14 @@ describe('ok packet', () => {
       .createConnection({ multipleStatements: true })
       .then((conn) => {
         conn
-          .query(
-            'CREATE TEMPORARY TABLE multiple_insert_result(' +
-              'id int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
-              'val varchar(256))'
-          )
+          .query('DROP TABLE IF EXISTS multiple_insert_result')
+          .then(() => {
+            return conn.query(
+              'CREATE TABLE multiple_insert_result(' +
+                'id int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
+                'val varchar(256))'
+            );
+          })
           .then(() => {
             return conn.query(
               'INSERT INTO multiple_insert_result(val) values (?); ' +
@@ -164,7 +181,10 @@ describe('ok packet', () => {
 
   it('update result text', function (done) {
     shareConn
-      .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
+      .query('DROP TABLE IF EXISTS updateResultSet1')
+      .then(() => {
+        return shareConn.query('CREATE TABLE updateResultSet1(id int(11))');
+      })
       .then(() => {
         return shareConn.query('INSERT INTO updateResultSet1 values (1), (1), (2), (3)');
       })
@@ -195,7 +215,10 @@ describe('ok packet', () => {
       .createConnection({ foundRows: false })
       .then((conn) => {
         conn
-          .query('CREATE TEMPORARY TABLE updateResultSet1(id int(11))')
+          .query('DROP TABLE IF EXISTS updateResultSet1')
+          .then(() => {
+            return conn.query('CREATE TABLE updateResultSet1(id int(11))');
+          })
           .then(() => {
             return conn.query('INSERT INTO updateResultSet1 values (1), (1), (2), (3)');
           })

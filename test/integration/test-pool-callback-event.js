@@ -72,8 +72,8 @@ describe('Pool callback event', () => {
           assert.equal(releaseNumber, 500, releaseNumber);
           pool.end();
           done();
-        }, 1000);
+        }, 5000);
       });
-    }, 500);
+    }, 1000);
   });
 });

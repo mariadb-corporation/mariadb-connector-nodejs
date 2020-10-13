@@ -15,46 +15,50 @@ describe('batch geometry type', () => {
 
   it('Point format', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-
-    shareConn.query('CREATE TEMPORARY TABLE gis_point_batch  (g POINT)');
     shareConn
-      .batch('INSERT INTO gis_point_batch VALUES (?)', [
-        [
-          {
-            type: 'Point',
-            coordinates: [10, 10]
-          }
-        ],
-        [
-          {
-            type: 'Point',
-            coordinates: [20, 10]
-          }
-        ],
-        [
-          {
-            type: 'Point',
-            coordinates: [20, 20]
-          }
-        ],
-        [
-          {
-            type: 'Point',
-            coordinates: [10, 20]
-          }
-        ],
-        [
-          {
-            type: 'Point',
-            coordinates: []
-          }
-        ],
-        [
-          {
-            type: 'Point'
-          }
-        ]
-      ])
+      .query('DROP TABLE IF EXISTS gis_point_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_point_batch  (g POINT)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_point_batch VALUES (?)', [
+          [
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            }
+          ],
+          [
+            {
+              type: 'Point',
+              coordinates: [20, 10]
+            }
+          ],
+          [
+            {
+              type: 'Point',
+              coordinates: [20, 20]
+            }
+          ],
+          [
+            {
+              type: 'Point',
+              coordinates: [10, 20]
+            }
+          ],
+          [
+            {
+              type: 'Point',
+              coordinates: []
+            }
+          ],
+          [
+            {
+              type: 'Point'
+            }
+          ]
+        ]);
+      })
       .then(() => {
         return shareConn.query('SELECT * FROM gis_point_batch');
       })
@@ -86,13 +90,17 @@ describe('batch geometry type', () => {
           },
           {
             g:
-              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+              shareConn.info.isMariaDB() &&
+              shareConn.info.hasMinVersion(10, 5, 2) &&
+              !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'Point' }
                 : null
           },
           {
             g:
-              shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+              shareConn.info.isMariaDB() &&
+              shareConn.info.hasMinVersion(10, 5, 2) &&
+              !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'Point' }
                 : null
           }
@@ -104,37 +112,42 @@ describe('batch geometry type', () => {
 
   it('LineString insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query('CREATE TEMPORARY TABLE gis_line_batch (g LINESTRING)');
     shareConn
-      .batch('INSERT INTO gis_line_batch VALUES (?)', [
-        [
-          {
-            type: 'LineString',
-            coordinates: [
-              [0, 0],
-              [0, 10],
-              [10, 0]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'LineString',
-            coordinates: [[0, 10]]
-          }
-        ],
-        [
-          {
-            type: 'LineString',
-            coordinates: []
-          }
-        ],
-        [
-          {
-            type: 'LineString'
-          }
-        ]
-      ])
+      .query('DROP TABLE IF EXISTS gis_line_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_line_batch (g LINESTRING)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_line_batch VALUES (?)', [
+          [
+            {
+              type: 'LineString',
+              coordinates: [
+                [0, 0],
+                [0, 10],
+                [10, 0]
+              ]
+            }
+          ],
+          [
+            {
+              type: 'LineString',
+              coordinates: [[0, 10]]
+            }
+          ],
+          [
+            {
+              type: 'LineString',
+              coordinates: []
+            }
+          ],
+          [
+            {
+              type: 'LineString'
+            }
+          ]
+        ]);
+      })
       .then(() => {
         return shareConn.query('SELECT * FROM gis_line_batch');
       })
@@ -163,12 +176,15 @@ describe('batch geometry type', () => {
                     coordinates: [],
                     type: 'LineString'
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'LineString' }
                 : null
             },
             {
-              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'LineString' } : null
+              g:
+                shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
+                  ? { type: 'LineString' }
+                  : null
             }
           ]);
         } else {
@@ -204,68 +220,73 @@ describe('batch geometry type', () => {
 
   it('Polygon insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query('CREATE TEMPORARY TABLE gis_polygon_batch (g POLYGON)');
     shareConn
-      .batch('INSERT INTO gis_polygon_batch VALUES (?)', [
-        [
-          {
-            type: 'Polygon',
-            coordinates: [
-              [
-                [10, 10],
-                [20, 10],
-                [20, 20],
-                [10, 20],
-                [10, 10]
+      .query('DROP TABLE IF EXISTS gis_polygon_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_polygon_batch (g POLYGON)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_polygon_batch VALUES (?)', [
+          [
+            {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [10, 10],
+                  [20, 10],
+                  [20, 20],
+                  [10, 20],
+                  [10, 10]
+                ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'Polygon',
-            coordinates: [
-              [
-                [0, 0],
-                [50, 0],
-                [50, 50],
-                [0, 50],
-                [0, 0]
-              ],
-              [
-                [10, 10],
-                [20, 10],
-                [20, 20],
-                [10, 20],
-                [10, 10]
+            }
+          ],
+          [
+            {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [0, 0],
+                  [50, 0],
+                  [50, 50],
+                  [0, 50],
+                  [0, 0]
+                ],
+                [
+                  [10, 10],
+                  [20, 10],
+                  [20, 20],
+                  [10, 20],
+                  [10, 10]
+                ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'Polygon',
-            coordinates: [
-              [[0, 0], [50]],
-              [
-                [10, 10],
-                [20, 10]
+            }
+          ],
+          [
+            {
+              type: 'Polygon',
+              coordinates: [
+                [[0, 0], [50]],
+                [
+                  [10, 10],
+                  [20, 10]
+                ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'Polygon',
-            coordinates: []
-          }
-        ],
-        [
-          {
-            type: 'Polygon'
-          }
-        ]
-      ])
+            }
+          ],
+          [
+            {
+              type: 'Polygon',
+              coordinates: []
+            }
+          ],
+          [
+            {
+              type: 'Polygon'
+            }
+          ]
+        ]);
+      })
       .then(() => {
         return shareConn.query('SELECT * FROM gis_polygon_batch');
       })
@@ -308,7 +329,10 @@ describe('batch geometry type', () => {
               }
             },
             {
-              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null
+              g:
+                shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
+                  ? { type: 'Polygon' }
+                  : null
             },
             {
               g: supportBulk
@@ -316,12 +340,15 @@ describe('batch geometry type', () => {
                     type: 'Polygon',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'Polygon' }
                 : null
             },
             {
-              g: shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Polygon' } : null
+              g:
+                shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
+                  ? { type: 'Polygon' }
+                  : null
             }
           ]);
         } else {
@@ -379,24 +406,29 @@ describe('batch geometry type', () => {
 
   it('MultiPoint insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query('CREATE TEMPORARY TABLE gis_multi_point_batch (g MULTIPOINT)');
     shareConn
-      .batch('INSERT INTO gis_multi_point_batch VALUES (?)', [
-        [
-          {
-            type: 'MultiPoint',
-            coordinates: [
-              [30, 30],
-              [10, 10],
-              [10, 20],
-              [20, 20]
-            ]
-          }
-        ],
-        [{ type: 'MultiPoint', coordinates: [[10, 0]] }],
-        [{ type: 'MultiPoint', coordinates: [] }],
-        [{ type: 'MultiPoint' }]
-      ])
+      .query('DROP TABLE IF EXISTS gis_multi_point_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_multi_point_batch (g MULTIPOINT)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_multi_point_batch VALUES (?)', [
+          [
+            {
+              type: 'MultiPoint',
+              coordinates: [
+                [30, 30],
+                [10, 10],
+                [10, 20],
+                [20, 20]
+              ]
+            }
+          ],
+          [{ type: 'MultiPoint', coordinates: [[10, 0]] }],
+          [{ type: 'MultiPoint', coordinates: [] }],
+          [{ type: 'MultiPoint' }]
+        ]);
+      })
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_point_batch');
       })
@@ -426,7 +458,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPoint',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPoint' }
                 : null
             },
@@ -436,7 +468,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPoint',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPoint' }
                 : null
             }
@@ -475,42 +507,48 @@ describe('batch geometry type', () => {
 
   it('Multi-line insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-    shareConn.query('CREATE TEMPORARY TABLE gis_multi_line_batch (g MULTILINESTRING)');
     shareConn
-      .batch('INSERT INTO gis_multi_line_batch VALUES (?)', [
-        [
-          {
-            type: 'MultiLineString',
-            coordinates: [
-              [
-                [10, 48],
-                [10, 21],
-                [10, 0]
-              ],
-              [
-                [16, 0],
-                [16, 23],
-                [16, 48]
+      .query('DROP TABLE IF EXISTS gis_multi_line_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_multi_line_batch (g MULTILINESTRING)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_multi_line_batch VALUES (?)', [
+          [
+            {
+              type: 'MultiLineString',
+              coordinates: [
+                [
+                  [10, 48],
+                  [10, 21],
+                  [10, 0]
+                ],
+                [
+                  [16, 0],
+                  [16, 23],
+                  [16, 48]
+                ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'MultiLineString',
-            coordinates: [
-              [
-                [10, 48],
-                [10, 21],
-                [10, 0]
+            }
+          ],
+          [
+            {
+              type: 'MultiLineString',
+              coordinates: [
+                [
+                  [10, 48],
+                  [10, 21],
+                  [10, 0]
+                ]
               ]
-            ]
-          }
-        ],
-        [{ type: 'MultiLineString', coordinates: [[]] }],
-        [{ type: 'MultiLineString', coordinates: [] }],
-        [{ type: 'MultiLineString' }]
-      ])
+            }
+          ],
+          [{ type: 'MultiLineString', coordinates: [[]] }],
+          [{ type: 'MultiLineString', coordinates: [] }],
+          [{ type: 'MultiLineString' }]
+        ]);
+      })
+
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_line_batch');
       })
@@ -552,7 +590,7 @@ describe('batch geometry type', () => {
                     type: 'MultiLineString',
                     coordinates: [[]]
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiLineString' }
                 : null
             },
@@ -562,7 +600,7 @@ describe('batch geometry type', () => {
                     type: 'MultiLineString',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiLineString' }
                 : null
             },
@@ -572,7 +610,7 @@ describe('batch geometry type', () => {
                     type: 'MultiLineString',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiLineString' }
                 : null
             }
@@ -626,89 +664,93 @@ describe('batch geometry type', () => {
 
   it('Multi-polygon insert', function (done) {
     if (!shareConn.info.isMariaDB()) this.skip();
-
-    shareConn.query('CREATE TEMPORARY TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
     shareConn
-      .batch('INSERT INTO gis_multi_polygon_batch VALUES (?)', [
-        [
-          {
-            type: 'MultiPolygon',
-            coordinates: [
-              [
+      .query('DROP TABLE IF EXISTS gis_multi_polygon_batch')
+      .then(() => {
+        return shareConn.query('CREATE TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
+      })
+      .then(() => {
+        return shareConn.batch('INSERT INTO gis_multi_polygon_batch VALUES (?)', [
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [
                 [
-                  [28, 26],
-                  [28, 0],
-                  [84, 0],
-                  [84, 42],
-                  [28, 26]
+                  [
+                    [28, 26],
+                    [28, 0],
+                    [84, 0],
+                    [84, 42],
+                    [28, 26]
+                  ],
+                  [
+                    [52, 18],
+                    [66, 23],
+                    [73, 9],
+                    [48, 6],
+                    [52, 18]
+                  ]
                 ],
                 [
-                  [52, 18],
-                  [66, 23],
-                  [73, 9],
-                  [48, 6],
-                  [52, 18]
-                ]
-              ],
-              [
-                [
-                  [59, 18],
-                  [67, 18],
-                  [67, 13],
-                  [59, 13],
-                  [59, 18]
+                  [
+                    [59, 18],
+                    [67, 18],
+                    [67, 13],
+                    [59, 13],
+                    [59, 18]
+                  ]
                 ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'MultiPolygon',
-            coordinates: [
-              [
+            }
+          ],
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [
                 [
-                  [28, 26],
-                  [28, 0],
-                  [84, 0],
-                  [84, 42],
-                  [28, 26]
-                ],
-                [
-                  [52, 18],
-                  [66, 23],
-                  [73, 9],
-                  [48, 6],
-                  [52, 18]
+                  [
+                    [28, 26],
+                    [28, 0],
+                    [84, 0],
+                    [84, 42],
+                    [28, 26]
+                  ],
+                  [
+                    [52, 18],
+                    [66, 23],
+                    [73, 9],
+                    [48, 6],
+                    [52, 18]
+                  ]
                 ]
               ]
-            ]
-          }
-        ],
-        [
-          {
-            type: 'MultiPolygon',
-            coordinates: [[[]]]
-          }
-        ],
-        [
-          {
-            type: 'MultiPolygon',
-            coordinates: [[]]
-          }
-        ],
-        [
-          {
-            type: 'MultiPolygon',
-            coordinates: []
-          }
-        ],
-        [
-          {
-            type: 'MultiPolygon'
-          }
-        ]
-      ])
+            }
+          ],
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [[[]]]
+            }
+          ],
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: [[]]
+            }
+          ],
+          [
+            {
+              type: 'MultiPolygon',
+              coordinates: []
+            }
+          ],
+          [
+            {
+              type: 'MultiPolygon'
+            }
+          ]
+        ]);
+      })
       .then(() => {
         return shareConn.query('SELECT * FROM gis_multi_polygon_batch');
       })
@@ -776,7 +818,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPolygon',
                     coordinates: [[[]]]
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPolygon' }
                 : null
             },
@@ -786,7 +828,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPolygon',
                     coordinates: [[]]
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPolygon' }
                 : null
             },
@@ -796,7 +838,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPolygon',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPolygon' }
                 : null
             },
@@ -806,7 +848,7 @@ describe('batch geometry type', () => {
                     type: 'MultiPolygon',
                     coordinates: []
                   }
-                : shareConn.info.hasMinVersion(10, 5, 2)
+                : shareConn.info.hasMinVersion(10, 5, 2) && !process.env.MAXSCALE_TEST_DISABLE
                 ? { type: 'MultiPolygon' }
                 : null
             }
@@ -893,111 +935,116 @@ describe('batch geometry type', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)');
         conn
-          .batch('INSERT INTO gis_geometrycollection_batch VALUES (?)', [
-            [
-              {
-                type: 'GeometryCollection',
-                geometries: [
-                  {
-                    type: 'Point',
-                    coordinates: [10, 10]
-                  },
-                  {
-                    type: 'LineString',
-                    coordinates: [
-                      [0, 0],
-                      [0, 10],
-                      [10, 0]
-                    ]
-                  },
-                  {
-                    type: 'MultiPoint',
-                    coordinates: [
-                      [0, 0],
-                      [10, 10],
-                      [10, 20],
-                      [20, 20]
-                    ]
-                  },
-                  {
-                    type: 'MultiLineString',
-                    coordinates: [
-                      [
-                        [10, 48],
-                        [10, 21],
+          .query('DROP TABLE IF EXISTS gis_geometrycollection_batch')
+          .then(() => {
+            return conn.query('CREATE TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)');
+          })
+          .then(() => {
+            return conn.batch('INSERT INTO gis_geometrycollection_batch VALUES (?)', [
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: [
+                    {
+                      type: 'Point',
+                      coordinates: [10, 10]
+                    },
+                    {
+                      type: 'LineString',
+                      coordinates: [
+                        [0, 0],
+                        [0, 10],
                         [10, 0]
-                      ],
-                      [
-                        [16, 0],
-                        [16, 23],
-                        [16, 48]
                       ]
-                    ]
-                  },
-                  {
-                    type: 'MultiPolygon',
-                    coordinates: [
-                      [
+                    },
+                    {
+                      type: 'MultiPoint',
+                      coordinates: [
+                        [0, 0],
+                        [10, 10],
+                        [10, 20],
+                        [20, 20]
+                      ]
+                    },
+                    {
+                      type: 'MultiLineString',
+                      coordinates: [
                         [
-                          [28, 26],
-                          [28, 0],
-                          [84, 0],
-                          [84, 42],
-                          [28, 26]
+                          [10, 48],
+                          [10, 21],
+                          [10, 0]
                         ],
                         [
-                          [52, 18],
-                          [66, 23],
-                          [73, 9],
-                          [48, 6],
-                          [52, 18]
-                        ]
-                      ],
-                      [
-                        [
-                          [59, 18],
-                          [67, 18],
-                          [67, 13],
-                          [59, 13],
-                          [59, 18]
+                          [16, 0],
+                          [16, 23],
+                          [16, 48]
                         ]
                       ]
-                    ]
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                type: 'GeometryCollection',
-                geometries: [
-                  {
-                    type: 'Point',
-                    coordinates: [10, 20]
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                type: 'GeometryCollection',
-                geometries: [{}]
-              }
-            ],
-            [
-              {
-                type: 'GeometryCollection',
-                geometries: []
-              }
-            ],
-            [
-              {
-                type: 'GeometryCollection'
-              }
-            ]
-          ])
+                    },
+                    {
+                      type: 'MultiPolygon',
+                      coordinates: [
+                        [
+                          [
+                            [28, 26],
+                            [28, 0],
+                            [84, 0],
+                            [84, 42],
+                            [28, 26]
+                          ],
+                          [
+                            [52, 18],
+                            [66, 23],
+                            [73, 9],
+                            [48, 6],
+                            [52, 18]
+                          ]
+                        ],
+                        [
+                          [
+                            [59, 18],
+                            [67, 18],
+                            [67, 13],
+                            [59, 13],
+                            [59, 18]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: [
+                    {
+                      type: 'Point',
+                      coordinates: [10, 20]
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: [{}]
+                }
+              ],
+              [
+                {
+                  type: 'GeometryCollection',
+                  geometries: []
+                }
+              ],
+              [
+                {
+                  type: 'GeometryCollection'
+                }
+              ]
+            ]);
+          })
           .then(() => {
             return conn.query('SELECT * FROM gis_geometrycollection_batch');
           })
