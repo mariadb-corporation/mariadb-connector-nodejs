@@ -290,20 +290,20 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   autoJsonMap?: boolean;
 
   /**
-   * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that). 
+   * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that).
    * in ms
    * (Default: 0)
    */
   keepAliveDelay?: number;
 
   /**
-   * Indicate path/content to MySQL server RSA public key. 
+   * Indicate path/content to MySQL server RSA public key.
    * use requires Node.js v11.6+
    */
   rsaPublicKey?: string;
-  
+
   /**
-   * Indicate path/content to MySQL server caching RSA public key. 
+   * Indicate path/content to MySQL server caching RSA public key.
    * use requires Node.js v11.6+
    */
   cachingRsaPublicKey?: string;
@@ -315,11 +315,11 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   allowPublicKeyRetrieval?: boolean;
 
   /**
-   * Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) 
-   * for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
-   * This ensures having expected value even for value > 2^53 
+   * Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
+   * for [BIGINT](https://mariadb.com/kb/en/bigint/) data type.
+   * This ensures having expected value even for value > 2^53
    * (see [safe](documentation/connection-options.md#support-for-big-integer) range).
-   * 
+   *
    * default false
    */
   supportBigInt?: boolean;
