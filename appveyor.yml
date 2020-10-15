@@ -38,17 +38,17 @@ environment:
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.3.25'
+    - DB: '10.3.24'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.2.34'
+    - DB: '10.2.33'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.1.47'
+    - DB: '10.1.46'
       MEM: "21"
       nodejs_version: "12"
       SKIP_LEAK: "1"

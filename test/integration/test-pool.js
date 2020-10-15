@@ -1062,8 +1062,16 @@ describe('Pool', () => {
       Promise.all(requests)
         .then(() => {
           setTimeout(() => {
-            assert.equal(pool.totalConnections(), 8);
-            assert.equal(pool.idleConnections(), 8);
+            assert.isTrue(
+              pool.totalConnections() === 8 ||
+                pool.totalConnections() === 9 ||
+                pool.totalConnections() === 10
+            );
+            assert.isTrue(
+              pool.idleConnections() === 8 ||
+                pool.idleConnections() === 9 ||
+                pool.idleConnections() === 10
+            );
           }, 5);
 
           setTimeout(() => {

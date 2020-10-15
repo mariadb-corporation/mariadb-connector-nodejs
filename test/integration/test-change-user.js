@@ -7,9 +7,9 @@ const Conf = require('../conf');
 
 describe('change user', () => {
   before((done) => {
-    Promise.allSettled([
+    Promise.all([
       shareConn.query("DROP USER IF EXISTS ChangeUser@'%'"),
-      shareConn.query('DROP USER IF EXISTS' + " ChangeUser2@'%'")
+      shareConn.query("DROP USER IF EXISTS ChangeUser2@'%'")
     ])
       .then(() => {
         return shareConn.query('CREATE DATABASE IF NOT EXISTS test');
