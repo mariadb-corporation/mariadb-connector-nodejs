@@ -7,31 +7,50 @@ const Conf = require('../conf');
 
 describe('change user', () => {
   before((done) => {
-    shareConn.query("DROP USER ChangeUser@'%'").catch((err) => {});
-    shareConn.query("DROP USER ChangeUser2@'%'").catch((err) => {});
-    shareConn.query('CREATE DATABASE IF NOT EXISTS test');
-    shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-    shareConn.query(
-      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
-    );
-    shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
-    shareConn.query(
-      'GRANT SELECT,EXECUTE ON `' +
-        Conf.baseConfig.database +
-        "`.* TO ChangeUser2@'%' with grant option"
-    );
-    shareConn
-      .query('FLUSH PRIVILEGES')
+    Promise.allSettled([
+      shareConn.query("DROP USER IF EXISTS ChangeUser@'%'"),
+      shareConn.query('DROP USER IF EXISTS' + " ChangeUser2@'%'")
+    ])
+      .then(() => {
+        return shareConn.query('CREATE DATABASE IF NOT EXISTS test');
+      })
+      .then(() => {
+        return shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
+      })
+      .then(() => {
+        return shareConn.query(
+          'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
+        );
+      })
+      .then(() => {
+        return shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
+      })
+      .then(() => {
+        return shareConn.query(
+          'GRANT SELECT,EXECUTE ON `' +
+            Conf.baseConfig.database +
+            "`.* TO ChangeUser2@'%' with grant option"
+        );
+      })
+      .then(() => {
+        return shareConn.query('FLUSH PRIVILEGES');
+      })
       .then(() => done())
       .catch((err) => done());
   });
 
   after((done) => {
-    shareConn.query("DROP USER ChangeUser@'%'");
-    shareConn.query("DROP USER ChangeUser2@'%'");
     shareConn
-      .query('FLUSH PRIVILEGES')
-      .then(() => done())
+      .query("DROP USER IF EXISTS ChangeUser@'%'")
+      .then(() => {
+        return shareConn.query("DROP USER IF EXISTS ChangeUser2@'%'");
+      })
+      .then(() => {
+        return shareConn.query('FLUSH PRIVILEGES');
+      })
+      .then(() => {
+        done();
+      })
       .catch((err) => done());
   });
 

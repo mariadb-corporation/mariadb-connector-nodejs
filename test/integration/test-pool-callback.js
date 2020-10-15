@@ -30,7 +30,8 @@ describe('Pool callback', () => {
                 err.errno === 1045 ||
                 err.errno === 1698 ||
                 err.errno === 45028 ||
-                err.errno === 45025,
+                err.errno === 45025 ||
+                err.errno === 45044,
               err.message
             );
             pool.end();
@@ -68,7 +69,8 @@ describe('Pool callback', () => {
                 err.errno === 1045 ||
                 err.errno === 1698 ||
                 err.errno === 45028 ||
-                err.errno === 45025,
+                err.errno === 45025 ||
+                err.errno === 45044,
               err.errno + ' - ' + err.message
             );
             done();
