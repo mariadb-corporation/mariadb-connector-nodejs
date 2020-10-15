@@ -107,6 +107,7 @@ describe('test connection options', () => {
     assert.equal(result.database, 'шdb');
     assert.equal(result.host, 'example.com');
     assert.equal(result.password, 'p@ssword');
+    assert.equal(result.keepAliveDelay, 0);
     assert.equal(result.port, 3307);
     assert.equal(result.user, 'rootå');
     assert.deepEqual(result.connectAttributes, { par1: 'bouh', par2: 'bla' });
@@ -226,13 +227,14 @@ describe('test connection options', () => {
 
     it('with options', () => {
       const result = ConnOptions.parse(
-        'mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true&collation=latin1_swedish_ci&maxAllowedPacket=1048576&permitSetMultiParamEntries=true'
+        'mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true&collation=latin1_swedish_ci&maxAllowedPacket=1048576&permitSetMultiParamEntries=true&keepAliveDelay=1000'
       );
       assert.deepEqual(result, {
         database: 'db',
         dateStrings: true,
         host: 'localhost',
         metaAsArray: false,
+        keepAliveDelay: 1000,
         password: 'pass',
         port: 3307,
         ssl: true,

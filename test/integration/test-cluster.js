@@ -486,7 +486,7 @@ describe('cluster', function () {
 
     it('server close connection during query', function (done) {
       if (process.env.SKYSQL) this.skip();
-      if (process.env.MAXSCALE_VERSION) this.skip();
+      if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});
 
@@ -525,7 +525,7 @@ describe('cluster', function () {
     });
 
     it('socket close connection during query', function (done) {
-      if (process.env.MAXSCALE_VERSION) this.skip();
+      if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});

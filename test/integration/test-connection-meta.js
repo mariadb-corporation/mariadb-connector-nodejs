@@ -12,10 +12,10 @@ describe('Connection meta', function () {
         assert(serverVersion.startsWith('10.5'));
       } else {
         const version =
-          process.platform === 'win32'
-            ? process.env.DB
-            : process.env.DB.substr(process.env.DB.indexOf(':') + 1);
-        assert(serverVersion.startsWith(version));
+          process.env.DB.indexOf(':') != -1
+            ? process.env.DB.substr(process.env.DB.indexOf(':') + 1)
+            : process.env.DB;
+        assert(serverVersion.startsWith(version), serverVersion + '/' + version);
       }
     }
   });

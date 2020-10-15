@@ -7,35 +7,55 @@ const Conf = require('../conf');
 
 describe('change user', () => {
   before((done) => {
-    shareConn.query("DROP USER ChangeUser@'%'").catch((err) => {});
-    shareConn.query("DROP USER ChangeUser2@'%'").catch((err) => {});
-    shareConn.query('CREATE DATABASE IF NOT EXISTS test');
-    shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-    shareConn.query(
-      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
-    );
-    shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
-    shareConn.query(
-      'GRANT SELECT,EXECUTE ON `' +
-        Conf.baseConfig.database +
-        "`.* TO ChangeUser2@'%' with grant option"
-    );
-    shareConn
-      .query('FLUSH PRIVILEGES')
+    Promise.all([
+      shareConn.query("DROP USER IF EXISTS ChangeUser@'%'"),
+      shareConn.query("DROP USER IF EXISTS ChangeUser2@'%'")
+    ])
+      .then(() => {
+        return shareConn.query('CREATE DATABASE IF NOT EXISTS test');
+      })
+      .then(() => {
+        return shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
+      })
+      .then(() => {
+        return shareConn.query(
+          'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
+        );
+      })
+      .then(() => {
+        return shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
+      })
+      .then(() => {
+        return shareConn.query(
+          'GRANT SELECT,EXECUTE ON `' +
+            Conf.baseConfig.database +
+            "`.* TO ChangeUser2@'%' with grant option"
+        );
+      })
+      .then(() => {
+        return shareConn.query('FLUSH PRIVILEGES');
+      })
       .then(() => done())
       .catch((err) => done());
   });
 
   after((done) => {
-    shareConn.query("DROP USER ChangeUser@'%'");
-    shareConn.query("DROP USER ChangeUser2@'%'");
     shareConn
-      .query('FLUSH PRIVILEGES')
-      .then(() => done())
+      .query("DROP USER IF EXISTS ChangeUser@'%'")
+      .then(() => {
+        return shareConn.query("DROP USER IF EXISTS ChangeUser2@'%'");
+      })
+      .then(() => {
+        return shareConn.query('FLUSH PRIVILEGES');
+      })
+      .then(() => {
+        done();
+      })
       .catch((err) => done());
   });
 
   it('basic change user using callback', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -61,6 +81,7 @@ describe('change user', () => {
   });
 
   it('wrong charset', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then((conn) => {
       conn
@@ -81,6 +102,7 @@ describe('change user', () => {
   });
 
   it('wrong collation in charset', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then((conn) => {
       conn
@@ -96,7 +118,9 @@ describe('change user', () => {
         .catch(done);
     });
   });
+
   it('wrong collation', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then((conn) => {
       conn
@@ -117,7 +141,7 @@ describe('change user', () => {
   });
 
   it('basic change user using callback no function', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -137,7 +161,7 @@ describe('change user', () => {
   });
 
   it('callback change user without option', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -157,7 +181,7 @@ describe('change user', () => {
   });
 
   it('basic change user using promise', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
@@ -196,7 +220,7 @@ describe('change user', () => {
   });
 
   it('basic change user using promise non node.js encoding', function (done) {
-    if (process.env.MAXSCALE_VERSION) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
@@ -236,6 +260,7 @@ describe('change user', () => {
   });
 
   it('change user with collation', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
@@ -275,6 +300,7 @@ describe('change user', () => {
   });
 
   it('autocommit state after changing user', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
@@ -296,7 +322,7 @@ describe('change user', () => {
             if (
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 2, 2) &&
-              !process.env.MAXSCALE_VERSION &&
+              !process.env.MAXSCALE_TEST_DISABLE &&
               !process.env.SKYSQL
             ) {
               assert.equal(conn.info.database, 'test');

@@ -15,9 +15,7 @@ describe('batch callback', () => {
   let supportBulk;
   before(function (done) {
     supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
-      ? (shareConn.info.serverCapabilities.high &
-          Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) >
-        0
+      ? (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) > 0
       : false;
     const hourOffset = Math.round((-1 * new Date().getTimezoneOffset()) / 60);
 
@@ -207,7 +205,7 @@ describe('batch callback', () => {
       );
       conn.query('select 1', (err, rows) => {
         if (err) return done(err);
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -274,7 +272,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -327,7 +325,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '2': 2 }]);
+        assert.deepEqual(rows, [{ 2: 2 }]);
       });
     });
   };
@@ -453,7 +451,7 @@ describe('batch callback', () => {
             done(err);
           });
         }
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
       });
     });
   };
@@ -543,7 +541,7 @@ describe('batch callback', () => {
                 done(err);
               });
             }
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             clearTimeout(timeout);
             return conn.end(() => {
               done();
@@ -1098,6 +1096,24 @@ describe('batch callback', () => {
   describe('standard question mark using rewrite', () => {
     const useCompression = false;
 
+    it('immediate batch after callback', function (done) {
+      let conn = base.createCallbackConnection();
+      conn.batch(
+        'INSERT INTO contacts(first_name, last_name, email) VALUES(?, ?, ?)',
+        ['John', 'Smith', 'js@example.com'],
+        (err, res, meta) => {
+          conn.end();
+          if (err) {
+            if (err.message.includes('Parameter at position 1 is not set for values 0')) {
+              done();
+            } else done(err);
+          } else {
+            done(new Error('Must have throw error'));
+          }
+        }
+      );
+    });
+
     it('simple batch, local date', function (done) {
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
@@ -1133,7 +1149,7 @@ describe('batch callback', () => {
           })
           .catch((err) => {
             assert.isTrue(
-              err.message.includes('Parameter at position 2 is not set for values 1'),
+              err.message.includes('Parameter at position 1 is not set for values 1'),
               err.message
             );
             conn.end();

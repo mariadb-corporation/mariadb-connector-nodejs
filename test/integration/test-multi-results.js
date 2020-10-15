@@ -42,10 +42,17 @@ describe('multi-results', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -82,10 +89,17 @@ describe('multi-results', () => {
     base
       .createConnection({ checkDuplicate: false })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -112,10 +126,17 @@ describe('multi-results', () => {
     base
       .createConnection({ nestTables: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -146,10 +167,18 @@ describe('multi-results', () => {
     base
       .createConnection({ checkDuplicate: false, nestTables: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t (i int)');
-        conn.query('INSERT INTO t(i) VALUES (1)');
-        conn
-          .query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' })
+        shareConn
+          .query('DROP TABLE IF EXISTS t')
+          .then(() => {
+            return conn.query('CREATE TABLE t (i int)');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t(i) VALUES (1)');
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+          })
+
           .then((res) => {
             conn
               .query('SELECT i, i FROM t')
@@ -234,7 +263,7 @@ describe('multi-results', () => {
     shareConn
       .query('SELECT 1')
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -244,7 +273,7 @@ describe('multi-results', () => {
     shareConn
       .query('select 1', (err, rows) => {})
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -256,7 +285,7 @@ describe('multi-results', () => {
         .query('select 1')
         .then((obj) => {
           assert.equal(obj.length, 2);
-          assert.deepEqual(obj[0], [{ '1': 1 }]);
+          assert.deepEqual(obj[0], [{ 1: 1 }]);
           conn.end();
           done();
         })
@@ -272,7 +301,7 @@ describe('multi-results', () => {
         .then((obj) => {
           assert.equal(obj[0].length, 2);
           assert.equal(obj[1].length, 2);
-          assert.deepEqual(obj[0], [[{ '1': 1 }], [{ '2': 2 }]]);
+          assert.deepEqual(obj[0], [[{ 1: 1 }], [{ 2: 2 }]]);
           conn.end();
           done();
         })
@@ -290,7 +319,7 @@ describe('multi-results', () => {
           if (err) {
             done(err);
           } else {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             callbackConn.end();
             done();
           }
@@ -410,8 +439,8 @@ describe('multi-results', () => {
       .query('call myProc()')
       .then((rows) => {
         assert.equal(rows.length, 3);
-        assert.deepEqual(rows[0], [{ '1': 1 }]);
-        assert.deepEqual(rows[1], [{ '2': 2 }]);
+        assert.deepEqual(rows[0], [{ 1: 1 }]);
+        assert.deepEqual(rows[1], [{ 2: 2 }]);
         assert.deepEqual(rows[2], {
           affectedRows: 0,
           insertId: 0,

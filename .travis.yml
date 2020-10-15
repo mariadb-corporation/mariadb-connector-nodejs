@@ -41,27 +41,25 @@ matrix:
   allow_failures:
   - node_js: "12"
     env: DB=build SKIP_LEAK=1
-  - node_js: "12"
-    env: SKYSQL=true SKIP_LEAK=1
   include:
   - node_js: "12"
     env: DB=build SKIP_LEAK=1
   - node_js: "12"
     env: SKYSQL=true SKIP_LEAK=1
   - node_js: "10"
-    env: DB=mariadb:10.4
+    env: DB=mariadb:10.5
   - node_js: "12"
-    env: DB=mariadb:10.4 SKIP_LEAK=1 ADDITIONAL_CONF=--version=10.4.199
+    env: DB=mariadb:10.5 SKIP_LEAK=1 ADDITIONAL_CONF=--version=10.5.199
   - node_js: "14"
-    env: DB=mariadb:10.4 SKIP_LEAK=1
+    env: DB=mariadb:10.5 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.4 SKIP_LEAK=1 TEST_COLLATION=cp1251_general_ci
+    env: DB=mariadb:10.5 SKIP_LEAK=1 TEST_COLLATION=cp1251_general_ci
   - node_js: "12"
-    env: DB=mariadb:10.4 LINT=1 SKIP_LEAK=1
+    env: DB=mariadb:10.5 LINT=1 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.4 BENCH=1 SKIP_LEAK=1
+    env: DB=mariadb:10.5 BENCH=1 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.4 MAXSCALE_VERSION=2.2.9 TEST_PORT=4007 TEST_USER=bob TEXT_DATABASE=test2 SKIP_LEAK=1
+    env: DB=mariadb:10.5 MAXSCALE_VERSION=2.5.4 MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.1 SKIP_LEAK=1
   - node_js: "12"
@@ -69,7 +67,7 @@ matrix:
   - node_js: "12"
     env: DB=mariadb:10.3 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mysql:5.6 SKIP_LEAK=1
+    env: DB=mariadb:10.4 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mysql:5.7 SKIP_LEAK=1
   - node_js: "12"

@@ -66,7 +66,7 @@ describe('debug', () => {
           .then(() => {
             if (
               compress &&
-              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.MAXSCALE_TEST_DISABLE == undefined &&
               process.env.SKYSQL == undefined
             ) {
               conn.debugCompress(true);
@@ -78,7 +78,7 @@ describe('debug', () => {
           .then(() => {
             if (
               compress &&
-              process.env.MAXSCALE_VERSION == undefined &&
+              process.env.MAXSCALE_TEST_DISABLE == undefined &&
               process.env.SKYSQL == undefined
             ) {
               conn.debugCompress(false);
@@ -96,13 +96,13 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) compress = false;
+              if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) compress = false;
               const rangeWithEOF = compress ? [900, 1200] : [1800, 2400];
               const rangeWithoutEOF = compress ? [900, 1200] : [1750, 2000];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
-                !process.env.MAXSCALE_VERSION &&
+                !process.env.MAXSCALE_TEST_DISABLE &&
                 !process.env.SKYSQL
               ) {
                 assert(
@@ -145,7 +145,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     initialStdOut = console.log;
     let data = '';
     console.log = function () {
@@ -216,23 +216,26 @@ describe('debug', () => {
         compress: compress
       })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE smallLocalInfile(id int, test varchar(100))');
         conn
-          .query(
-            "LOAD DATA LOCAL INFILE '" +
-              smallFileName.replace(/\\/g, '/') +
-              "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-          )
+          .query('DROP TABLE IF EXISTS smallLocalInfile')
           .then(() => {
-            return conn.end();
+            return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
           })
           .then(() => {
+            return conn.query(
+              "LOAD DATA LOCAL INFILE '" +
+                smallFileName.replace(/\\/g, '/') +
+                "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+            );
+          })
+          .then(() => {
+            conn.end();
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              const range = [5500, 6800];
+              const range = [5500, 7000];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +

@@ -7,7 +7,10 @@ const Long = require('long');
 describe('float', () => {
   before((done) => {
     shareConn
-      .query('CREATE TEMPORARY TABLE testBigfloat (a FLOAT, b DOUBLE)')
+      .query('DROP TABLE IF EXISTS testBigfloat')
+      .then(() => {
+        return shareConn.query('CREATE TABLE testBigfloat (a FLOAT, b DOUBLE)');
+      })
       .then(() => {
         done();
       })
@@ -29,9 +32,12 @@ describe('float', () => {
 
   it('bigint format', (done) => {
     shareConn
-      .query(
-        'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
-      )
+      .query('TRUNCATE testBigfloat')
+      .then(() => {
+        return shareConn.query(
+          'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
+        );
+      })
       .then((rows) => {
         return shareConn.query('SELECT * FROM testBigfloat');
       })

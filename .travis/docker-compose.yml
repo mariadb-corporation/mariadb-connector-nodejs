@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 services:
   db:
     image: $DB
@@ -7,11 +7,14 @@ services:
       - 3305:3306
     volumes:
       - $SSLCERT:/etc/sslcert
-      - $ENTRYPOINT:/pam
+      - $ENTRYPOINT:/docker-entrypoint-initdb.d
     environment:
       MYSQL_DATABASE: testn
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
-      MYSQL_ROOT_PASSWORD:
-
+    healthcheck:
+      test: ["CMD", "mysql", "--protocol=tcp", "-ubob", "-h127.0.0.1"]
+      timeout: 50s
+      retries: 10
+      interval: 5s
 
 

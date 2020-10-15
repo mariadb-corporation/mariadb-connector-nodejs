@@ -105,7 +105,10 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: tinyToBoolean })
       .then((conn) => {
         conn
-          .query('CREATE TEMPORARY TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2))')
+          .query('DROP TABLE IF EXISTS tinyToBool')
+          .then(() => {
+            return conn.query('CREATE TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2))');
+          })
           .then(() => {
             return conn.query('INSERT INTO tinyToBool VALUES (0,0), (1,1), (2,2), (null,null)');
           })
@@ -141,7 +144,10 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: longCast })
       .then((conn) => {
         conn
-          .query('CREATE TEMPORARY TABLE stupidCast(b1 TINYINT(1), b2 varchar(3))')
+          .query('DROP TABLE IF EXISTS stupidCast')
+          .then(() => {
+            return conn.query('CREATE TABLE stupidCast(b1 TINYINT(1), b2 varchar(3))');
+          })
           .then(() => {
             return conn.query(
               "INSERT INTO stupidCast VALUES (0,'0.1'), (1,'1.1')," + " (2,'2.2'), (null,null)"
@@ -177,7 +183,10 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: longCast })
       .then((conn) => {
         conn
-          .query('CREATE TEMPORARY TABLE stupidCast(b1 varchar(100))')
+          .query('DROP TABLE IF EXISTS stupidCast')
+          .then(() => {
+            return conn.query('CREATE TABLE stupidCast(b1 varchar(100))');
+          })
           .then(() => {
             return conn.query(
               "INSERT INTO stupidCast VALUES ('1999-01-31" +
@@ -208,7 +217,10 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: longCast })
       .then((conn) => {
         conn
-          .query('CREATE TEMPORARY TABLE stupidCast(b1 POINT)')
+          .query('DROP TABLE IF EXISTS stupidCast')
+          .then(() => {
+            return conn.query('CREATE TABLE stupidCast(b1 POINT)');
+          })
           .then(() => {
             return conn.query('INSERT INTO stupidCast VALUES (?), (?),(null)', [
               {
@@ -240,7 +252,9 @@ describe('TypeCast', () => {
               },
               {
                 b1:
-                  shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2)
+                  shareConn.info.isMariaDB() &&
+                  shareConn.info.hasMinVersion(10, 5, 2) &&
+                  !process.env.MAXSCALE_TEST_DISABLE
                     ? { type: 'Point' }
                     : null
               }

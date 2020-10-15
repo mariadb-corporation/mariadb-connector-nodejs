@@ -17,9 +17,12 @@ describe('streaming', () => {
   before(function (done) {
     this.timeout(20000);
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE Streaming (id int NOT NULL AUTO_INCREMENT, b longblob, c varchar(10), d longblob, e varchar(10), PRIMARY KEY (id))'
-      )
+      .query('DROP TABLE IF EXISTS Streaming')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE Streaming (id int NOT NULL AUTO_INCREMENT, b longblob, c varchar(10), d longblob, e varchar(10), PRIMARY KEY (id))'
+        );
+      })
       .then(() => {
         return shareConn.query('SELECT @@max_allowed_packet as t');
       })
@@ -39,10 +42,13 @@ describe('streaming', () => {
   it('Streaming url content', function (done) {
     this.timeout(30000);
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, c' +
-          ' varchar(10), PRIMARY KEY (id))'
-      )
+      .query('DROP TABLE IF EXISTS StreamingContent')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE StreamingContent (id int NOT NULL AUTO_INCREMENT, b longblob, c' +
+            ' varchar(10), PRIMARY KEY (id))'
+        );
+      })
       .then(() => {
         const https = require('https');
         https.get(
@@ -139,7 +145,7 @@ describe('streaming', () => {
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
 
-    let createTable = 'CREATE TEMPORARY TABLE Streaming2 (b longblob';
+    let createTable = 'CREATE TABLE Streaming2 (b longblob';
     let insertSql = 'insert into Streaming2 values(?';
     const params = [r];
     const max = 200;
@@ -152,7 +158,10 @@ describe('streaming', () => {
     insertSql += ')';
 
     shareConn
-      .query(createTable)
+      .query('DROP TABLE IF EXISTS Streaming2')
+      .then(() => {
+        return shareConn.query(createTable);
+      })
       .then(() => {
         return shareConn.query(insertSql, params);
       })

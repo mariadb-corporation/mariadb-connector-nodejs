@@ -42,7 +42,7 @@ describe('Compression', function () {
     conn
       .query('SELECT 1')
       .then((rows) => {
-        assert.deepEqual(rows, [{ '1': 1 }]);
+        assert.deepEqual(rows, [{ 1: 1 }]);
         done();
       })
       .catch(done);
@@ -56,13 +56,13 @@ describe('Compression', function () {
       .query('select 1; DO 1;select 2')
       .then((rows) => {
         assert.equal(rows.length, 3);
-        assert.deepEqual(rows[0], [{ '1': 1 }]);
+        assert.deepEqual(rows[0], [{ 1: 1 }]);
         assert.deepEqual(rows[1], {
           affectedRows: 0,
           insertId: 0,
           warningStatus: 0
         });
-        assert.deepEqual(rows[2], [{ '2': 2 }]);
+        assert.deepEqual(rows[2], [{ 2: 2 }]);
         done();
       })
       .catch(done);
@@ -71,9 +71,14 @@ describe('Compression', function () {
   it('parameter bigger than 16M packet size', function (done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    conn.query('CREATE TEMPORARY TABLE bigParameter (b longblob)');
     conn
-      .query('insert into bigParameter(b) values(?)', [buf])
+      .query('DROP TABLE IF EXISTS bigParameter')
+      .then(() => {
+        return conn.query('CREATE TABLE bigParameter (b longblob)');
+      })
+      .then(() => {
+        return conn.query('insert into bigParameter(b) values(?)', [buf]);
+      })
       .then(() => {
         return conn.query('SELECT * from bigParameter');
       })
@@ -87,9 +92,14 @@ describe('Compression', function () {
   it('multi compression packet size', function (done) {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    conn.query('CREATE TEMPORARY TABLE bigParameter2 (b longblob)');
     conn
-      .query('insert into bigParameter2(b) values(?)', [randomBuf])
+      .query('DROP TABLE IF EXISTS bigParameter2')
+      .then(() => {
+        return conn.query('CREATE TABLE bigParameter2 (b longblob)');
+      })
+      .then(() => {
+        return conn.query('insert into bigParameter2(b) values(?)', [randomBuf]);
+      })
       .then(() => {
         return conn.query('SELECT * from bigParameter2');
       })

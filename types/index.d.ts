@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Type definitions for mariadb 2.0
+// Type definitions for mariadb 2.5
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
 // Definitions by:  Diego Dupin <https://github.com/rusher>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -228,9 +228,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   multipleStatements?: boolean;
 
   /**
-   * object with ssl parameters or a string containing name of ssl profile
+   * object with ssl parameters or a boolean to enable ssl without setting any other ssl option.
+   * see
+   * https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/connection-options.md#ssl
+   * for more information
    */
-  ssl?: string | (tls.SecureContextOptions & { rejectUnauthorized?: boolean });
+  ssl?: boolean | (tls.SecureContextOptions & { rejectUnauthorized?: boolean });
 
   /**
    * Compress exchanges with database using gzip.
@@ -275,6 +278,51 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * Example: sessionVariables:{'idle_transaction_timeout':10000}
    */
   sessionVariables?: any;
+
+  /**
+   * Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5
+   */
+  arrayParenthesis?: boolean;
+
+  /**
+   * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
+   */
+  autoJsonMap?: boolean;
+
+  /**
+   * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that).
+   * in ms
+   * (Default: 0)
+   */
+  keepAliveDelay?: number;
+
+  /**
+   * Indicate path/content to MySQL server RSA public key.
+   * use requires Node.js v11.6+
+   */
+  rsaPublicKey?: string;
+
+  /**
+   * Indicate path/content to MySQL server caching RSA public key.
+   * use requires Node.js v11.6+
+   */
+  cachingRsaPublicKey?: string;
+
+  /**
+   * Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key.
+   * default: false
+   */
+  allowPublicKeyRetrieval?: boolean;
+
+  /**
+   * Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
+   * for [BIGINT](https://mariadb.com/kb/en/bigint/) data type.
+   * This ensures having expected value even for value > 2^53
+   * (see [safe](documentation/connection-options.md#support-for-big-integer) range).
+   *
+   * default false
+   */
+  supportBigInt?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {

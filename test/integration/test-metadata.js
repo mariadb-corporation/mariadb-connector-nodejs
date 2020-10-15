@@ -8,15 +8,18 @@ const FieldType = require('../../lib/const/field-type');
 describe('metadata', () => {
   it('result metadata values', function (done) {
     shareConn
-      .query(
-        'CREATE TEMPORARY TABLE metadatatable (id BIGINT not null primary key auto_increment, ' +
-          't varchar(32) UNIQUE, ' +
-          'd DECIMAL(10,4) UNSIGNED ZEROFILL, ' +
-          'ds DECIMAL(10,4) SIGNED, ' +
-          'd2 DECIMAL(10,0) UNSIGNED, ' +
-          'ds2 DECIMAL(10,0) SIGNED ' +
-          ") COLLATE='utf8mb4_unicode_ci'"
-      )
+      .query('DROP TABLE IF EXISTS metadatatable')
+      .then(() => {
+        return shareConn.query(
+          'CREATE TABLE metadatatable (id BIGINT not null primary key auto_increment, ' +
+            't varchar(32) UNIQUE, ' +
+            'd DECIMAL(10,4) UNSIGNED ZEROFILL, ' +
+            'ds DECIMAL(10,4) SIGNED, ' +
+            'd2 DECIMAL(10,0) UNSIGNED, ' +
+            'ds2 DECIMAL(10,0) SIGNED ' +
+            ") COLLATE='utf8mb4_unicode_ci'"
+        );
+      })
       .then(() => {
         return shareConn.query(
           'SELECT id as id1, t as t1, d as d1, ds as d2, d2 as d3, ds2 as d4 FROM metadatatable as tm'

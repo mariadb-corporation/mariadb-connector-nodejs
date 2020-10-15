@@ -50,9 +50,11 @@ describe('Pool', () => {
       });
   });
 
-  it('pool escape', function () {
+  it('pool escape', function (done) {
     if (!base.utf8Collation()) this.skip();
     const pool = base.createPool({ connectionLimit: 1 });
+    const pool2 = base.createPool({ connectionLimit: 1, arrayParenthesis: true });
+
     pool.on('connection', (conn) => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
       assert.equal(
@@ -82,15 +84,17 @@ describe('Pool', () => {
       assert.equal(pool.escape("let'g'o😊"), "'let\\'g\\'o😊'");
       assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
       const arr = ["let'g'o😊", false, null, fctStr];
-      assert.equal(pool.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
+      assert.equal(pool.escape(arr), "'let\\'g\\'o😊',false,NULL,'bla\\'bla'");
+      assert.equal(pool2.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
 
       assert.equal(pool.escapeId('good_$one'), '`good_$one`');
       assert.equal(pool.escape(''), "''");
       assert.equal(pool.escapeId('f:a'), '`f:a`');
       assert.equal(pool.escapeId('`f:a`'), '`f:a`');
       assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
-
       pool.end();
+      pool2.end();
+      done();
     });
   });
 
@@ -105,6 +109,7 @@ describe('Pool', () => {
   });
 
   it('pool with wrong authentication', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip(); //to avoid host beeing blocked
     this.timeout(10000);
     const pool = base.createPool({
       acquireTimeout: 4000,
@@ -123,7 +128,8 @@ describe('Pool', () => {
             err.errno === 1045 ||
             err.errno === 1698 ||
             err.errno === 45025 ||
-            err.errno === 45028,
+            err.errno === 45028 ||
+            err.errno === 45044,
           err.message
         );
         pool
@@ -139,7 +145,8 @@ describe('Pool', () => {
                 err.errno === 1045 ||
                 err.errno === 1698 ||
                 err.errno === 45028 ||
-                err.errno === 45025,
+                err.errno === 45025 ||
+                err.errno === 45044,
               err.message
             );
             done();
@@ -157,13 +164,15 @@ describe('Pool', () => {
             err.errno === 1045 ||
             err.errno === 1698 ||
             err.errno === 45025 ||
-            err.errno === 45028,
+            err.errno === 45028 ||
+            err.errno === 45044,
           err.message
         );
       });
   });
 
   it('pool with wrong authentication connection', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(10000);
     const pool = base.createPool({
       acquireTimeout: 4000,
@@ -182,7 +191,8 @@ describe('Pool', () => {
             err.errno === 1045 ||
             err.errno === 1698 ||
             err.errno === 45028 ||
-            err.errno === 45025,
+            err.errno === 45025 ||
+            err.errno === 45044,
           err.message
         );
         pool
@@ -198,7 +208,8 @@ describe('Pool', () => {
                 err.errno === 1045 ||
                 err.errno === 1698 ||
                 err.errno === 45028 ||
-                err.errno === 45025,
+                err.errno === 45025 ||
+                err.errno === 45044,
               err.message
             );
             done();
@@ -216,13 +227,15 @@ describe('Pool', () => {
             err.errno === 1045 ||
             err.errno === 1698 ||
             err.errno === 45028 ||
-            err.errno === 45025,
+            err.errno === 45025 ||
+            err.errno === 45044,
           err.message
         );
       });
   });
 
   it('create pool', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
     const initTime = Date.now();
@@ -249,7 +262,7 @@ describe('Pool', () => {
   });
 
   it('create pool with multipleStatement', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 5,
@@ -259,7 +272,7 @@ describe('Pool', () => {
       .query('select 1; select 2')
       .then((results) => {
         //select 1 results
-        assert.deepEqual(results, [[{ '1': 1 }], [{ '2': 2 }]]);
+        assert.deepEqual(results, [[{ 1: 1 }], [{ 2: 2 }]]);
         pool.end();
         done();
       })
@@ -270,10 +283,14 @@ describe('Pool', () => {
   });
 
   it('ensure commit', function (done) {
-    shareConn.query('DROP TABLE IF EXISTS ensureCommit');
-    shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
     shareConn
-      .query("INSERT INTO ensureCommit values ('john')")
+      .query('DROP TABLE IF EXISTS ensureCommit')
+      .then(() => {
+        return shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
+      })
+      .then(() => {
+        return shareConn.query("INSERT INTO ensureCommit values ('john')");
+      })
       .then((res) => {
         const pool = base.createPool({ connectionLimit: 1 });
         pool.getConnection().then((conn) => {
@@ -306,10 +323,14 @@ describe('Pool', () => {
   });
 
   it('pool without control after use', function (done) {
-    shareConn.query('DROP TABLE IF EXISTS ensureCommit');
-    shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
     shareConn
-      .query("INSERT INTO ensureCommit values ('john')")
+      .query('DROP TABLE IF EXISTS ensureCommit')
+      .then(() => {
+        return shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
+      })
+      .then(() => {
+        return shareConn.query("INSERT INTO ensureCommit values ('john')");
+      })
       .then((res) => {
         const pool = base.createPool({
           connectionLimit: 1,
@@ -363,6 +384,7 @@ describe('Pool', () => {
   });
 
   it('pool ending during requests', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(20000);
     const initial = new Date();
     const pool = base.createPool({ connectionLimit: 1 });
@@ -471,7 +493,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
     let errorThrown = false;
     pool
@@ -495,7 +517,7 @@ describe('Pool', () => {
   });
 
   it('pool leakDetectionTimeout timeout', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 1,
       acquireTimeout: 200,
@@ -518,7 +540,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout recovery', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -530,7 +552,6 @@ describe('Pool', () => {
       for (let i = 0; i < 10; i++) {
         pool.query('SELECT SLEEP(1)').catch((err) => {
           console.log('SLEEP ERROR');
-          console.log(err);
           done(err);
         });
       }
@@ -571,6 +592,7 @@ describe('Pool', () => {
   });
 
   it('pool query timeout', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
     const initTime = Date.now();
@@ -677,7 +699,7 @@ describe('Pool', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -721,7 +743,7 @@ describe('Pool', () => {
   });
 
   it('query fail handling', function (done) {
-    if (process.env.MAXSCALE_VERSION || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -763,6 +785,7 @@ describe('Pool', () => {
   });
 
   it('connection end', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -796,6 +819,7 @@ describe('Pool', () => {
   });
 
   it('connection release alias', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -829,6 +853,7 @@ describe('Pool', () => {
   });
 
   it('connection destroy', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -901,12 +926,17 @@ describe('Pool', () => {
 
   it('pool batch', function (done) {
     const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
-    pool.query('CREATE TEMPORARY TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
     pool
-      .batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [
-        [1, 'john'],
-        [2, 'jack']
-      ])
+      .query('DROP TABLE IF EXISTS parse')
+      .then(() => {
+        return pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
+      })
+      .then(() => {
+        return pool.batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [
+          [1, 'john'],
+          [2, 'jack']
+        ]);
+      })
       .then((res) => {
         assert.equal(res.affectedRows, 2);
         return pool.query('select * from `parse`');
@@ -938,9 +968,15 @@ describe('Pool', () => {
 
   it('pool batch single array', function (done) {
     const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
-    pool.query('CREATE TEMPORARY TABLE singleBatchArray(id int)');
+
     pool
-      .batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3])
+      .query('DROP TABLE IF EXISTS singleBatchArray')
+      .then(() => {
+        return pool.query('CREATE TABLE singleBatchArray(id int)');
+      })
+      .then(() => {
+        return pool.batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3]);
+      })
       .then((res) => {
         assert.equal(res.affectedRows, 3);
         return pool.query('select * from `singleBatchArray`');
@@ -966,6 +1002,7 @@ describe('Pool', () => {
   });
 
   it("ensure pipe ending doesn't stall connection", function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     //sequence engine only exist in MariaDB
     if (!shareConn.info.isMariaDB()) this.skip();
     const ver = process.version.substring(1).split('.');
@@ -1008,48 +1045,59 @@ describe('Pool', () => {
   });
 
   it('test minimum idle decrease', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(30000);
     const pool = base.createPool({
       connectionLimit: 10,
-      minimumIdle: 4,
+      minimumIdle: 8,
       idleTimeout: 2,
       acquireTimeout: 20000
     });
 
     const requests = [];
-    for (let i = 0; i < 15000; i++) {
+    for (let i = 0; i < 5000; i++) {
       requests.push(pool.query('SELECT ' + i));
     }
-    Promise.all(requests)
-      .then(() => {
-        setTimeout(() => {
-          assert.equal(pool.totalConnections(), 10);
-          assert.equal(pool.idleConnections(), 10);
-        }, 5);
+    setTimeout(() => {
+      Promise.all(requests)
+        .then(() => {
+          setTimeout(() => {
+            assert.isTrue(
+              pool.totalConnections() === 8 ||
+                pool.totalConnections() === 9 ||
+                pool.totalConnections() === 10
+            );
+            assert.isTrue(
+              pool.idleConnections() === 8 ||
+                pool.idleConnections() === 9 ||
+                pool.idleConnections() === 10
+            );
+          }, 5);
 
-        setTimeout(() => {
-          //wait for 1 second
-          assert.equal(pool.totalConnections(), 10);
-          assert.equal(pool.idleConnections(), 10);
-        }, 1000);
+          setTimeout(() => {
+            //wait for 1 second
+            assert.equal(pool.totalConnections(), 8);
+            assert.equal(pool.idleConnections(), 8);
+          }, 1000);
 
-        setTimeout(() => {
-          //minimumIdle-1 is possible after reaching idleTimeout and connection
-          // is still not recreated
-          assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
-          assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
+          setTimeout(() => {
+            //minimumIdle-1 is possible after reaching idleTimeout and connection
+            // is still not recreated
+            assert.isTrue(pool.totalConnections() === 8 || pool.totalConnections() === 7);
+            assert.isTrue(pool.idleConnections() === 8 || pool.idleConnections() === 7);
+            pool.end();
+            done();
+          }, 3000);
+        })
+        .catch((err) => {
           pool.end();
-          done();
-        }, 3000);
-      })
-      .catch((err) => {
-        pool.end();
-        done(err);
-      });
+          done(err);
+        });
+    }, 4000);
   });
 
   it('test minimum idle', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -1070,6 +1118,7 @@ describe('Pool', () => {
   });
 
   it('pool immediate error', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     const pool = base.createPool({});
     pool
       .getConnection()
@@ -1086,6 +1135,7 @@ describe('Pool', () => {
   });
 
   it('pool server defect timeout', function (done) {
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     this.timeout(5000);
     const proxy = new Proxy({
       port: Conf.baseConfig.port,

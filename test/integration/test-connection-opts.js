@@ -219,6 +219,7 @@ describe('connection option', () => {
   });
 
   it('Server with different tz', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
@@ -226,15 +227,27 @@ describe('connection option', () => {
       .createConnection({ timezone: 'Etc/GMT+5' })
       .then((conn) => {
         const now = new Date();
-        conn.query("SET SESSION time_zone = '-05:00'");
-        conn.query('CREATE TEMPORARY TABLE t1 (a timestamp(6))');
-        conn.query('INSERT INTO t1 values (?)', now);
-        conn.query('SELECT NOW() as b, t1.a FROM t1').then((res) => {
-          assert.deepEqual(res[0].a, now);
-          assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
-          conn.end();
-          done();
-        });
+        conn
+          .query("SET SESSION time_zone = '-05:00'")
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t1');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a timestamp(6))');
+          })
+          .then(() => {
+            return conn.query('INSERT INTO t1 values (?)', now);
+          })
+          .then(() => {
+            return conn.query('SELECT NOW() as b, t1.a FROM t1');
+          })
+          .then((res) => {
+            assert.deepEqual(res[0].a, now);
+            assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
+            conn.end();
+            done();
+          })
+          .catch(done);
       })
       .catch(done);
   });
@@ -243,23 +256,38 @@ describe('connection option', () => {
     base
       .createConnection({ nestTables: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query('SELECT * FROM t1, t2')
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM t1, t2');
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               { t1: { a: 'bla' }, t2: { b: 'bou' } },
               { t1: { a: 'bla2' }, t2: { b: 'bou' } }
             ]);
-            return conn.end();
-          })
-          .then(() => {
+            conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -268,23 +296,38 @@ describe('connection option', () => {
     base
       .createConnection({ nestTables: '_' })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query('SELECT * FROM t1, t2')
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM t1, t2');
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               { t1_a: 'bla', t2_b: 'bou' },
               { t1_a: 'bla2', t2_b: 'bou' }
             ]);
-            return conn.end();
-          })
-          .then(() => {
+            conn.end();
             done();
           })
-          .catch(done);
+          .catch((err) => {
+            conn.end();
+            done(err);
+          });
       })
       .catch(done);
   });
@@ -293,12 +336,26 @@ describe('connection option', () => {
     base
       .createConnection({ rowsAsArray: true })
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query('SELECT * FROM t1, t2')
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query('SELECT * FROM t1, t2');
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               ['bla', 'bou'],
@@ -318,12 +375,26 @@ describe('connection option', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' })
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' });
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               ['bla', 'bou'],
@@ -343,12 +414,26 @@ describe('connection option', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query({ nestTables: true, sql: 'SELECT * FROM t1, t2' })
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query({ nestTables: true, sql: 'SELECT * FROM t1, t2' });
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               { t1: { a: 'bla' }, t2: { b: 'bou' } },
@@ -368,12 +453,26 @@ describe('connection option', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('CREATE TEMPORARY TABLE t1 (a varchar(20))');
-        conn.query('CREATE TEMPORARY TABLE t2 (b varchar(20))');
-        conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-        conn.query("INSERT INTO t2 VALUES ('bou')");
         conn
-          .query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' })
+          .query('DROP TABLE IF EXISTS t1')
+          .then(() => {
+            return conn.query('DROP TABLE IF EXISTS t2');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t1 (a varchar(20))');
+          })
+          .then(() => {
+            return conn.query('CREATE TABLE t2 (b varchar(20))');
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+          })
+          .then(() => {
+            return conn.query("INSERT INTO t2 VALUES ('bou')");
+          })
+          .then(() => {
+            return conn.query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' });
+          })
           .then((rows) => {
             assert.deepEqual(rows, [
               { t1_a: 'bla', t2_b: 'bou' },
@@ -396,7 +495,7 @@ describe('connection option', () => {
         conn
           .query('SELECT 1')
           .then((rows) => {
-            assert.deepEqual(rows, [{ '1': 1 }]);
+            assert.deepEqual(rows, [{ 1: 1 }]);
             conn.end();
             done();
           })

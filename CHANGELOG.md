@@ -1,5 +1,44 @@
 # Change Log
 
+## [2.5.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.0) (15 Oct 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.2...2.5.0)
+
+* CONJS-148 - permit setting socket keep alive (option `keepAliveDelay`)
+* CONJS-145 - batch rewrite error when packet reach maxAllowedPacket
+* CONJS-146 - Using callback API, batch, avoid return error if connection not established
+* CONJS-144 - TypeScript type ssl wrong definitions
+* CONJS-143 - Array parameter escaping differ from mysql/mysql2
+* CONJS-133	- Support ES2020 BigInt object (option `supportBigInt`)
+* CONJS-77 - Support MySQL caching_sha256_password authentication 
+* CONJS-76 - Support MySQL sha256_password authentication
+ 
+  
+New Options
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`arrayParenthesis`** | Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5|*boolean* | false |
+| **`rsaPublicKey`** | Indicate path/content to MySQL server RSA public key. use requires Node.js v11.6+ |*string* | |
+| **`cachingRsaPublicKey`** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
+| **`allowPublicKeyRetrieval`** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
+| **`supportBigInt`** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](documentation/connection-options.md#support-for-big-integer) range). |*boolean* | false |
+| **`keepAliveDelay`** | permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that). in ms |*int* | |
+
+CONJS-143 is a breaking change. Queries that have a IN parameter with array parameters format change. 
+previous format did not accept parenthesis : 
+```
+conn.query('SELECT * FROM arrayParam WHERE id = ? AND val IN ?', [1, ['b', 'c']]);
+```
+
+now, format is 
+```
+conn.query('SELECT * FROM arrayParam WHERE id = ? AND val IN (?)', [1, ['b', 'c']]);
+```
+same than mysql/mysql2 drivers.
+previous behaviour can be reverted setting option `arrayParenthesis` to true.  
+
+
+
 ## [2.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.2) (23 Jul 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.1...2.4.2)
 

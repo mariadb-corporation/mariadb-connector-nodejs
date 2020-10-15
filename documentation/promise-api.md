@@ -460,6 +460,7 @@ connection.query('select * from animals')
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
 * [`supportBigNumbers`](#supportBigNumbers)
+* [`supportBigint`](#supportBigint)
 * [`bigNumberStrings`](#bigNumberStrings)
 
 Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 
@@ -596,6 +597,16 @@ Whether you want the Connector to retrieve date values as strings, rather than `
 *boolean, default: false*
 
 Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in the [safe](documentation/connection-options.md#support-for-big-integer) range.
+
+
+#### `supportBigInt`
+
+*boolean, default: false*
+
+Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript
+/Reference/Global_Objects/BigInt) 
+for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
+This ensures having expected value even for value > 2^53 (see [safe](documentation/connection-options.md#support-for-big-integer) range).
 
 
 #### `bigNumberStrings`
