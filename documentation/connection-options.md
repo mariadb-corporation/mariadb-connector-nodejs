@@ -357,7 +357,11 @@ mariadb.createConnection({
 | **checkDuplicate** | Indicate to throw an exception if result-set will not contain some data due to having duplicate identifier. <br/>JSON cannot have multiple identical key, so query like `SELECT 1 as i, 2 as i` cannot result in { i:1, i:2 }, 'i:1' would be skipped. <br/>When `checkDuplicate` is enable (default) driver will throw an error if some data are skipped. Duplication error can be avoided by multiple ways, like using unique aliases or using options [`rowsAsArray`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#rowsasarray) / [`nestTables`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#nestTables) for example <br/><i><small>Since version 2.3.0</small></i>|*boolean* | true |
 | **arrayParenthesis** | Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5|*boolean* | false |
 | **autoJsonMap** | indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)|*boolean* | true |
-  **keepAliveDelay** | permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that). in ms |*int* | |
+| **keepAliveDelay** | permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that). in ms |*int* | |
+| **rsaPublicKey** | Indicate path/content to MySQL server RSA public key. use requires Node.js v11.6+ |*string* | |
+| **cachingRsaPublicKey** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
+| **allowPublicKeyRetrieval** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
+
 
 
 ## F.A.Q.

@@ -9,6 +9,17 @@
 * CONJS-144 - TypeScript type ssl wrong definitions
 * CONJS-143 - Array parameter escaping differ from mysql/mysql2
 * CONJS-133	- Support ES2020 BigInt object (option `supportBigInt`)
+* CONJS-77 - Support MySQL caching_sha256_password authentication 
+* CONJS-76 - Support MySQL sha256_password authentication
+ 
+New Options
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **`rsaPublicKey`** | Indicate path/content to MySQL server RSA public key. use requires Node.js v11.6+ |*string* | |
+| **`cachingRsaPublicKey`** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
+| **`allowPublicKeyRetrieval`** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
+
 
 ## [2.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.4.2) (23 Jul 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.1...2.4.2)

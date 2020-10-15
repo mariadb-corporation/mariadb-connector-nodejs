@@ -5,6 +5,64 @@ const { assert } = require('chai');
 const Conf = require('../conf');
 
 describe('authentication plugin', () => {
+  let rsaPublicKey = process.env.TEST_RSA_PUBLIC_KEY;
+  let cachingRsaPublicKey = process.env.TEST_CACHING_RSA_PUBLIC_KEY;
+
+  before(async function () {
+    if (!rsaPublicKey) {
+      if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0)) {
+        const res = await shareConn.query({
+          sql: "SHOW STATUS LIKE 'Rsa_public_key'",
+          rowsAsArray: true
+        });
+        rsaPublicKey = res[0][1];
+      }
+    }
+
+    if (!cachingRsaPublicKey) {
+      if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) {
+        const res = await shareConn.query({
+          sql: "SHOW STATUS LIKE 'Caching_sha2_password_rsa_public_key'",
+          rowsAsArray: true
+        });
+        cachingRsaPublicKey = res[0][1];
+      }
+    }
+
+    await shareConn.query("DROP USER IF EXISTS 'sha256User'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User2'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User3'@'%'");
+
+    if (!shareConn.info.isMariaDB()) {
+      if (shareConn.info.hasMinVersion(8, 0, 0)) {
+        await shareConn.query(
+          "CREATE USER 'sha256User'@'%' IDENTIFIED WITH sha256_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'sha256User'@'%'");
+
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User'@'%' IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User'@'%'");
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User2'@'%' IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User2'@'%'");
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User3'@'%'  IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User3'@'%'");
+      } else {
+        await shareConn.query("CREATE USER 'sha256User'@'%'");
+        await shareConn.query(
+          "GRANT ALL PRIVILEGES ON *.* TO 'sha256User'@'%' IDENTIFIED WITH " +
+            "sha256_password BY 'password'"
+        );
+      }
+    }
+  });
+
   it('ed25519 authentication plugin', function (done) {
     if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     const self = this;
@@ -273,6 +331,235 @@ describe('authentication plugin', () => {
               .catch(done);
           })
           .catch(done);
+      })
+      .catch(done);
+  });
+
+  it('sha256 authentication plugin', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.platform === 'win32') this.skip();
+    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0))
+      this.skip();
+
+    const self = this;
+    base
+      .createConnection({
+        user: 'sha256User',
+        password: 'password',
+        rsaPublicKey: rsaPublicKey
+      })
+      .then((conn) => {
+        conn.end();
+        done();
+      })
+      .catch((err) => {
+        if (err.message.includes('sha256_password authentication plugin require node 11.6+'))
+          self.skip();
+        done(err);
+      });
+  });
+
+  it('sha256 authentication plugin with public key retrieval', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.platform === 'win32') this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
+
+    const self = this;
+    base
+      .createConnection({
+        user: 'sha256User',
+        password: 'password',
+        allowPublicKeyRetrieval: true
+      })
+      .then((conn) => {
+        conn.end();
+        done();
+      })
+      .catch((err) => {
+        if (err.message.includes('sha256_password authentication plugin require node 11.6+'))
+          self.skip();
+        done(err);
+      });
+  });
+
+  it('sha256 authentication plugin without public key retrieval', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
+
+    base
+      .createConnection({
+        user: 'sha256User',
+        password: 'password'
+      })
+      .then((conn) => {
+        conn.end();
+        done(new Error('must have thrown error'));
+      })
+      .catch((err) => {
+        assert.isTrue(
+          err.message.includes('RSA public key is not available client side.') ||
+            err.message.includes('sha256_password authentication plugin require node 11.6+')
+        );
+        done();
+      });
+  });
+
+  it('sha256 authentication plugin with ssl', function (done) {
+    if (
+      process.env.MAXSCALE_TEST_DISABLE ||
+      shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(5, 7, 0)
+    )
+      this.skip();
+
+    const self = this;
+    shareConn
+      .query("SHOW VARIABLES LIKE 'have_ssl'")
+      .then((rows) => {
+        // console.log("ssl is not enable on database, skipping test :");
+        if (rows[0].Value === 'YES') {
+          base
+            .createConnection({
+              user: 'sha256User',
+              password: 'password',
+              ssl: {
+                rejectUnauthorized: false
+              }
+            })
+            .then((conn) => {
+              conn.end();
+              done();
+            })
+            .catch((err) => {
+              if (err.message.includes('sha256_password authentication plugin require node 11.6+'))
+                self.skip();
+              done(err);
+            });
+        } else {
+          this.skip();
+        }
+      })
+      .catch(done);
+  });
+
+  it('cachingsha256 authentication plugin', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.platform === 'win32') this.skip();
+    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0))
+      this.skip();
+
+    const self = this;
+    base
+      .createConnection({
+        user: 'cachingSha256User',
+        password: 'password',
+        cachingRsaPublicKey: rsaPublicKey
+      })
+      .then((conn) => {
+        conn.end();
+        //using fast auth
+        base
+          .createConnection({
+            user: 'cachingSha256User',
+            password: 'password',
+            cachingRsaPublicKey: rsaPublicKey
+          })
+          .then((conn) => {
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch((err) => {
+        if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+'))
+          self.skip();
+        done(err);
+      });
+  });
+
+  it('cachingsha256 authentication plugin with public key retrieval', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.platform === 'win32') this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+
+    const self = this;
+    base
+      .createConnection({
+        user: 'cachingSha256User2',
+        password: 'password',
+        allowPublicKeyRetrieval: true
+      })
+      .then((conn) => {
+        conn.end();
+        done();
+      })
+      .catch((err) => {
+        if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+'))
+          self.skip();
+        done(err);
+      });
+  });
+
+  it('cachingsha256 authentication plugin without public key retrieval', function (done) {
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+
+    base
+      .createConnection({
+        user: 'cachingSha256User3',
+        password: 'password'
+      })
+      .then((conn) => {
+        conn.end();
+        done(new Error('must have thrown error'));
+      })
+      .catch((err) => {
+        assert.isTrue(
+          err.message.includes('RSA public key is not available client side.') ||
+            err.message.includes('caching_sha2_password authentication plugin require node 11.6+')
+        );
+        done();
+      });
+  });
+
+  it('cachingsha256 authentication plugin with ssl', function (done) {
+    if (
+      process.env.MAXSCALE_TEST_DISABLE ||
+      shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(8, 0, 0)
+    )
+      this.skip();
+
+    const self = this;
+    shareConn
+      .query("SHOW VARIABLES LIKE 'have_ssl'")
+      .then((rows) => {
+        // console.log("ssl is not enable on database, skipping test :");
+        if (rows[0].Value === 'YES') {
+          base
+            .createConnection({
+              user: 'cachingSha256User3',
+              password: 'password',
+              ssl: {
+                rejectUnauthorized: false
+              }
+            })
+            .then((conn) => {
+              conn.end();
+              done();
+            })
+            .catch((err) => {
+              if (
+                err.message.includes(
+                  'caching_sha2_password authentication plugin require node 11.6+'
+                )
+              )
+                self.skip();
+              done();
+            });
+        } else {
+          self.skip();
+        }
       })
       .catch(done);
   });

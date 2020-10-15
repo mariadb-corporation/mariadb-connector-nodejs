@@ -642,7 +642,8 @@ describe('connection', () => {
   it('connection.connect() error code validation callback', function (done) {
     const conn = base.createCallbackConnection({
       user: 'fooUser',
-      password: 'myPwd'
+      password: 'myPwd',
+      allowPublicKeyRetrieval: true
     });
     conn.connect((err) => {
       if (!err) done(new Error('must have thrown error'));
@@ -685,7 +686,7 @@ describe('connection', () => {
 
   it('connection.connect() error code validation promise', function (done) {
     base
-      .createConnection({ user: 'fooUser', password: 'myPwd' })
+      .createConnection({ user: 'fooUser', password: 'myPwd', allowPublicKeyRetrieval: true })
       .then(() => {
         done(new Error('must have thrown error'));
       })
@@ -928,5 +929,4 @@ describe('connection', () => {
         .catch(done);
     });
   });
-  
 });
