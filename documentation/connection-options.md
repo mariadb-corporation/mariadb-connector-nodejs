@@ -61,14 +61,18 @@ Integers in JavaScript use IEEE-754 representation.  This means that Node.js can
 
 This means that when the value set on a column is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, the default implementation receives an inexact representation of the number.
 
-The Connector provides two options to address this issue. 
+The Connector provides 3 options to address this issue. 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **bigNumberStrings** | When an integer is not in the safe range, the Connector interprets the value as a string. |*boolean* |false| 
 | **supportBigNumbers** | When an integer is not in the safe range, the Connector interprets the value as a [Long](https://www.npmjs.com/package/long) object. |*boolean* |false|
+| **supportBigInt** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](#big-integer-support) range). |*boolean* | false |
 
 
+Native `supportBigInt` implementation is recommended over `supportBigNumbers` (remains for compability with older version). `supportBigInt` is not enabled by default for compatibilty to avoid major regression. 
+It will be in a future 3.x version.
+ 
 ## SSL
 
 The Connector can encrypt data during transfer using the Transport Layer Security (TLS) protocol.  TLS/SSL allows for transfer encryption, and can optionally use identity validation for the server and client.
@@ -361,7 +365,7 @@ mariadb.createConnection({
 | **rsaPublicKey** | Indicate path/content to MySQL server RSA public key. use requires Node.js v11.6+ |*string* | |
 | **cachingRsaPublicKey** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
 | **allowPublicKeyRetrieval** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
-| **supportBigInt** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](documentation/connection-options.md#support-for-big-integer) range). |*boolean* | false |
+| **supportBigInt** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](#big-integer-support) range). |*boolean* | false |
 
 
 ## F.A.Q.

@@ -50,7 +50,9 @@ To use the Connector, you need to import the package into your application code.
 const mariadb = require('mariadb');
 ```
 
-## Timezone consideration
+## Recommendation
+
+### Timezone consideration
 
 It's not recommended, but in some cases, Node.js and database are configured with different timezone. 
 
@@ -63,7 +65,7 @@ If client and server timezone differ, `timezone` option has to be set to server 
 Connector will then convert date to server timezone, rather than the current Node.js timezone. 
 
 
-## Security consideration
+### Security consideration
 
 Connection details such as URL, username, and password are better hidden into environment variables.
 using code like : 
@@ -104,6 +106,12 @@ DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
 
+### Default options consideration
+
+For new project, enabling option `supportBigInt` is recommended (It will be in a future 3.x version).
+
+This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
+BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
 
 # Promise API
 
@@ -596,7 +604,8 @@ Whether you want the Connector to retrieve date values as strings, rather than `
 
 *boolean, default: false*
 
-Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in the [safe](documentation/connection-options.md#support-for-big-integer) range.
+Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in
+ the [safe](/documentation/connection-options.md#big-integer-support) range.
 
 
 #### `supportBigInt`
@@ -605,7 +614,7 @@ Whether the query should return integers as [`Long`](https://www.npmjs.com/packa
 
 Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) 
 for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
-This ensures having expected value even for value > 2^53 (> 9007199254740991) (see [safe](documentation/connection-options.md#support-for-big-integer) range).
+This ensures having expected value even for value > 2^53 (see [safe](/documentation/connection-options.md#big-integer-support) range).
 This option can be set to query level, supplanting connection option `supportBigInt` value. 
 
 ```javascript
@@ -622,7 +631,7 @@ const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBig
 
 *boolean, default: false*
 
-Whether the query should return integers as strings when they are not in the [safe](documentation/connection-options.md#support-for-big-integer) range.
+Whether the query should return integers as strings when they are not in the [safe](documentation/connection-options.md#big-integer-support) range.
 
 
 #### `typeCast`
