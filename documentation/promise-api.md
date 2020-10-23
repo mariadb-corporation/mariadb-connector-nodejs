@@ -603,10 +603,19 @@ Whether the query should return integers as [`Long`](https://www.npmjs.com/packa
 
 *boolean, default: false*
 
-Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript
-/Reference/Global_Objects/BigInt) 
+Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) 
 for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
-This ensures having expected value even for value > 2^53 (see [safe](documentation/connection-options.md#support-for-big-integer) range).
+This ensures having expected value even for value > 2^53 (> 9007199254740991) (see [safe](documentation/connection-options.md#support-for-big-integer) range).
+This option can be set to query level, supplanting connection option `supportBigInt` value. 
+
+```javascript
+await shareConn.query('CREATE TEMPORARY TABLE bigIntTable(id BIGINT)');
+await shareConn.query("INSERT INTO bigIntTable value ('9007199254740993')");
+const res = await shareConn.query('select * from bigIntTable');
+// res :  [{ id: 9007199254740992 }] (not exact value)
+const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBigInt: true});
+// res :  [{ id: 9007199254740993n }] (exact value)
+```
 
 
 #### `bigNumberStrings`
