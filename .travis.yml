@@ -52,6 +52,8 @@ matrix:
     env: DB=mariadb:10.5 SKIP_LEAK=1 ADDITIONAL_CONF=--version=10.5.199
   - node_js: "14"
     env: DB=mariadb:10.5 SKIP_LEAK=1
+  - node_js: "15"
+    env: DB=mariadb:10.5 SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.5 SKIP_LEAK=1 TEST_COLLATION=cp1251_general_ci
   - node_js: "12"
