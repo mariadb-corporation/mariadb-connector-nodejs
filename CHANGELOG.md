@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.5.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.1) (23 Oct 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.0...2.5.1)
+
+* CONJS-149 - [CONJS-149] correcting possible TypeError [ERR_UNKNOWN_ENCODING], Node v15 compatibility
+
+
 ## [2.5.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.0) (15 Oct 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.4.2...2.5.0)
 
