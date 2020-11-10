@@ -586,12 +586,12 @@ describe('Error', () => {
       .createConnection({ compress: true })
       .then((conn) => {
         conn
-          .query('DROP TABLE IF EXISTS execute_missing_parameter')
+          .query('DROP TABLE IF EXISTS execute_missing_parameter2')
           .then(() => {
-            return conn.query('CREATE TABLE execute_missing_parameter (id int, id2 int, id3 int)');
+            return conn.query('CREATE TABLE execute_missing_parameter2 (id int, id2 int, id3 int)');
           })
           .then(() => {
-            return conn.query('INSERT INTO execute_missing_parameter values (?, ?, ?)', [1, 3]);
+            return conn.query('INSERT INTO execute_missing_parameter2 values (?, ?, ?)', [1, 3]);
           })
           .then(() => {
             done(new Error('must have thrown error !'));
@@ -604,7 +604,7 @@ describe('Error', () => {
             assert.ok(
               err.message.includes(
                 'Parameter at position 3 is not set\n' +
-                  'sql: INSERT INTO execute_missing_parameter values (?, ?, ?) - parameters:[1,3]'
+                  'sql: INSERT INTO execute_missing_parameter2 values (?, ?, ?) - parameters:[1,3]'
               )
             );
             return conn
