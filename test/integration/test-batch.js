@@ -1276,6 +1276,15 @@ describe('batch', () => {
   };
 
   describe('standard question mark using bulk', () => {
+    it('ensure bulk param length encoded size #137', async function () {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      await shareConn.query('DROP TABLE IF EXISTS bufLength');
+      await shareConn.query('create table bufLength (val TEXT not null, val2 varchar(10))');
+      await shareConn.batch('update bufLength set val=?, val2=?', [
+        [Buffer.alloc(16366).toString(), 'abc']
+      ]);
+    });
+
     const useCompression = false;
     it('simple batch, local date', function (done) {
       if (process.env.SKYSQL || !base.utf8Collation()) {
