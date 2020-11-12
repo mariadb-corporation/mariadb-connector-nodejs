@@ -75,6 +75,21 @@ describe('local-infile', () => {
       .catch(done);
   });
 
+  it('local infile and init functions', function (done) {
+    base
+      .createConnection({ permitLocalInfile: true, initSql: "set time_zone='+00:00'" })
+      .then((conn) => {
+        conn
+          .query('SELECT 1')
+          .then(() => {
+            conn.end();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it('local infile disable using default options', function (done) {
     base
       .createConnection({ pipelining: undefined, permitLocalInfile: undefined })
