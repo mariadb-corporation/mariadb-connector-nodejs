@@ -96,6 +96,33 @@ describe('connection option', () => {
       .catch(done);
   });
 
+  it('timezone +0h', function (done) {
+    base
+      .createConnection({ timezone: '+00:00' })
+      .then((conn) => {
+        let d = new Date('2000-01-01T00:00:00Z');
+        conn
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [d])
+          .then((res) => {
+            assert.deepEqual(res[0].tt, d.getTime() / 1000);
+            return conn.query(
+              "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
+              [d]
+            );
+          })
+          .then((res) => {
+            assert.deepEqual(res[0].tt1, new Date('2003-12-31T12:00:00Z'));
+            assert.deepEqual(res[0].tt2, d);
+            return conn.end();
+          })
+          .then(() => {
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it('timezone +2h', function (done) {
     base
       .createConnection({ timezone: '+02' })
