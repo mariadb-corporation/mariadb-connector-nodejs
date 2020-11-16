@@ -110,28 +110,27 @@ describe('datetime', () => {
       .catch(done);
   });
 
-    it('date text America/New_York timezone', function (done) {
-        const date = new Date('1999-01-31 12:13:14');
-        if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
-        base
-            .createConnection({ timezone: 'America/New_York'})
-            .then((conn) => {
-                conn
-                    .query({ sql: 'select CAST(? as datetime) d' }, [date])
-                    .then((res) => {
-                        assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');
-                        assert.equal(res[0].d.getDate(), date.getDate());
-                        assert.equal(res[0].d.getHours(), date.getHours());
-                        assert.equal(res[0].d.getMinutes(), date.getMinutes());
-                        assert.equal(res[0].d.getSeconds(), date.getSeconds());
-                        conn.close();
-                        done();
-                    })
-                    .catch(done);
-            })
-            .catch(done);
-    });
-
+  it('date text America/New_York timezone', function (done) {
+    const date = new Date('1999-01-31 12:13:14');
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
+    base
+      .createConnection({ timezone: 'America/New_York' })
+      .then((conn) => {
+        conn
+          .query({ sql: 'select CAST(? as datetime) d' }, [date])
+          .then((res) => {
+            assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');
+            assert.equal(res[0].d.getDate(), date.getDate());
+            assert.equal(res[0].d.getHours(), date.getHours());
+            assert.equal(res[0].d.getMinutes(), date.getMinutes());
+            assert.equal(res[0].d.getSeconds(), date.getSeconds());
+            conn.close();
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
 
   it('date text from row', function (done) {
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
