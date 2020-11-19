@@ -46,6 +46,8 @@ matrix:
     env: DB=build SKIP_LEAK=1
   - node_js: "12"
     env: SKYSQL=true SKIP_LEAK=1
+  - node_js: "12"
+    env: SKYSQL_HA=true SKIP_LEAK=1
   - node_js: "10"
     env: DB=mariadb:10.5
   - node_js: "12"

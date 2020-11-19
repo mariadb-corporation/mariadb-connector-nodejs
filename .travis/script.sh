@@ -6,19 +6,29 @@ set -e
 ###################################################################################################################
 # test different type of configuration
 ###################################################################################################################
-
-if [ -n "$SKYSQL" ] ; then
-
-  if [ -z "$SKYSQL_HOST" ] ; then
-    echo "No SkySQL configuration found !"
-    exit 0
+if [ -n "$SKYSQL" ] || [ -n "$SKYSQL_HA" ]; then
+  if [ -n "$SKYSQL" ] ; then
+    if [ -z "$SKYSQL_HOST" ] ; then
+      echo "No SkySQL configuration found !"
+      exit 0
+    else
+      export TEST_USER=$SKYSQL_USER
+      export TEST_HOST=$SKYSQL_HOST
+      export TEST_PASSWORD=$SKYSQL_PASSWORD
+      export TEST_PORT=$SKYSQL_PORT
+      export TEST_SSL_CA=$SKYSQL_SSL_CA
+    fi
   else
-    export TEST_USER=$SKYSQL_USER
-    export TEST_HOST=$SKYSQL_HOST
-    export TEST_PASSWORD=$SKYSQL_PASSWORD
-    export TEST_PORT=$SKYSQL_PORT
-    export TEST_SSL_CA=$SKYSQL_SSL_CA
-    export TEST_BULK=false
+    if [ -z "$SKYSQL_HA_HOST" ] ; then
+      echo "No SkySQL configuration found !"
+      exit 0
+    else
+      export TEST_USER=$SKYSQL_HA_USER
+      export TEST_HOST=$SKYSQL_HA_HOST
+      export TEST_PASSWORD=$SKYSQL_HA_PASSWORD
+      export TEST_PORT=$SKYSQL_HA_PORT
+      export TEST_SSL_CA=$SKYSQL_HA_SSL_CA
+    fi
   fi
 
 else
