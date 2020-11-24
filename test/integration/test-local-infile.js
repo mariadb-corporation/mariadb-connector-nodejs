@@ -280,7 +280,8 @@ describe('local-infile', () => {
               })
               .then(() => {
                 conn.end();
-                done('must have thrown error');
+                // expected result is to throw error, but super user might still read file.
+                done();
               })
               .catch((err) => {
                 assert.equal(err.sqlState, '22000');
