@@ -10,29 +10,16 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('cluster', function () {
-  before(function (done) {
-    if (process.env.SKYSQL) this.skip();
-    shareConn
-      .query('DROP TABLE IF EXISTS clusterInsert')
-      .then(() => {
-        shareConn
-          .query('CREATE TABLE clusterInsert(id int, nam varchar(256))')
-          .then(() => {
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  before(async function () {
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    await shareConn.query('DROP TABLE IF EXISTS clusterInsert');
+    await shareConn.query('CREATE TABLE clusterInsert(id int, nam varchar(256))');
+    await shareConn.query('FLUSH TABLES');
   });
 
   describe('promise', function () {
-    beforeEach(function (done) {
-      shareConn
-        .query('TRUNCATE TABLE clusterInsert')
-        .then(() => {
-          done();
-        })
-        .catch(done);
+    beforeEach(async function () {
+      await shareConn.query('TRUNCATE TABLE clusterInsert');
     });
 
     it('no node', function (done) {
@@ -436,7 +423,7 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', function (done) {
-      if (process.env.SKYSQL) this.skip();
+      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       this.timeout(20000);
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const poolCluster = cl.cluster;
@@ -485,7 +472,7 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (process.env.SKYSQL) this.skip();
+      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});
@@ -665,20 +652,17 @@ describe('cluster', function () {
         });
     });
 
-    it('batch on filtered', function (done) {
+    it('batch on filtered', async function () {
       this.timeout(10000);
       const poolCluster = get3NodeCluster();
       const filteredCluster = poolCluster.of(/^node[12]/);
 
-      filteredCluster
-        .query('DROP TABLE IF EXISTS filteredSimpleBatch')
-        .then(() => {
-          return filteredCluster.query(
+      await filteredCluster.query('DROP TABLE IF EXISTS filteredSimpleBatch');
+      await filteredCluster.query(
             'CREATE TABLE filteredSimpleBatch(id int not null primary key auto_increment, val int)'
           );
-        })
-        .then(() => {
-          const promises = [];
+      await filteredCluster.query('FLUSH TABLES');
+      const promises = [];
           for (let i = 0; i < 60; i++) {
             promises.push(
               filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [
@@ -688,22 +672,10 @@ describe('cluster', function () {
               ])
             );
           }
-          Promise.all(promises)
-            .then(() => {
-              return filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
-            })
-            .then((res) => {
-              expect(res[0].nb).to.equal(180);
-              poolCluster.end().then(() => {
-                done();
-              });
-            })
-            .catch((err) => {
-              poolCluster.end().then(() => {
-                done(err);
-              });
-            });
-        });
+      await Promise.all(promises);
+      const res = await filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
+      expect(res[0].nb).to.equal(180);
+      await poolCluster.end();
     });
 
     it('batch error on filtered', function (done) {

@@ -282,6 +282,7 @@ describe('ssl', function () {
     if (
       !sslEnable ||
       process.env.SKYSQL ||
+      process.env.SKYSQL_HA ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
       shareConn.info.serverVersion.raw.includes('focal')
@@ -518,7 +519,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -543,7 +544,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
-    if (process.env.SKYSQL != null) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();

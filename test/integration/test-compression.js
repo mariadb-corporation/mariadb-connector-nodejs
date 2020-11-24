@@ -49,7 +49,7 @@ describe('Compression', function () {
   });
 
   it('multiple packet result (multiple rows)', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     //using sequence engine
     if (!conn.info.isMariaDB() || !conn.info.hasMinVersion(10, 1)) this.skip();
     conn
@@ -68,45 +68,25 @@ describe('Compression', function () {
       .catch(done);
   });
 
-  it('parameter bigger than 16M packet size', function (done) {
+  it('parameter bigger than 16M packet size', async function () {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    conn
-      .query('DROP TABLE IF EXISTS bigParameter')
-      .then(() => {
-        return conn.query('CREATE TABLE bigParameter (b longblob)');
-      })
-      .then(() => {
-        return conn.query('insert into bigParameter(b) values(?)', [buf]);
-      })
-      .then(() => {
-        return conn.query('SELECT * from bigParameter');
-      })
-      .then((rows) => {
-        assert.deepEqual(rows[0].b, buf);
-        done();
-      })
-      .catch(done);
+    conn.query('DROP TABLE IF EXISTS bigParameter');
+    conn.query('CREATE TABLE bigParameter (b longblob)');
+    await conn.query('FLUSH TABLES');
+    conn.query('insert into bigParameter(b) values(?)', [buf]);
+    const rows = await conn.query('SELECT * from bigParameter');
+    assert.deepEqual(rows[0].b, buf);
   });
 
-  it('multi compression packet size', function (done) {
+  it('multi compression packet size', async function () {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    conn
-      .query('DROP TABLE IF EXISTS bigParameter2')
-      .then(() => {
-        return conn.query('CREATE TABLE bigParameter2 (b longblob)');
-      })
-      .then(() => {
-        return conn.query('insert into bigParameter2(b) values(?)', [randomBuf]);
-      })
-      .then(() => {
-        return conn.query('SELECT * from bigParameter2');
-      })
-      .then((rows) => {
-        assert.deepEqual(rows[0].b, randomBuf);
-        done();
-      })
-      .catch(done);
+    conn.query('DROP TABLE IF EXISTS bigParameter2');
+    conn.query('CREATE TABLE bigParameter2 (b longblob)');
+    await conn.query('FLUSH TABLES');
+    conn.query('insert into bigParameter2(b) values(?)', [randomBuf]);
+    const rows = await conn.query('SELECT * from bigParameter2');
+    assert.deepEqual(rows[0].b, randomBuf);
   });
 });

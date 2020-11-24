@@ -23,74 +23,45 @@ describe('Big query', function () {
       .catch(done);
   });
 
-  it('parameter bigger than 16M packet size', function (done) {
+  it('parameter bigger than 16M packet size', async function () {
     if (maxAllowedSize <= testSize) this.skip();
     this.timeout(20000); //can take some time
-    shareConn
-      .query('DROP TABLE IF EXISTS bigParameterBigParam')
-      .then(() => {
-        return shareConn.query('CREATE TABLE bigParameterBigParam (b longblob)');
-      })
-      .then(() => {
-        return shareConn.query('insert into bigParameterBigParam(b) values(?)', [buf]);
-      })
-      .then(() => {
-        return shareConn.query('SELECT * from bigParameterBigParam');
-      })
-      .then((rows) => {
-        assert.deepEqual(rows[0].b, buf);
-        done();
-      })
-      .catch(done);
+    shareConn.query('DROP TABLE IF EXISTS bigParameterBigParam');
+    shareConn.query('CREATE TABLE bigParameterBigParam (b longblob)');
+    await shareConn.query('FLUSH TABLES');
+    shareConn.query('insert into bigParameterBigParam(b) values(?)', [buf]);
+    const rows = await shareConn.query('SELECT * from bigParameterBigParam');
+    assert.deepEqual(rows[0].b, buf);
   });
 
-  it('int8 buffer overflow', function (done) {
+  it('int8 buffer overflow', async function () {
     const buf = Buffer.alloc(979, '0');
-    base.createConnection({ collation: 'latin1_swedish_ci' }).then((conn) => {
-      conn
-        .query('DROP TABLE IF EXISTS bigParameterInt8')
-        .then(() => {
-          return conn.query('CREATE TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
-        })
-        .then(() => {
-          return conn.query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test']);
-        })
-        .then(() => {
-          return conn.query('SELECT * from bigParameterInt8');
-        })
-        .then((rows) => {
-          assert.deepEqual(rows[0].a, buf.toString());
-          assert.deepEqual(rows[0].b, 'test');
-          conn.end();
-          done();
-        })
-        .catch(done);
-    });
+    const conn = await base.createConnection({ collation: 'latin1_swedish_ci' });
+    conn.query('DROP TABLE IF EXISTS bigParameterInt8');
+    conn.query('CREATE TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
+    await conn.query('FLUSH TABLE');
+    await conn.query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test']);
+    const rows = await conn.query('SELECT * from bigParameterInt8');
+    assert.deepEqual(rows[0].a, buf.toString());
+    assert.deepEqual(rows[0].b, 'test');
+    conn.end();
   });
 
-  it('buffer growing', function (done) {
+  it('buffer growing', async function () {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
-    base
-      .createConnection()
-      .then((conn) => {
-        bufferGrowing(conn, done);
-      })
-      .catch(done);
+    const conn = await base.createConnection({ compress: true });
+    await bufferGrowing(conn);
   });
 
-  it('buffer growing compression', function (done) {
+  it('buffer growing compression', async function () {
     if (maxAllowedSize <= 11 * 1024 * 1024) this.skip();
     this.timeout(10000); //can take some time
-    base
-      .createConnection({ compress: true })
-      .then((conn) => {
-        bufferGrowing(conn, done);
-      })
-      .catch(done);
+    const conn = await base.createConnection({ compress: true });
+    await bufferGrowing(conn);
   });
 
-  function bufferGrowing(conn, done) {
+  async function bufferGrowing(conn) {
     const st = Buffer.alloc(65536, '0').toString();
     const st2 = Buffer.alloc(1048576, '0').toString();
     const params = [st];
@@ -103,27 +74,14 @@ describe('Big query', function () {
     }
     sql += ')';
     sqlInsert += ')';
-    conn
-      .query('DROP TABLE IF EXISTS bigParameter')
-      .then(() => {
-        return conn.query(sql);
-      })
-      .then(() => {
-        return conn.query(sqlInsert, params);
-      })
-      .then(() => {
-        return conn.query('SELECT * from bigParameter');
-      })
-      .then((rows) => {
-        for (let i = 0; i < 10; i++) {
-          assert.deepEqual(rows[0]['a' + i], params[i]);
-        }
-        conn.end();
-        done();
-      })
-      .catch((err) => {
-        conn.end();
-        done(err);
-      });
+    conn.query('DROP TABLE IF EXISTS bigParameter');
+    conn.query(sql);
+    await shareConn.query('FLUSH TABLES');
+    conn.query(sqlInsert, params);
+    const rows = await conn.query('SELECT * from bigParameter');
+    for (let i = 0; i < 10; i++) {
+      assert.deepEqual(rows[0]['a' + i], params[i]);
+    }
+    conn.end();
   }
 });

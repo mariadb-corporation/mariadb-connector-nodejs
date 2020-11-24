@@ -19,6 +19,7 @@ install:
   # generate SSL certificates
   - mkdir tmp
   - chmod +x .travis/gen-ssl.sh
+  - chmod +x .travis/sql/*
   - chmod +x .travis/build/build.sh
   - chmod +x .travis/build/docker-entrypoint.sh
   - chmod 777 .travis/build/
@@ -47,7 +48,7 @@ matrix:
   - node_js: "12"
     env: SKYSQL=true SKIP_LEAK=1
   - node_js: "12"
-    env: SKYSQL_HA=true SKIP_LEAK=1
+    env: SKYSQL_HA=true MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
   - node_js: "10"
     env: DB=mariadb:10.5
   - node_js: "12"

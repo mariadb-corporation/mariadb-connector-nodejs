@@ -374,7 +374,8 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+      this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -415,7 +416,8 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL_HA)
+      this.skip();
     this.timeout(20000);
     base
       .createConnection()

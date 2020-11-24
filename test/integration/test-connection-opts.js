@@ -245,38 +245,22 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('Server with different tz', function (done) {
+  it('Server with different tz', async function () {
     if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
-    base
-      .createConnection({ timezone: 'Etc/GMT+5' })
-      .then((conn) => {
-        const now = new Date();
-        conn
-          .query("SET SESSION time_zone = '-05:00'")
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t1');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a timestamp(6))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO t1 values (?)', now);
-          })
-          .then(() => {
-            return conn.query('SELECT NOW() as b, t1.a FROM t1');
-          })
-          .then((res) => {
-            assert.deepEqual(res[0].a, now);
-            assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const conn = await base.createConnection({ timezone: 'Etc/GMT+5' });
+    const now = new Date();
+    conn.query("SET SESSION time_zone = '-05:00'");
+    conn.query('DROP TABLE IF EXISTS t1');
+    conn.query('CREATE TABLE t1 (a timestamp(6))');
+    await conn.query('FLUSH TABLES');
+    conn.query('INSERT INTO t1 values (?)', now);
+    const res = await conn.query('SELECT NOW() as b, t1.a FROM t1');
+    assert.deepEqual(res[0].a, now);
+    assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
+    conn.end();
   });
 
   it('nestTables results boolean', function (done) {
@@ -532,7 +516,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -577,7 +561,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     this.timeout(10000);
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base

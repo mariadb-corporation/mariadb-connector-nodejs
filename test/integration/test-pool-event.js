@@ -10,7 +10,7 @@ const os = require('os');
 
 describe('Pool event', () => {
   before(function () {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
   });
 
   it('pool connection creation', function (done) {
