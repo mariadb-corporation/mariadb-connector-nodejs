@@ -391,65 +391,65 @@ describe('batch callback', () => {
       );
       conn.query('FLUSH TABLES', (err) => {
         conn.batch(
-            'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)',
+          'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)',
+          [
             [
-              [
-                true,
-                'john',
-                new Date('2001-12-31 23:59:58'),
-                new Date('2018-01-01 12:30:20.456789'),
-                {
-                  type: 'Point',
-                  coordinates: [10, 10]
-                }
-              ],
-              [
-                false,
-                '12345678901',
-                null,
-                new Date('2018-01-21 11:30:20.123456'),
-                {
-                  type: 'Point',
-                  coordinates: [10, 20]
-                }
-              ],
-              [
-                0,
-                null,
-                new Date('2020-12-31 23:59:59'),
-                new Date('2018-01-21 11:30:20.123456'),
-                {
-                  type: 'Point',
-                  coordinates: [20, 20]
-                }
-              ]
-            ],
-            (err, res) => {
-              if (err) {
-                assert.isTrue(
-                    err.message.includes("Data too long for column 't' at row 2"),
-                    err.message
-                );
-                conn.query('DROP TABLE simpleBatch', (err, res) => {
-                  clearTimeout(timeout);
-                  conn.end(() => {
-                    done();
-                  });
-                });
-              } else {
-                conn.end(() => {
-                  if (
-                      (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-                      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-                  ) {
-                    //field truncated must have thrown error
-                    done(new Error('must have throw error !'));
-                  } else {
-                    done();
-                  }
-                });
+              true,
+              'john',
+              new Date('2001-12-31 23:59:58'),
+              new Date('2018-01-01 12:30:20.456789'),
+              {
+                type: 'Point',
+                coordinates: [10, 10]
               }
+            ],
+            [
+              false,
+              '12345678901',
+              null,
+              new Date('2018-01-21 11:30:20.123456'),
+              {
+                type: 'Point',
+                coordinates: [10, 20]
+              }
+            ],
+            [
+              0,
+              null,
+              new Date('2020-12-31 23:59:59'),
+              new Date('2018-01-21 11:30:20.123456'),
+              {
+                type: 'Point',
+                coordinates: [20, 20]
+              }
+            ]
+          ],
+          (err, res) => {
+            if (err) {
+              assert.isTrue(
+                err.message.includes("Data too long for column 't' at row 2"),
+                err.message
+              );
+              conn.query('DROP TABLE simpleBatch', (err, res) => {
+                clearTimeout(timeout);
+                conn.end(() => {
+                  done();
+                });
+              });
+            } else {
+              conn.end(() => {
+                if (
+                  (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+                  (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+                ) {
+                  //field truncated must have thrown error
+                  done(new Error('must have throw error !'));
+                } else {
+                  done();
+                }
+              });
             }
+          }
         );
         conn.query('select 1', (err, rows) => {
           if (err) {
@@ -458,9 +458,8 @@ describe('batch callback', () => {
             });
           }
           assert.deepEqual(rows, [{ 1: 1 }]);
-        });  
+        });
       });
-
     });
   };
 
@@ -577,54 +576,53 @@ describe('batch callback', () => {
       conn.query(
         'CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
       );
-      conn.query('FLUSH TABLES', err => {
+      conn.query('FLUSH TABLES', (err) => {
         conn.batch(
-            'INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)',
-            [
-              [1, stream1, 99],
-              [2, stream2, 98]
-            ],
-            (err, res) => {
+          'INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)',
+          [
+            [1, stream1, 99],
+            [2, stream2, 98]
+          ],
+          (err, res) => {
+            if (err) {
+              return conn.end(() => {
+                done(err);
+              });
+            }
+            assert.equal(res.affectedRows, 2);
+            conn.query('select * from `batchWithStream`', (err, res) => {
               if (err) {
                 return conn.end(() => {
                   done(err);
                 });
               }
-              assert.equal(res.affectedRows, 2);
-              conn.query('select * from `batchWithStream`', (err, res) => {
-                if (err) {
-                  return conn.end(() => {
-                    done(err);
-                  });
+              assert.deepEqual(res, [
+                {
+                  id: 1,
+                  id2: 1,
+                  id3: 2,
+                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  id4: 99,
+                  id5: 3
+                },
+                {
+                  id: 1,
+                  id2: 2,
+                  id3: 2,
+                  t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
+                  id4: 98,
+                  id5: 3
                 }
-                assert.deepEqual(res, [
-                  {
-                    id: 1,
-                    id2: 1,
-                    id3: 2,
-                    t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
-                    id4: 99,
-                    id5: 3
-                  },
-                  {
-                    id: 1,
-                    id2: 2,
-                    id3: 2,
-                    t: 'abcdefghijkflmnopqrtuvwxyz🤘💪',
-                    id4: 98,
-                    id5: 3
-                  }
-                ]);
-                conn.query('DROP TABLE batchWithStream');
-                clearTimeout(timeout);
-                conn.end(() => {
-                  done();
-                });
+              ]);
+              conn.query('DROP TABLE batchWithStream');
+              clearTimeout(timeout);
+              conn.end(() => {
+                done();
               });
-            }
+            });
+          }
         );
       });
-      
     });
   };
 
@@ -687,7 +685,7 @@ describe('batch callback', () => {
       conn.query(
         'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
       );
-      conn.query('FLUSH TABLES', err => {
+      conn.query('FLUSH TABLES', (err) => {
         conn.batch(
           'INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)',
           [
@@ -854,7 +852,7 @@ describe('batch callback', () => {
       conn.query(
         'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
       );
-      conn.query('FLUSH TABLES', err => {
+      conn.query('FLUSH TABLES', (err) => {
         conn.batch(
           'INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)',
           [

@@ -120,9 +120,9 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('CREATE TABLE gis_line_batch (g LINESTRING)');
       })
-        .then(() => {
-          return shareConn.query('FLUSH TABLES');
-        })
+      .then(() => {
+        return shareConn.query('FLUSH TABLES');
+      })
       .then(() => {
         return shareConn.batch('INSERT INTO gis_line_batch VALUES (?)', [
           [
@@ -231,10 +231,10 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('CREATE TABLE gis_polygon_batch (g POLYGON)');
       })
-        .then(() => {
-          return shareConn.query('FLUSH TABLES');
-        })
-        
+      .then(() => {
+        return shareConn.query('FLUSH TABLES');
+      })
+
       .then(() => {
         return shareConn.batch('INSERT INTO gis_polygon_batch VALUES (?)', [
           [
@@ -421,10 +421,10 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('CREATE TABLE gis_multi_point_batch (g MULTIPOINT)');
       })
-        .then(() => {
-          return shareConn.query('FLUSH TABLES');
-        })
-        
+      .then(() => {
+        return shareConn.query('FLUSH TABLES');
+      })
+
       .then(() => {
         return shareConn.batch('INSERT INTO gis_multi_point_batch VALUES (?)', [
           [
@@ -526,10 +526,10 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('CREATE TABLE gis_multi_line_batch (g MULTILINESTRING)');
       })
-        .then(() => {
-          return shareConn.query('FLUSH TABLES');
-        })
-        
+      .then(() => {
+        return shareConn.query('FLUSH TABLES');
+      })
+
       .then(() => {
         return shareConn.batch('INSERT INTO gis_multi_line_batch VALUES (?)', [
           [
@@ -687,10 +687,10 @@ describe('batch geometry type', () => {
       .then(() => {
         return shareConn.query('CREATE TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
       })
-        .then(() => {
-          return shareConn.query('FLUSH TABLES');
-        })
-        
+      .then(() => {
+        return shareConn.query('FLUSH TABLES');
+      })
+
       .then(() => {
         return shareConn.batch('INSERT INTO gis_multi_polygon_batch VALUES (?)', [
           [
@@ -959,213 +959,213 @@ describe('batch geometry type', () => {
     conn.query('CREATE TABLE gis_geometrycollection_batch (g GEOMETRYCOLLECTION)');
     await shareConn.query('FLUSH TABLES');
     await conn.batch('INSERT INTO gis_geometrycollection_batch VALUES (?)', [
-              [
-                {
-                  type: 'GeometryCollection',
-                  geometries: [
-                    {
-                      type: 'Point',
-                      coordinates: [10, 10]
-                    },
-                    {
-                      type: 'LineString',
-                      coordinates: [
-                        [0, 0],
-                        [0, 10],
-                        [10, 0]
-                      ]
-                    },
-                    {
-                      type: 'MultiPoint',
-                      coordinates: [
-                        [0, 0],
-                        [10, 10],
-                        [10, 20],
-                        [20, 20]
-                      ]
-                    },
-                    {
-                      type: 'MultiLineString',
-                      coordinates: [
-                        [
-                          [10, 48],
-                          [10, 21],
-                          [10, 0]
-                        ],
-                        [
-                          [16, 0],
-                          [16, 23],
-                          [16, 48]
-                        ]
-                      ]
-                    },
-                    {
-                      type: 'MultiPolygon',
-                      coordinates: [
-                        [
-                          [
-                            [28, 26],
-                            [28, 0],
-                            [84, 0],
-                            [84, 42],
-                            [28, 26]
-                          ],
-                          [
-                            [52, 18],
-                            [66, 23],
-                            [73, 9],
-                            [48, 6],
-                            [52, 18]
-                          ]
-                        ],
-                        [
-                          [
-                            [59, 18],
-                            [67, 18],
-                            [67, 13],
-                            [59, 13],
-                            [59, 18]
-                          ]
-                        ]
-                      ]
-                    }
-                  ]
-                }
-              ],
-              [
-                {
-                  type: 'GeometryCollection',
-                  geometries: [
-                    {
-                      type: 'Point',
-                      coordinates: [10, 20]
-                    }
-                  ]
-                }
-              ],
-              [
-                {
-                  type: 'GeometryCollection',
-                  geometries: [{}]
-                }
-              ],
-              [
-                {
-                  type: 'GeometryCollection',
-                  geometries: []
-                }
-              ],
-              [
-                {
-                  type: 'GeometryCollection'
-                }
+      [
+        {
+          type: 'GeometryCollection',
+          geometries: [
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            },
+            {
+              type: 'LineString',
+              coordinates: [
+                [0, 0],
+                [0, 10],
+                [10, 0]
               ]
-            ]);
-      const rows = await conn.query('SELECT * FROM gis_geometrycollection_batch');
-        assert.deepEqual(rows, [
-          {
-            g: {
-              type: 'GeometryCollection',
-              geometries: [
-                {
-                  type: 'Point',
-                  coordinates: [10, 10]
-                },
-                {
-                  type: 'LineString',
-                  coordinates: [
-                    [0, 0],
-                    [0, 10],
-                    [10, 0]
+            },
+            {
+              type: 'MultiPoint',
+              coordinates: [
+                [0, 0],
+                [10, 10],
+                [10, 20],
+                [20, 20]
+              ]
+            },
+            {
+              type: 'MultiLineString',
+              coordinates: [
+                [
+                  [10, 48],
+                  [10, 21],
+                  [10, 0]
+                ],
+                [
+                  [16, 0],
+                  [16, 23],
+                  [16, 48]
+                ]
+              ]
+            },
+            {
+              type: 'MultiPolygon',
+              coordinates: [
+                [
+                  [
+                    [28, 26],
+                    [28, 0],
+                    [84, 0],
+                    [84, 42],
+                    [28, 26]
+                  ],
+                  [
+                    [52, 18],
+                    [66, 23],
+                    [73, 9],
+                    [48, 6],
+                    [52, 18]
                   ]
-                },
-                {
-                  type: 'MultiPoint',
-                  coordinates: [
-                    [0, 0],
-                    [10, 10],
-                    [10, 20],
-                    [20, 20]
+                ],
+                [
+                  [
+                    [59, 18],
+                    [67, 18],
+                    [67, 13],
+                    [59, 13],
+                    [59, 18]
                   ]
-                },
-                {
-                  type: 'MultiLineString',
-                  coordinates: [
-                    [
-                      [10, 48],
-                      [10, 21],
-                      [10, 0]
-                    ],
-                    [
-                      [16, 0],
-                      [16, 23],
-                      [16, 48]
-                    ]
-                  ]
-                },
-                {
-                  type: 'MultiPolygon',
-                  coordinates: [
-                    [
-                      [
-                        [28, 26],
-                        [28, 0],
-                        [84, 0],
-                        [84, 42],
-                        [28, 26]
-                      ],
-                      [
-                        [52, 18],
-                        [66, 23],
-                        [73, 9],
-                        [48, 6],
-                        [52, 18]
-                      ]
-                    ],
-                    [
-                      [
-                        [59, 18],
-                        [67, 18],
-                        [67, 13],
-                        [59, 13],
-                        [59, 18]
-                      ]
-                    ]
-                  ]
-                }
+                ]
               ]
             }
-          },
-          {
-            g: {
-              type: 'GeometryCollection',
-              geometries: [
-                {
-                  type: 'Point',
-                  coordinates: [10, 20]
-                }
+          ]
+        }
+      ],
+      [
+        {
+          type: 'GeometryCollection',
+          geometries: [
+            {
+              type: 'Point',
+              coordinates: [10, 20]
+            }
+          ]
+        }
+      ],
+      [
+        {
+          type: 'GeometryCollection',
+          geometries: [{}]
+        }
+      ],
+      [
+        {
+          type: 'GeometryCollection',
+          geometries: []
+        }
+      ],
+      [
+        {
+          type: 'GeometryCollection'
+        }
+      ]
+    ]);
+    const rows = await conn.query('SELECT * FROM gis_geometrycollection_batch');
+    assert.deepEqual(rows, [
+      {
+        g: {
+          type: 'GeometryCollection',
+          geometries: [
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            },
+            {
+              type: 'LineString',
+              coordinates: [
+                [0, 0],
+                [0, 10],
+                [10, 0]
+              ]
+            },
+            {
+              type: 'MultiPoint',
+              coordinates: [
+                [0, 0],
+                [10, 10],
+                [10, 20],
+                [20, 20]
+              ]
+            },
+            {
+              type: 'MultiLineString',
+              coordinates: [
+                [
+                  [10, 48],
+                  [10, 21],
+                  [10, 0]
+                ],
+                [
+                  [16, 0],
+                  [16, 23],
+                  [16, 48]
+                ]
+              ]
+            },
+            {
+              type: 'MultiPolygon',
+              coordinates: [
+                [
+                  [
+                    [28, 26],
+                    [28, 0],
+                    [84, 0],
+                    [84, 42],
+                    [28, 26]
+                  ],
+                  [
+                    [52, 18],
+                    [66, 23],
+                    [73, 9],
+                    [48, 6],
+                    [52, 18]
+                  ]
+                ],
+                [
+                  [
+                    [59, 18],
+                    [67, 18],
+                    [67, 13],
+                    [59, 13],
+                    [59, 18]
+                  ]
+                ]
               ]
             }
-          },
-          {
-            g: {
-              type: 'GeometryCollection',
-              geometries: []
+          ]
+        }
+      },
+      {
+        g: {
+          type: 'GeometryCollection',
+          geometries: [
+            {
+              type: 'Point',
+              coordinates: [10, 20]
             }
-          },
-          {
-            g: {
-              type: 'GeometryCollection',
-              geometries: []
-            }
-          },
-          {
-            g: {
-              type: 'GeometryCollection',
-              geometries: []
-            }
-          }
-        ]);
-      conn.end();
+          ]
+        }
+      },
+      {
+        g: {
+          type: 'GeometryCollection',
+          geometries: []
+        }
+      },
+      {
+        g: {
+          type: 'GeometryCollection',
+          geometries: []
+        }
+      },
+      {
+        g: {
+          type: 'GeometryCollection',
+          geometries: []
+        }
+      }
+    ]);
+    conn.end();
   });
 });

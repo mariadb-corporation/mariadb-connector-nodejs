@@ -295,7 +295,7 @@ describe('local-infile', () => {
               })
               .then(() => {
                 conn.end();
-                // expected result is to throw error, but super user might still read file. 
+                // expected result is to throw error, but super user might still read file.
                 done();
               })
               .catch((err) => {

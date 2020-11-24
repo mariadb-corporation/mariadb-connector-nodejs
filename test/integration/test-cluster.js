@@ -659,19 +659,15 @@ describe('cluster', function () {
 
       await filteredCluster.query('DROP TABLE IF EXISTS filteredSimpleBatch');
       await filteredCluster.query(
-            'CREATE TABLE filteredSimpleBatch(id int not null primary key auto_increment, val int)'
-          );
+        'CREATE TABLE filteredSimpleBatch(id int not null primary key auto_increment, val int)'
+      );
       await filteredCluster.query('FLUSH TABLES');
       const promises = [];
-          for (let i = 0; i < 60; i++) {
-            promises.push(
-              filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [
-                [1],
-                [2],
-                [3]
-              ])
-            );
-          }
+      for (let i = 0; i < 60; i++) {
+        promises.push(
+          filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [[1], [2], [3]])
+        );
+      }
       await Promise.all(promises);
       const res = await filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
       expect(res[0].nb).to.equal(180);

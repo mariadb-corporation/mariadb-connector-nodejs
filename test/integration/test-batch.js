@@ -22,7 +22,7 @@ describe('batch', () => {
     supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
       ? (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) > 0
       : false;
-    const row = await shareConn.query('SELECT @@max_allowed_packet as t')
+    const row = await shareConn.query('SELECT @@max_allowed_packet as t');
     maxAllowedSize = row[0].t;
     if (testSize < maxAllowedSize) {
       bigBuf = Buffer.alloc(testSize);
@@ -36,7 +36,7 @@ describe('batch', () => {
 
   beforeEach(async function () {
     //just to ensure shared connection is not closed by server due to inactivity
-    await shareConn.ping()
+    await shareConn.ping();
   });
 
   after(function () {
@@ -47,10 +47,10 @@ describe('batch', () => {
 
   const simpleBatch = async (useCompression, useBulk, timezone) => {
     const conn = await base.createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        timezone: timezone
-      });
+      compress: useCompression,
+      bulk: useBulk,
+      timezone: timezone
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 25000);
@@ -66,103 +66,103 @@ describe('batch', () => {
       return 'blabla';
     };
     let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
-              [
-                true,
-                'Ʉjo"h\u000An😎🌶\\\\',
-                new Date('2001-12-31 23:59:58+3'),
-                new Date('2018-01-01 12:30:20.456789+3'),
-                {
-                  type: 'Point',
-                  coordinates: [10, 10]
-                }
-              ],
-              [
-                true,
-                f,
-                new Date('2001-12-31 23:59:58+3'),
-                new Date('2018-01-01 12:30:20.456789+3'),
-                {
-                  type: 'Point',
-                  coordinates: [10, 10]
-                }
-              ],
-              [
-                false,
-                { name: 'jack\u000Aमस्', val: 'tt' },
-                null,
-                new Date('2018-01-21 11:30:20.123456+3'),
-                {
-                  type: 'Point',
-                  coordinates: [10, 20]
-                }
-              ],
-              [
-                0,
-                null,
-                new Date('2020-12-31 23:59:59+3'),
-                new Date('2018-01-21 11:30:20.123456+3'),
-                {
-                  type: 'Point',
-                  coordinates: [20, 20]
-                }
-              ]
-            ]);
+      [
+        true,
+        'Ʉjo"h\u000An😎🌶\\\\',
+        new Date('2001-12-31 23:59:58+3'),
+        new Date('2018-01-01 12:30:20.456789+3'),
+        {
+          type: 'Point',
+          coordinates: [10, 10]
+        }
+      ],
+      [
+        true,
+        f,
+        new Date('2001-12-31 23:59:58+3'),
+        new Date('2018-01-01 12:30:20.456789+3'),
+        {
+          type: 'Point',
+          coordinates: [10, 10]
+        }
+      ],
+      [
+        false,
+        { name: 'jack\u000Aमस्', val: 'tt' },
+        null,
+        new Date('2018-01-21 11:30:20.123456+3'),
+        {
+          type: 'Point',
+          coordinates: [10, 20]
+        }
+      ],
+      [
+        0,
+        null,
+        new Date('2020-12-31 23:59:59+3'),
+        new Date('2018-01-21 11:30:20.123456+3'),
+        {
+          type: 'Point',
+          coordinates: [20, 20]
+        }
+      ]
+    ]);
     assert.equal(res.affectedRows, 4);
     res = await conn.query('select * from `simpleBatch`');
-      assert.deepEqual(res, [
-        {
-          id: 1,
-          id2: 1,
-          id3: 2,
-          t: 'Ʉjo"h\u000An😎🌶\\\\',
-          d: new Date('2001-12-31 23:59:58+3'),
-          d2: new Date('2018-01-01 12:30:20.456789+3'),
-          g: {
-            type: 'Point',
-            coordinates: [10, 10]
-          },
-          id4: 3
+    assert.deepEqual(res, [
+      {
+        id: 1,
+        id2: 1,
+        id3: 2,
+        t: 'Ʉjo"h\u000An😎🌶\\\\',
+        d: new Date('2001-12-31 23:59:58+3'),
+        d2: new Date('2018-01-01 12:30:20.456789+3'),
+        g: {
+          type: 'Point',
+          coordinates: [10, 10]
         },
-        {
-          id: 1,
-          id2: 1,
-          id3: 2,
-          t: 'blabla',
-          d: new Date('2001-12-31 23:59:58+3'),
-          d2: new Date('2018-01-01 12:30:20.456789+3'),
-          g: {
-            type: 'Point',
-            coordinates: [10, 10]
-          },
-          id4: 3
+        id4: 3
+      },
+      {
+        id: 1,
+        id2: 1,
+        id3: 2,
+        t: 'blabla',
+        d: new Date('2001-12-31 23:59:58+3'),
+        d2: new Date('2018-01-01 12:30:20.456789+3'),
+        g: {
+          type: 'Point',
+          coordinates: [10, 10]
         },
-        {
-          id: 1,
-          id2: 0,
-          id3: 2,
-          t: '{"name":"jack\\nमस्","val":"tt"}',
-          d: null,
-          d2: new Date('2018-01-21 11:30:20.123456+3'),
-          g: {
-            type: 'Point',
-            coordinates: [10, 20]
-          },
-          id4: 3
+        id4: 3
+      },
+      {
+        id: 1,
+        id2: 0,
+        id3: 2,
+        t: '{"name":"jack\\nमस्","val":"tt"}',
+        d: null,
+        d2: new Date('2018-01-21 11:30:20.123456+3'),
+        g: {
+          type: 'Point',
+          coordinates: [10, 20]
         },
-        {
-          id: 1,
-          id2: 0,
-          id3: 2,
-          t: null,
-          d: new Date('2020-12-31 23:59:59+3'),
-          d2: new Date('2018-01-21 11:30:20.123456+3'),
-          g: {
-            type: 'Point',
-            coordinates: [20, 20]
-          },
-          id4: 3
-        }
-      ]);
+        id4: 3
+      },
+      {
+        id: 1,
+        id2: 0,
+        id3: 2,
+        t: null,
+        d: new Date('2020-12-31 23:59:59+3'),
+        d2: new Date('2018-01-21 11:30:20.123456+3'),
+        g: {
+          type: 'Point',
+          coordinates: [20, 20]
+        },
+        id4: 3
+      }
+    ]);
     conn.query('DROP TABLE simpleBatch');
     clearTimeout(timeout);
 
@@ -213,12 +213,11 @@ describe('batch', () => {
   };
 
   const simpleBatchEncodingCP1251 = async (useCompression, useBulk, timezone) => {
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        collation: 'CP1251_GENERAL_CI'
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      collation: 'CP1251_GENERAL_CI'
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 25000);
@@ -247,18 +246,18 @@ describe('batch', () => {
       console.log(conn.info.getLastPackets());
     }, 25000);
     try {
-    await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
-            [1, 'john'],
-            [2, 'jack']
-          ]);
-            throw new Error('must have thrown error !');
-    } catch(err) {
+      await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
+        [1, 'john'],
+        [2, 'jack']
+      ]);
+      throw new Error('must have thrown error !');
+    } catch (err) {
       assert.isTrue(err != null);
       assert.isTrue(err.message.includes(" doesn't exist"));
       assert.isTrue(
-          err.message.includes(
-              "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
-          )
+        err.message.includes(
+          "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'john'],[2,'jack']]"
+        )
       );
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
@@ -286,10 +285,10 @@ describe('batch', () => {
 
   const simpleBatchErrorSplit = async (useCompression, useBulk, timezone) => {
     const conn = await base.createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        timezone: timezone
-      });
+      compress: useCompression,
+      bulk: useBulk,
+      timezone: timezone
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 25000);
@@ -333,19 +332,16 @@ describe('batch', () => {
         ]
       ]);
       if (
-          (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+        (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+        (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
       ) {
         //field truncated must have thrown error
         throw new Error('must have throw error !');
       }
     } catch (err) {
-      assert.isTrue(
-          err.message.includes("Data too long for column 't' at row 2"),
-          err.message
-      );
+      assert.isTrue(err.message.includes("Data too long for column 't' at row 2"), err.message);
     }
-    conn.query('DROP TABLE simpleBatch')
+    conn.query('DROP TABLE simpleBatch');
     conn.end();
     clearTimeout(timeout);
   };
@@ -380,10 +376,10 @@ describe('batch', () => {
     } catch (err) {
       if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
         assert.isTrue(
-            err.message.includes(
-                'This command is not supported in the prepared statement protocol yet'
-            ),
-            err.message
+          err.message.includes(
+            'This command is not supported in the prepared statement protocol yet'
+          ),
+          err.message
         );
       }
     }
@@ -392,13 +388,12 @@ describe('batch', () => {
   };
 
   const bigBatchWith16mMaxAllowedPacket = async (useCompression, useBulk) => {
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        maxAllowedPacket: 16 * 1024 * 1024,
-        bulk: useBulk,
-        logPackets: true
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      maxAllowedPacket: 16 * 1024 * 1024,
+      bulk: useBulk,
+      logPackets: true
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 200000);
@@ -412,43 +407,44 @@ describe('batch', () => {
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
     }
-    let res = await conn
-      .batch('INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values);
+    let res = await conn.batch(
+      'INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)',
+      values
+    );
     assert.equal(res.affectedRows, 1000000);
     let currRow = 0;
     return new Promise(function (resolve, reject) {
       conn
-          .queryStream('select * from `bigBatchWith16mMaxAllowedPacket`')
-          .on('error', (err) => {
-            reject(new Error('must not have thrown any error !'));
-          })
-          .on('data', (row) => {
-            assert.deepEqual(row, {
-              id: 1,
-              id2: currRow,
-              id3: 2,
-              t: str,
-              id4: 3
-            });
-            currRow++;
-          })
-          .on('end', () => {
-            assert.equal(1000000, currRow);
-            conn.query('DROP TABLE bigBatchWith16mMaxAllowedPacket');
-            clearTimeout(timeout);
-            conn.end();
-            resolve();
+        .queryStream('select * from `bigBatchWith16mMaxAllowedPacket`')
+        .on('error', (err) => {
+          reject(new Error('must not have thrown any error !'));
+        })
+        .on('data', (row) => {
+          assert.deepEqual(row, {
+            id: 1,
+            id2: currRow,
+            id3: 2,
+            t: str,
+            id4: 3
           });
+          currRow++;
+        })
+        .on('end', () => {
+          assert.equal(1000000, currRow);
+          conn.query('DROP TABLE bigBatchWith16mMaxAllowedPacket');
+          clearTimeout(timeout);
+          conn.end();
+          resolve();
+        });
     });
   };
 
   const bigBatchWith4mMaxAllowedPacket = async (useCompression, useBulk) => {
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        logPackets: true
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      logPackets: true
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 200000);
@@ -461,42 +457,44 @@ describe('batch', () => {
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
     }
-    let res = await conn.batch('INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values);
+    let res = await conn.batch(
+      'INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)',
+      values
+    );
     assert.equal(res.affectedRows, 1000000);
     let currRow = 0;
     return new Promise(function (resolve, reject) {
       conn
-          .queryStream('select * from `bigBatchWith4mMaxAllowedPacket`')
-          .on('error', (err) => {
-            reject(new Error('must not have thrown any error !'));
-          })
-          .on('data', (row) => {
-            assert.deepEqual(row, {
-              id: 1,
-              id2: currRow,
-              id3: 2,
-              t: str,
-              id4: 3
-            });
-            currRow++;
-          })
-          .on('end', () => {
-            assert.equal(1000000, currRow);
-            conn.query('DROP TABLE bigBatchWith4mMaxAllowedPacket');
-            clearTimeout(timeout);
-            conn.end();
-            resolve();
+        .queryStream('select * from `bigBatchWith4mMaxAllowedPacket`')
+        .on('error', (err) => {
+          reject(new Error('must not have thrown any error !'));
+        })
+        .on('data', (row) => {
+          assert.deepEqual(row, {
+            id: 1,
+            id2: currRow,
+            id3: 2,
+            t: str,
+            id4: 3
           });
+          currRow++;
+        })
+        .on('end', () => {
+          assert.equal(1000000, currRow);
+          conn.query('DROP TABLE bigBatchWith4mMaxAllowedPacket');
+          clearTimeout(timeout);
+          conn.end();
+          resolve();
+        });
     });
   };
 
   const bigBatchError = async (useCompression, useBulk) => {
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        logPackets: true
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      logPackets: true
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 200000);
@@ -525,11 +523,13 @@ describe('batch', () => {
       'CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLE');
-    const res = await conn
-          .batch('INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)', [
-            [1, bigBuf],
-            [2, 'john']
-          ]);
+    const res = await conn.batch(
+      'INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)',
+      [
+        [1, bigBuf],
+        [2, 'john']
+      ]
+    );
     assert.equal(res.affectedRows, 2);
     const rows = await conn.query('select * from `singleBigInsertWithoutMaxAllowedPacket`');
     assert.deepEqual(rows, [
@@ -556,12 +556,11 @@ describe('batch', () => {
   const batchWithStream = async (useCompression, useBulk) => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        logPackets: true
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      logPackets: true
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 25000);
@@ -571,9 +570,9 @@ describe('batch', () => {
     );
     await conn.query('FLUSH TABLES');
     let res = await conn.batch('INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)', [
-        [1, stream1, 99],
-        [2, stream2, 98]
-      ]);
+      [1, stream1, 99],
+      [2, stream2, 98]
+    ]);
     assert.equal(res.affectedRows, 2);
     res = await conn.query('select * from `batchWithStream`');
     assert.deepEqual(res, [
@@ -602,24 +601,23 @@ describe('batch', () => {
   const batchErrorWithStream = async (useCompression, useBulk) => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
-    const conn = await base.createConnection({compress: useCompression, bulk: useBulk});
+    const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 25000);
     try {
-      await conn
-          .batch('INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)', [
-            [1, stream1, 99],
-            [2, stream2, 98]
-          ]);
+      await conn.batch('INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)', [
+        [1, stream1, 99],
+        [2, stream2, 98]
+      ]);
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
       assert.isTrue(err.message.includes(" doesn't exist"));
       assert.isTrue(
-          err.message.includes(
-              'sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]'
-          )
+        err.message.includes(
+          'sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3) - parameters:[[1,[object Object],99],[2,[object Object],98]]'
+        )
       );
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
@@ -635,12 +633,11 @@ describe('batch', () => {
       if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
       else values.push([i, str, i * 2]);
     }
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        logPackets: true
-      });
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      logPackets: true
+    });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 200000);
@@ -649,34 +646,37 @@ describe('batch', () => {
       'CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
-    let res = await conn.batch('INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)', values);
+    let res = await conn.batch(
+      'INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)',
+      values
+    );
     assert.equal(res.affectedRows, 1000000);
     let currRow = 0;
     return new Promise(function (resolve, reject) {
-            conn
-              .queryStream('select * from `bigBatchWithStreams`')
-              .on('error', (err) => {
-                reject(new Error('must not have thrown any error !'));
-              })
-              .on('data', (row) => {
-                assert.deepEqual(row, {
-                  id: 1,
-                  id2: currRow,
-                  id3: 2,
-                  t: str,
-                  id4: currRow * 2,
-                  id5: 3
-                });
-                currRow++;
-              })
-              .on('end', () => {
-                assert.equal(1000000, currRow);
-                conn.query('DROP TABLE bigBatchWithStreams');
-                clearTimeout(timeout);
-                conn.end();
-                resolve();
-              });
+      conn
+        .queryStream('select * from `bigBatchWithStreams`')
+        .on('error', (err) => {
+          reject(new Error('must not have thrown any error !'));
+        })
+        .on('data', (row) => {
+          assert.deepEqual(row, {
+            id: 1,
+            id2: currRow,
+            id3: 2,
+            t: str,
+            id4: currRow * 2,
+            id5: 3
           });
+          currRow++;
+        })
+        .on('end', () => {
+          assert.equal(1000000, currRow);
+          conn.query('DROP TABLE bigBatchWithStreams');
+          clearTimeout(timeout);
+          conn.end();
+          resolve();
+        });
+    });
   };
 
   const bigBatchErrorWithStreams = async (useCompression, useBulk) => {
@@ -686,25 +686,23 @@ describe('batch', () => {
       else values.push([i, str, i * 2]);
     }
 
-    const conn = await base
-      .createConnection({
-        compress: useCompression,
-        bulk: useBulk,
-        logPackets: true
-      });
-      const timeout = setTimeout(() => {
-        console.log(conn.info.getLastPackets());
-      }, 200000);
-      try {
-        await conn
-            .batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
-        throw new Error('must have thrown error !');
-      } catch (err) {
-        const rows = await conn.query('select 1');
-        assert.deepEqual(rows, [{ 1: 1 }]);
-        conn.end();
-        clearTimeout(timeout);
-      }
+    const conn = await base.createConnection({
+      compress: useCompression,
+      bulk: useBulk,
+      logPackets: true
+    });
+    const timeout = setTimeout(() => {
+      console.log(conn.info.getLastPackets());
+    }, 200000);
+    try {
+      await conn.batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
+      throw new Error('must have thrown error !');
+    } catch (err) {
+      const rows = await conn.query('select 1');
+      assert.deepEqual(rows, [{ 1: 1 }]);
+      conn.end();
+      clearTimeout(timeout);
+    }
   };
 
   const simpleNamedPlaceHolders = async (useBulk) => {
@@ -717,28 +715,30 @@ describe('batch', () => {
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
-    let res = await conn
-      .batch('INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)', [
+    let res = await conn.batch(
+      'INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)',
+      [
         { param_1: 1, param_2: 'john' },
         { param_1: 2, param_2: 'jack' }
-      ]);
+      ]
+    );
     assert.equal(res.affectedRows, 2);
     res = await conn.query('select * from `simpleNamedPlaceHolders`');
     assert.deepEqual(res, [
-    {
-      id: 1,
-      id2: 1,
-      id3: 2,
-      t: 'john',
-      id4: 3
-    },
-    {
-      id: 1,
-      id2: 2,
-      id3: 2,
-      t: 'jack',
-      id4: 3
-    }
+      {
+        id: 1,
+        id2: 1,
+        id3: 2,
+        t: 'john',
+        id4: 3
+      },
+      {
+        id: 1,
+        id2: 2,
+        id3: 2,
+        t: 'jack',
+        id4: 3
+      }
     ]);
     conn.query('DROP TABLE simpleNamedPlaceHolders');
     conn.end();
@@ -751,19 +751,18 @@ describe('batch', () => {
       console.log(conn.info.getLastPackets());
     }, 25000);
     try {
-      await conn
-          .batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
-            { param_1: 1, param_2: 'john' },
-            { param_1: 2, param_2: 'jack' }
-          ]);
-             throw new Error('must have thrown error !');
+      await conn.batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
+        { param_1: 1, param_2: 'john' },
+        { param_1: 2, param_2: 'jack' }
+      ]);
+      throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
       assert.isTrue(err.message.includes(" doesn't exist"));
       assert.isTrue(
-          err.message.includes(
-              "sql: INSERT INTO blabla values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
-          )
+        err.message.includes(
+          "sql: INSERT INTO blabla values (1, :param_1, 2, :param_2, 3) - parameters:[{'param_1':1,'param_2':'john'},{'param_1':2,'param_2':'jack'}]"
+        )
       );
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
@@ -779,11 +778,10 @@ describe('batch', () => {
       console.log(conn.info.getLastPackets());
     }, 25000);
     try {
-      const res = await conn
-          .batch('SELECT :id2 as id, :id1 as t', [
-            { id2: 1, id1: 'john' },
-            { id1: 'jack', id2: 2 }
-          ]);
+      const res = await conn.batch('SELECT :id2 as id, :id1 as t', [
+        { id2: 1, id1: 'john' },
+        { id1: 'jack', id2: 2 }
+      ]);
       if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
         conn.end();
         throw new Error('Must have thrown an exception');
@@ -805,9 +803,9 @@ describe('batch', () => {
     } catch (err) {
       if (useBulk & conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 7)) {
         assert.isTrue(
-            err.message.includes(
-                'This command is not supported in the prepared statement protocol yet'
-            )
+          err.message.includes(
+            'This command is not supported in the prepared statement protocol yet'
+          )
         );
       }
     }
@@ -829,38 +827,40 @@ describe('batch', () => {
     for (let i = 0; i < 1000000; i++) {
       values.push({ id1: i, id2: str });
     }
-    const res = await conn.batch('INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)', values);
+    const res = await conn.batch(
+      'INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)',
+      values
+    );
     assert.equal(res.affectedRows, 1000000);
     let currRow = 0;
     return new Promise(function (resolve, reject) {
-            conn
-              .queryStream('select * from `more16MNamedPlaceHolders`')
-              .on('error', (err) => {
-                reject(new Error('must not have thrown any error !'));
-              })
-              .on('data', (row) => {
-                assert.deepEqual(row, {
-                  id: 1,
-                  id2: currRow,
-                  id3: 2,
-                  t: str,
-                  id4: 3
-                });
-                currRow++;
-              })
-              .on('end', () => {
-                assert.equal(1000000, currRow);
-                conn.query('DROP TABLE more16MNamedPlaceHolders');
-                clearTimeout(timeout);
-                conn.end();
-                resolve();
-              });
+      conn
+        .queryStream('select * from `more16MNamedPlaceHolders`')
+        .on('error', (err) => {
+          reject(new Error('must not have thrown any error !'));
+        })
+        .on('data', (row) => {
+          assert.deepEqual(row, {
+            id: 1,
+            id2: currRow,
+            id3: 2,
+            t: str,
+            id4: 3
           });
+          currRow++;
+        })
+        .on('end', () => {
+          assert.equal(1000000, currRow);
+          conn.query('DROP TABLE more16MNamedPlaceHolders');
+          clearTimeout(timeout);
+          conn.end();
+          resolve();
+        });
+    });
   };
 
   const more16MSingleNamedPlaceHolders = async function (useBulk) {
-    const conn = await base
-      .createConnection({ namedPlaceholders: true, bulk: useBulk });
+    const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
     const timeout = setTimeout(() => {
       console.log(conn.info.getLastPackets());
     }, 200000);
@@ -869,11 +869,13 @@ describe('batch', () => {
       'CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
-    const res = await conn
-          .batch('INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)', [
-            { id: 1, id2: bigBuf },
-            { id: 2, id2: 'john' }
-          ]);
+    const res = await conn.batch(
+      'INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)',
+      [
+        { id: 1, id2: bigBuf },
+        { id: 2, id2: 'john' }
+      ]
+    );
     assert.equal(res.affectedRows, 2);
     const rows = await conn.query('select * from `more16MSingleNamedPlaceHolders`');
     assert.deepEqual(rows, [
@@ -909,10 +911,13 @@ describe('batch', () => {
       'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLE');
-    const res = await conn.batch('INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)', [
-            { id1: 1, id3: stream1, id4: 99, id5: 6 },
-            { id1: 2, id3: stream2, id4: 98 }
-          ]);
+    const res = await conn.batch(
+      'INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)',
+      [
+        { id1: 1, id3: stream1, id4: 99, id5: 6 },
+        { id1: 2, id3: stream2, id4: 98 }
+      ]
+    );
     assert.equal(res.affectedRows, 2);
     const rows = await conn.query('select * from `streamNamedPlaceHolders`');
     assert.deepEqual(rows, [
@@ -948,9 +953,9 @@ describe('batch', () => {
 
     try {
       await conn.batch('INSERT INTO blabla values (1, :id1, 2, :id3, :id7, 3)', [
-            { id1: 1, id3: stream1, id4: 99, id5: 6 },
-            { id1: 2, id3: stream2, id4: 98 }
-          ]);
+        { id1: 1, id3: stream1, id4: 99, id5: 6 },
+        { id1: 2, id3: stream2, id4: 98 }
+      ]);
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
@@ -990,36 +995,36 @@ describe('batch', () => {
     );
     await conn.query('FLUSH TABLES');
     const res = await conn.batch(
-        'INSERT INTO `stream16MNamedPlaceHolders` values (1, :id1, 2, :id2, :id3, 3)',
-        values
-      );
+      'INSERT INTO `stream16MNamedPlaceHolders` values (1, :id1, 2, :id2, :id3, 3)',
+      values
+    );
     assert.equal(res.affectedRows, 1000000);
     let currRow = 0;
     return new Promise(function (resolve, reject) {
-            conn
-              .queryStream('select * from `stream16MNamedPlaceHolders`')
-              .on('error', (err) => {
-                reject(new Error('must not have thrown any error !'));
-              })
-              .on('data', (row) => {
-                assert.deepEqual(row, {
-                  id: 1,
-                  id2: currRow,
-                  id3: 2,
-                  t: str,
-                  id4: currRow * 2,
-                  id5: 3
-                });
-                currRow++;
-              })
-              .on('end', () => {
-                assert.equal(1000000, currRow);
-                conn.query('DROP TABLE stream16MNamedPlaceHolders');
-                clearTimeout(timeout);
-                conn.end();
-                resolve();
-              });
+      conn
+        .queryStream('select * from `stream16MNamedPlaceHolders`')
+        .on('error', (err) => {
+          reject(new Error('must not have thrown any error !'));
+        })
+        .on('data', (row) => {
+          assert.deepEqual(row, {
+            id: 1,
+            id2: currRow,
+            id3: 2,
+            t: str,
+            id4: currRow * 2,
+            id5: 3
           });
+          currRow++;
+        })
+        .on('end', () => {
+          assert.equal(1000000, currRow);
+          conn.query('DROP TABLE stream16MNamedPlaceHolders');
+          clearTimeout(timeout);
+          conn.end();
+          resolve();
+        });
+    });
   };
 
   describe('standard question mark using bulk', () => {
@@ -1102,11 +1107,11 @@ describe('batch', () => {
         conn.end();
         throw new Error('expect an error !');
       } catch (err) {
-            assert.isTrue(
-              err.message.includes('Parameter at position 2 is undefined for values 1', err.message)
-            );
-            conn.end();
-      };
+        assert.isTrue(
+          err.message.includes('Parameter at position 2 is undefined for values 1', err.message)
+        );
+        conn.end();
+      }
     });
 
     it('simple batch offset date', async function () {
@@ -1377,13 +1382,12 @@ describe('batch', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       const conn = await base.createConnection({ compress: useCompression, bulk: false });
       try {
-        await conn
-            .batch('INSERT INTO `blabla` values (?)');
+        await conn.batch('INSERT INTO `blabla` values (?)');
         throw new Error('expect an error !');
       } catch (err) {
         assert.isTrue(err.message.includes('Batch must have values set'), err.message);
         conn.end();
-      };
+      }
     });
 
     it('rewrite split for maxAllowedPacket', async function () {
@@ -1391,11 +1395,11 @@ describe('batch', () => {
       const conn = await base.createConnection({ bulk: false, maxAllowedPacket: 150 });
       conn.query('DROP TABLE IF EXISTS my_table');
       conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
-      await conn.query('FLUSH TABLES');         
+      await conn.query('FLUSH TABLES');
       await conn.batch('INSERT INTO my_table(id,val) VALUES( ?, ?) ', [
-          [1, t],
-          [2, t]
-        ]);
+        [1, t],
+        [2, t]
+      ]);
       const res = await conn.query('SELECT * FROM my_table');
       assert.deepEqual(res, [
         { id: 1, val: t },
@@ -1413,8 +1417,8 @@ describe('batch', () => {
         throw new Error('expect an error !');
       } catch (err) {
         assert.isTrue(
-            err.message.includes('Parameter at position 1 is not set for values 1'),
-            err.message
+          err.message.includes('Parameter at position 1 is not set for values 1'),
+          err.message
         );
         conn.end();
       }
@@ -1429,17 +1433,16 @@ describe('batch', () => {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       const conn = await base.createConnection({ compress: useCompression, bulk: false });
       try {
-        await conn
-            .batch('INSERT INTO `blabla` values (?,?)', [
-              [1, 2],
-              [1, undefined]
-            ]);
+        await conn.batch('INSERT INTO `blabla` values (?,?)', [
+          [1, 2],
+          [1, undefined]
+        ]);
         conn.end();
         throw new Error('expect an error !');
       } catch (err) {
         assert.isTrue(
-            err.message.includes('Parameter at position 2 is undefined for values 1'),
-            err.message
+          err.message.includes('Parameter at position 2 is undefined for values 1'),
+          err.message
         );
         conn.end();
       }
@@ -1473,19 +1476,18 @@ describe('batch', () => {
         console.log(conn.info.getLastPackets());
       }, 25000);
       try {
-        await conn
-            .batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
-              [1, 'john"'],
-              [2, 'jac"k']
-            ]);
+        await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
+          [1, 'john"'],
+          [2, 'jac"k']
+        ]);
         throw new Error('must have thrown error !');
       } catch (err) {
         assert.isTrue(err != null);
         assert.isTrue(err.message.includes(" doesn't exist"));
         const expectedMsg =
-            debugLen === 80
-                ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
-                : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
+          debugLen === 80
+            ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
+            : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
         assert.isTrue(err.message.includes(expectedMsg));
         assert.equal(err.errno, 1146);
         assert.equal(err.sqlState, '42S02');
@@ -1603,17 +1605,17 @@ describe('batch', () => {
       }, 25000);
       try {
         await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
-              [1, 'john"'],
-              [2, 'jac"k']
-            ]);
+          [1, 'john"'],
+          [2, 'jac"k']
+        ]);
         throw new Error('must have thrown error !');
       } catch (err) {
         assert.isTrue(err != null);
         assert.isTrue(err.message.includes(" doesn't exist"));
         const expectedMsg =
-            debugLen === 80
-                ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
-                : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
+          debugLen === 80
+            ? "INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3) - parameters:[[1,'jo...]"
+            : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
         assert.isTrue(err.message.includes(expectedMsg));
         assert.equal(err.errno, 1146);
         assert.equal(err.sqlState, '42S02');
