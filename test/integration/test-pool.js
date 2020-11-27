@@ -1065,7 +1065,7 @@ describe('Pool', () => {
     const pool = base.createPool({
       connectionLimit: 10,
       minimumIdle: 8,
-      idleTimeout: 2,
+      idleTimeout: 1,
       acquireTimeout: 20000
     });
 
@@ -1073,7 +1073,8 @@ describe('Pool', () => {
     for (let i = 0; i < 5000; i++) {
       requests.push(pool.query('SELECT ' + i));
     }
-    setTimeout(() => {
+
+    var test = () => {
       Promise.all(requests)
         .then(() => {
           setTimeout(() => {
@@ -1090,10 +1091,10 @@ describe('Pool', () => {
           }, 5);
 
           setTimeout(() => {
-            //wait for 1 second
+            //wait for 2 second > idleTimeout
             assert.equal(pool.totalConnections(), 8);
             assert.equal(pool.idleConnections(), 8);
-          }, 1000);
+          }, 2000);
 
           setTimeout(() => {
             //minimumIdle-1 is possible after reaching idleTimeout and connection
@@ -1108,7 +1109,21 @@ describe('Pool', () => {
           pool.end();
           done(err);
         });
-    }, 4000);
+    };
+
+    const waitServerConnections = (max) => {
+      if (max > 0) {
+        setTimeout(() => {
+          console.log(pool.totalConnections());
+          if (pool.totalConnections() < 8) {
+            waitServerConnections(max - 1);
+          } else test();
+        }, 1000);
+      } else {
+        done(new Error("pool doesn't have at least 8 connections after 10s"));
+      }
+    };
+    waitServerConnections(10);
   });
 
   it('test minimum idle', function (done) {
