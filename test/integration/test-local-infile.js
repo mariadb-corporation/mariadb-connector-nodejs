@@ -160,102 +160,62 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('small local infile', function (done) {
+  it('small local infile', async function () {
     const self = this;
-    shareConn
-      .query('select @@local_infile')
-      .then((rows) => {
-        if (rows[0]['@@local_infile'] === 0) {
-          self.skip();
-        }
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-      })
-      .then(() => {
-        base
-          .createConnection({ permitLocalInfile: true })
-          .then((conn) => {
-            shareConn
-              .query('DROP TABLE IF EXISTS smallLocalInfile')
-              .then(() => {
-                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
-              })
-              .then(() => {
-                return conn.query(
-                  "LOAD DATA LOCAL INFILE '" +
-                    smallFileName.replace(/\\/g, '/') +
-                    "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-                );
-              })
-              .then(() => {
-                return conn.query('SELECT * FROM smallLocalInfile');
-              })
-              .then((rows) => {
-                assert.deepEqual(rows, [
-                  { id: 1, test: 'hello' },
-                  { id: 2, test: 'world' }
-                ]);
-                conn.end();
-                done();
-              })
-              .catch(done);
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const rows = await shareConn.query('select @@local_infile');
+    if (rows[0]['@@local_infile'] === 0) {
+      return self.skip();
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({ permitLocalInfile: true });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    await conn.query(
+      "LOAD DATA LOCAL INFILE '" +
+        smallFileName.replace(/\\/g, '/') +
+        "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+    );
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' }
+    ]);
+    conn.end();
   });
 
-  it('small local infile with non supported node.js encoding', function (done) {
+  it('small local infile with non supported node.js encoding', async function () {
     const self = this;
-    shareConn
-      .query('select @@local_infile')
-      .then((rows) => {
-        if (rows[0]['@@local_infile'] === 0) {
-          self.skip();
-        }
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-      })
-      .then(() => {
-        base
-          .createConnection({ permitLocalInfile: true, charset: 'big5' })
-          .then((conn) => {
-            shareConn
-              .query('DROP TABLE IF EXISTS smallLocalInfile')
-              .then(() => {
-                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
-              })
-              .then(() => {
-                return conn.query(
-                  "LOAD DATA LOCAL INFILE '" +
-                    smallFileName.replace(/\\/g, '/') +
-                    "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-                );
-              })
-              .then(() => {
-                return conn.query('SELECT * FROM smallLocalInfile');
-              })
-              .then((rows) => {
-                assert.deepEqual(rows, [
-                  { id: 1, test: 'hello' },
-                  { id: 2, test: 'world' }
-                ]);
-                conn.end();
-                done();
-              })
-              .catch(done);
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const rows = await shareConn.query('select @@local_infile');
+    if (rows[0]['@@local_infile'] === 0) {
+      return self.skip();
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({ permitLocalInfile: true, charset: 'big5' });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    await conn.query(
+      "LOAD DATA LOCAL INFILE '" +
+        smallFileName.replace(/\\/g, '/') +
+        "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+    );
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' }
+    ]);
+    conn.end();
   });
 
   it('non readable local infile', function (done) {
@@ -310,81 +270,59 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('big local infile', function (done) {
+  it('big local infile', async function () {
     this.timeout(180000);
     let size;
     const self = this;
-    shareConn
-      .query('select @@local_infile')
-      .then((rows) => {
-        if (rows[0]['@@local_infile'] === 0) {
-          self.skip();
-        }
-        return shareConn.query('SELECT @@max_allowed_packet as t');
-      })
-      .then((rows) => {
-        const maxAllowedSize = rows[0].t;
-        size = Math.round((maxAllowedSize - 100) / 16);
-        const header = '"a","b"\n';
-        const headerLen = header.length;
-        const buf = Buffer.allocUnsafe(size * 16 + headerLen);
-        buf.write(header);
-        for (let i = 0; i < size; i++) {
-          buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16 + headerLen);
-        }
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(bigFileName, buf, function (err) {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-      })
-      .then(() => {
-        base
-          .createConnection({ permitLocalInfile: true })
-          .then((conn) => {
-            shareConn
-              .query('DROP TABLE IF EXISTS bigLocalInfile')
-              .then(() => {
-                return conn.query('CREATE TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
-              })
-              .then(() => {
-                return conn.query(
-                  "LOAD DATA LOCAL INFILE '" +
-                    bigFileName.replace(/\\/g, '/') +
-                    "' INTO TABLE bigLocalInfile " +
-                    "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
-                    "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
-                    '(t1, t2)'
-                );
-              })
-              .then(() => {
-                return conn.query('SELECT * FROM bigLocalInfile');
-              })
-              .then((rows) => {
-                assert.equal(rows.length, size);
-                for (let i = 0; i < size; i++) {
-                  if (rows[i].t1 !== 'a' + padStartZero(i, 8) && rows[i].t2 !== 'b') {
-                    console.log(
-                      'result differ (no:' +
-                        i +
-                        ') t1=' +
-                        rows[i].t1 +
-                        ' != ' +
-                        padStartZero(i, 8) +
-                        ' t2=' +
-                        rows[i].t2
-                    );
-                  }
-                }
-                conn.end();
-                done();
-              })
-              .catch(done);
-          })
-          .catch(done);
-      })
-      .catch(done);
+    let rows = await shareConn.query('select @@local_infile');
+    if (rows[0]['@@local_infile'] === 0) {
+      return self.skip();
+    }
+    rows = await shareConn.query('SELECT @@max_allowed_packet as t');
+    const maxAllowedSize = rows[0].t;
+    size = Math.round((maxAllowedSize - 100) / 16);
+    const header = '"a","b"\n';
+    const headerLen = header.length;
+    const buf = Buffer.allocUnsafe(size * 16 + headerLen);
+    buf.write(header);
+    for (let i = 0; i < size; i++) {
+      buf.write('"a' + padStartZero(i, 8) + '","b"\n', i * 16 + headerLen);
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(bigFileName, buf, function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({ permitLocalInfile: true });
+    await conn.query('DROP TABLE IF EXISTS bigLocalInfile');
+    await conn.query('CREATE TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
+    await conn.beginTransaction();
+    await conn.query(
+      "LOAD DATA LOCAL INFILE '" +
+        bigFileName.replace(/\\/g, '/') +
+        "' INTO TABLE bigLocalInfile " +
+        "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
+        "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
+        '(t1, t2)'
+    );
+    rows = await conn.query('SELECT * FROM bigLocalInfile');
+    assert.equal(rows.length, size);
+    for (let i = 0; i < size; i++) {
+      if (rows[i].t1 !== 'a' + padStartZero(i, 8) && rows[i].t2 !== 'b') {
+        console.log(
+          'result differ (no:' +
+            i +
+            ') t1=' +
+            rows[i].t1 +
+            ' != ' +
+            padStartZero(i, 8) +
+            ' t2=' +
+            rows[i].t2
+        );
+      }
+    }
+    conn.end();
   });
 
   function padStartZero(val, length) {

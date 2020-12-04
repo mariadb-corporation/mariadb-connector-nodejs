@@ -6,69 +6,38 @@ const { assert } = require('chai');
 describe('sql template strings', () => {
   const value = "'`\\";
 
-  it('query with parameters', (done) => {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS query_with_parameter')
-          .then(() => {
-            return conn.query('CREATE TABLE query_with_parameter(t varchar(128))');
-          })
-          .then(() => {
-            return conn.query({
-              sql: 'INSERT INTO query_with_parameter value (?)',
-              values: [value]
-            });
-          })
-          .then(() => {
-            return conn.query({
-              sql: 'select * from query_with_parameter where t = ?',
-              values: [value]
-            });
-          })
-          .then((res) => {
-            assert.strictEqual(res[0].t, value);
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('query with parameters', async () => {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS query_with_parameter');
+    await conn.query('CREATE TABLE query_with_parameter(t varchar(128))');
+    await conn.beginTransaction();
+    await conn.query({
+      sql: 'INSERT INTO query_with_parameter value (?)',
+      values: [value]
+    });
+    const res = await conn.query({
+      sql: 'select * from query_with_parameter where t = ?',
+      values: [value]
+    });
+    assert.strictEqual(res[0].t, value);
+    conn.end();
   });
 
-  it('batch with parameters', (done) => {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS batch_with_parameters')
-          .then(() => {
-            return conn.query('CREATE TABLE batch_with_parameters(t varchar(128))');
-          })
-          .then(() => {
-            return conn.batch({
-              sql: 'INSERT INTO batch_with_parameters value (?)',
-              values: [value]
-            });
-          })
-          .then(() => {
-            return conn.query({
-              sql: 'select * from batch_with_parameters where t = ?',
-              values: [value]
-            });
-          })
-          .then((res) => {
-            assert.strictEqual(res[0].t, value);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('batch with parameters', async () => {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS batch_with_parameters');
+    await conn.query('CREATE TABLE batch_with_parameters(t varchar(128))');
+    await conn.beginTransaction();
+    await conn.batch({
+      sql: 'INSERT INTO batch_with_parameters value (?)',
+      values: [value]
+    });
+    const res = await conn.query({
+      sql: 'select * from batch_with_parameters where t = ?',
+      values: [value]
+    });
+    assert.strictEqual(res[0].t, value);
+    conn.end();
   });
 
   it('callback query with parameters', (done) => {
@@ -87,32 +56,34 @@ describe('sql template strings', () => {
                 conn.end();
                 done(err);
               } else {
-                conn.query(
-                  { sql: 'INSERT INTO callback_with_parameters value (?)', values: [value] },
-                  (err) => {
-                    if (err) {
-                      conn.end();
-                      done(err);
-                    } else {
-                      conn.query(
-                        {
-                          sql: 'select * from callback_with_parameters where t = ?',
-                          values: [value]
-                        },
-                        (err, res) => {
-                          if (err) {
-                            conn.end();
-                            done(err);
-                          } else {
-                            assert.strictEqual(res[0].t, value);
-                            conn.end();
-                            done();
+                conn.beginTransaction(() => {
+                  conn.query(
+                    { sql: 'INSERT INTO callback_with_parameters value (?)', values: [value] },
+                    (err) => {
+                      if (err) {
+                        conn.end();
+                        done(err);
+                      } else {
+                        conn.query(
+                          {
+                            sql: 'select * from callback_with_parameters where t = ?',
+                            values: [value]
+                          },
+                          (err, res) => {
+                            if (err) {
+                              conn.end();
+                              done(err);
+                            } else {
+                              assert.strictEqual(res[0].t, value);
+                              conn.end();
+                              done();
+                            }
                           }
-                        }
-                      );
+                        );
+                      }
                     }
-                  }
-                );
+                  );
+                });
               }
             });
           }
@@ -137,32 +108,37 @@ describe('sql template strings', () => {
                 conn.end();
                 done(err);
               } else {
-                conn.batch(
-                  { sql: 'INSERT INTO callback_batch_with_parameters value (?)', values: [value] },
-                  (err) => {
-                    if (err) {
-                      conn.end();
-                      done(err);
-                    } else {
-                      conn.query(
-                        {
-                          sql: 'select * from callback_batch_with_parameters where t = ?',
-                          values: [value]
-                        },
-                        (err, res) => {
-                          if (err) {
-                            conn.end();
-                            done(err);
-                          } else {
-                            assert.strictEqual(res[0].t, value);
-                            conn.end();
-                            done();
+                conn.beginTransaction(() => {
+                  conn.batch(
+                    {
+                      sql: 'INSERT INTO callback_batch_with_parameters value (?)',
+                      values: [value]
+                    },
+                    (err) => {
+                      if (err) {
+                        conn.end();
+                        done(err);
+                      } else {
+                        conn.query(
+                          {
+                            sql: 'select * from callback_batch_with_parameters where t = ?',
+                            values: [value]
+                          },
+                          (err, res) => {
+                            if (err) {
+                              conn.end();
+                              done(err);
+                            } else {
+                              assert.strictEqual(res[0].t, value);
+                              conn.end();
+                              done();
+                            }
                           }
-                        }
-                      );
+                        );
+                      }
                     }
-                  }
-                );
+                  );
+                });
               }
             });
           }

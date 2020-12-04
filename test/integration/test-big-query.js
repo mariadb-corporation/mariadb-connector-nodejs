@@ -29,9 +29,11 @@ describe('Big query', function () {
     shareConn.query('DROP TABLE IF EXISTS bigParameterBigParam');
     shareConn.query('CREATE TABLE bigParameterBigParam (b longblob)');
     await shareConn.query('FLUSH TABLES');
+    shareConn.beginTransaction();
     shareConn.query('insert into bigParameterBigParam(b) values(?)', [buf]);
     const rows = await shareConn.query('SELECT * from bigParameterBigParam');
     assert.deepEqual(rows[0].b, buf);
+    shareConn.commit();
   });
 
   it('int8 buffer overflow', async function () {
@@ -40,6 +42,7 @@ describe('Big query', function () {
     conn.query('DROP TABLE IF EXISTS bigParameterInt8');
     conn.query('CREATE TABLE bigParameterInt8 (a varchar(1024), b varchar(10))');
     await conn.query('FLUSH TABLE');
+    await conn.beginTransaction();
     await conn.query('insert into bigParameterInt8 values(?, ?)', [buf.toString(), 'test']);
     const rows = await conn.query('SELECT * from bigParameterInt8');
     assert.deepEqual(rows[0].a, buf.toString());
@@ -76,7 +79,8 @@ describe('Big query', function () {
     sqlInsert += ')';
     conn.query('DROP TABLE IF EXISTS bigParameter');
     conn.query(sql);
-    await shareConn.query('FLUSH TABLES');
+    await conn.query('FLUSH TABLES');
+    conn.beginTransaction();
     await conn.beginTransaction();
     conn.query(sqlInsert, params);
     const rows = await conn.query('SELECT * from bigParameter');

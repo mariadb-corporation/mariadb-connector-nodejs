@@ -20,181 +20,90 @@ describe('basic query', () => {
       .catch(done);
   });
 
-  it('parameter last', (done) => {
+  it('parameter last', async () => {
     const value = "'`\\";
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS parse')
-          .then(() => {
-            return conn.query('CREATE TABLE parse(t varchar(128))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO `parse` value (?)', value);
-          })
-          .then(() => {
-            return conn.query('select * from `parse` where t = ?', value);
-          })
-          .then((res) => {
-            assert.strictEqual(res[0].t, value);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS parse');
+    await conn.query('CREATE TABLE parse(t varchar(128))');
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO `parse` value (?)', value);
+    const res = await conn.query('select * from `parse` where t = ?', value);
+    assert.strictEqual(res[0].t, value);
+    conn.end();
   });
 
-  it('array parameter', function (done) {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS arrayParam')
-          .then(() => {
-            return conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
-          })
-          .then(() => {
-            return conn.query(
-              "INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')"
-            );
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', 1]]);
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              {
-                id: 2,
-                val: 'b'
-              },
-              {
-                id: 3,
-                val: 'c'
-              }
-            ]);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('array parameter', async function () {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS arrayParam');
+    await conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')");
+    const rows = await conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', 1]]);
+    assert.deepEqual(rows, [
+      {
+        id: 2,
+        val: 'b'
+      },
+      {
+        id: 3,
+        val: 'c'
+      }
+    ]);
+    conn.end();
   });
 
-  it('array parameter with null value', function (done) {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS arrayParamNull')
-          .then(() => {
-            return conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO arrayParamNull VALUES (?)', [[1, null]]);
-          })
-          .then(() => {
-            return conn.query('INSERT INTO arrayParamNull VALUES (?)', [[2, 'a']]);
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM arrayParamNull');
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              {
-                id: 1,
-                val: null
-              },
-              {
-                id: 2,
-                val: 'a'
-              }
-            ]);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('array parameter with null value', async function () {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS arrayParamNull');
+    await conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO arrayParamNull VALUES (?)', [[1, null]]);
+    await conn.query('INSERT INTO arrayParamNull VALUES (?)', [[2, 'a']]);
+    const rows = await conn.query('SELECT * FROM arrayParamNull');
+    assert.deepEqual(rows, [
+      {
+        id: 1,
+        val: null
+      },
+      {
+        id: 2,
+        val: 'a'
+      }
+    ]);
+    conn.end();
   });
 
-  it('array parameter with null value with parenthesis', function (done) {
-    base
-      .createConnection({ arrayParenthesis: true })
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS arrayParamNullParen')
-          .then(() => {
-            return conn.query('CREATE TABLE arrayParamNullParen (id int, val varchar(10))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[1, null]]);
-          })
-          .then(() => {
-            return conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[2, 'a']]);
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM arrayParamNullParen');
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              {
-                id: 1,
-                val: null
-              },
-              {
-                id: 2,
-                val: 'a'
-              }
-            ]);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('array parameter with null value with parenthesis', async function () {
+    const conn = await base.createConnection({ arrayParenthesis: true });
+    await conn.query('DROP TABLE IF EXISTS arrayParamNullParen');
+    await conn.query('CREATE TABLE arrayParamNullParen (id int, val varchar(10))');
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[1, null]]);
+    await conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[2, 'a']]);
+    const rows = await conn.query('SELECT * FROM arrayParamNullParen');
+    assert.deepEqual(rows, [
+      {
+        id: 1,
+        val: null
+      },
+      {
+        id: 2,
+        val: 'a'
+      }
+    ]);
+    conn.end();
   });
 
-  it('permitSetMultiParamEntries set', (done) => {
+  it('permitSetMultiParamEntries set', async () => {
     const jsonValue = { id: 1, val: 'test' };
-    base
-      .createConnection({ permitSetMultiParamEntries: true })
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS setTable')
-          .then(() => {
-            return conn.query('CREATE TABLE setTable(id int, val varchar(128))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO setTable SET ?', jsonValue);
-          })
-          .then(() => {
-            return conn.query('select * from setTable');
-          })
-          .then((res) => {
-            assert.deepEqual(res[0], jsonValue);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+    const conn = await base.createConnection({ permitSetMultiParamEntries: true });
+    await conn.query('DROP TABLE IF EXISTS setTable');
+    await conn.query('CREATE TABLE setTable (id int, val varchar(128))');
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO setTable SET ?', jsonValue);
+    const res = await conn.query('select * from setTable');
+    assert.deepEqual(res[0], jsonValue);
+    conn.end();
   });
 
   it('query with escape values', function (done) {
@@ -301,7 +210,7 @@ describe('basic query', () => {
       .catch(done);
   });
 
-  it('255 columns', (done) => {
+  it('255 columns', async () => {
     let table = 'CREATE TABLE myTable(';
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
@@ -317,51 +226,25 @@ describe('basic query', () => {
     table += ')';
     insert += ')';
 
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS myTable')
-          .then(() => {
-            return conn.query(table);
-          })
-          .then(() => {
-            return conn.query(insert);
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM myTable');
-          })
-          .then((res) => {
-            assert.deepEqual(res[0], expRes);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS myTable');
+    await conn.query(table);
+    await conn.beginTransaction();
+    await conn.query(insert);
+    const res = await conn.query('SELECT * FROM myTable');
+    assert.deepEqual(res[0], expRes);
+    conn.end();
   });
 
-  it('escape validation', function (done) {
+  it('escape validation', async function () {
     if (!base.utf8Collation()) this.skip();
-    shareConn
-      .query('DROP TABLE IF EXISTS tt1')
-      .then(() => {
-        return shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
-      })
-      .then(() => {
-        return shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
-      })
-      .then(() => {
-        return shareConn.query('SELECT * FROM tt1');
-      })
-      .then((res) => {
-        assert.equal(res[0].tt, 'jack\nkमस्');
-        done();
-      })
-      .catch(done);
+    await shareConn.query('DROP TABLE IF EXISTS tt1');
+    await shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+    await shareConn.beginTransaction();
+    await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
+    const res = await shareConn.query('SELECT * FROM tt1');
+    assert.equal(res[0].tt, 'jack\nkमस्');
+    shareConn.commit;
   });
 
   it('permitSetMultiParamEntries escape ', function (done) {
