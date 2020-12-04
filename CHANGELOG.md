@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [2.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.2) (14 Dec 2020)
+## [2.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.2) (04 Dec 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.1...2.5.2)
 
 * [CONJS-151] bulk batch error (parameter truncation) #137
