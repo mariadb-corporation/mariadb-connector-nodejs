@@ -32,8 +32,7 @@ if [ -n "$SKYSQL" ] || [ -n "$SKYSQL_HA" ]; then
   fi
 
 else
-  export TEST_USER=boby
-  export TEST_PASSWORD=heyPassw0@rd
+  export TEST_USER=bob
   export TEST_HOST=mariadb.example.com
   export COMPOSE_FILE=.travis/docker-compose.yml
   export ENTRYPOINT=$PROJ_PATH/.travis/sql
