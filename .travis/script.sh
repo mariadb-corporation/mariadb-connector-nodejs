@@ -51,6 +51,8 @@ else
     docker-compose -f ${COMPOSE_FILE} build
     export TEST_PORT=4006
     export TEST_SSL_PORT=4009
+    export TEST_USER=boby
+    export TEST_PASSWORD=heyPassw0@rd
   fi
 
   docker-compose -f ${COMPOSE_FILE} up -d

@@ -74,6 +74,7 @@ describe('Compression', function () {
     conn.query('DROP TABLE IF EXISTS bigParameter');
     conn.query('CREATE TABLE bigParameter (b longblob)');
     await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
     conn.query('insert into bigParameter(b) values(?)', [buf]);
     const rows = await conn.query('SELECT * from bigParameter');
     assert.deepEqual(rows[0].b, buf);
@@ -85,6 +86,7 @@ describe('Compression', function () {
     conn.query('DROP TABLE IF EXISTS bigParameter2');
     conn.query('CREATE TABLE bigParameter2 (b longblob)');
     await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
     conn.query('insert into bigParameter2(b) values(?)', [randomBuf]);
     const rows = await conn.query('SELECT * from bigParameter2');
     assert.deepEqual(rows[0].b, randomBuf);

@@ -13,7 +13,7 @@ const str = base.utf8Collation()
 
 describe('batch', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempBatchFile.txt');
-  const testSize = 16 * 1024 * 1024 + 800; // more than one packet
+  const testSize = 16 * 1024 * 1024 + 80; // more than one packet
 
   let maxAllowedSize, bigBuf, timezoneParam;
   let supportBulk;
@@ -60,6 +60,7 @@ describe('batch', () => {
       'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
     );
     await shareConn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
 
     const f = {};
     f.toSqlString = () => {
@@ -163,6 +164,8 @@ describe('batch', () => {
         id4: 3
       }
     ]);
+    await conn.query('ROLLBACK');
+
     conn.query('DROP TABLE simpleBatch');
     clearTimeout(timeout);
 
@@ -180,6 +183,7 @@ describe('batch', () => {
     conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
     conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
     await shareConn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
 
     const f = {};
     f.toSqlString = () => {
@@ -207,6 +211,8 @@ describe('batch', () => {
         d: new Date('2001-12-31 23:59:58')
       }
     ]);
+    await conn.query('ROLLBACK');
+
     conn.query('DROP TABLE simpleBatchWithOptions');
     clearTimeout(timeout);
     conn.end();
@@ -225,6 +231,8 @@ describe('batch', () => {
     conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
     conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
     await shareConn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     let res = await conn.batch('INSERT INTO `simpleBatchCP1251` values (?, ?)', [
       ['john', 2],
       ['©°', 3]
@@ -235,6 +243,8 @@ describe('batch', () => {
       { id: 2, t: 'john' },
       { id: 3, t: '©°' }
     ]);
+    await conn.query('ROLLBACK');
+
     conn.query('DROP TABLE simpleBatchCP1251');
     clearTimeout(timeout);
     conn.end();
@@ -275,6 +285,7 @@ describe('batch', () => {
       console.log(conn.info.getLastPackets());
     }, 2000);
     await shareConn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
 
     await conn.batch('INSERT INTO noValueBatch values ()', []);
     const res = await conn.query('SELECT COUNT(*) as nb FROM noValueBatch');
@@ -298,6 +309,7 @@ describe('batch', () => {
       'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(8), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
     try {
       let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
         [
@@ -402,6 +414,7 @@ describe('batch', () => {
       'CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
 
     const values = [];
     for (let i = 0; i < 1000000; i++) {
@@ -453,6 +466,8 @@ describe('batch', () => {
       'CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
@@ -502,6 +517,8 @@ describe('batch', () => {
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
     }
+    await conn.query('START TRANSACTION');
+
     try {
       await conn.batch('INSERT INTO `bigBatchError` values (1, ?, 2, ?, 3)', values);
       throw new Error('must have thrown error !');
@@ -523,6 +540,8 @@ describe('batch', () => {
       'CREATE TABLE singleBigInsertWithoutMaxAllowedPacket(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLE');
+    await conn.query('START TRANSACTION');
+
     const res = await conn.batch(
       'INSERT INTO `singleBigInsertWithoutMaxAllowedPacket` values (1, ?, 2, ?, 3)',
       [
@@ -569,6 +588,8 @@ describe('batch', () => {
       'CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     let res = await conn.batch('INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)', [
       [1, stream1, 99],
       [2, stream2, 98]
@@ -646,6 +667,8 @@ describe('batch', () => {
       'CREATE TABLE bigBatchWithStreams(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     let res = await conn.batch(
       'INSERT INTO `bigBatchWithStreams` values (1, ?, 2, ?, ?, 3)',
       values
@@ -715,6 +738,8 @@ describe('batch', () => {
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     let res = await conn.batch(
       'INSERT INTO `simpleNamedPlaceHolders` values (1, :param_1, 2, :param_2, 3)',
       [
@@ -823,6 +848,8 @@ describe('batch', () => {
       'CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push({ id1: i, id2: str });
@@ -869,6 +896,8 @@ describe('batch', () => {
       'CREATE TABLE more16MSingleNamedPlaceHolders(id int, id2 int, id3 int, t longtext, id4 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     const res = await conn.batch(
       'INSERT INTO `more16MSingleNamedPlaceHolders` values (1, :id, 2, :id2, 3)',
       [
@@ -911,6 +940,8 @@ describe('batch', () => {
       'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLE');
+    await conn.query('START TRANSACTION');
+
     const res = await conn.batch(
       'INSERT INTO `streamNamedPlaceHolders` values (1, :id1, 2, :id3, :id7, 3)',
       [
@@ -994,6 +1025,8 @@ describe('batch', () => {
       'CREATE TABLE stream16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
     );
     await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+
     const res = await conn.batch(
       'INSERT INTO `stream16MNamedPlaceHolders` values (1, :id1, 2, :id2, :id3, 3)',
       values
@@ -1040,7 +1073,7 @@ describe('batch', () => {
 
     const useCompression = false;
     it('simple batch, local date', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !base.utf8Collation()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1050,31 +1083,19 @@ describe('batch', () => {
     });
 
     it('simple batch with option', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatchWithOptions(useCompression, true);
     });
 
     it('batch without value', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await noValueBatch(useCompression, true);
     });
 
     it('batch without parameter', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-      ) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) {
         this.skip();
         return;
       }
@@ -1090,11 +1111,7 @@ describe('batch', () => {
     });
 
     it('batch with erroneous parameter', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0))
-      ) {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) {
         this.skip();
         return;
       }
@@ -1115,7 +1132,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !base.utf8Collation()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1125,7 +1142,7 @@ describe('batch', () => {
     });
 
     it('simple batch offset date Z ', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !base.utf8Collation()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1135,16 +1152,13 @@ describe('batch', () => {
     });
 
     it('simple batch encoding CP1251', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchEncodingCP1251(useCompression, true, 'local');
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
+      if (process.env.SKYSQL_HA) {
+        // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
       }
@@ -1153,17 +1167,13 @@ describe('batch', () => {
     });
 
     it('simple batch error message packet split', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatchErrorSplit(useCompression, true, 'local');
     });
 
     it('non rewritable batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !supportBulk) {
+      if (!supportBulk) {
         this.skip();
         return;
       }
@@ -1172,12 +1182,7 @@ describe('batch', () => {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        !process.env.RUN_LONG_TEST ||
-        maxAllowedSize <= testSize
-      ) {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1186,12 +1191,7 @@ describe('batch', () => {
     });
 
     it('16M+ batch with max_allowed_packet set to 4M', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        !process.env.RUN_LONG_TEST ||
-        maxAllowedSize <= 4 * 1024 * 1024
-      ) {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= 4 * 1024 * 1024) {
         this.skip();
         return;
       }
@@ -1209,12 +1209,7 @@ describe('batch', () => {
     });
 
     it('16M+ single insert batch with no maxAllowedPacket set', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        !process.env.RUN_LONG_TEST ||
-        maxAllowedSize <= testSize
-      ) {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
       } else {
         this.timeout(360000);
@@ -1223,7 +1218,7 @@ describe('batch', () => {
     });
 
     it('batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !base.utf8Collation()) {
+      if (!base.utf8Collation()) {
         this.skip();
       } else {
         this.timeout(30000);
@@ -1232,21 +1227,12 @@ describe('batch', () => {
     });
 
     it('batch error with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) {
-        this.skip();
-      } else {
-        this.timeout(30000);
-        await batchErrorWithStream(useCompression, true);
-      }
+      this.timeout(30000);
+      await batchErrorWithStream(useCompression, true);
     });
 
     it('16M+ batch with streams', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        !process.env.RUN_LONG_TEST ||
-        maxAllowedSize <= testSize
-      ) {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
       } else {
         this.timeout(360000);
@@ -1255,12 +1241,7 @@ describe('batch', () => {
     });
 
     it('16M+ error batch with streams', async function () {
-      if (
-        process.env.SKYSQL ||
-        process.env.SKYSQL_HA ||
-        !process.env.RUN_LONG_TEST ||
-        maxAllowedSize <= testSize
-      ) {
+      if (!process.env.RUN_LONG_TEST || maxAllowedSize <= testSize) {
         this.skip();
         return;
       }
@@ -1273,7 +1254,6 @@ describe('batch', () => {
     const useCompression = true;
 
     it('simple batch, local date', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -1281,7 +1261,6 @@ describe('batch', () => {
     });
 
     it('simple batch offset date', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -1289,26 +1268,28 @@ describe('batch', () => {
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+      if (process.env.SKYSQL_HA) {
+        // due to https://jira.mariadb.org/browse/MXS-3196
+        this.skip();
+        return;
+      }
       this.timeout(30000);
       await simpleBatchErrorMsg(useCompression, true);
     });
 
     it('batch without value', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await noValueBatch(useCompression, true);
     });
 
     it('non rewritable batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !supportBulk) this.skip();
+      if (!supportBulk) this.skip();
       this.timeout(30000);
       await nonRewritableBatch(useCompression, true);
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1316,7 +1297,6 @@ describe('batch', () => {
     });
 
     it('16M+ batch with max_allowed_packet set to 4M', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= 4 * 1024 * 1024) this.skip();
       this.timeout(360000);
@@ -1324,14 +1304,12 @@ describe('batch', () => {
     });
 
     it('16M+ error batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
       await bigBatchError(useCompression, true);
     });
 
     it('16M+ single insert batch with no maxAllowedPacket set', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1339,20 +1317,17 @@ describe('batch', () => {
     });
 
     it('batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       await batchWithStream(useCompression, true);
     });
 
     it('batch error with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       this.timeout(30000);
       await batchErrorWithStream(useCompression, true);
     });
 
     it('16M+ batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1360,7 +1335,6 @@ describe('batch', () => {
     });
 
     it('16M+ error batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1701,25 +1675,27 @@ describe('batch', () => {
 
   describe('named parameter with bulk', () => {
     it('simple batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       this.timeout(30000);
       await simpleNamedPlaceHolders(true);
     });
 
     it('simple batch error', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+      if (process.env.SKYSQL_HA) {
+        // due to https://jira.mariadb.org/browse/MXS-3196
+        this.skip();
+        return;
+      }
       this.timeout(30000);
       await simpleNamedPlaceHoldersErr(true);
     });
 
     it('non rewritable batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || !supportBulk) this.skip();
+      if (!supportBulk) this.skip();
       this.timeout(30000);
       await nonRewritableHoldersErr(true);
     });
 
     it('16M+ batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1727,7 +1703,6 @@ describe('batch', () => {
     });
 
     it('16M+ single insert batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);
@@ -1735,20 +1710,17 @@ describe('batch', () => {
     });
 
     it('batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       await streamNamedPlaceHolders(true);
     });
 
     it('batch error with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       this.timeout(30000);
       await streamErrorNamedPlaceHolders(true);
     });
 
     it('16M+ batch with streams', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
       if (!process.env.RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(360000);

@@ -77,6 +77,7 @@ describe('Big query', function () {
     conn.query('DROP TABLE IF EXISTS bigParameter');
     conn.query(sql);
     await shareConn.query('FLUSH TABLES');
+    await conn.beginTransaction();
     conn.query(sqlInsert, params);
     const rows = await conn.query('SELECT * from bigParameter');
     for (let i = 0; i < 10; i++) {
