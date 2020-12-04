@@ -364,7 +364,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. null means node won't be removed|*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed|*integer* | 5 |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 1000|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 
