@@ -280,7 +280,8 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+      this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
     shareConn

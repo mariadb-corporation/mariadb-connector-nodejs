@@ -96,6 +96,33 @@ describe('connection option', () => {
       .catch(done);
   });
 
+  it('timezone +0h', function (done) {
+    base
+      .createConnection({ timezone: '+00:00' })
+      .then((conn) => {
+        let d = new Date('2000-01-01T00:00:00Z');
+        conn
+          .query('SELECT UNIX_TIMESTAMP(?) tt', [d])
+          .then((res) => {
+            assert.deepEqual(res[0].tt, d.getTime() / 1000);
+            return conn.query(
+              "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
+              [d]
+            );
+          })
+          .then((res) => {
+            assert.deepEqual(res[0].tt1, new Date('2003-12-31T12:00:00Z'));
+            assert.deepEqual(res[0].tt2, d);
+            return conn.end();
+          })
+          .then(() => {
+            done();
+          })
+          .catch(done);
+      })
+      .catch(done);
+  });
+
   it('timezone +2h', function (done) {
     base
       .createConnection({ timezone: '+02' })
@@ -218,274 +245,130 @@ describe('connection option', () => {
       .catch(done);
   });
 
-  it('Server with different tz', function (done) {
+  it('Server with different tz', async function () {
     if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
-    base
-      .createConnection({ timezone: 'Etc/GMT+5' })
-      .then((conn) => {
-        const now = new Date();
-        conn
-          .query("SET SESSION time_zone = '-05:00'")
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t1');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a timestamp(6))');
-          })
-          .then(() => {
-            return conn.query('INSERT INTO t1 values (?)', now);
-          })
-          .then(() => {
-            return conn.query('SELECT NOW() as b, t1.a FROM t1');
-          })
-          .then((res) => {
-            assert.deepEqual(res[0].a, now);
-            assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const conn = await base.createConnection({ timezone: 'Etc/GMT+5' });
+    const now = new Date();
+    conn.query("SET SESSION time_zone = '-05:00'");
+    conn.query('DROP TABLE IF EXISTS t1');
+    conn.query('CREATE TABLE t1 (a timestamp(6))');
+    await conn.query('FLUSH TABLES');
+    conn.query('INSERT INTO t1 values (?)', now);
+    const res = await conn.query('SELECT NOW() as b, t1.a FROM t1');
+    assert.deepEqual(res[0].a, now);
+    assert.isOk(Math.abs(res[0].b.getTime() - now.getTime()) < 5000);
+    conn.end();
   });
 
-  it('nestTables results boolean', function (done) {
-    base
-      .createConnection({ nestTables: true })
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM t1, t2');
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              { t1: { a: 'bla' }, t2: { b: 'bou' } },
-              { t1: { a: 'bla2' }, t2: { b: 'bou' } }
-            ]);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('nestTables results boolean', async function () {
+    const conn = await base.createConnection({ nestTables: true });
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query('SELECT * FROM t1, t2');
+    assert.deepEqual(rows, [
+      { t1: { a: 'bla' }, t2: { b: 'bou' } },
+      { t1: { a: 'bla2' }, t2: { b: 'bou' } }
+    ]);
+    conn.end();
   });
 
-  it('nestTables results string', function (done) {
-    base
-      .createConnection({ nestTables: '_' })
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM t1, t2');
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              { t1_a: 'bla', t2_b: 'bou' },
-              { t1_a: 'bla2', t2_b: 'bou' }
-            ]);
-            conn.end();
-            done();
-          })
-          .catch((err) => {
-            conn.end();
-            done(err);
-          });
-      })
-      .catch(done);
+  it('nestTables results string', async function () {
+    const conn = await base.createConnection({ nestTables: '_' });
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query('SELECT * FROM t1, t2');
+    assert.deepEqual(rows, [
+      { t1_a: 'bla', t2_b: 'bou' },
+      { t1_a: 'bla2', t2_b: 'bou' }
+    ]);
+    conn.end();
   });
 
-  it('rows as array', function (done) {
-    base
-      .createConnection({ rowsAsArray: true })
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query('SELECT * FROM t1, t2');
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              ['bla', 'bou'],
-              ['bla2', 'bou']
-            ]);
-            return conn.end();
-          })
-          .then(() => {
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('rows as array', async function () {
+    const conn = await base.createConnection({ rowsAsArray: true });
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query('SELECT * FROM t1, t2');
+    assert.deepEqual(rows, [
+      ['bla', 'bou'],
+      ['bla2', 'bou']
+    ]);
+    conn.end();
   });
 
-  it('query option rows as array', function (done) {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' });
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              ['bla', 'bou'],
-              ['bla2', 'bou']
-            ]);
-            return conn.end();
-          })
-          .then(() => {
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('query option rows as array', async function () {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query({ rowsAsArray: true, sql: 'SELECT * FROM t1, t2' });
+    assert.deepEqual(rows, [
+      ['bla', 'bou'],
+      ['bla2', 'bou']
+    ]);
+    conn.end();
   });
 
-  it('nestTables results query boolean', function (done) {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query({ nestTables: true, sql: 'SELECT * FROM t1, t2' });
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              { t1: { a: 'bla' }, t2: { b: 'bou' } },
-              { t1: { a: 'bla2' }, t2: { b: 'bou' } }
-            ]);
-            return conn.end();
-          })
-          .then(() => {
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('nestTables results query boolean', async function () {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query({ nestTables: true, sql: 'SELECT * FROM t1, t2' });
+    assert.deepEqual(rows, [
+      { t1: { a: 'bla' }, t2: { b: 'bou' } },
+      { t1: { a: 'bla2' }, t2: { b: 'bou' } }
+    ]);
+    conn.end();
   });
 
-  it('nestTables results query string', function (done) {
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query('DROP TABLE IF EXISTS t1')
-          .then(() => {
-            return conn.query('DROP TABLE IF EXISTS t2');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t1 (a varchar(20))');
-          })
-          .then(() => {
-            return conn.query('CREATE TABLE t2 (b varchar(20))');
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
-          })
-          .then(() => {
-            return conn.query("INSERT INTO t2 VALUES ('bou')");
-          })
-          .then(() => {
-            return conn.query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' });
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [
-              { t1_a: 'bla', t2_b: 'bou' },
-              { t1_a: 'bla2', t2_b: 'bou' }
-            ]);
-            return conn.end();
-          })
-          .then(() => {
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('nestTables results query string', async function () {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS t1');
+    await conn.query('DROP TABLE IF EXISTS t2');
+    await conn.query('CREATE TABLE t1 (a varchar(20))');
+    await conn.query('CREATE TABLE t2 (b varchar(20))');
+    await conn.query('FLUSH TABLES');
+    await conn.beginTransaction();
+    await conn.query("INSERT INTO t1 VALUES ('bla'), ('bla2')");
+    await conn.query("INSERT INTO t2 VALUES ('bou')");
+    const rows = await conn.query({ nestTables: '_', sql: 'SELECT * FROM t1, t2' });
+    assert.deepEqual(rows, [
+      { t1_a: 'bla', t2_b: 'bou' },
+      { t1_a: 'bla2', t2_b: 'bou' }
+    ]);
+    await conn.end();
   });
 
   it('force version check', function (done) {
@@ -505,7 +388,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -550,7 +433,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
-    if (process.env.SKYSQL) this.skip();
+    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
     this.timeout(10000);
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base

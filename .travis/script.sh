@@ -6,24 +6,33 @@ set -e
 ###################################################################################################################
 # test different type of configuration
 ###################################################################################################################
-
-if [ -n "$SKYSQL" ] ; then
-
-  if [ -z "$SKYSQL_HOST" ] ; then
-    echo "No SkySQL configuration found !"
-    exit 0
+if [ -n "$SKYSQL" ] || [ -n "$SKYSQL_HA" ]; then
+  if [ -n "$SKYSQL" ] ; then
+    if [ -z "$SKYSQL_HOST" ] ; then
+      echo "No SkySQL configuration found !"
+      exit 0
+    else
+      export TEST_USER=$SKYSQL_USER
+      export TEST_HOST=$SKYSQL_HOST
+      export TEST_PASSWORD=$SKYSQL_PASSWORD
+      export TEST_PORT=$SKYSQL_PORT
+      export TEST_SSL_CA=$SKYSQL_SSL_CA
+    fi
   else
-    export TEST_USER=$SKYSQL_USER
-    export TEST_HOST=$SKYSQL_HOST
-    export TEST_PASSWORD=$SKYSQL_PASSWORD
-    export TEST_PORT=$SKYSQL_PORT
-    export TEST_SSL_CA=$SKYSQL_SSL_CA
-    export TEST_BULK=false
+    if [ -z "$SKYSQL_HA_HOST" ] ; then
+      echo "No SkySQL configuration found !"
+      exit 0
+    else
+      export TEST_USER=$SKYSQL_HA_USER
+      export TEST_HOST=$SKYSQL_HA_HOST
+      export TEST_PASSWORD=$SKYSQL_HA_PASSWORD
+      export TEST_PORT=$SKYSQL_HA_PORT
+      export TEST_SSL_CA=$SKYSQL_HA_SSL_CA
+    fi
   fi
 
 else
-  export TEST_USER=boby
-  export TEST_PASSWORD=heyPassw0@rd
+  export TEST_USER=bob
   export TEST_HOST=mariadb.example.com
   export COMPOSE_FILE=.travis/docker-compose.yml
   export ENTRYPOINT=$PROJ_PATH/.travis/sql
@@ -42,6 +51,8 @@ else
     docker-compose -f ${COMPOSE_FILE} build
     export TEST_PORT=4006
     export TEST_SSL_PORT=4009
+    export TEST_USER=boby
+    export TEST_PASSWORD=heyPassw0@rd
   fi
 
   docker-compose -f ${COMPOSE_FILE} up -d

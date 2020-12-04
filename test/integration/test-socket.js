@@ -63,7 +63,6 @@ describe('test socket', () => {
           })
           .catch((err) => {
             assert(err.message.includes('connect ENOENT \\\\.\\pipe\\'));
-            assert.equal(err.code, 'ENOENT');
             done();
           });
       })

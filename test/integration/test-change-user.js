@@ -323,7 +323,8 @@ describe('change user', () => {
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 2, 2) &&
               !process.env.MAXSCALE_TEST_DISABLE &&
-              !process.env.SKYSQL
+              !process.env.SKYSQL &&
+              !process.env.SKYSQL_HA
             ) {
               assert.equal(conn.info.database, 'test');
             }

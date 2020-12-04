@@ -66,8 +66,9 @@ describe('debug', () => {
           .then(() => {
             if (
               compress &&
-              process.env.MAXSCALE_TEST_DISABLE == undefined &&
-              process.env.SKYSQL == undefined
+              !process.env.MAXSCALE_TEST_DISABLE &&
+              !process.env.SKYSQL &&
+              !process.env.SKYSQL_HA
             ) {
               conn.debugCompress(true);
             } else {
@@ -78,8 +79,9 @@ describe('debug', () => {
           .then(() => {
             if (
               compress &&
-              process.env.MAXSCALE_TEST_DISABLE == undefined &&
-              process.env.SKYSQL == undefined
+              !process.env.MAXSCALE_TEST_DISABLE &&
+              !process.env.SKYSQL &&
+              !process.env.SKYSQL_HA
             ) {
               conn.debugCompress(false);
             } else {
@@ -96,14 +98,16 @@ describe('debug', () => {
               console.log = initialStdOut;
 
               const serverVersion = conn.serverVersion();
-              if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) compress = false;
+              if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+                compress = false;
               const rangeWithEOF = compress ? [900, 1200] : [1800, 2400];
               const rangeWithoutEOF = compress ? [900, 1200] : [1750, 2000];
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
                 !process.env.MAXSCALE_TEST_DISABLE &&
-                !process.env.SKYSQL
+                !process.env.SKYSQL &&
+                !process.env.SKYSQL_HA
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -145,7 +149,8 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+      this.skip();
     initialStdOut = console.log;
     let data = '';
     console.log = function () {

@@ -1,5 +1,17 @@
 # Change Log
 
+
+## [2.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.2) (04 Dec 2020)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.1...2.5.2)
+
+* [CONJS-151] bulk batch error (parameter truncation) #137
+* [CONJS-152] correction when enabling the `permitLocalInfile` option and some initial commands
+* [CONJS-154] Timezone support correction and clarification
+* [CONJS-155] correction to support for node.js 10.13 to 10.19
+* [CONJS-156] Ensure setting capability PLUGIN_AUTH only if server has it
+
+documentation improvement
+
 ## [2.5.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.1) (23 Oct 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.0...2.5.1)
 

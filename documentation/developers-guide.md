@@ -17,12 +17,22 @@ Before submitting a pull request to the project, run local and continuous integr
 
 The repository contains a series of tests to evaluate the Connector and to make sure it can connect to and operate on MariaDB with the new code.  Run local tests using npm. 
 
-In order for these tests to pass, you need to have a MariaDB or MySQL server installed, which by default it assumes is running at localhost:3306 with a database named `testn` and a user `root` without a password.  Once this is set up, you can run the tests with npm:
+In order for these tests to pass, you need to have a MariaDB or MySQL server installed, which by default it assumes is running at localhost:3306 with a database named `testn` and a user `root` without a password.
+Alternatively you will need to create a user [with grant privilege](https://mariadb.com/kb/en/grant/#the-grant-option-privilege).
+Example, with `root` user create the new user and grant privileges:
+```
+MariaDB [(none)]> create user anel@localhost identified by ('testpass');
+MariaDB [(none)]> grant all privileges on *.* to anel@localhost WITH GRANT OPTION;
+```
+Once this is set up, you can run the tests with npm:
  
 ```
 $ npm run test:base
 ```
-
+Or via environment variables with specific user:
+```
+$ TEST_DB=testn TEST_USER=anel TEST_PASSWORD=testpass TEST_PORT=3306 TEST_HOST=localhost npm run test:base
+```
 The tests retrieve the host, password, database and port number from environmental variables, which you can manually set if you want to connect to MariaDB in other ways.
  
 * `TEST_HOST` Hostname.  By default, localhost.
