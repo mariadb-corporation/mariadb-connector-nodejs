@@ -121,12 +121,12 @@ describe('integer with big value', () => {
       })
       .then((rows) => {
         assert.strictEqual(rows.length, 6);
-        assert.strictEqual(rows[0].v, -9007199254740991n);
-        assert.strictEqual(rows[1].v, 127n);
-        assert.strictEqual(rows[2].v, 128n);
-        assert.strictEqual(rows[3].v, 9007199254740991n);
-        assert.strictEqual(rows[4].v, 9007199254740992n);
-        assert.strictEqual(rows[5].v, 9007199254740993n);
+        assert.strictEqual(rows[0].v, BigInt(-9007199254740991));
+        assert.strictEqual(rows[1].v, BigInt(127));
+        assert.strictEqual(rows[2].v, BigInt(128));
+        assert.strictEqual(rows[3].v, BigInt(9007199254740991));
+        assert.strictEqual(rows[4].v, BigInt(9007199254740992));
+        assert.strictEqual(rows[5].v, BigInt(9007199254740993));
         assert.strictEqual(typeof rows[4].v, 'bigint');
         return base.createConnection({ supportBigInt: true });
       })
@@ -134,7 +134,7 @@ describe('integer with big value', () => {
         conn2
           .query('INSERT INTO testBigint values ()')
           .then((rows) => {
-            assert.strictEqual(rows.insertId, 9007199254740994n);
+            assert.strictEqual(rows.insertId, BigInt(9007199254740994));
             conn2.end();
             done();
           })
@@ -175,7 +175,7 @@ describe('integer with big value', () => {
       })
       .then((rows) => {
         assert.strictEqual(rows.length, 2);
-        assert.strictEqual(rows[0].v, 127n);
+        assert.strictEqual(rows[0].v, BigInt(127));
         assert.strictEqual(rows[1].v, null);
         done();
       });
@@ -252,7 +252,7 @@ describe('integer with big value', () => {
   });
 
   it('using very big number bigint', function (done) {
-    const maxValue = 18446744073709551615n;
+    const maxValue = BigInt(18446744073709551615);
     base.createConnection({ supportBigInt: true }).then((conn) => {
       conn
         .query('DROP TABLE IF EXISTS BIG_NUMBER')
@@ -266,7 +266,7 @@ describe('integer with big value', () => {
           return conn.query('SELECT * FROM BIG_NUMBER LIMIT ?', [maxValue]);
         })
         .then((res) => {
-          assert.deepEqual(res, [{ val: 10n }, { val: maxValue }]);
+          assert.deepEqual(res, [{ val: BigInt(10) }, { val: maxValue }]);
           conn.end();
           done();
         })
