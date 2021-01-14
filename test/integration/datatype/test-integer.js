@@ -125,8 +125,8 @@ describe('integer with big value', () => {
         assert.strictEqual(rows[1].v, BigInt(127));
         assert.strictEqual(rows[2].v, BigInt(128));
         assert.strictEqual(rows[3].v, BigInt(9007199254740991));
-        assert.strictEqual(rows[4].v, BigInt(9007199254740992));
-        assert.strictEqual(rows[5].v, BigInt(9007199254740993));
+        assert.strictEqual(rows[4].v, BigInt('9007199254740992'));
+        assert.strictEqual(rows[5].v, BigInt('9007199254740993'));
         assert.strictEqual(typeof rows[4].v, 'bigint');
         return base.createConnection({ supportBigInt: true });
       })
@@ -134,7 +134,7 @@ describe('integer with big value', () => {
         conn2
           .query('INSERT INTO testBigint values ()')
           .then((rows) => {
-            assert.strictEqual(rows.insertId, BigInt(9007199254740994));
+            assert.strictEqual(rows.insertId, BigInt('9007199254740994'));
             conn2.end();
             done();
           })
@@ -252,7 +252,7 @@ describe('integer with big value', () => {
   });
 
   it('using very big number bigint', function (done) {
-    const maxValue = BigInt(18446744073709551615);
+    const maxValue = BigInt('18446744073709551615');
     base.createConnection({ supportBigInt: true }).then((conn) => {
       conn
         .query('DROP TABLE IF EXISTS BIG_NUMBER')
