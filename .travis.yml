@@ -15,7 +15,6 @@ before_install:
 - chmod +x .travis/script.sh
 
 install:
-  - wget -qO- 'https://github.com/tianon/pgp-happy-eyeballs/raw/master/hack-my-builds.sh' | bash
   # generate SSL certificates
   - mkdir tmp
   - chmod +x .travis/gen-ssl.sh
