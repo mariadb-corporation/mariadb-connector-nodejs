@@ -37,9 +37,9 @@ else
   export COMPOSE_FILE=.travis/docker-compose.yml
   export ENTRYPOINT=$PROJ_PATH/.travis/sql
 
-  if [ "$DB" = "build" ] ; then
+  if [[ "$DB" == build* ]] ; then
     .travis/build/build.sh
-    docker build -t build:latest --label build .travis/build/
+    docker build -t build:10.6 --label build .travis/build/
   fi
 
   if [ -n "$MAXSCALE_VERSION" ] ; then

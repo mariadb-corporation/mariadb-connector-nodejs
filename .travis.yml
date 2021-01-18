@@ -40,10 +40,10 @@ env:
 matrix:
   allow_failures:
   - node_js: "12"
-    env: DB=build SKIP_LEAK=1
+    env: DB=build:10.6 SKIP_LEAK=1
   include:
   - node_js: "12"
-    env: DB=build SKIP_LEAK=1
+    env: DB=build:10.6 SKIP_LEAK=1
   - node_js: "12"
     env: SKYSQL=true SKIP_LEAK=1
   - node_js: "12"
@@ -83,7 +83,7 @@ notifications:
 script:
 - npm install
 - npm install nyc -g
-- travis_retry .travis/script.sh
+- .travis/script.sh
 
 after_success:
 - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
