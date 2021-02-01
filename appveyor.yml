@@ -47,11 +47,6 @@ environment:
       nodejs_version: "12"
       SKIP_LEAK: "1"
 
-    - DB: '10.1.46'
-      MEM: "21"
-      nodejs_version: "12"
-      SKIP_LEAK: "1"
-
 cache:
   - node_modules
 
