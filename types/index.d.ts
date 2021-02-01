@@ -582,7 +582,7 @@ export interface PoolConnection extends Connection {
   /**
    * Release the connection to pool internal cache.
    */
-  release(): void;
+  release(): Promise<void>;
 }
 
 export interface Pool {
