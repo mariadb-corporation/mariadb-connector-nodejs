@@ -7,7 +7,7 @@ const Conf = require('../conf');
 describe('test socket', () => {
   it('named pipe', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (process.env.MUST_USE_TCPIP || process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
     const test = this;
@@ -49,7 +49,7 @@ describe('test socket', () => {
 
   it('named pipe error', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (process.env.MUST_USE_TCPIP) this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
 
@@ -70,7 +70,7 @@ describe('test socket', () => {
   });
 
   it('unix socket', function (done) {
-    if (process.env.MUST_USE_TCPIP) this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (process.platform === 'win32') this.skip();
     if (
       Conf.baseConfig.host &&

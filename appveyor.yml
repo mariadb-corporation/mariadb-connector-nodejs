@@ -7,7 +7,6 @@ environment:
   LINT: 0
   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   CMAKE_PARAM: 'Visual Studio 15 2017 Win64'
-  MUST_USE_TCPIP: 1
   TEST_HOST: mariadb.example.com
   TEST_LOG_PACKETS: true
   matrix:
