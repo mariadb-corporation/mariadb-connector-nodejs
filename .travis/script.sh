@@ -36,6 +36,7 @@ else
   export TEST_HOST=mariadb.example.com
   export COMPOSE_FILE=.travis/docker-compose.yml
   export ENTRYPOINT=$PROJ_PATH/.travis/sql
+  export ENTRYPOINT_PAM=$PROJ_PATH/.travis/pam
 
   if [[ "$DB" == build* ]] ; then
     .travis/build/build.sh
@@ -65,16 +66,25 @@ else
       docker-compose -f ${COMPOSE_FILE} exec maxscale tail -n 500 /var/log/maxscale/maxscale.log
   fi
 
-#  if [ -z "$MAXSCALE_VERSION" ] ; then
-#    docker-compose -f .travis/docker-compose.yml exec -u root db bash /pam/pam.sh
-#    sleep 1
-#    docker-compose -f .travis/docker-compose.yml stop db
-#    sleep 1
-#    docker-compose -f .travis/docker-compose.yml up -d
-#    docker-compose -f .travis/docker-compose.yml logs db
-#    node --version
-#    node .travis/wait-for-docker-up.js
-#  fi
+
+  if [[ "$DB" != mysql* ]] ; then
+    ###################################################################################################################
+    # execute pam
+    ###################################################################################################################
+    docker-compose -f ${COMPOSE_FILE} exec -u root db bash /pam/pam.sh
+    sleep 1
+    docker-compose -f ${COMPOSE_FILE} restart db
+    sleep 5
+
+    ###################################################################################################################
+    # wait for restart
+    ###################################################################################################################
+    node .travis/wait-for-docker-up.js
+    docker-compose -f ${COMPOSE_FILE} logs
+    if [ -n "$MAXSCALE_VERSION" ] ; then
+        docker-compose -f ${COMPOSE_FILE} exec maxscale tail -n 500 /var/log/maxscale/maxscale.log
+    fi
+  fi
 fi
 
 if [ -n "$LINT" ] ; then npm run test:lint; fi

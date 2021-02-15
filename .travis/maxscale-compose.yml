@@ -2,20 +2,20 @@ version: '2.1'
 services:
   db:
     image: $DB
-    command: --innodb-log-file-size=400m --max-allowed-packet=40m  --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0 $ADDITIONAL_CONF
+    command: --max-connections=500 --max-allowed-packet=$PACKET --innodb-log-file-size=$INNODB_LOG_FILE_SIZE --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --ssl-ca=/etc/sslcert/ca.crt --ssl-cert=/etc/sslcert/server.crt --ssl-key=/etc/sslcert/server.key --bind-address=0.0.0.0
     ports:
       - 3305:3306
     volumes:
       - $SSLCERT:/etc/sslcert
       - $ENTRYPOINT:/docker-entrypoint-initdb.d
+      - $ENTRYPOINT_PAM:/pam
     environment:
-      MYSQL_DATABASE: testn
+      MYSQL_DATABASE: testj
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     healthcheck:
-      test: ["CMD", "mysql", "--protocol=tcp", "-ubob", "-h127.0.0.1"]
-      timeout: 50s
+      test: ["CMD", "mysql", "--protocol=tcp", "-ubob", "-h127.0.0.1", "-ubob"]
+      timeout: 20s
       retries: 10
-      interval: 5s
 
   maxscale:
     depends_on:

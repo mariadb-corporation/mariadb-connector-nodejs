@@ -38,6 +38,38 @@ describe('Compression', function () {
       .catch(done);
   });
 
+  const generateLongText = function (len) {
+    let t = '';
+    for (let i = 0; i < len; i++) {
+      t += 'a';
+    }
+    return t;
+  };
+
+  it('test compression multiple packet', function (done) {
+    this.timeout(30000);
+    if (maxAllowedSize < 35000000) this.skip();
+
+    conn.query(
+      'CREATE TEMPORARY TABLE compressTab (t1 LONGTEXT, t2 LONGTEXT, t3 LONGTEXT, t4 LONGTEXT)'
+    );
+
+    const longText = generateLongText(20000000);
+    const mediumText = generateLongText(10000000);
+    const smallIntText = generateLongText(60000);
+    conn
+      .query('INSERT INTO compressTab values (?,?,?,?)', [
+        longText,
+        mediumText,
+        smallIntText,
+        'expected'
+      ])
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
   it('simple select 1', function (done) {
     conn
       .query('SELECT 1')
