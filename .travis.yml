@@ -15,7 +15,6 @@ before_install:
 - chmod +x .travis/script.sh
 
 install:
-  - wget -qO- 'https://github.com/tianon/pgp-happy-eyeballs/raw/master/hack-my-builds.sh' | bash
   # generate SSL certificates
   - mkdir tmp
   - chmod +x .travis/gen-ssl.sh
@@ -35,16 +34,15 @@ env:
   global:
   - TEST_PORT=3305
   - TEST_HOST=mariadb.example.com
-  - MUST_USE_TCPIP=1
   - RUN_LONG_TEST=1
 
 matrix:
   allow_failures:
   - node_js: "12"
-    env: DB=build SKIP_LEAK=1
+    env: DB=build:10.6 SKIP_LEAK=1
   include:
   - node_js: "12"
-    env: DB=build SKIP_LEAK=1
+    env: DB=build:10.6 SKIP_LEAK=1
   - node_js: "12"
     env: SKYSQL=true SKIP_LEAK=1
   - node_js: "12"
@@ -64,9 +62,7 @@ matrix:
   - node_js: "12"
     env: DB=mariadb:10.5 BENCH=1 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.5 MAXSCALE_VERSION=2.5.4 MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
-  - node_js: "12"
-    env: DB=mariadb:10.1 SKIP_LEAK=1
+    env: DB=mariadb:10.5 MAXSCALE_VERSION=2.5.7 MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.2 SKIP_LEAK=1
   - node_js: "12"
@@ -84,7 +80,7 @@ notifications:
 script:
 - npm install
 - npm install nyc -g
-- travis_retry .travis/script.sh
+- .travis/script.sh
 
 after_success:
 - if [ -z "$BENCH" ] ; then npm run coverage:report; fi

@@ -86,9 +86,18 @@ function Proxy(args) {
       }
     });
     server.on('error', (err) => {
-      if (log) console.log('proxy server error : ' + err);
-      throw err;
+      if (err.code === 'EADDRINUSE') {
+        console.log('Address in use, retrying...');
+        setTimeout(() => {
+          server.close();
+          server.listen(LOCAL_PORT);
+        }, 1000);
+      } else {
+        if (log) console.log('proxy server error : ' + err);
+        throw err;
+      }
     });
+
     server.on('close', () => {
       if (log) console.log('closing proxy server');
       sockets.forEach((socket) => {
@@ -113,6 +122,7 @@ function Proxy(args) {
     });
 
     server.listen(LOCAL_PORT);
+
     if (log) console.log('TCP server accepting connection on port: ' + LOCAL_PORT);
   };
 

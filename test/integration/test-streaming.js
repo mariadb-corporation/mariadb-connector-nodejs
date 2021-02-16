@@ -67,7 +67,7 @@ describe('streaming', () => {
   });
 
   it('Streaming single parameter', async function () {
-    if (maxAllowedSize < size) this.skip();
+    if (maxAllowedSize <= size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(fileName);
     await shareConn.query('truncate Streaming');
@@ -80,7 +80,7 @@ describe('streaming', () => {
 
   it('Streaming multiple parameter', async function () {
     this.timeout(20000);
-    if (maxAllowedSize < size) this.skip();
+    if (maxAllowedSize <= size) this.skip();
     const r = fs.createReadStream(halfFileName);
     const r2 = fs.createReadStream(halfFileName);
     await shareConn.query('truncate Streaming');
@@ -98,7 +98,7 @@ describe('streaming', () => {
   });
 
   it('Streaming multiple parameter begin no stream', async function () {
-    if (maxAllowedSize < size) this.skip();
+    if (maxAllowedSize <= size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
     const r2 = fs.createReadStream(halfFileName);
@@ -117,7 +117,7 @@ describe('streaming', () => {
   });
 
   it('Streaming multiple parameter ensure max callstack', async function () {
-    if (maxAllowedSize < size) this.skip();
+    if (maxAllowedSize <= size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
 

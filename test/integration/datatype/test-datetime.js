@@ -57,6 +57,8 @@ describe('datetime', () => {
 
   it('standard date', function (done) {
     //using distant server, time might be different
+    // if local socket not available, this means using distant / docker server that might have other default
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (
       (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
       process.env.MAXSCALE_TEST_DISABLE

@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:bionic
+FROM ubuntu:xenial
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -57,18 +57,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN { \
-		echo "mariadb-server-10.5" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-10.5" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server-10.6" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server-10.6" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections
 
 RUN apt-get update -y
 RUN apt-get install -y software-properties-common wget
 RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
 RUN apt-key adv --recv-keys --keyserver ha.pool.sks-keyservers.net F1656F24C74CD1D8
-RUN echo 'deb http://yum.mariadb.org/galera/repo/deb bionic main' > /etc/apt/sources.list.d/galera-test-repo.list
+RUN echo 'deb http://yum.mariadb.org/galera/repo4/deb xenial main' > /etc/apt/sources.list.d/galera-test-repo.list
 RUN apt-get update -y
 
-RUN apt-get install -y curl libdbi-perl rsync socat galera3 libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2
+RUN apt-get install -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 apt-utils
+
+RUN apt-get install -y galera4
 
 COPY *.deb /root/
 RUN chmod 777 /root/*
@@ -77,15 +79,19 @@ RUN dpkg --install /root/mysql-common*
 RUN dpkg --install /root/mariadb-common*
 RUN dpkg -R --unpack /root/
 RUN apt-get install -f -y
-
+RUN ls -lrt /etc/mysql
+RUN ls -lrt /etc/mysql/mariadb.conf.d
+RUN find / -type f -name "*tz_info*"
+RUN ls -lrt /usr/bin/
 RUN rm -rf /var/lib/apt/lists/* \
+    	&& sed -ri 's/^user\s/#&/' /etc/mysql/my.cnf /etc/mysql/mariadb.conf.d/*.cnf \
     	&& rm -rf /var/lib/mysql && mkdir -p /var/lib/mysql /var/run/mysqld \
     	&& chown -R mysql:mysql /var/lib/mysql /var/run/mysqld \
     	&& chmod 777 /var/run/mysqld \
     	&& find /etc/mysql/ -name '*.cnf' -print0 \
     		| xargs -0 grep -lZE '^(bind-address|log)' \
     		| xargs -rt -0 sed -Ei 's/^(bind-address|log)/#&/' \
-    	&& echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
+    	&& echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/mariadb.conf.d/docker.cnf
 
 VOLUME /var/lib/mysql
 

@@ -46,6 +46,7 @@ servers=server1
 user=boby
 password=heyPassw0@rd
 monitor_interval=2000
+failcount=50
 
 [MariaDB-Monitor2]
 type=monitor
@@ -54,6 +55,7 @@ servers=server2
 user=boby
 password=heyPassw0@rd
 monitor_interval=2000
+failcount=50
 
 # Service definitions
 #
@@ -66,9 +68,8 @@ monitor_interval=2000
 
 [Read-Only-Service]
 type=service
-router=readwritesplit
-version_string=10.5.99-MariaDB-maxScale
-servers=server2
+router=readconnroute
+servers=server1
 user=boby
 password=heyPassw0@rd
 router_options=slave

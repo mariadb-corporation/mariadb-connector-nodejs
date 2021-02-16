@@ -23,7 +23,10 @@ describe('server additional information API', () => {
     if (!process.env.DB) this.skip();
     if (process.env.DB.indexOf(':') != -1) {
       const serverInfo = process.env.DB.split(':');
-      assert.equal(serverInfo[0] === 'mariadb', shareConn.info.isMariaDB());
+      assert.equal(
+        serverInfo[0] === 'mariadb' || serverInfo[0] === 'build',
+        shareConn.info.isMariaDB()
+      );
     } else {
       //appveyor use mariadb only
       assert(shareConn.info.isMariaDB());

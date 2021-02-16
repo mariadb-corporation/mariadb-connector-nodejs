@@ -1092,8 +1092,10 @@ describe('Pool', () => {
 
           setTimeout(() => {
             //wait for 2 second > idleTimeout
-            assert.equal(pool.totalConnections(), 8);
-            assert.equal(pool.idleConnections(), 8);
+            //minimumIdle-1 is possible after reaching idleTimeout and connection
+            // is still not recreated
+            assert.isTrue(pool.totalConnections() === 8 || pool.totalConnections() === 7);
+            assert.isTrue(pool.idleConnections() === 8 || pool.idleConnections() === 7);
           }, 2000);
 
           setTimeout(() => {

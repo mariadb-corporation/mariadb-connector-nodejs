@@ -180,7 +180,7 @@ describe('authentication plugin', () => {
   it('unix socket authentication plugin', function (done) {
     if (process.platform === 'win32') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
-    if (process.env.MUST_USE_TCPIP) this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
 
@@ -221,7 +221,7 @@ describe('authentication plugin', () => {
 
   it('dialog authentication plugin', function (done) {
     //pam is set using .travis/sql/pam.sh
-    if (!process.env.TRAVIS || process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
