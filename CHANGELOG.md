@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.5.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.3) (16 Feb 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.2...2.5.3)
+
+* [CONJS-157] Batch error when setting maxAllowedPacket less than an insert parameter value
+* [CONJS-158] use BigInt constructor in place of literal to ensure maximum compatibility		
+* [CONJS-160] Wrong definition for typescript PoolConnection.release
+* [CONJS-159] test 10.6 server latest build
+
 
 ## [2.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.2) (04 Dec 2020)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.1...2.5.2)
