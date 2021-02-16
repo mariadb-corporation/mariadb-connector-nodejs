@@ -20,7 +20,7 @@ describe('sql template strings', () => {
       values: [value]
     });
     assert.strictEqual(res[0].t, value);
-    conn.end();
+    await conn.end();
   });
 
   it('batch with parameters', async () => {
@@ -37,7 +37,7 @@ describe('sql template strings', () => {
       values: [value]
     });
     assert.strictEqual(res[0].t, value);
-    conn.end();
+    await conn.end();
   });
 
   it('callback query with parameters', (done) => {
@@ -71,12 +71,14 @@ describe('sql template strings', () => {
                           },
                           (err, res) => {
                             if (err) {
-                              conn.end();
-                              done(err);
+                              conn.end(() => {
+                                done(err);
+                              });
                             } else {
                               assert.strictEqual(res[0].t, value);
-                              conn.end();
-                              done();
+                              conn.end(() => {
+                                done();
+                              });
                             }
                           }
                         );
@@ -126,12 +128,14 @@ describe('sql template strings', () => {
                           },
                           (err, res) => {
                             if (err) {
-                              conn.end();
-                              done(err);
+                              conn.end(() => {
+                                done(err);
+                              });
                             } else {
                               assert.strictEqual(res[0].t, value);
-                              conn.end();
-                              done();
+                              conn.end(() => {
+                                done();
+                              });
                             }
                           }
                         );
@@ -166,7 +170,9 @@ describe('sql template strings', () => {
         return pool.query('drop table pool_query_param');
       })
       .then(() => {
-        pool.end();
+        return pool.end();
+      })
+      .then(() => {
         done();
       })
       .catch(done);
@@ -190,7 +196,9 @@ describe('sql template strings', () => {
         return pool.query('drop table pool_parse_batch');
       })
       .then(() => {
-        pool.end();
+        return pool.end();
+      })
+      .then(() => {
         done();
       })
       .catch(done);

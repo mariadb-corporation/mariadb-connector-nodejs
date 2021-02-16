@@ -37,7 +37,7 @@ describe('Connection meta', function () {
   it('isMariaDB', () => {
     const isMariadb = shareConn.info.isMariaDB();
     if (process.env.DB) {
-      if (process.env.DB === 'build') {
+      if (process.env.DB.startsWith('build')) {
         assert(isMariadb);
       } else {
         //Appveyor test only mariadb, travis use docker image with DB=mariadb/mysql:version

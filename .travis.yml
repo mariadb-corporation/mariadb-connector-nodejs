@@ -62,7 +62,7 @@ matrix:
   - node_js: "12"
     env: DB=mariadb:10.5 BENCH=1 SKIP_LEAK=1
   - node_js: "12"
-    env: DB=mariadb:10.5 MAXSCALE_VERSION=2.5.4 MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
+    env: DB=mariadb:10.5 MAXSCALE_VERSION=2.5.7 MAXSCALE_TEST_DISABLE=true SKIP_LEAK=1
   - node_js: "12"
     env: DB=mariadb:10.2 SKIP_LEAK=1
   - node_js: "12"

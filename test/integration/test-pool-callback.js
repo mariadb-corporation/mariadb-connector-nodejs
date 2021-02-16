@@ -643,7 +643,7 @@ describe('Pool callback', () => {
         } else {
           setTimeout(() => {
             assert.equal(pool.totalConnections(), 10);
-            assert.equal(pool.idleConnections(), 10);
+            assert.isTrue(pool.idleConnections() === 9 || pool.idleConnections() === 10);
           }, 5);
 
           setTimeout(() => {

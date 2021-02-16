@@ -63,14 +63,14 @@ RUN { \
 
 RUN apt-get update -y
 RUN apt-get install -y software-properties-common wget
-#RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
-#RUN apt-key adv --recv-keys --keyserver ha.pool.sks-keyservers.net F1656F24C74CD1D8
-#RUN echo 'deb http://yum.mariadb.org/galera/repo/deb xenial main' > /etc/apt/sources.list.d/galera-test-repo.list
-#RUN apt-get update -y
+RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
+RUN apt-key adv --recv-keys --keyserver ha.pool.sks-keyservers.net F1656F24C74CD1D8
+RUN echo 'deb http://yum.mariadb.org/galera/repo4/deb xenial main' > /etc/apt/sources.list.d/galera-test-repo.list
+RUN apt-get update -y
 
-RUN apt-get install -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2
+RUN apt-get install -y curl libdbi-perl rsync socat libnuma1 libaio1 zlib1g-dev libreadline5 libjemalloc1 libsnappy1v5 libcrack2 apt-utils
 
-#RUN apt-get install -y galera3
+RUN apt-get install -y galera4
 
 COPY *.deb /root/
 RUN chmod 777 /root/*
@@ -81,6 +81,8 @@ RUN dpkg -R --unpack /root/
 RUN apt-get install -f -y
 RUN ls -lrt /etc/mysql
 RUN ls -lrt /etc/mysql/mariadb.conf.d
+RUN find / -type f -name "*tz_info*"
+RUN ls -lrt /usr/bin/
 RUN rm -rf /var/lib/apt/lists/* \
     	&& sed -ri 's/^user\s/#&/' /etc/mysql/my.cnf /etc/mysql/mariadb.conf.d/*.cnf \
     	&& rm -rf /var/lib/mysql && mkdir -p /var/lib/mysql /var/run/mysqld \
