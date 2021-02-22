@@ -221,7 +221,7 @@ describe('authentication plugin', () => {
 
   it('dialog authentication plugin', function (done) {
     //pam is set using .travis/sql/pam.sh
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.MAXSCALE_TEST_DISABLE || process.env.APPVEYOR_BUILD_WORKER_IMAGE) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
