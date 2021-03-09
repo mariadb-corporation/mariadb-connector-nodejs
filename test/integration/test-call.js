@@ -6,7 +6,7 @@ const { assert } = require('chai');
 
 describe('stored procedure', () => {
   before(function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     shareConn
       .query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end')
       .then(() => {

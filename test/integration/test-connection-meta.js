@@ -6,15 +6,13 @@ const assert = require('chai').assert;
 describe('Connection meta', function () {
   it('server version', () => {
     const serverVersion = shareConn.serverVersion();
-    if (process.env.DB) {
-      if (process.env.DB === 'build') {
-        //last mariadb build version
-        assert(serverVersion.startsWith('10.5'));
-      } else {
-        const version =
-          process.env.DB.indexOf(':') != -1
-            ? process.env.DB.substr(process.env.DB.indexOf(':') + 1)
-            : process.env.DB;
+    if (process.env.srv) {
+      if (
+        process.env.srv !== 'skysql' &&
+        process.env.srv !== 'skysql-ha' &&
+        process.env.srv !== 'maxscale'
+      ) {
+        const version = process.env.v;
         assert(serverVersion.startsWith(version), serverVersion + '/' + version);
       }
     }
@@ -36,16 +34,8 @@ describe('Connection meta', function () {
 
   it('isMariaDB', () => {
     const isMariadb = shareConn.info.isMariaDB();
-    if (process.env.DB) {
-      if (process.env.DB.startsWith('build')) {
-        assert(isMariadb);
-      } else {
-        //Appveyor test only mariadb, travis use docker image with DB=mariadb/mysql:version
-        assert.equal(
-          isMariadb,
-          process.platform === 'win32' || process.env.DB.startsWith('mariadb')
-        );
-      }
+    if (process.env.srv) {
+      assert.equal(isMariadb, !process.env.srv.startsWith('mysql'));
     }
   });
 

@@ -10,7 +10,8 @@ const os = require('os');
 
 describe('Pool callback event', () => {
   before(function () {
-    if (process.env.SKYSQL != null || process.env.SKYSQL_HA != null) this.skip();
+    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null)
+      this.skip();
   });
 
   it('pool connection creation', function (done) {
@@ -47,7 +48,7 @@ describe('Pool callback event', () => {
   });
 
   it('pool connection enqueue', function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     const pool = base.createPoolCallback({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;

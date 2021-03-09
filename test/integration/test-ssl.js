@@ -15,7 +15,7 @@ describe('ssl', function () {
   let sslPort = Conf.baseConfig.port;
 
   before(function (done) {
-    if (process.env.TEST_SSL_PORT) sslPort = parseInt(process.env.TEST_SSL_PORT);
+    if (process.env.TEST_MAXSCALE_TLS_PORT) sslPort = parseInt(process.env.TEST_MAXSCALE_TLS_PORT);
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
       ((process.platform === 'win32' &&
@@ -35,10 +35,10 @@ describe('ssl', function () {
     }
 
     let serverCaFile =
-      Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : process.env.TEST_SSL_CA_FILE;
-    let clientKeyFileName = process.env.TEST_SSL_CLIENT_KEY_FILE;
-    let clientCertFileName = process.env.TEST_SSL_CLIENT_CERT_FILE;
-    let clientKeystoreFileName = process.env.TEST_SSL_CLIENT_KEYSTORE_FILE;
+      Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : process.env.TEST_DB_SERVER_CERT;
+    let clientKeyFileName = process.env.TEST_DB_CLIENT_KEY;
+    let clientCertFileName = process.env.TEST_DB_CLIENT_CERT;
+    let clientKeystoreFileName = process.env.TEST_DB_CLIENT_PKCS;
 
     if (
       !serverCaFile &&
@@ -281,8 +281,8 @@ describe('ssl', function () {
   it('TLSv1.1 with permit cipher', function (done) {
     if (
       !sslEnable ||
-      process.env.SKYSQL ||
-      process.env.SKYSQL_HA ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha' ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
       (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
       shareConn.info.serverVersion.raw.includes('focal')
@@ -391,7 +391,7 @@ describe('ssl', function () {
   });
 
   it('TLSv1.2 with cipher working', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
@@ -507,7 +507,7 @@ describe('ssl', function () {
       })
       .then((conn) => {
         conn.end();
-        if (!process.env.MAXSCALE_TEST_DISABLE) {
+        if (process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha') {
           done(new Error('Must have thrown an exception !'));
         } else {
           done();
@@ -519,7 +519,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -544,7 +544,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -569,7 +569,7 @@ describe('ssl', function () {
   });
 
   it('ssl change user', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     if (!sslEnable) this.skip();
     let currUser;

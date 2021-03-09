@@ -246,7 +246,12 @@ describe('connection option', () => {
   });
 
   it('Server with different tz', async function () {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
+      this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
@@ -388,7 +393,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -433,7 +438,7 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
     base

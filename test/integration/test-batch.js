@@ -1157,7 +1157,7 @@ describe('batch', () => {
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1200,7 +1200,11 @@ describe('batch', () => {
     });
 
     it('16M+ error batch', async function () {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA || maxAllowedSize <= testSize) {
+      if (
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha' ||
+        maxAllowedSize <= testSize
+      ) {
         this.skip();
       } else {
         this.timeout(360000);
@@ -1268,7 +1272,7 @@ describe('batch', () => {
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1680,7 +1684,7 @@ describe('batch', () => {
     });
 
     it('simple batch error', async function () {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;

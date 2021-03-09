@@ -58,7 +58,8 @@ describe('json', () => {
       .then((rows) => {
         if (
           (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
-          process.env.MAXSCALE_TEST_DISABLE
+          process.env.srv === 'maxscale' ||
+          process.env.srv === 'skysql-ha'
         ) {
           const val1 = JSON.parse(rows[0].val1);
           const val2 = JSON.parse(rows[1].val1);
@@ -115,7 +116,8 @@ describe('json', () => {
           if (
             shareConn.info.isMariaDB() &&
             shareConn.info.hasMinVersion(10, 5, 2) &&
-            !process.env.MAXSCALE_TEST_DISABLE
+            process.env.srv !== 'maxscale' &&
+            process.env.srv !== 'skysql-ha'
           ) {
             assert.deepEqual(rows[0].val1, obj);
           } else {
@@ -136,7 +138,9 @@ describe('json', () => {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() &&
-        (!shareConn.info.hasMinVersion(10, 5, 2) || process.env.MAXSCALE_TEST_DISABLE)) ||
+        (!shareConn.info.hasMinVersion(10, 5, 2) ||
+          process.env.srv === 'maxscale' ||
+          process.env.srv === 'skysql-ha')) ||
       !shareConn.info.isMariaDB()
     ) {
       this.skip();

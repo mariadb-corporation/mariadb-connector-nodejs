@@ -11,7 +11,7 @@ const { assert } = require('chai');
 
 describe('cluster', function () {
   before(async function () {
-    if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     await shareConn.query('DROP TABLE IF EXISTS clusterInsert');
     await shareConn.query('CREATE TABLE clusterInsert(id int, nam varchar(256))');
     await shareConn.query('FLUSH TABLES');
@@ -423,7 +423,7 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', function (done) {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
+      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       this.timeout(30000);
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const poolCluster = cl.cluster;
@@ -472,8 +472,12 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (process.env.SKYSQL || process.env.SKYSQL_HA) this.skip();
-      if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+      if (
+        process.env.srv === 'maxscale' ||
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha'
+      )
+        this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});
 
@@ -512,7 +516,12 @@ describe('cluster', function () {
     });
 
     it('socket close connection during query', function (done) {
-      if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+      if (
+        process.env.srv === 'maxscale' ||
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha'
+      )
+        this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});

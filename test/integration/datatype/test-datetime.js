@@ -61,7 +61,8 @@ describe('datetime', () => {
     if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (
       (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
-      process.env.MAXSCALE_TEST_DISABLE
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql-ha'
     )
       this.skip();
 

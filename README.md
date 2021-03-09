@@ -7,8 +7,7 @@
 # MariaDB Node.js connector
 
 [![npm package][npm-image]][npm-url] 
-[![Linux Build][travis-image]][travis-url]
-[![Windows status][appveyor-image]][appveyor-url]
+[![Test Build][travis-image]][travis-url]
 [![License (LGPL version 2.1)][licence-image]][licence-url]
 [![codecov][codecov-image]][codecov-url]
 
@@ -149,8 +148,6 @@ To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/
 [travis-url]:https://travis-ci.com/mariadb-corporation/mariadb-connector-nodejs
 [npm-image]:https://img.shields.io/npm/v/mariadb.svg
 [npm-url]:http://npmjs.org/package/mariadb
-[appveyor-image]:https://ci.appveyor.com/api/projects/status/558kpv0j1r545pgq/branch/master?svg=true
-[appveyor-url]:https://ci.appveyor.com/project/mariadb/mariadb-connector-nodejs
 [licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square
 [licence-url]:http://opensource.org/licenses/LGPL-2.1
 [codecov-image]:https://codecov.io/gh/mariadb-corporation/mariadb-connector-nodejs/branch/master/graph/badge.svg
