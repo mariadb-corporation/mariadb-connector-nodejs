@@ -1261,11 +1261,11 @@ describe('cluster', function () {
     });
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
-      proxyPort: 4000,
       host: Conf.baseConfig.host,
       resetAfterUse: false,
       trace: true
     });
+
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node2'",
       connectionLimit: 1,
@@ -1273,7 +1273,7 @@ describe('cluster', function () {
       connectTimeout: 200,
       socketTimeout: 200,
       acquireTimeout: 250,
-      port: 4000,
+      port: proxy.port(),
       resetAfterUse: false,
       trace: true
     });

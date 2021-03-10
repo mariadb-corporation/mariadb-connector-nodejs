@@ -1246,13 +1246,12 @@ describe('Pool', () => {
     this.timeout(5000);
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
-      proxyPort: 4000,
       host: Conf.baseConfig.host
     });
 
     const initTime = Date.now();
     const pool = base.createPool({
-      port: 4000,
+      port: proxy.port(),
       acquireTimeout: 1000,
       minDelayValidation: 0,
       connectionLimit: 1,
