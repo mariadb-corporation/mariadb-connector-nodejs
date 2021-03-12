@@ -1,7 +1,7 @@
 'use strict';
 
-const pkg = require('./package.json')
-require('please-upgrade-node')(pkg)
+const pkg = require('./package.json');
+require('please-upgrade-node')(pkg);
 
 const Connection = require('./lib/connection');
 const PoolPromise = require('./lib/pool-promise');
@@ -13,6 +13,17 @@ const PoolClusterOptions = require('./lib/config/pool-cluster-options');
 
 module.exports.version = require('./package.json').version;
 module.exports.SqlError = require('./lib/misc/errors').SqlError;
+
+module.exports.defaultOptions = function defaultOptions(opts) {
+  const connOpts = new ConnOptions(opts);
+  const res = {};
+  for (const [key, value] of Object.entries(connOpts)) {
+    if (!key.startsWith('_')) {
+      res[key] = value;
+    }
+  }
+  return res;
+};
 
 module.exports.createConnection = function createConnection(opts) {
   try {
