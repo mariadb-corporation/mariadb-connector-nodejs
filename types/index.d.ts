@@ -680,7 +680,7 @@ export interface SqlError extends Error {
   code: string | null;
   
   /**
-   * The driver information and message text
+   * The message text and information (e.g conn=5149, no: 1644, SQLState: 45000) for better identification
    */
   msg: string | null;
 
