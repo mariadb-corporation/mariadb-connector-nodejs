@@ -682,7 +682,7 @@ export interface SqlError extends Error {
   /**
    * The driver information and message text
    */
-  msg: string,
+  msg: string | null;
 
   /**
    * The error number for the error code
