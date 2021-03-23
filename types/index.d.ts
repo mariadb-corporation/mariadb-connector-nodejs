@@ -678,6 +678,11 @@ export interface SqlError extends Error {
    * (e.g. 'PROTOCOL_CONNECTION_LOST').
    */
   code: string | null;
+  
+  /**
+   * The driver information and message text
+   */
+  msg: string,
 
   /**
    * The error number for the error code
