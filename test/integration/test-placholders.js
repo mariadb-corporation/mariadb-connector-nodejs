@@ -107,6 +107,11 @@ describe('Placeholder', () => {
       assert.equal(err.errno, 45018);
       assert.equal(err.code, 'ER_PLACEHOLDER_UNDEFINED');
       assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.text, "Placeholder 'param2' is not defined");
+      assert.equal(
+        err.sql,
+        "INSERT INTO undefinedParameter values (:param3, :param1, :param2) - parameters:{'param1':1,'param3':3,'param4':4}"
+      );
       assert(!err.fatal);
       assert.ok(
         err.message.includes(

@@ -131,8 +131,11 @@ describe('Error', () => {
             } else {
               assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
               assert.isTrue(
-                err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
+                err.message.includes(
+                  "sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"
+                )
               );
+              assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
               assert.equal(err.errno, 1064);
               assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
@@ -216,16 +219,26 @@ describe('Error', () => {
                   'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
                 )
               );
+              assert.isTrue(
+                err.text.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
               assert.equal(err.sqlState, 'HY000');
             } else {
               assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.text.includes('You have an error in your SQL syntax'));
               assert.equal(err.errno, 1064);
               assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             assert.isTrue(
-              err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
+              err.message.includes(
+                "sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"
+              )
             );
+            assert.equal(err.sql, "wrong query :par1, :par2 - parameters:{'par1':'some par...}");
+
             conn.end();
             done();
           });
@@ -283,6 +296,7 @@ describe('Error', () => {
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
             assert.isTrue(err.message.includes('sql: DO 1 - parameters:[]'));
+            assert.equal(err.sql, 'DO 1 - parameters:[]');
             assert.isTrue(err.fatal);
             assert.equal(err.sqlState, '08S01');
             assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
@@ -607,6 +621,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
+            console.log(err);
             assert.equal(err.errno, 45016);
             assert.equal(err.sqlState, 'HY000');
             assert.equal(err.code, 'ER_MISSING_PARAMETER');
