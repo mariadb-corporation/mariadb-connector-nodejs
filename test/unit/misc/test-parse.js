@@ -34,8 +34,7 @@ describe('parse', () => {
         values
       );
       assert.deepEqual(res, {
-        sql:
-          'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=col2+10',
+        sql: 'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=col2+10',
         values: [
           [2, 1],
           [4, null],
@@ -76,8 +75,7 @@ describe('parse', () => {
         values
       );
       assert.deepEqual(res, {
-        sql:
-          'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=?',
+        sql: 'INSERT INTO TABLE(col1,col2,col3,col4, col5) VALUES (9, ?, 5, ?, 8) ON DUPLICATE KEY UPDATE col2=?',
         values: [
           [2, 1, null],
           [4, null, 3],

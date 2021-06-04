@@ -678,11 +678,16 @@ export interface SqlError extends Error {
    * (e.g. 'PROTOCOL_CONNECTION_LOST').
    */
   code: string | null;
-  
+
   /**
-   * The message text and information (e.g conn=5149, no: 1644, SQLState: 45000) for better identification
+   * original error message value
    */
-  msg: string | null;
+  text: string | null;
+
+  /**
+   * The sql command associate
+   */
+  sql: string | null;
 
   /**
    * The error number for the error code
