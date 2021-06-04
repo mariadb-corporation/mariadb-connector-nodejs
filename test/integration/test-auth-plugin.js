@@ -63,69 +63,61 @@ describe('authentication plugin', () => {
     }
   });
 
-  it('ed25519 authentication plugin', function (done) {
+  it('ed25519 authentication plugin', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
-    shareConn
-      .query('SELECT @@strict_password_validation as a')
-      .then((res) => {
-        if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
-        shareConn
-          .query("INSTALL SONAME 'auth_ed25519'")
-          .then(
-            () => {
-              shareConn
-                .query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'")
-                .then(() => {
-                  if (shareConn.info.hasMinVersion(10, 4, 0)) {
-                    return shareConn.query(
-                      "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                        "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
-                    );
-                  }
-                  return shareConn.query(
-                    "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                      "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
-                  );
-                })
-                .then(() => {
-                  return shareConn.query(
-                    'GRANT SELECT on  `' +
-                      Conf.baseConfig.database +
-                      "`.* to verificationEd25519AuthPlugin@'%'"
-                  );
-                })
-                .then(() => {
-                  base
-                    .createConnection({
-                      user: 'verificationEd25519AuthPlugin',
-                      password: 'MySup8%rPassw@ord'
-                    })
-                    .then((conn) => {
-                      conn.end();
-                      done();
-                    })
-                    .catch(done);
-                })
-                .catch((err) => {
-                  const expectedMsg = err.message.includes(
-                    "Client does not support authentication protocol 'client_ed25519' requested by server."
-                  );
-                  if (!expectedMsg) console.log(err);
-                  assert(expectedMsg);
-                  done();
-                });
-            },
-            (err) => {
-              //server wasn't build with this plugin, cancelling test
-              self.skip();
-            }
-          )
-          .catch(done);
-      })
-      .catch(done);
+    const res = await shareConn.query('SELECT @@strict_password_validation as a');
+    if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
+    await shareConn.query("INSTALL SONAME 'auth_ed25519'");
+    await shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
+    if (shareConn.info.hasMinVersion(10, 4, 0)) {
+      await shareConn.query(
+        "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+          "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+      );
+    } else {
+      await shareConn.query(
+        "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+          "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
+      );
+    }
+
+    await shareConn.query(
+      'GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'"
+    );
+    try {
+      let conn = await base.createConnection({
+        user: 'verificationEd25519AuthPlugin',
+        password: 'MySup8%rPassw@ord'
+      });
+      conn.end();
+      try {
+        conn = await base.createConnection({
+          user: 'verificationEd25519AuthPlugin',
+          password: 'MySup8%rPassw@ord',
+          restrictedAuth: ''
+        });
+        conn.end();
+        throw new Error('must have thrown error');
+      } catch (err) {
+        assert.equal(
+          err.text,
+          'Unsupported authentication plugin client_ed25519. Authorized plugin: '
+        );
+        assert.equal(err.errno, 45047);
+        assert.equal(err.sqlState, '42000');
+        assert.equal(err.code, 'ER_NOT_SUPPORTED_AUTH_PLUGIN');
+        assert.isTrue(err.fatal);
+      }
+    } catch (err) {
+      const expectedMsg = err.message.includes(
+        "Client does not support authentication protocol 'client_ed25519' requested by server."
+      );
+      if (!expectedMsg) console.log(err);
+      assert(expectedMsg);
+    }
   });
 
   it('name pipe authentication plugin', function (done) {

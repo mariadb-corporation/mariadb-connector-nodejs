@@ -621,7 +621,6 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            console.log(err);
             assert.equal(err.errno, 45016);
             assert.equal(err.sqlState, 'HY000');
             assert.equal(err.code, 'ER_MISSING_PARAMETER');

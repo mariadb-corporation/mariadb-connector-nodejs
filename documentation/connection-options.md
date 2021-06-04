@@ -28,6 +28,7 @@
 | **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
 | **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
+| **restrictedAuth** | if set, restrict authentication plugin to secure list. Default provided plugins are mysql_native_password, mysql_clear_password, client_ed25519, dialog, sha256_password and caching_sha2_password |*Array|String* | |
 
 
 ### JSON or String configuration

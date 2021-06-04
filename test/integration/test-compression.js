@@ -15,7 +15,6 @@ describe('Compression', function () {
         conn = con;
         conn.query('SELECT @@max_allowed_packet as t').then((row) => {
           maxAllowedSize = Number(row[0].t);
-          console.log('max_allowed_size:' + maxAllowedSize);
           if (testSize < maxAllowedSize) {
             buf = Buffer.alloc(testSize);
             randomBuf = Buffer.alloc(testSize);
@@ -48,7 +47,7 @@ describe('Compression', function () {
   };
 
   it('test compression multiple packet', function (done) {
-    this.timeout(30000);
+    this.timeout(60000);
     if (maxAllowedSize < 35000000) this.skip();
 
     conn.query(

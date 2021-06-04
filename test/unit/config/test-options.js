@@ -23,6 +23,7 @@ describe('test options', () => {
       compress: false,
       rsaPublicKey: undefined,
       cachingRsaPublicKey: undefined,
+      restrictedAuth: undefined,
       allowPublicKeyRetrieval: false,
       forceVersionCheck: false,
       maxAllowedPacket: undefined,
