@@ -681,6 +681,16 @@ export interface SqlError extends Error {
   code: string | null;
 
   /**
+   * original error message value
+   */
+  text: string | null;
+
+  /**
+   * The sql command associate
+   */
+  sql: string | null;
+
+  /**
    * The error number for the error code
    */
   errno: number;
