@@ -125,7 +125,7 @@ describe('Pool callback', () => {
     });
     pool.getConnection((err, conn) => {
       conn.query('SELECT SLEEP(1)', () => {
-        assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
+        assert(Date.now() - initTime >= 1985, 'expected > 2s, but was ' + (Date.now() - initTime));
         conn.release();
         pool.end((err) => {
           done();
