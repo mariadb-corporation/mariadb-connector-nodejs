@@ -296,6 +296,7 @@ Bench.prototype.displayReport = function () {
   const keys = Object.keys(this.reportData);
   for (let i = 0; i < keys.length; i++) {
     let base = 0;
+    let base2 = 0;
     let best = 0;
     let data = this.reportData[keys[i]];
 
@@ -304,11 +305,16 @@ Bench.prototype.displayReport = function () {
       if (o.drvType === 'mysql' || o.drvType === 'promise-mysql') {
         base = o.iteration;
       }
+      if (o.drvType === 'mysql2' || o.drvType === 'promise mysql2') {
+        base2 = o.iteration;
+      }
       if (o.iteration > best) {
         best = o.iteration;
       }
     }
-
+    if (base === 0) {
+      base = base2;
+    }
     //display results
     console.log('');
     console.log('bench : ' + keys[i]);
@@ -352,7 +358,16 @@ Bench.prototype.fill = function (val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function (title, displaySql, fct, onComplete, isPromise, usePool, conn) {
+Bench.prototype.add = function (
+  title,
+  displaySql,
+  fct,
+  onComplete,
+  isPromise,
+  usePool,
+  requireExecute,
+  conn
+) {
   const self = this;
   const addTest = getAddTest(
     self,
@@ -374,11 +389,11 @@ Bench.prototype.add = function (title, displaySql, fct, onComplete, isPromise, u
       addTest(self.CONN.MARIADB, 'warmup');
     }
 
-    if (!isPromise && mysql) {
+    if (!requireExecute && !isPromise && mysql) {
       addTest(self.CONN.MYSQL, self.CONN.MYSQL.desc);
     }
 
-    if (isPromise && promiseMysql) {
+    if (!requireExecute && isPromise && promiseMysql) {
       addTest(self.CONN.PROMISE_MYSQL, self.CONN.PROMISE_MYSQL.desc);
     }
 
@@ -396,7 +411,7 @@ Bench.prototype.add = function (title, displaySql, fct, onComplete, isPromise, u
       addTest(self.CONN.MARIADB, self.CONN.MARIADB.desc);
     }
 
-    if (isPromise && promiseMariasql) {
+    if (!requireExecute && isPromise && promiseMariasql) {
       addTest(self.CONN.PROMISE_MARIASQL, self.CONN.PROMISE_MARIASQL.desc);
     }
 

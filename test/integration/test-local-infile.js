@@ -117,53 +117,46 @@ describe('local-infile', () => {
       .catch(done);
   });
 
-  it('file error missing', function (done) {
+  it('file error missing', async function () {
     const self = this;
-    shareConn
-      .query('select @@local_infile')
-      .then((rows) => {
-        if (rows[0]['@@local_infile'] === 0) {
-          self.skip();
-        }
-        base
-          .createConnection({ permitLocalInfile: true })
-          .then((conn) => {
-            shareConn
-              .query('DROP TABLE IF EXISTS smallLocalInfile')
-              .then(() => {
-                return conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
-              })
-              .then(() => {
-                return conn.query(
-                  "LOAD DATA LOCAL INFILE '" +
-                    path.join(os.tmpdir(), 'notExistFile.txt').replace(/\\/g, '/') +
-                    "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
-                );
-              })
-              .then(() => {
-                done(new Error('must have thrown error !'));
-              })
-              .catch((err) => {
-                assert(
-                  err.message.includes(
-                    'LOCAL INFILE command failed: ENOENT: no such file or directory'
-                  )
-                );
-                assert.equal(err.sqlState, '22000');
-                assert(!err.fatal);
-                conn.end();
-                done();
-              });
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const rows = await shareConn.query('select @@local_infile');
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      return self.skip();
+    }
+    const conn = await base.createConnection({ permitLocalInfile: true });
+    await shareConn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    try {
+      await conn.query(
+        "LOAD DATA LOCAL INFILE '" +
+          path.join(os.tmpdir(), 'notExistFile.txt').replace(/\\/g, '/') +
+          "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+      );
+      throw new Error('must have thrown error !');
+    } catch (err) {
+      assert(
+        err.message.includes('LOCAL INFILE command failed: ENOENT: no such file or directory')
+      );
+      assert.equal(err.sqlState, '22000');
+      assert(!err.fatal);
+      conn.end();
+    }
   });
 
   it('small local infile', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (rows[0]['@@local_infile'] === 0) {
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
       return self.skip();
     }
     await new Promise(function (resolve, reject) {
@@ -192,9 +185,15 @@ describe('local-infile', () => {
   it('small local infile with non supported node.js encoding', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (rows[0]['@@local_infile'] === 0) {
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
       return self.skip();
     }
+
     await new Promise(function (resolve, reject) {
       fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
         if (err) reject(err);
@@ -226,9 +225,15 @@ describe('local-infile', () => {
     shareConn
       .query('select @@local_infile')
       .then((rows) => {
-        if (rows[0]['@@local_infile'] === 0) {
-          self.skip();
+        if (
+          rows[0]['@@local_infile'] === 0 ||
+          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+          process.env.srv === 'skysql' ||
+          process.env.srv === 'skysql-ha'
+        ) {
+          return self.skip();
         }
+
         return new Promise(function (resolve, reject) {
           fs.writeFile(nonReadableFile, '1,hello\n2,world\n', 'utf8', function (err) {
             if (err) reject(err);
@@ -275,11 +280,17 @@ describe('local-infile', () => {
     let size;
     const self = this;
     let rows = await shareConn.query('select @@local_infile');
-    if (rows[0]['@@local_infile'] === 0) {
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
       return self.skip();
     }
+
     rows = await shareConn.query('SELECT @@max_allowed_packet as t');
-    const maxAllowedSize = rows[0].t;
+    const maxAllowedSize = Number(rows[0].t);
     size = Math.round((maxAllowedSize - 100) / 16);
     const header = '"a","b"\n';
     const headerLen = header.length;

@@ -25,6 +25,9 @@
 | **socketTimeout** | Socket timeout in milliseconds after the connection is established |*integer* | 0|
 | **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations.|*boolean* | false|
 | **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)|*integer* | 4196304|
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
 
 
 ### JSON or String configuration
@@ -54,25 +57,6 @@ mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=fals
 ```
 
 
-
-## Big Integer Support 
-
-Integers in JavaScript use IEEE-754 representation.  This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  However, MariaDB does support larger integers. 
-
-This means that when the value set on a column is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, the default implementation receives an inexact representation of the number.
-
-The Connector provides 3 options to address this issue. 
-
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
-| **bigNumberStrings** | When an integer is not in the safe range, the Connector interprets the value as a string. |*boolean* |false| 
-| **supportBigNumbers** | When an integer is not in the safe range, the Connector interprets the value as a [Long](https://www.npmjs.com/package/long) object. |*boolean* |false|
-| **supportBigInt** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](#big-integer-support) range). |*boolean* | false |
-
-
-Native `supportBigInt` implementation is recommended over `supportBigNumbers` (remains for compability with older version). `supportBigInt` is not enabled by default for compatibilty to avoid major regression. 
-It will be in a future 3.x version.
- 
 ## SSL
 
 The Connector can encrypt data during transfer using the Transport Layer Security (TLS) protocol.  TLS/SSL allows for transfer encryption, and can optionally use identity validation for the server and client.

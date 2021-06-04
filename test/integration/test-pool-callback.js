@@ -253,6 +253,19 @@ describe('Pool callback', () => {
     }, 200);
   });
 
+  it('pool direct execute', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({ connectionLimit: 1 });
+    pool.execute('SELECT ? as a', [2], (err, res, meta) => {
+      if (err) return done(err);
+      assert.isTrue(res[0].a === 2 || res[0].a === 2n);
+      assert.isTrue(meta.length === 1);
+      pool.end(() => {
+        done();
+      });
+    });
+  });
+
   it('pool grow', function (done) {
     this.timeout(20000);
     const pool = base.createPoolCallback({ connectionLimit: 10 });
@@ -265,14 +278,14 @@ describe('Pool callback', () => {
       let closed = false;
       let doneSend = false;
       for (let i = 0; i < 10000; i++) {
-        pool.query('SELECT ? as a', [i], (err, rows) => {
+        pool.query('SELECT ? as a', [i + ''], (err, rows) => {
           if (err) {
             if (!doneSend) {
               doneSend = true;
               done(err);
             }
           } else {
-            assert.deepEqual(rows, [{ a: i }]);
+            assert.deepEqual(rows, [{ a: i + '' }]);
           }
         });
       }

@@ -38,7 +38,7 @@ describe('pipelining', () => {
       .then((rows) => {
         assert.deepEqual(rows, {
           affectedRows: 0,
-          insertId: 0,
+          insertId: 0n,
           warningStatus: 0
         });
         return conn1.query('DO 2');
@@ -46,7 +46,7 @@ describe('pipelining', () => {
       .then((rows) => {
         assert.deepEqual(rows, {
           affectedRows: 0,
-          insertId: 0,
+          insertId: 0n,
           warningStatus: 0
         });
         done();
@@ -58,8 +58,8 @@ describe('pipelining', () => {
     const conn = base.createCallbackConnection();
     conn.connect((err) => {});
     conn.query('DO 1');
-    conn.query('SELECT 1', (err, rows) => {
-      assert.deepEqual(rows, [{ 1: 1 }]);
+    conn.query("SELECT '1'", (err, rows) => {
+      assert.deepEqual(rows, [{ 1: '1' }]);
       conn.end();
       done();
     });

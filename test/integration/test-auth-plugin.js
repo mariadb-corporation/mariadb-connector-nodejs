@@ -316,7 +316,7 @@ describe('authentication plugin', () => {
         });
       })
       .then((conn) => {
-        return conn.query('select 1').then((res) => {
+        return conn.query("select '1'").then((res) => {
           return conn.end();
         });
       })

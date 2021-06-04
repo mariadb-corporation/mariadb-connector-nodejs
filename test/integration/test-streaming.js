@@ -27,7 +27,7 @@ describe('streaming', () => {
         return shareConn.query('SELECT @@max_allowed_packet as t');
       })
       .then((rows) => {
-        maxAllowedSize = rows[0].t;
+        maxAllowedSize = Number(rows[0].t);
         createTmpFiles(done);
       })
       .catch(done);

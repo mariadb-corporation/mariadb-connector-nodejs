@@ -52,6 +52,30 @@ const mariadb = require('mariadb');
 
 ## Recommendation
 
+### Exact number consideration
+
+Integers in JavaScript use IEEE-754 representation.  This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  
+However, MariaDB does support larger integers and exact big decimal.
+This means that when the value set on a BIGINT is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, javascript Number Object cannot represent exact value.
+Same with DECIMAL type that might not be exact in IEEE 754 floating number.  
+
+Driver automatically return a JSON with type depending on database data types :
+* DECIMAL => javascript String
+* BIGINT => javascript BigInt 
+
+Default implementation return exact values, but might cause some incompatibility.
+Driver provides 3 options to address this issue.
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
+
+This is a breaking change from 3.0 compare to previous version and mysql/mysql2 drivers. 
+
+If wanting compatibility with previous version those values can be set to true / use [`typeCast`](#typeCast) to convert DECIMAL/BIGINT to expect value. 
+
 ### Timezone consideration
 
 Client and database can have a different timezone.
@@ -158,6 +182,8 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.prepare(sql) → Promise`](#connectionpreparesql---promise): Prepares a query.
+* [`connection.execute(sql[, values]) → Promise`](#connectionexecutesql-values--promise): Prepare and Executes a query.
 * [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values--promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
@@ -522,9 +548,7 @@ connection.query('select * from animals')
 * [`rowsAsArray`](#rowsAsArray)
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
-* [`supportBigNumbers`](#supportBigNumbers)
-* [`supportBigint`](#supportBigint)
-* [`bigNumberStrings`](#bigNumberStrings)
+* [`decimalAsNumber`](#decimalAsNumber)
 
 Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 
 
@@ -553,7 +577,7 @@ connection
           // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
           // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
           // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)
-          // at Query.readResponsePacket (C:\projets\mariadb-connector-nodejs.git\lib\cmd\resultset.js:46:28)
+          // at Query.readResponsePacket (C:\projets\mariadb-connector-nodejs.git\lib\cmd\parser.js:46:28)
           // at PacketInputStream.receivePacketBasic (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:104:9)
           // at PacketInputStream.onData (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:160:20)
           // at Socket.emit (events.js:210:5)
@@ -663,30 +687,33 @@ Whether the query should return integers as [`Long`](https://www.npmjs.com/packa
  the [safe](/documentation/connection-options.md#big-integer-support) range.
 
 
-#### `supportBigInt`
+#### `bigIntAsNumber`
 
-*boolean, default: false*
+*boolean, default: true*
 
 Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) 
 for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
 This ensures having expected value even for value > 2^53 (see [safe](/documentation/connection-options.md#big-integer-support) range).
 This option can be set to query level, supplanting connection option `supportBigInt` value. 
 
+this option is for compatibility for driver version < 3
+
 ```javascript
 await shareConn.query('CREATE TEMPORARY TABLE bigIntTable(id BIGINT)');
 await shareConn.query("INSERT INTO bigIntTable value ('9007199254740993')");
 const res = await shareConn.query('select * from bigIntTable');
-// res :  [{ id: 9007199254740992 }] (not exact value)
-const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBigInt: true});
 // res :  [{ id: 9007199254740993n }] (exact value)
+const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBigInt: false});
+// res :  [{ id: 9007199254740992 }] (not exact value)
 ```
 
 
-#### `bigNumberStrings`
+#### `decimalAsNumber`
 
 *boolean, default: false*
 
-Whether the query should return integers as strings when they are not in the [safe](documentation/connection-options.md#big-integer-support) range.
+Whether the query should return decimal as Number. 
+If enable, this might return approximate values. 
 
 
 #### `typeCast`
@@ -828,6 +855,67 @@ const queryStream = connection.queryStream("SELECT * FROM mysql.user");
 
 stream.pipeline(queryStream, transformStream, someWriterStream);
 
+```
+## `connection.prepare(sql) → Promise`
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+>
+> Returns a promise that :
+> * resolves with a [Prepare](#prepareobject) object.
+> * rejects with an [Error](#error).
+
+This permit to [PREPARE](https://mariadb.com/kb/en/prepare-statement/) a command that permits to be executed many times. 
+After use, prepare.close() method MUST be call, in order to properly close object. 
+
+
+### Prepare object
+
+Public variables : 
+* `id`: Prepare statement Identifier
+* `query`: sql command
+* `database`: database it applies to. 
+* `parameters`: parameter array information.
+* `columns`: columns array information. 
+
+Public methods :
+#### `execute(values) → Promise`
+> * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string.
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
+
+#### `close() → void`
+This close the prepared statement. 
+Each time a Prepared object is used, it must be closed. 
+
+In case prepare cache is enabled (having option `prepareCacheLength` > 0 (default)), 
+Driver will either really close Prepare or keep it in cache. 
+
+
+```javascript
+const prepare = await conn.prepare('INSERT INTO mytable(id,val) VALUES (?,?)');
+await prepare.execute([1, 'val1'])
+prepare.close();
+```
+
+## `connection.execute(sql[, values]) → Promise`
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is.
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
+
+This is quite similar to [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise) method, with a few differences : 
+Execute will in fact [PREPARE](https://mariadb.com/kb/en/prepare-statement/) + [EXECUTE](https://mariadb.com/kb/en/execute-statement/) + [CLOSE](https://mariadb.com/kb/en/deallocate-drop-prepare/) command.
+
+It makes sense to use this only if the command will often be used and if prepare cache is enabled (default).
+If PREPARE result is already in cache, only [EXECUTE](https://mariadb.com/kb/en/execute-statement/) command is executed.
+MariaDB server 10.6 even avoid resending result-set metadata if not changed since, permitting even faster results.
+
+ 
+```javascript
+const res = await conn.execute('SELECT * FROM mytable WHERE someVal = ? and otherVal = ?', [1, 'val1']);
 ```
 
 

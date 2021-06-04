@@ -271,6 +271,13 @@ describe('Pool', () => {
     });
   });
 
+  it('pool execute', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    const res = await pool.execute('SELECT ? as a', [5]);
+    assert.isTrue(res[0].a === 5 || res[0].a === 5n);
+    await pool.end();
+  });
+
   it('create pool with multipleStatement', function (done) {
     if (
       process.env.srv === 'maxscale' ||
@@ -284,10 +291,10 @@ describe('Pool', () => {
       multipleStatements: true
     });
     pool
-      .query('select 1; select 2')
+      .query("select '1'; select '2'")
       .then((results) => {
         //select 1 results
-        assert.deepEqual(results, [[{ 1: 1 }], [{ 2: 2 }]]);
+        assert.deepEqual(results, [[{ 1: '1' }], [{ 2: '2' }]]);
         pool.end();
         done();
       })
@@ -703,16 +710,21 @@ describe('Pool', () => {
       assert.equal(pool.idleConnections(), 10);
       assert.equal(pool.taskQueueSize(), 0);
       let closed = false;
+      const queryPromises = [];
       for (let i = 0; i < 10000; i++) {
-        pool
-          .query('SELECT ? as a', [i])
-          .then((rows) => {
-            assert.deepEqual(rows, [{ a: i }]);
-          })
-          .catch((err) => {
-            if (!closed) done(err);
-          });
+        queryPromises.push(pool.query('SELECT ? as a', [i + '']));
       }
+
+      Promise.all(queryPromises)
+        .then((rows) => {
+          for (let i = 0; i < rows.length; i++) {
+            assert.deepEqual(rows[i], [{ a: i + '' }]);
+          }
+        })
+        .catch((err) => {
+          if (!closed) done(err);
+        });
+
       setImmediate(() => {
         assert.equal(pool.activeConnections(), 10);
         assert.equal(pool.totalConnections(), 10);
@@ -1031,39 +1043,26 @@ describe('Pool', () => {
       .catch(done);
   });
 
-  it('pool batch single array', function (done) {
+  it('pool batch single array', async function () {
     const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
 
-    pool
-      .query('DROP TABLE IF EXISTS singleBatchArray')
-      .then(() => {
-        return pool.query('CREATE TABLE singleBatchArray(id int)');
-      })
-      .then(() => {
-        return pool.batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3]);
-      })
-      .then((res) => {
-        assert.equal(res.affectedRows, 3);
-        return pool.query('select * from `singleBatchArray`');
-      })
-      .then((res) => {
-        assert.deepEqual(res, [
-          {
-            id: 1
-          },
-          {
-            id: 2
-          },
-          {
-            id: 3
-          }
-        ]);
-        return pool.end();
-      })
-      .then(() => {
-        done();
-      })
-      .catch(done);
+    await pool.query('DROP TABLE IF EXISTS singleBatchArray');
+    await pool.query('CREATE TABLE singleBatchArray(id int)');
+    let res = await pool.batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3]);
+    assert.equal(res.affectedRows, 3);
+    res = await pool.query('select * from `singleBatchArray`');
+    assert.deepEqual(res, [
+      {
+        id: 1
+      },
+      {
+        id: 2
+      },
+      {
+        id: 3
+      }
+    ]);
+    pool.end();
   });
 
   it("ensure pipe ending doesn't stall connection", function (done) {
@@ -1091,7 +1090,12 @@ describe('Pool', () => {
         const transformStream = new stream.Transform({
           objectMode: true,
           transform: function transformer(chunk, encoding, callback) {
-            callback(null, JSON.stringify(chunk));
+            callback(
+              null,
+              JSON.stringify(chunk, (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value
+              )
+            );
             received++;
           }
         });

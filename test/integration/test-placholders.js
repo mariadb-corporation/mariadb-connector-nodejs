@@ -10,12 +10,12 @@ describe('Placeholder', () => {
       .then((conn) => {
         conn
           .query('select :param1 as val1, :param3 as val3, :param2 as val2', {
-            param3: 30,
-            param1: 10,
-            param2: 20
+            param3: '30',
+            param1: '10',
+            param2: '20'
           })
           .then((rows) => {
-            assert.deepEqual(rows, [{ val1: 10, val3: 30, val2: 20 }]);
+            assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
             conn.end();
             done();
           })
@@ -31,10 +31,10 @@ describe('Placeholder', () => {
           namedPlaceholders: true,
           sql: 'select :param1 as val1, :param3 as val3, :param2 as val2'
         },
-        { param3: 30, param1: 10, param2: 20 }
+        { param3: '30', param1: '10', param2: '20' }
       )
       .then((rows) => {
-        assert.deepEqual(rows, [{ val1: 10, val3: 30, val2: 20 }]);
+        assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
         done();
       })
       .catch(done);
@@ -47,10 +47,10 @@ describe('Placeholder', () => {
           namedPlaceholders: true,
           sql: 'select :param-1 as val1, :param-3 as val3, :param-2'
         },
-        { 'param-3': 30, 'param-1': 10, 'param-2': 20 }
+        { 'param-3': '30', 'param-1': '10', 'param-2': '20' }
       )
       .then((rows) => {
-        assert.deepEqual(rows, [{ val1: 10, val3: 30, 20: 20 }]);
+        assert.deepEqual(rows, [{ val1: '10', val3: '30', 20: '20' }]);
         done();
       })
       .catch(done);
@@ -235,9 +235,9 @@ describe('Placeholder', () => {
       .createConnection({ namedPlaceholders: true })
       .then((conn) => {
         conn
-          .query('select 1', [2])
+          .query("select '1'", [2])
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -284,13 +284,13 @@ describe('Placeholder', () => {
       .createConnection({ namedPlaceholders: true })
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 -- test comment\n , :par', {
+          .query("select /* blabla */ '1' -- test comment\n , :par", {
             par: 'val'
           })
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);
@@ -307,13 +307,13 @@ describe('Placeholder', () => {
       .createConnection({ namedPlaceholders: true })
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 # test comment\n , :par', {
+          .query("select /* blabla */ '1' # test comment\n , :par", {
             par: 'val'
           })
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);

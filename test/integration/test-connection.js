@@ -34,9 +34,9 @@ describe('connection', () => {
       .createConnection({ connectAttributes: attr, charset: charset })
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -54,9 +54,9 @@ describe('connection', () => {
       })
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -87,11 +87,11 @@ describe('connection', () => {
 
   it('callback without connect', function (done) {
     const conn = base.createCallbackConnection();
-    conn.query('select 1', (err, rows) => {
+    conn.query("select '1'", (err, rows) => {
       if (err) {
         done(err);
       } else {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         conn.end();
         done();
       }
@@ -257,9 +257,9 @@ describe('connection', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -811,9 +811,9 @@ describe('connection', () => {
     }, 500);
 
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         const diff = process.hrtime(startTime);
         //query has take more than 500ms
         assert.isTrue(

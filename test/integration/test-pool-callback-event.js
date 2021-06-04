@@ -36,7 +36,7 @@ describe('Pool callback event', () => {
       acquireNumber++;
     });
 
-    pool.query('SELECT 1', (err, res) => {
+    pool.query("SELECT '1'", (err, res) => {
       assert.equal(acquireNumber, 1);
       pool.getConnection((err, conn) => {
         assert.equal(acquireNumber, 2);

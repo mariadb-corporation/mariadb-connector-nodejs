@@ -129,7 +129,7 @@ describe('ok packet', () => {
       .then((rows) => {
         assert.ok(!Array.isArray(rows));
         assert.strictEqual(typeof rows, 'object');
-        assert.strictEqual(rows.insertId, 1);
+        assert.strictEqual(rows.insertId, 1n);
         assert.strictEqual(rows.affectedRows, 1);
         assert.strictEqual(rows.warningStatus, 0);
         done();
@@ -162,13 +162,13 @@ describe('ok packet', () => {
           .then((rows) => {
             assert.ok(Array.isArray(rows));
             assert.strictEqual(rows.length, 3);
-            assert.strictEqual(rows[0].insertId, 1);
+            assert.strictEqual(rows[0].insertId, 1n);
             assert.strictEqual(rows[0].affectedRows, 1);
             assert.strictEqual(rows[0].warningStatus, 0);
-            assert.strictEqual(rows[1].insertId, 9);
+            assert.strictEqual(rows[1].insertId, 9n);
             assert.strictEqual(rows[1].affectedRows, 1);
             assert.strictEqual(rows[1].warningStatus, 0);
-            assert.strictEqual(rows[2].insertId, 10);
+            assert.strictEqual(rows[2].insertId, 10n);
             assert.strictEqual(rows[2].affectedRows, 1);
             assert.strictEqual(rows[2].warningStatus, 0);
             conn.end();
@@ -194,7 +194,7 @@ describe('ok packet', () => {
       .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
-        assert.strictEqual(res.insertId, 0);
+        assert.strictEqual(res.insertId, 0n);
         assert.strictEqual(res.affectedRows, 4);
         assert.strictEqual(res.warningStatus, 0);
         return shareConn.query('UPDATE updateResultSet1 set id = 1');
@@ -202,7 +202,7 @@ describe('ok packet', () => {
       .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
-        assert.strictEqual(res.insertId, 0);
+        assert.strictEqual(res.insertId, 0n);
         assert.strictEqual(res.affectedRows, 4);
         assert.strictEqual(res.warningStatus, 0);
         done();
@@ -228,7 +228,7 @@ describe('ok packet', () => {
           .then((res) => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
-            assert.strictEqual(res.insertId, 0);
+            assert.strictEqual(res.insertId, 0n);
             assert.strictEqual(res.affectedRows, 2);
             assert.strictEqual(res.warningStatus, 0);
             return conn.query('UPDATE updateResultSet1 set id = 1');
@@ -236,7 +236,7 @@ describe('ok packet', () => {
           .then((res) => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
-            assert.strictEqual(res.insertId, 0);
+            assert.strictEqual(res.insertId, 0n);
             assert.strictEqual(res.affectedRows, 0);
             assert.strictEqual(res.warningStatus, 0);
             conn.end();

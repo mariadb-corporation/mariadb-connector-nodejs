@@ -14,7 +14,7 @@ const ZLib = require('zlib');
 describe('test compress PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
-  const info = new ConnectionInformation();
+  const info = new ConnectionInformation({});
   const unexpectedPacket = (packet) => {
     throw new Error('unexpected packet');
   };

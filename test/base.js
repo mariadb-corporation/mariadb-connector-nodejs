@@ -9,29 +9,26 @@ const { assert } = require('chai');
 //*****************************************************************
 // initialize share connection
 //*****************************************************************
-before('share initialization', (done) => {
-  if (global.shareConn) {
-    done();
-  } else {
-    basePromise
-      .createConnection(Conf.baseConfig)
-      .then((conn) => {
-        global.shareConn = conn;
-        done();
-      })
-      .catch(done);
+before('share initialization', async () => {
+  if (!global.shareConn) {
+    try {
+      global.shareConn = await basePromise.createConnection(Conf.baseConfig);
+    } catch (e) {
+      // retry
+      global.shareConn = await basePromise.createConnection(Conf.baseConfig);
+    }
   }
 });
 
-after('share destroy', () => {
+after('share destroy', async () => {
   if (shareConn) {
-    shareConn
-      .end()
-      .then(() => (global.shareConn = undefined))
-      .catch((err) => {
-        global.shareConn = undefined;
-        console.log('Error when ending shared connection : ' + err.message);
-      });
+    try {
+      await shareConn.end();
+      global.shareConn = undefined;
+    } catch (err) {
+      global.shareConn = undefined;
+      console.log('Error when ending shared connection : ' + err.message);
+    }
   }
 });
 

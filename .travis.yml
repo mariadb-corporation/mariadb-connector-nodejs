@@ -1,7 +1,7 @@
 os: linux
 language: node_js
 services: docker
-node_js: 12
+node_js: 16
 addons:
   hosts:
   - mariadb.example.com
@@ -9,6 +9,7 @@ addons:
 
 before_install:
   - git clone https://github.com/mariadb-corporation/connector-test-machine.git
+
 
 install:
   - |-
@@ -31,8 +32,8 @@ env:
 jobs:
   fast_finish: true
   allow_failures:
-    - env: srv=skysql
-    - env: srv=skysql-ha
+    - env: srv=skysql RUN_LONG_TEST=0
+    - env: srv=skysql-ha RUN_LONG_TEST=0
     - env: srv=build v=10.6
   include:
     - env: srv=mariadb v=10.5
@@ -45,12 +46,12 @@ jobs:
     - env: srv=mariadb v=10.5
       node_js: 14
     - env: srv=mariadb v=10.5
-      node_js: 15
+      node_js: 12
     - env: srv=mariadb-es v=10.5
-    - env: srv=mariadb v=10.5 BENCH=1
+    - env: srv=mariadb v=10.6 BENCH=1
     - env: srv=maxscale
-    - env: srv=skysql
-    - env: srv=skysql-ha
+    - env: srv=skysql RUN_LONG_TEST=0
+    - env: srv=skysql-ha RUN_LONG_TEST=0
     - env: srv=build v=10.6
     - env: srv=mysql v=5.7
     - env: srv=mysql v=8.0

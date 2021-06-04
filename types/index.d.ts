@@ -44,6 +44,11 @@ export interface QueryConfig {
   rowsAsArray?: boolean;
 
   /**
+   * force returning insertId as Number in place of BigInt
+   */
+  insertIdAsNumber?: boolean;
+
+  /**
    * Whether to retrieve dates as strings or as Date objects.
    */
   dateStrings?: boolean;
@@ -60,28 +65,12 @@ export interface QueryConfig {
   namedPlaceholders?: boolean;
 
   /**
-   * permit to indicate server global variable max_allowed_packet value to ensure efficient batching.
-   * default is 4Mb. see batch documentation
-   */
-  maxAllowedPacket?: number;
-
-  /**
-   * When an integer is not in the safe range, the Connector interprets the value as a Long object.
-   */
-  supportBigNumbers?: boolean;
-
-  /**
    * Compatibility option to permit setting multiple value by a JSON object to replace one question mark.
    * key values will replace the question mark with format like key1=val,key2='val2'.
    * Since it doesn't respect the usual prepared statement format that one value is for one question mark,
    * this can lead to incomprehension, even if badly use to possible injection.
    */
   permitSetMultiParamEntries?: boolean;
-
-  /**
-   * When an integer is not in the safe range, the Connector interprets the value as a string
-   */
-  bigNumberStrings?: boolean;
 
   /**
    * disabled bulk command in batch.
@@ -110,9 +99,39 @@ export interface QueryConfig {
   permitLocalInfile?: boolean;
 
   /**
-   * Database server port number
+   * Allows timeout for command execution.
    */
-  port?: number;
+  timeout?: number;
+
+  /**
+   * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
+   */
+  autoJsonMap?: boolean;
+
+  /**
+   * Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5
+   */
+  arrayParenthesis?: boolean;
+
+  /**
+   * indicate to throw an exception if result-set will not contain some data due to having duplicate identifier
+   * (Default: true)
+   */
+  checkDuplicate?: boolean;
+
+  /**
+   * force returning decimal values as Number in place of String
+   *
+   * Default: false;
+   */
+  decimalAsNumber?: boolean;
+
+  /**
+   * Force returning BIGINT data as Number in place of BigInt.
+   *
+   * Default: false;
+   */
+  bigIntAsNumber?: boolean;
 }
 
 export interface QueryOptions extends QueryConfig {
@@ -258,12 +277,6 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   forceVersionCheck?: boolean;
 
   /**
-   * indicate to throw an exception if result-set will not contain some data due to having duplicate identifier
-   * (Default: true)
-   */
-  checkDuplicate?: boolean;
-
-  /**
    * When enabled, the update number corresponds to update rows.
    * When disabled, it indicates the real rows changed.
    */
@@ -281,14 +294,10 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   sessionVariables?: any;
 
   /**
-   * Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5
+   * permit to indicate server global variable max_allowed_packet value to ensure efficient batching.
+   * default is 4Mb. see batch documentation
    */
-  arrayParenthesis?: boolean;
-
-  /**
-   * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
-   */
-  autoJsonMap?: boolean;
+  maxAllowedPacket?: number;
 
   /**
    * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that).
@@ -316,14 +325,18 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   allowPublicKeyRetrieval?: boolean;
 
   /**
-   * Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
-   * for [BIGINT](https://mariadb.com/kb/en/bigint/) data type.
-   * This ensures having expected value even for value > 2^53
-   * (see [safe](documentation/connection-options.md#support-for-big-integer) range).
+   * force returning insertId as Number in place of BigInt
    *
-   * default false
+   * Default: false;
    */
-  supportBigInt?: boolean;
+  insertIdAsNumber?: boolean;
+
+  /**
+   * Indicate prepare cache size when using prepared statement
+   *
+   * default to 256.
+   */
+  prepareCacheLength?: number;
 }
 
 export interface PoolConfig extends ConnectionConfig {
@@ -461,6 +474,12 @@ export interface ConnectionInfo {
   readonly serverCapabilities: number;
 }
 
+export interface Prepare {
+  id: number;
+  execute(values?: any): Promise<any>;
+  close(): void;
+}
+
 export interface Connection {
   /**
    * Connection information
@@ -500,7 +519,17 @@ export interface Connection {
   query(sql: string | QueryOptions, values?: any): Promise<any>;
 
   /**
-   * Execute batch using text protocol.
+   * Prepare query.
+   */
+  prepare(sql: string): Promise<Prepare>;
+
+  /**
+   * Execute query using binary (prepare) protocol
+   */
+  execute(sql: string | QueryOptions, values?: any): Promise<any>;
+
+  /**
+   * Execute batch. Values are Array of Array.
    */
   batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
 
@@ -605,6 +634,11 @@ export interface Pool {
   batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
 
   /**
+   * Execute query using binary (prepare) protocol
+   */
+  execute(sql: string | QueryOptions, values?: any): Promise<any>;
+
+  /**
    * Close all connection in pool
    */
   end(): Promise<void>;
@@ -655,6 +689,7 @@ export interface FilteredPoolCluster {
   getConnection(): Promise<PoolConnection>;
   query(sql: string | QueryOptions, values?: any): Promise<any>;
   batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
+  execute(sql: string | QueryOptions, values?: any): Promise<any>;
 }
 
 export interface PoolCluster {
@@ -668,7 +703,7 @@ export interface PoolCluster {
 
 export interface UpsertResult {
   affectedRows: number;
-  insertId: number;
+  insertId: number | bigint;
   warningStatus: number;
 }
 

@@ -9,9 +9,9 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select 1', [2])
+          .query("select '1'", [2])
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -141,11 +141,11 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 -- test comment\n , ?', ['val'])
+          .query("select /* blabla */ '1' -- test comment\n , ?", ['val'])
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);
@@ -162,11 +162,11 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 # test comment\n , ?', ['val'])
+          .query("select /* blabla */ '1' # test comment\n , ?", ['val'])
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);

@@ -17,11 +17,11 @@ describe('TypeCast', () => {
   it('query level typecast function', function (done) {
     shareConn
       .query({
-        sql: "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r",
+        sql: "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r",
         typeCast: changeCaseCast
       })
       .then((rows) => {
-        assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
+        assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
         done();
       })
       .catch(done);
@@ -32,9 +32,9 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: changeCaseCast })
       .then((conn) => {
         conn
-          .query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r")
+          .query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r")
           .then((rows) => {
-            assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
+            assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
             conn.end();
             done();
           })
@@ -48,9 +48,9 @@ describe('TypeCast', () => {
       .createConnection({ typeCast: true })
       .then((conn) => {
         conn
-          .query('SELECT 1 as r')
+          .query("SELECT '1' as r")
           .then((rows) => {
-            assert.deepEqual(rows, [{ r: 1 }]);
+            assert.deepEqual(rows, [{ r: '1' }]);
             conn.end();
             done();
           })
@@ -59,20 +59,13 @@ describe('TypeCast', () => {
       .catch(done);
   });
 
-  it('connection level typecast function', function (done) {
-    base
-      .createConnection({ typeCast: changeCaseCast })
-      .then((conn) => {
-        conn
-          .query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, 1 as r")
-          .then((rows) => {
-            assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: 1 }]);
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('connection level typecast function', async function () {
+    const conn = await base.createConnection({ typeCast: changeCaseCast });
+    const rows = await conn.query(
+      "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r"
+    );
+    assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
+    conn.end();
   });
 
   it('cast fields', function (done) {
@@ -119,10 +112,12 @@ describe('TypeCast', () => {
   it('long cast', async function () {
     const longCast = (column, next) => {
       if (column.type == 'TINY' && column.columnLength === 1) {
-        return column.long();
+        const val = column.long();
+        return val == null ? null : Number(val);
       }
       if (column.type == 'VAR_STRING') {
-        return column.decimal();
+        const val = column.decimal();
+        return val == null ? null : Number(val);
       }
       return next();
     };
