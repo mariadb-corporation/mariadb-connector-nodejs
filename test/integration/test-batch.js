@@ -52,10 +52,6 @@ describe('batch', function () {
       bulk: useBulk,
       timezone: timezone
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
-
     conn.query('DROP TABLE IF EXISTS simpleBatch');
     conn.query(
       'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
@@ -168,8 +164,6 @@ describe('batch', function () {
     await conn.query('ROLLBACK');
 
     conn.query('DROP TABLE simpleBatch');
-    clearTimeout(timeout);
-
     const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
     assert.deepEqual(rows, [{ 1: 1 }]);
     conn.end();
@@ -177,10 +171,6 @@ describe('batch', function () {
 
   const simpleBatchWithOptions = async (useCompression, useBulk) => {
     const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
-
     conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
     conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
     await shareConn.query('FLUSH TABLES');
@@ -215,7 +205,6 @@ describe('batch', function () {
     await conn.query('ROLLBACK');
 
     conn.query('DROP TABLE simpleBatchWithOptions');
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -225,10 +214,6 @@ describe('batch', function () {
       bulk: useBulk,
       collation: 'CP1251_GENERAL_CI'
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
-
     conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
     conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
     await shareConn.query('FLUSH TABLES');
@@ -247,16 +232,11 @@ describe('batch', function () {
     await conn.query('ROLLBACK');
 
     conn.query('DROP TABLE simpleBatchCP1251');
-    clearTimeout(timeout);
     conn.end();
   };
 
   const simpleBatchErrorMsg = async (compression, useBulk) => {
     const conn = await base.createConnection({ trace: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
-
     try {
       await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
         [1, 'john'],
@@ -273,7 +253,6 @@ describe('batch', function () {
       assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       conn.end();
-      clearTimeout(timeout);
     }
   };
 
@@ -281,9 +260,6 @@ describe('batch', function () {
     const conn = await base.createConnection({ trace: true, bulk: useBulk });
     await conn.query('DROP TABLE IF EXISTS noValueBatch');
     await conn.query('CREATE TABLE noValueBatch(id int not null primary key auto_increment)');
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 2000);
     await shareConn.query('FLUSH TABLES');
     await conn.query('START TRANSACTION');
 
@@ -291,7 +267,6 @@ describe('batch', function () {
     const res = await conn.query('SELECT COUNT(*) as nb FROM noValueBatch');
     assert.equal(res[0].nb, 2);
     conn.end();
-    clearTimeout(timeout);
   };
 
   const simpleBatchErrorSplit = async (useCompression, useBulk, timezone) => {
@@ -300,10 +275,6 @@ describe('batch', function () {
       bulk: useBulk,
       timezone: timezone
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
-
     await conn.query('DROP TABLE IF EXISTS simpleBatch');
     await conn.query(
       'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(8), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
@@ -355,14 +326,10 @@ describe('batch', function () {
     }
     conn.query('DROP TABLE simpleBatch');
     conn.end();
-    clearTimeout(timeout);
   };
 
   const nonRewritableBatch = async (useCompression, useBulk) => {
     const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     try {
       let res = await conn.batch('SELECT ? as id, ? as t', [
         [1, 'john'],
@@ -395,7 +362,6 @@ describe('batch', function () {
         );
       }
     }
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -403,12 +369,8 @@ describe('batch', function () {
     const conn = await base.createConnection({
       compress: useCompression,
       maxAllowedPacket: 16 * 1024 * 1024,
-      bulk: useBulk,
-      logPackets: true
+      bulk: useBulk
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 200000);
     conn.query('DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -438,7 +400,6 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -446,12 +407,8 @@ describe('batch', function () {
     const conn = await base.createConnection({
       compress: useCompression,
       bulk: useBulk,
-      logPackets: true,
       maxAllowedPacket: 4 * 1024 * 1024
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 200000);
     conn.query('DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -481,20 +438,14 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-
-    clearTimeout(timeout);
     conn.end();
   };
 
   const bigBatchError = async (useCompression, useBulk) => {
     const conn = await base.createConnection({
       compress: useCompression,
-      bulk: useBulk,
-      logPackets: true
+      bulk: useBulk
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 200000);
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
@@ -507,7 +458,6 @@ describe('batch', function () {
     } catch (err) {
       const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
       assert.deepEqual(rows, [{ 1: 1 }]);
-      clearTimeout(timeout);
       conn.end();
     }
   };
@@ -517,12 +467,8 @@ describe('batch', function () {
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({
       compress: useCompression,
-      bulk: useBulk,
-      logPackets: true
+      bulk: useBulk
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     conn.query('DROP TABLE IF EXISTS batchWithStream');
     await conn.query(
       'CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
@@ -555,7 +501,6 @@ describe('batch', function () {
       }
     ]);
     conn.query('DROP TABLE batchWithStream');
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -563,9 +508,6 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     try {
       await conn.batch('INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)', [
         [1, stream1, 99],
@@ -581,7 +523,6 @@ describe('batch', function () {
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-      clearTimeout(timeout);
       conn.end();
     }
   };
@@ -595,12 +536,8 @@ describe('batch', function () {
 
     const conn = await base.createConnection({
       compress: useCompression,
-      bulk: useBulk,
-      logPackets: true
+      bulk: useBulk
     });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 200000);
     try {
       await conn.batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
       throw new Error('must have thrown error !');
@@ -608,15 +545,11 @@ describe('batch', function () {
       const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
       assert.deepEqual(rows, [{ 1: 1 }]);
       conn.end();
-      clearTimeout(timeout);
     }
   };
 
   const simpleNamedPlaceHolders = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     conn.query('DROP TABLE IF EXISTS simpleNamedPlaceHolders');
     conn.query(
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -651,14 +584,10 @@ describe('batch', function () {
     ]);
     conn.query('DROP TABLE simpleNamedPlaceHolders');
     conn.end();
-    clearTimeout(timeout);
   };
 
   const simpleNamedPlaceHoldersErr = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     try {
       await conn.batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
         { param_1: 1, param_2: 'john' },
@@ -672,16 +601,12 @@ describe('batch', function () {
       assert.equal(err.errno, 1146);
       assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-      clearTimeout(timeout);
       conn.end();
     }
   };
 
   const more16MNamedPlaceHolders = async function (useBulk) {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 200000);
     conn.query('DROP TABLE IF EXISTS more16MNamedPlaceHolders');
     conn.query(
       'CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -710,7 +635,6 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -718,9 +642,6 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     conn.query('DROP TABLE IF EXISTS streamNamedPlaceHolders');
     conn.query(
       'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
@@ -756,7 +677,6 @@ describe('batch', function () {
       }
     ]);
     conn.query('DROP TABLE streamNamedPlaceHolders');
-    clearTimeout(timeout);
     conn.end();
   };
 
@@ -764,9 +684,6 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    const timeout = setTimeout(() => {
-      console.log(conn.info.getLastPackets());
-    }, 25000);
     await conn.query('DROP TABLE IF EXISTS blabla');
     await conn.query('CREATE TABLE blabla(i int, i2 int, i3 int, s1 TEXT, s2 TEXT, i4 int)');
     try {
@@ -786,8 +703,6 @@ describe('batch', function () {
       assert.equal(err.errno, 45017);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.code, 'ER_PARAMETER_UNDEFINED');
-      clearTimeout(timeout);
-
       await conn.query('DROP TABLE IF EXISTS blabla');
       conn.end();
     }
@@ -919,7 +834,7 @@ describe('batch', function () {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
+      // // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
       if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
@@ -1152,9 +1067,6 @@ describe('batch', function () {
 
     const displayError = async (debugLen) => {
       const conn = await base.createConnection({ trace: true, bulk: false, debugLen: debugLen });
-      const timeout = setTimeout(() => {
-        console.log(conn.info.getLastPackets());
-      }, 25000);
       try {
         await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
           [1, 'john"'],
@@ -1173,7 +1085,6 @@ describe('batch', function () {
         assert.equal(err.sqlState, '42S02');
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
         conn.end();
-        clearTimeout(timeout);
       }
     };
 
@@ -1258,9 +1169,6 @@ describe('batch', function () {
 
     const displayError = async (debugLen) => {
       const conn = await base.createConnection({ trace: true, bulk: false, debugLen: debugLen });
-      const timeout = setTimeout(() => {
-        console.log(conn.info.getLastPackets());
-      }, 25000);
       try {
         await conn.batch('INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)', [
           [1, 'john"'],
@@ -1279,7 +1187,6 @@ describe('batch', function () {
         assert.equal(err.sqlState, '42S02');
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
         conn.end();
-        clearTimeout(timeout);
       }
     };
 

@@ -9,7 +9,12 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
   return mariadb.createConnection({
     host: baseConfig.host,
     user: option.user,
-    password: baseConfig.password
+    password: baseConfig.password,
+    logger: {
+      network: (msg) => console.log(msg),
+      query: (msg) => console.log(msg),
+      error: (err) => console.log(err)
+    }
   });
 }
 

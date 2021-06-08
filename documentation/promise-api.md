@@ -160,13 +160,6 @@ DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
 
-### Default options consideration
-
-For new project, enabling option `supportBigInt` is recommended (It will be in a future 3.x version).
-
-This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
-BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
-
 # Promise API
 
 **Base:**
@@ -272,6 +265,7 @@ Essential options list:
 | **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
 | **`queryTimeout`** | Set maximum query time in ms (an error will be thrown if limit is reached). 0 or undefined meaning no timeout. This can be superseded for a query using [`timeout`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#timeout) option|*int* |0| 
 | **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
+| **`logger`** | Configure logger. For more information, see the [`logger` option](/documentation/connection-options.md#logger) documentation. |*mixed*|
 
 For more information, see the [Connection Options](/documentation/connection-options.md) documentation. 
 

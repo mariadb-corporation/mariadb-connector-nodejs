@@ -27,6 +27,12 @@ export type TypeCastResult =
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
 
+export interface LoggerConfig {
+  network?: (msg: string) => void;
+  query?: (msg: string) => void;
+  error?: (err: Error) => void;
+}
+
 export interface QueryConfig {
   /**
    * Presents result-sets by table to avoid results with colliding fields. See the query() description for more information.
@@ -132,6 +138,11 @@ export interface QueryConfig {
    * Default: false;
    */
   bigIntAsNumber?: boolean;
+
+  /**
+   * Configure logger
+   */
+  logger?: LoggerConfig;
 }
 
 export interface QueryOptions extends QueryConfig {

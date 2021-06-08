@@ -39,11 +39,16 @@ describe('test options', () => {
       debug: false,
       debugCompress: false,
       debugLen: 256,
-      logPackets: false,
       trace: false,
       checkDuplicate: true,
       dateStrings: false,
       foundRows: true,
+      logger: {
+        error: null,
+        network: null,
+        query: null,
+        logParam: false
+      },
       metaAsArray: false,
       multipleStatements: false,
       namedPlaceholders: false,

@@ -28,8 +28,7 @@
 | **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
 | **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
-| **restrictedAuth** | if set, restrict authentication plugin to secure list. Default provided plugins are mysql_native_password, mysql_clear_password, client_ed25519, dialog, sha256_password and caching_sha2_password |*Array|String* | |
-
+| **logger** | Configure logger. For more information, see the [`logger` option](#logger) documentation. |*mixed*|
 
 ### JSON or String configuration
 
@@ -56,6 +55,45 @@ mariadb.createConnection({
 //passing argument as String
 mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=false&ssl=true&dateStrings=true');
 ```
+## logger
+
+Driver permit mapping the logs to an external logger.
+There is 3 caller functions:
+* network(string): called for each network exchanges. 
+* query(string): called for each commands 
+* error(Error): called for each error. 
+
+if setting one function, function will be used for all loggers. 
+(ie. logger: console.log  ===  logger: { network: console.log, query: console.log, error: console.log})
+
+**Example:**
+
+```javascript
+const mariadb = require('mariadb');
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    // - Write all logs with level `error` and below to `error.log`
+    // - Write all logs with level `info` and below to `combined.log`
+    new winston.transports.Console({ filename: 'error.log', level: 'error' }),
+    new winston.transports.Console({ filename: 'combined.log' })
+  ]
+});
+
+const pool = mariadb.createPool({
+  host: 'mydb.com',
+  user:'myUser',
+  password: 'myPwd',
+  logger: {
+    network: (msg) => logger.silly(msg),
+    query: (msg) => logger.info(msg),
+    error: (err) => logger.error(err),
+  }
+});
+```
+
 
 
 ## SSL
@@ -350,12 +388,12 @@ mariadb.createConnection({
 | **rsaPublicKey** | Indicate path/content to MySQL server RSA public key. use requires Node.js v11.6+ |*string* | |
 | **cachingRsaPublicKey** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
 | **allowPublicKeyRetrieval** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
-| **supportBigInt** | Whether resultset should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. This ensures having expected value even for value > 2^53 (see [safe](#big-integer-support) range). |*boolean* | false |
+| **restrictedAuth** | if set, restrict authentication plugin to secure list. Default provided plugins are mysql_native_password, mysql_clear_password, client_ed25519, dialog, sha256_password and caching_sha2_password |*Array|String* | |
 
 
 ## F.A.Q.
 
-#### error Hostname/IP doesn't match certificate's altnames
+#### error Hostname/IP doesn't match certificate's alt-names
 
 Clients verify certificate SAN (subject alternative names) and CN to ensure that the certificate corresponds to the hostname.  If the certificate's SAN/CN does not correspond to the `host` option, it returns an error such as:
 
