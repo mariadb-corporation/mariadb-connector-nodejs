@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.5.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.4) (08 Jun 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.3...2.5.4)
+
+* [CONJS-163] Authentication plugin failing doesn't always return error
+* [CONJS-164] Add API that list options default value
+* [CONJS-161] escaping correction
+* update iconv-lite dependency to 0.6.3
+  
 ## [2.5.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.3) (16 Feb 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.2...2.5.3)
 
