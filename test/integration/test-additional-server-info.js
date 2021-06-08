@@ -8,28 +8,14 @@ describe('server additional information API', () => {
     shareConn
       .query('SELECT VERSION() a')
       .then((res) => {
-        if (process.env.MAXSCALE_VERSION) {
-          //maxscale version is set to 10.5.99-MariaDB-maxScale
-          assert.deepEqual(shareConn.serverVersion(), '10.5.99-MariaDB-maxScale');
-        } else {
-          assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
-        }
+        assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
         done();
       })
       .catch(done);
   });
 
   it('server type', function () {
-    if (!process.env.DB) this.skip();
-    if (process.env.DB.indexOf(':') != -1) {
-      const serverInfo = process.env.DB.split(':');
-      assert.equal(
-        serverInfo[0] === 'mariadb' || serverInfo[0] === 'build',
-        shareConn.info.isMariaDB()
-      );
-    } else {
-      //appveyor use mariadb only
-      assert(shareConn.info.isMariaDB());
-    }
+    if (!process.env.srv) this.skip();
+    assert.equal(process.env.srv !== 'mysql', shareConn.info.isMariaDB());
   });
 });

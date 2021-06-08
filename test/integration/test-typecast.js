@@ -202,7 +202,8 @@ describe('TypeCast', () => {
         b1:
           shareConn.info.isMariaDB() &&
           shareConn.info.hasMinVersion(10, 5, 2) &&
-          !process.env.MAXSCALE_TEST_DISABLE
+          process.env.srv !== 'maxscale' &&
+          process.env.srv !== 'skysql-ha'
             ? { type: 'Point' }
             : null
       }

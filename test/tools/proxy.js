@@ -1,7 +1,7 @@
 const net = require('net');
 
 function Proxy(args) {
-  const LOCAL_PORT = args.proxyPort || 6512;
+  let localPort = -1;
   const REMOTE_PORT = args.port;
   const REMOTE_ADDR = args.host;
   let log = args.log || false;
@@ -11,6 +11,10 @@ function Proxy(args) {
 
   this.close = () => {
     if (server) server.close();
+  };
+
+  this.port = () => {
+    return localPort;
   };
 
   this.stop = () => {
@@ -28,7 +32,7 @@ function Proxy(args) {
 
   this.resume = () => {
     stop = false;
-    server.listen(LOCAL_PORT);
+    server.listen(localPort);
   };
 
   this.start = () => {
@@ -90,7 +94,8 @@ function Proxy(args) {
         console.log('Address in use, retrying...');
         setTimeout(() => {
           server.close();
-          server.listen(LOCAL_PORT);
+          server.listen();
+          localPort = server.address().port;
         }, 1000);
       } else {
         if (log) console.log('proxy server error : ' + err);
@@ -101,7 +106,7 @@ function Proxy(args) {
     server.on('close', () => {
       if (log) console.log('closing proxy server');
       sockets.forEach((socket) => {
-        if (socket) socket.end();
+        if (socket) socket.destroy();
       });
     });
 
@@ -121,9 +126,11 @@ function Proxy(args) {
       stopRemote = false;
     });
 
-    server.listen(LOCAL_PORT);
+    server.listen();
 
-    if (log) console.log('TCP server accepting connection on port: ' + LOCAL_PORT);
+    localPort = server.address().port;
+
+    if (log) console.log('TCP server accepting connection on port: ' + localPort);
   };
 
   this.start();

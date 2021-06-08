@@ -1,5 +1,6 @@
 'use strict';
 
+const base = require('../../base');
 const { assert } = require('chai');
 
 describe('boolean type', () => {

@@ -1026,7 +1026,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1083,7 +1083,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1212,7 +1212,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1256,7 +1256,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1289,7 +1289,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;
@@ -1323,7 +1323,7 @@ describe('batch callback', () => {
     });
 
     it('simple batch error', function (done) {
-      if (process.env.SKYSQL_HA) {
+      if (process.env.srv === 'skysql-ha') {
         // due to https://jira.mariadb.org/browse/MXS-3196
         this.skip();
         return;

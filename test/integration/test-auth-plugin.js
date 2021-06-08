@@ -64,7 +64,7 @@ describe('authentication plugin', () => {
   });
 
   it('ed25519 authentication plugin', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
@@ -130,7 +130,7 @@ describe('authentication plugin', () => {
 
   it('name pipe authentication plugin', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
       this.skip();
@@ -219,68 +219,82 @@ describe('authentication plugin', () => {
       .catch(done);
   });
 
-  it('dialog authentication plugin', function (done) {
+  it('dialog authentication plugin', async function () {
     //pam is set using .travis/sql/pam.sh
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.APPVEYOR_BUILD_WORKER_IMAGE) this.skip();
+    if (!process.env.TEST_PAM_USER) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
-    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch((err) => {});
-    shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch((err) => {});
-    shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
-    shareConn.query("GRANT SELECT ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
-    shareConn.query('FLUSH PRIVILEGES');
+    try {
+      await shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
+    } catch (error) {}
+    try {
+      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'%'");
+    } catch (error) {}
+
+    await shareConn.query(
+      "CREATE USER '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam USING 'mariadb'"
+    );
+    await shareConn.query(
+      "GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam"
+    );
+    await shareConn.query('FLUSH PRIVILEGES');
 
     //password is unix password "myPwd"
-    base
-      .createConnection({ user: 'testPam', password: 'myPwd' })
-      .then((conn) => {
-        return conn.end();
-      })
-      .then(() => {
-        done();
-      })
-      .catch((err) => {
-        if (err.errno === 1045 || err.errno === 1044) {
-          done();
-        } else {
-          done(err);
-        }
+    try {
+      const conn = await base.createConnection({
+        user: process.env.TEST_PAM_USER,
+        password: process.env.TEST_PAM_PWD
       });
+      await conn.end();
+    } catch (err) {
+      if (err.errno !== 1045 && err.errno !== 1044) {
+        throw err;
+      }
+    }
   });
 
-  it('dialog authentication plugin multiple password', function (done) {
+  it('dialog authentication plugin multiple password', async function () {
     //pam is set using .travis/sql/pam.sh
-    if (!process.env.TRAVIS || process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (!process.env.TEST_PAM_USER) this.skip();
 
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
-    shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'").catch((err) => {});
-    shareConn.query("DROP USER IF EXISTS 'testPam'@'%'").catch((err) => {});
-    shareConn.query("CREATE USER 'testPam'@'%' IDENTIFIED VIA pam USING 'mariadb'");
-    shareConn.query("GRANT SELECT ON *.* TO 'testPam'@'%' IDENTIFIED VIA pam");
-    shareConn.query('FLUSH PRIVILEGES');
+    try {
+      await shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
+    } catch (error) {}
+    try {
+      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'%'");
+    } catch (error) {}
+    await shareConn.query(
+      "CREATE USER '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam USING 'mariadb'"
+    );
+    await shareConn.query(
+      "GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam"
+    );
+    await shareConn.query('FLUSH PRIVILEGES');
 
     //password is unix password "myPwd"
-    base
-      .createConnection({ user: 'testPam', password: ['myPwd', 'myPwd'] })
-      .then((conn) => {
-        return conn.end();
-      })
-      .then(() => {
-        done();
-      })
-      .catch((err) => {
-        if (err.errno === 1045 || err.errno === 1044) {
-          done();
-        } else {
-          done(err);
-        }
+    //password is unix password "myPwd"
+    try {
+      const conn = await base.createConnection({
+        user: process.env.TEST_PAM_USER,
+        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD]
       });
+      await conn.end();
+    } catch (err) {
+      if (err.errno !== 1045 && err.errno !== 1044) {
+        throw err;
+      }
+    }
   });
 
   it('multi authentication plugin', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
       this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
@@ -337,7 +351,6 @@ describe('authentication plugin', () => {
   });
 
   it('sha256 authentication plugin', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (process.platform === 'win32') this.skip();
     if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0))
       this.skip();
@@ -361,7 +374,6 @@ describe('authentication plugin', () => {
   });
 
   it('sha256 authentication plugin with public key retrieval', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (process.platform === 'win32') this.skip();
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
 
@@ -384,7 +396,6 @@ describe('authentication plugin', () => {
   });
 
   it('sha256 authentication plugin without public key retrieval', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
 
     base
@@ -406,12 +417,7 @@ describe('authentication plugin', () => {
   });
 
   it('sha256 authentication plugin with ssl', function (done) {
-    if (
-      process.env.MAXSCALE_TEST_DISABLE ||
-      shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(5, 7, 0)
-    )
-      this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
 
     const self = this;
     shareConn
@@ -444,7 +450,6 @@ describe('authentication plugin', () => {
   });
 
   it('cachingsha256 authentication plugin', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (process.platform === 'win32') this.skip();
     if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0))
       this.skip();
@@ -479,7 +484,6 @@ describe('authentication plugin', () => {
   });
 
   it('cachingsha256 authentication plugin with public key retrieval', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (process.platform === 'win32') this.skip();
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
@@ -502,7 +506,6 @@ describe('authentication plugin', () => {
   });
 
   it('cachingsha256 authentication plugin without public key retrieval', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     base
@@ -524,12 +527,7 @@ describe('authentication plugin', () => {
   });
 
   it('cachingsha256 authentication plugin with ssl', function (done) {
-    if (
-      process.env.MAXSCALE_TEST_DISABLE ||
-      shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(8, 0, 0)
-    )
-      this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     const self = this;
     shareConn

@@ -131,8 +131,11 @@ describe('Error', () => {
             } else {
               assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
               assert.isTrue(
-                err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long par...]")
+                err.message.includes(
+                  "sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"
+                )
               );
+              assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
               assert.equal(err.errno, 1064);
               assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
@@ -216,16 +219,26 @@ describe('Error', () => {
                   'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
                 )
               );
+              assert.isTrue(
+                err.text.includes(
+                  'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+                )
+              );
               assert.equal(err.sqlState, 'HY000');
             } else {
               assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.text.includes('You have an error in your SQL syntax'));
               assert.equal(err.errno, 1064);
               assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             assert.isTrue(
-              err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'som...}")
+              err.message.includes(
+                "sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"
+              )
             );
+            assert.equal(err.sql, "wrong query :par1, :par2 - parameters:{'par1':'some par...}");
+
             conn.end();
             done();
           });
@@ -283,6 +296,7 @@ describe('Error', () => {
             assert.isTrue(err != null);
             assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
             assert.isTrue(err.message.includes('sql: DO 1 - parameters:[]'));
+            assert.equal(err.sql, 'DO 1 - parameters:[]');
             assert.isTrue(err.fatal);
             assert.equal(err.sqlState, '08S01');
             assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
@@ -334,7 +348,7 @@ describe('Error', () => {
 
   it('server close connection without warning', function (done) {
     //removed for maxscale, since wait_timeout will be set to other connections
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
@@ -374,7 +388,11 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL || process.env.SKYSQL_HA)
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
       this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
@@ -416,7 +434,11 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (process.env.SKYSQL || process.env.MAXSCALE_TEST_DISABLE || process.env.SKYSQL_HA)
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
       this.skip();
     this.timeout(20000);
     base
@@ -429,7 +451,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (process.env.MAXSCALE_TEST_DISABLE) {
+            if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
             } else {
@@ -450,7 +472,7 @@ describe('Error', () => {
   });
 
   it('end connection query error', function (done) {
-    if (process.env.MAXSCALE_TEST_DISABLE) this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     base
       .createConnection()
       .then((conn) => {
@@ -502,9 +524,9 @@ describe('Error', () => {
       .catch(handleResult);
 
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         done();
       })
       .catch(done);
@@ -541,9 +563,9 @@ describe('Error', () => {
       .catch(handleResult);
 
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         done();
       })
       .catch(done);
@@ -575,9 +597,9 @@ describe('Error', () => {
       })
       .catch(handleResult);
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         done();
       })
       .catch(done);
@@ -599,6 +621,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
+            console.log(err);
             assert.equal(err.errno, 45016);
             assert.equal(err.sqlState, 'HY000');
             assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -610,9 +633,9 @@ describe('Error', () => {
               )
             );
             return conn
-              .query('SELECT 1')
+              .query("SELECT '1'")
               .then((rows) => {
-                assert.deepEqual(rows, [{ 1: 1 }]);
+                assert.deepEqual(rows, [{ 1: '1' }]);
                 conn.end();
                 done();
               })
@@ -647,9 +670,9 @@ describe('Error', () => {
         );
       });
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         done();
       })
       .catch(done);

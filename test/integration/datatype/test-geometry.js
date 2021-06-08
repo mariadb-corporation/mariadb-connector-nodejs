@@ -225,7 +225,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'Point' }
                 : null
           },
@@ -233,7 +234,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'Point' }
                 : null
           }
@@ -364,7 +366,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'LineString' }
                 : null
           },
@@ -372,7 +375,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'LineString' }
                 : null
           }
@@ -559,7 +563,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'Polygon' }
                 : null
           },
@@ -567,7 +572,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'Polygon' }
                 : null
           }
@@ -700,7 +706,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPoint' }
                 : null
           },
@@ -708,7 +715,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPoint' }
                 : null
           }
@@ -887,7 +895,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiLineString' }
                 : null
           },
@@ -895,7 +904,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiLineString' }
                 : null
           },
@@ -903,7 +913,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiLineString' }
                 : null
           }
@@ -1182,7 +1193,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPolygon' }
                 : null
           },
@@ -1190,7 +1202,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPolygon' }
                 : null
           },
@@ -1198,7 +1211,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPolygon' }
                 : null
           },
@@ -1206,7 +1220,8 @@ describe('geometry data type', () => {
             g:
               shareConn.info.isMariaDB() &&
               shareConn.info.hasMinVersion(10, 5, 2) &&
-              !process.env.MAXSCALE_TEST_DISABLE
+              process.env.srv !== 'maxscale' &&
+              process.env.srv !== 'skysql-ha'
                 ? { type: 'MultiPolygon' }
                 : null
           }

@@ -52,7 +52,10 @@ function createPool(options?: unknown): mariadb.Pool {
 
 async function testMisc(): Promise<void> {
   let rows;
-
+  const defaultOptions = mariadb.defaultOptions();
+  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00' });
+  console.log(defaultOptions);
+  console.log(defaultOptionsWithTz);
   const connection = await createConnection();
 
   rows = await connection.query('SELECT 1 + 1 AS solution');

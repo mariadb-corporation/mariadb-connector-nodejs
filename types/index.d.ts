@@ -13,6 +13,7 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
+export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
 
 export type TypeCastResult =
   | boolean
@@ -678,6 +679,16 @@ export interface SqlError extends Error {
    * (e.g. 'PROTOCOL_CONNECTION_LOST').
    */
   code: string | null;
+
+  /**
+   * original error message value
+   */
+  text: string | null;
+
+  /**
+   * The sql command associate
+   */
+  sql: string | null;
 
   /**
    * The error number for the error code

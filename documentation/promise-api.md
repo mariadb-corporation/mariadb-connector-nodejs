@@ -151,7 +151,8 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
 * [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
 * [`version → String`](#version--string) : Return library version.
-
+* [`defaultOptions(options) → Json`](#defaultoptionsoptions--json) : list options with default values
+  
 
 **Connection:** 
 
@@ -372,6 +373,30 @@ Specific options for pool cluster are :
 
 > Returns a String that is library version. example '2.1.2'.
 
+## `defaultOptions(options) → Json`
+
+> * `options`: *JSON/String* [connection option documentation](#connection-options) (non mandatory)
+> 
+> Returns a JSON value containing options default value. 
+
+permit listing default option that will be used. 
+
+```js
+const mariadb = require('mariadb');
+console.log(mariadb.defaultOptions({ timezone: '+00:00' }));
+/*
+{
+   host: 'localhost',
+   port: 3306,
+   user: 'root',
+   password: undefined,
+   database: undefined,
+   collation: Collation { index: 224, name: 'UTF8MB4_UNICODE_CI', charset: 'utf8' },
+   timezone: '+00:00',
+   ...
+}
+*/        
+```
 
 # Connection API
 
