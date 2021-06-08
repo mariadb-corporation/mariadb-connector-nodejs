@@ -34,6 +34,7 @@ jobs:
     - env: srv=skysql
     - env: srv=skysql-ha
     - env: srv=build v=10.6
+    - env: srv=mariadb-es v=10.5
   include:
     - env: srv=mariadb v=10.5
       os: windows
@@ -45,7 +46,7 @@ jobs:
     - env: srv=mariadb v=10.5
       node_js: 14
     - env: srv=mariadb v=10.5
-      node_js: 15
+      node_js: 16
     - env: srv=mariadb-es v=10.5
     - env: srv=mariadb v=10.5 BENCH=1
     - env: srv=maxscale
