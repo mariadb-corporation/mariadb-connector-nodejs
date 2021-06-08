@@ -24,6 +24,9 @@ version after 2.4 is compatible with Node.js 10+
 See [promise documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API. 
 
 [Callback documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
+
+See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#migrating-from-2.x-or-mysql/mysql2-to-3.x) for migration from mysql/mysql2 or from 2.x version.
+
    
 ## Why a New Client?
 

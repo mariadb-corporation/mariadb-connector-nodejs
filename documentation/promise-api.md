@@ -50,20 +50,29 @@ To use the Connector, you need to import the package into your application code.
 const mariadb = require('mariadb');
 ```
 
-## Recommendation
+## Migrating from 2.x or mysql/mysql2 to 3.x
 
-### Exact number consideration
+This is a breaking change from 3.0 compare to previous version and mysql/mysql2 drivers.
 
-Integers in JavaScript use IEEE-754 representation.  This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  
+Integers in JavaScript use IEEE-754 representation. This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  
 However, MariaDB does support larger integers and exact big decimal.
 This means that when the value set on a BIGINT is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, javascript Number Object cannot represent exact value.
-Same with DECIMAL type that might not be exact in IEEE 754 floating number.  
+Same with DECIMAL type that might not be exact in IEEE 754 floating number.
 
-Driver automatically return a JSON with type depending on database data types :
+2.x/mysql/mysql2 have options that try to address those issues. Those are now removed :
+
+* supportBigNumbers: When an integer was not in the safe range, the driver did interprets the value as a [`Long`](https://www.npmjs.com/package/long) object. Now use javascript standard BigInt
+* supportBigInt: Removed, since BigInt support is now required.
+* bigNumberStrings: When an integer was not in the safe range, the driver did interprets the value as a string.
+
+Those options might return a different object type depending on value.
+
+
+Since 3.x version, Driver automatically return data depending on data types :
 * DECIMAL => javascript String
-* BIGINT => javascript BigInt 
+* BIGINT => javascript BigInt
 
-Default implementation return exact values, but might cause some incompatibility.
+this permit to ensure returning exact values and reliable data type, but might cause some incompatibility.
 Driver provides 3 options to address this issue.
 
 |option|description|type|default| 
@@ -72,9 +81,10 @@ Driver provides 3 options to address this issue.
 | **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
 
-This is a breaking change from 3.0 compare to previous version and mysql/mysql2 drivers. 
+If wanting compatibility with previous version those values can be set to true / use [`typeCast`](#typeCast) to convert DECIMAL/BIGINT to expect value.
+ 
 
-If wanting compatibility with previous version those values can be set to true / use [`typeCast`](#typeCast) to convert DECIMAL/BIGINT to expect value. 
+## Recommendation
 
 ### Timezone consideration
 
@@ -671,14 +681,6 @@ connection.query({nestTables: '_',
 *boolean, default: false*
 
 Whether you want the Connector to retrieve date values as strings, rather than `Date` objects.
-
-
-#### `supportBigNumbers`
-
-*boolean, default: false*
-
-Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in
- the [safe](/documentation/connection-options.md#big-integer-support) range.
 
 
 #### `bigIntAsNumber`
