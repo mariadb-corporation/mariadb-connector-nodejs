@@ -35,6 +35,7 @@ jobs:
     - env: srv=skysql RUN_LONG_TEST=0
     - env: srv=skysql-ha RUN_LONG_TEST=0
     - env: srv=build v=10.6
+    - env: srv=mariadb-es v=10.5
   include:
     - env: srv=mariadb v=10.5
       os: windows
