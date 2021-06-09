@@ -28,7 +28,8 @@
 | **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
 | **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
-| **logger** | Configure logger. For more information, see the [`logger` option](#logger) documentation. |*mixed*|
+| **logger** | Permit custom logger configuration. For more information, see the [`logger` option](#logger) documentation. |*mixed*|
+| **prepareCacheLength** | Define prepare LRU cache length. 0 means no cache |*int*| 256 |
 
 ### JSON or String configuration
 
@@ -389,6 +390,8 @@ mariadb.createConnection({
 | **cachingRsaPublicKey** | Indicate path/content to MySQL server caching RSA public key. use requires Node.js v11.6+ |*string* | |
 | **allowPublicKeyRetrieval** | Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key. |*boolean* | false |
 | **restrictedAuth** | if set, restrict authentication plugin to secure list. Default provided plugins are mysql_native_password, mysql_clear_password, client_ed25519, dialog, sha256_password and caching_sha2_password |*Array|String* | |
+| **supportBigNumbers** | (deprecated) DECIMAL/BIGINT data type will be returned as number if in safe integer range, as string if not.|*boolean* | false |
+| **bigNumberStrings** | (deprecated) if set with `supportBigNumbers` DECIMAL/BIGINT data type will be returned as string |*boolean* | false |
 
 
 ## F.A.Q.

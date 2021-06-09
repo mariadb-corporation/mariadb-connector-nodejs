@@ -471,30 +471,23 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('end connection query error', function (done) {
+  it('end connection query error', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
-    base
-      .createConnection()
-      .then((conn) => {
-        conn
-          .query(
-            'select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
-          )
-          .then(() => {
-            done(new Error('must have thrown error !'));
-          })
-          .catch((err) => {
-            assert.isTrue(
-              err.message.includes('close forced') ||
-                err.message.includes('socket has unexpectedly been closed')
-            );
-            done();
-          });
-        setTimeout(() => {
-          conn.__tests.getSocket().destroy(new Error('close forced'));
-        }, 5);
-      })
-      .catch(done);
+    const conn = await base.createConnection();
+    setTimeout(() => {
+      conn.__tests.getSocket().destroy(new Error('close forced'));
+    }, 5);
+    try {
+      await conn.query(
+        'select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
+      );
+      throw new Error('must have thrown error !');
+    } catch (err) {
+      assert.isTrue(
+        err.message.includes('close forced') ||
+          err.message.includes('socket has unexpectedly been closed')
+      );
+    }
   });
 
   it('query parameters logged in error', function (done) {

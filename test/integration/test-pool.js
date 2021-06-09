@@ -464,33 +464,28 @@ describe('Pool', () => {
     });
   });
 
-  it('pool wrong query', function (done) {
+  it('pool wrong query', async function () {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
-    pool
-      .query('wrong query')
-      .then(() => {
-        done(new Error('must have thrown error !'));
-      })
-      .catch((err) => {
-        if (err.errno === 1141) {
-          // SKYSQL ERROR
-          assert.isTrue(
-            err.message.includes(
-              'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
-            )
-          );
-          assert.equal(err.sqlState, 'HY000');
-        } else {
-          assert(err.message.includes(' You have an error in your SQL syntax'));
-          assert.equal(err.sqlState, '42000');
-          assert.equal(err.code, 'ER_PARSE_ERROR');
-        }
-        return pool.end();
-      })
-      .then(() => {
-        done();
-      });
+    try {
+      await pool.query('wrong query');
+      throw new Error('must have thrown error !');
+    } catch (err) {
+      if (err.errno === 1141) {
+        // SKYSQL ERROR
+        assert.isTrue(
+          err.message.includes(
+            'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+          )
+        );
+        assert.equal(err.sqlState, 'HY000');
+      } else {
+        assert(err.message.includes('You have an error in your SQL syntax'));
+        assert.equal(err.sqlState, '42000');
+        assert.equal(err.code, 'ER_PARSE_ERROR');
+      }
+      pool.end();
+    }
   });
 
   it('pool getConnection after close', function (done) {

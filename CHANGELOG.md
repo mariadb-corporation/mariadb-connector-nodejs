@@ -1,5 +1,35 @@
 # Change Log
 
+## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (08 Jun 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...3.0.0-beta)
+
+Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) documentation.
+
+* [CONJS-153] support Prepared statement with 10.6 new feature metadata skip
+* [CONJS-165] Adding initial message error value on Error object
+* [CONJS-166] Restrict authentication plugin list
+* [CONJS-167] Permit custom logger configuration
+
+New Connection options
+
+|option|description|type|default|
+|---:|---|:---:|:---:| 
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
+| **logger** | Permit custom logger configuration. For more information, see the [`logger` option](#logger) documentation. |*mixed*|
+| **prepareCacheLength** | Define prepare LRU cache length. 0 means no cache |*int*| 256 |
+
+new Connection methods
+* [`connection.prepare(sql) → Promise`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#connectionpreparesql---promise): Prepares a query.
+* [`connection.execute(sql[, values]) → Promise`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#connectionexecutesql-values--promise): Prepare and Executes a query.
+
+This methods are compatible with mysql2 with some differences:
+* permit streaming parameters
+* execute use by default a prepared cache that hasn't infinite length.
+* implement mariadb 10.6 skipping metadata when possible for better performance
+* Doesn't have a unprepare methods. 
+
 ## [2.5.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.4) (08 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.3...2.5.4)
 

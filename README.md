@@ -25,7 +25,7 @@ See [promise documentation](https://github.com/mariadb-corporation/mariadb-conne
 
 [Callback documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
 
-See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#migrating-from-2.x-or-mysql/mysql2-to-3.x) for migration from mysql/mysql2 or from 2.x version.
+See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) for migration from mysql/mysql2 or from 2.x version.
 
    
 ## Why a New Client?

@@ -64,6 +64,8 @@ describe('test options', () => {
       bigIntAsNumber: false,
       bulk: true,
       permitLocalInfile: false,
+      bigNumberStrings: false,
+      supportBigNumbers: false,
       tz: 'Etc/UTC'
     };
     assert.deepEqual(expected, defaultOpts);

@@ -52,37 +52,23 @@ const mariadb = require('mariadb');
 
 ## Migrating from 2.x or mysql/mysql2 to 3.x
 
-This is a breaking change from 3.0 compare to previous version and mysql/mysql2 drivers.
+Default behaviour for decoding [BIGINT](https://mariadb.com/kb/en/bigint/) / [DECIMAL](https://mariadb.com/kb/en/decimal/) datatype for 2.x version and mysql/mysql2 drivers return a javascript [Number](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Number) object.
+BIGINT/DECIMAL values might not be in the safe range, resulting in approximate results. 
 
-Integers in JavaScript use IEEE-754 representation. This means that Node.js cannot exactly represent integers in the ±9,007,199,254,740,991 range.  
-However, MariaDB does support larger integers and exact big decimal.
-This means that when the value set on a BIGINT is not in the [safe](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger) range, javascript Number Object cannot represent exact value.
-Same with DECIMAL type that might not be exact in IEEE 754 floating number.
-
-2.x/mysql/mysql2 have options that try to address those issues. Those are now removed :
-
-* supportBigNumbers: When an integer was not in the safe range, the driver did interprets the value as a [`Long`](https://www.npmjs.com/package/long) object. Now use javascript standard BigInt
-* supportBigInt: Removed, since BigInt support is now required.
-* bigNumberStrings: When an integer was not in the safe range, the driver did interprets the value as a string.
-
-Those options might return a different object type depending on value.
-
-
-Since 3.x version, Driver automatically return data depending on data types :
+Since 3.x version, driver has reliable default, returning:
 * DECIMAL => javascript String
-* BIGINT => javascript BigInt
+* BIGINT => javascript [BigInt](https://mariadb.com/kb/en/bigint/) object
 
-this permit to ensure returning exact values and reliable data type, but might cause some incompatibility.
-Driver provides 3 options to address this issue.
+For compatibility with previous version or mysql/mysql driver, 3 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
-| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
-| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values. |*boolean* | false |
 
-If wanting compatibility with previous version those values can be set to true / use [`typeCast`](#typeCast) to convert DECIMAL/BIGINT to expect value.
- 
+Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.   
+
 
 ## Recommendation
 
@@ -552,6 +538,7 @@ connection.query('select * from animals')
 * [`rowsAsArray`](#rowsAsArray)
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
+* [`bigIntAsNumber`](#bigIntAsNumber)
 * [`decimalAsNumber`](#decimalAsNumber)
 
 Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 

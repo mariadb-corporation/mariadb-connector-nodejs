@@ -35,83 +35,270 @@ describe('integer with big value', () => {
 
   it('decimal value without truncation', async function () {
     await shareConn.query(
-      'INSERT INTO floatTest VALUES (-0.9999237060546875, 9999237060546875.9999237060546875, 9999237060546875)'
+      'INSERT INTO floatTest VALUES (-0.1, 128.3, 129), (-0.9999237060546875, 9999237060546875.9999237060546875, 9999237060546875)'
     );
+    const expected = [
+      {
+        t: -0.1,
+        t2: '128.3000000000000000',
+        t3: '129'
+      },
+      { t: -0.9999237060546875, t2: '9999237060546875.9999237060546875', t3: '9999237060546875' }
+    ];
     let rows = await shareConn.query(' SELECT * FROM floatTest');
-    assert.equal(rows[0].t, -0.9999237060546875);
-    assert.equal(rows[0].t2, '9999237060546875.9999237060546875');
-    assert.equal(rows[0].t3, '9999237060546875');
+    assert.deepEqual(rows, expected);
 
     rows = await shareConn.execute(' SELECT * FROM floatTest');
-    assert.equal(rows[0].t, -0.9999237060546875);
-    assert.equal(rows[0].t2, '9999237060546875.9999237060546875');
-    assert.equal(rows[0].t3, '9999237060546875');
+    assert.deepEqual(rows, expected);
+
+    const expectedNumber = [
+      {
+        t: -0.1,
+        t2: 128.3,
+        t3: 129
+      },
+      { t: -0.9999237060546875, t2: 9999237060546875.9999237060546875, t3: 9999237060546875 }
+    ];
+    rows = await shareConn.query({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true });
+    assert.deepEqual(rows, expectedNumber);
+
+    rows = await shareConn.execute({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true });
+    assert.deepEqual(rows, expectedNumber);
+
+    const expectedBigNumber = [
+      {
+        t: -0.1,
+        t2: '128.3000000000000000',
+        t3: 129
+      },
+      { t: -0.9999237060546875, t2: '9999237060546875.9999237060546875', t3: '9999237060546875' }
+    ];
+    rows = await shareConn.query({ sql: 'SELECT * FROM floatTest', supportBigNumbers: true });
+    assert.deepEqual(rows, expectedBigNumber);
+
+    rows = await shareConn.execute({ sql: 'SELECT * FROM floatTest', supportBigNumbers: true });
+    assert.deepEqual(rows, expectedBigNumber);
+
+    const expectedBigNumberString = [
+      {
+        t: -0.1,
+        t2: '128.3000000000000000',
+        t3: '129'
+      },
+      { t: -0.9999237060546875, t2: '9999237060546875.9999237060546875', t3: '9999237060546875' }
+    ];
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM floatTest',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.deepEqual(rows, expectedBigNumberString);
+
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM floatTest',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.deepEqual(rows, expectedBigNumberString);
   });
 
   it('bigint format', async () => {
     let rows = await shareConn.query('INSERT INTO testBigint values (127), (128)');
     assert.strictEqual(rows.insertId, BigInt(128));
+
+    rows = await shareConn.query({
+      sql: 'INSERT INTO testBigint values ()',
+      insertIdAsNumber: true
+    });
+    assert.strictEqual(rows.insertId, 129);
+
+    rows = await shareConn.execute({
+      sql: 'INSERT INTO testBigint values ()',
+      insertIdAsNumber: true
+    });
+    assert.strictEqual(rows.insertId, 130);
+
+    rows = await shareConn.query({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true
+    });
+    assert.strictEqual(rows.insertId, 131);
+
+    rows = await shareConn.execute({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true
+    });
+    assert.strictEqual(rows.insertId, 132);
+
+    rows = await shareConn.query({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.strictEqual(rows.insertId, '133');
+
+    rows = await shareConn.execute({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.strictEqual(rows.insertId, '134');
+
     rows = await shareConn.query(
-      'INSERT INTO testBigint values (-9007199254740991), (9007199254740991)'
+      { sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true },
+      ['9007199254741991']
     );
-    assert.strictEqual(rows.insertId, BigInt('9007199254740991'));
+    assert.strictEqual(rows.insertId, 9007199254741991);
+
+    rows = await shareConn.query(
+      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true },
+      ['9007199254741992']
+    );
+    assert.strictEqual(rows.insertId, '9007199254741992');
+
+    rows = await shareConn.query(
+      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true, bigNumberStrings: true },
+      ['9007199254741993']
+    );
+    assert.strictEqual(rows.insertId, '9007199254741993');
+
+    rows = await shareConn.execute(
+      { sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true },
+      ['9007199254741994']
+    );
+    assert.strictEqual(rows.insertId, 9007199254741994);
+
+    rows = await shareConn.execute(
+      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true },
+      ['9007199254741995']
+    );
+    assert.strictEqual(rows.insertId, '9007199254741995');
+
+    rows = await shareConn.execute(
+      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true, bigNumberStrings: true },
+      ['9007199254741996']
+    );
+    assert.strictEqual(rows.insertId, '9007199254741996');
+
     rows = await shareConn.execute('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, BigInt('9007199254740992'));
+    assert.strictEqual(rows.insertId, BigInt('9007199254741997'));
     rows = await shareConn.query('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, BigInt('9007199254740993'));
+    assert.strictEqual(rows.insertId, BigInt('9007199254741998'));
     rows = await shareConn.query('SELECT * FROM testBigint');
-    assert.strictEqual(rows.length, 6);
-    assert.strictEqual(rows[0].v, BigInt('-9007199254740991'));
-    assert.strictEqual(rows[1].v, BigInt('127'));
-    assert.strictEqual(rows[2].v, BigInt('128'));
-    assert.strictEqual(rows[3].v, BigInt('9007199254740991'));
-    assert.strictEqual(rows[4].v, BigInt('9007199254740992'));
-    assert.strictEqual(rows[5].v, BigInt('9007199254740993'));
-    assert.strictEqual(typeof rows[3].v, 'bigint');
+    const expected = [
+      { v: 127n },
+      { v: 128n },
+      { v: 129n },
+      { v: 130n },
+      { v: 131n },
+      { v: 132n },
+      { v: 133n },
+      { v: 134n },
+      { v: 9007199254741991n },
+      { v: 9007199254741992n },
+      { v: 9007199254741993n },
+      { v: 9007199254741994n },
+      { v: 9007199254741995n },
+      { v: 9007199254741996n },
+      { v: 9007199254741997n },
+      { v: 9007199254741998n }
+    ];
+    assert.deepEqual(rows, expected);
 
     rows = await shareConn.execute('SELECT * FROM testBigint');
-    assert.strictEqual(rows.length, 6);
-    assert.strictEqual(rows[0].v, BigInt('-9007199254740991'));
-    assert.strictEqual(rows[1].v, BigInt('127'));
-    assert.strictEqual(rows[2].v, BigInt('128'));
-    assert.strictEqual(rows[3].v, BigInt('9007199254740991'));
-    assert.strictEqual(rows[4].v, BigInt('9007199254740992'));
-    assert.strictEqual(rows[5].v, BigInt('9007199254740993'));
-    assert.strictEqual(typeof rows[3].v, 'bigint');
+    assert.deepEqual(rows, expected);
 
+    const expectedNumber = [
+      { v: 127 },
+      { v: 128 },
+      { v: 129 },
+      { v: 130 },
+      { v: 131 },
+      { v: 132 },
+      { v: 133 },
+      { v: 134 },
+      { v: 9007199254741991 },
+      { v: 9007199254741992 },
+      { v: 9007199254741993 },
+      { v: 9007199254741994 },
+      { v: 9007199254741995 },
+      { v: 9007199254741996 },
+      { v: 9007199254741997 },
+      { v: 9007199254741998 }
+    ];
     rows = await shareConn.query({
       bigIntAsNumber: true,
       sql: 'SELECT * FROM testBigint'
     });
-    assert.strictEqual(rows.length, 6);
-    assert.strictEqual(rows[0].v, -9007199254740991);
-    assert.strictEqual(rows[1].v, 127);
-    assert.strictEqual(rows[2].v, 128);
-    assert.strictEqual(rows[3].v, 9007199254740991);
-    assert.strictEqual(rows[4].v, 9007199254740992);
-    assert.strictEqual(rows[5].v, 9007199254740993);
-    assert.strictEqual(typeof rows[4].v, 'number');
+    assert.deepEqual(rows, expectedNumber);
 
     rows = await shareConn.execute({
       bigIntAsNumber: true,
       sql: 'SELECT * FROM testBigint'
     });
-    assert.strictEqual(rows.length, 6);
-    assert.strictEqual(rows[0].v, -9007199254740991);
-    assert.strictEqual(rows[1].v, 127);
-    assert.strictEqual(rows[2].v, 128);
-    assert.strictEqual(rows[3].v, 9007199254740991);
-    assert.strictEqual(rows[4].v, 9007199254740992);
-    assert.strictEqual(rows[5].v, 9007199254740993);
-    assert.strictEqual(typeof rows[4].v, 'number');
+    assert.deepEqual(rows, expectedNumber);
 
-    const conn2 = await base.createConnection({ insertIdAsNumber: true });
-    rows = await conn2.query('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, 9007199254740994);
+    const expectedNumberSupportBig = [
+      { v: 127 },
+      { v: 128 },
+      { v: 129 },
+      { v: 130 },
+      { v: 131 },
+      { v: 132 },
+      { v: 133 },
+      { v: 134 },
+      { v: '9007199254741991' },
+      { v: '9007199254741992' },
+      { v: '9007199254741993' },
+      { v: '9007199254741994' },
+      { v: '9007199254741995' },
+      { v: '9007199254741996' },
+      { v: '9007199254741997' },
+      { v: '9007199254741998' }
+    ];
+    rows = await shareConn.query({
+      supportBigNumbers: true,
+      sql: 'SELECT * FROM testBigint'
+    });
+    assert.deepEqual(rows, expectedNumberSupportBig);
 
-    rows = await conn2.execute('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, 9007199254740995);
-    conn2.end();
+    rows = await shareConn.execute({
+      supportBigNumbers: true,
+      sql: 'SELECT * FROM testBigint'
+    });
+    assert.deepEqual(rows, expectedNumberSupportBig);
+
+    const expectedNumberSupportBigString = [
+      { v: '127' },
+      { v: '128' },
+      { v: '129' },
+      { v: '130' },
+      { v: '131' },
+      { v: '132' },
+      { v: '133' },
+      { v: '134' },
+      { v: '9007199254741991' },
+      { v: '9007199254741992' },
+      { v: '9007199254741993' },
+      { v: '9007199254741994' },
+      { v: '9007199254741995' },
+      { v: '9007199254741996' },
+      { v: '9007199254741997' },
+      { v: '9007199254741998' }
+    ];
+    rows = await shareConn.query({
+      supportBigNumbers: true,
+      bigNumberStrings: true,
+      sql: 'SELECT * FROM testBigint'
+    });
+    assert.deepEqual(rows, expectedNumberSupportBigString);
+
+    rows = await shareConn.execute({
+      supportBigNumbers: true,
+      bigNumberStrings: true,
+      sql: 'SELECT * FROM testBigint'
+    });
+    assert.deepEqual(rows, expectedNumberSupportBigString);
   });
 
   it('bigint format null ', async () => {
