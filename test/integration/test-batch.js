@@ -1371,9 +1371,10 @@ describe('batch', () => {
     it('rewrite split for maxAllowedPacket', async function () {
       const t = makeid(100);
       const conn = await base.createConnection({ bulk: false, maxAllowedPacket: 150 });
-      conn.query('DROP TABLE IF EXISTS my_table');
-      conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
+      await conn.query('DROP TABLE IF EXISTS my_table');
+      await conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
       await conn.query('FLUSH TABLES');
+      await conn.query('START TRANSACTION');
       await conn.batch('INSERT INTO my_table(id,val) VALUES( ?, ?) ', [
         [1, t],
         [2, t]
