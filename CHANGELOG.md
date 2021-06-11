@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (08 Jun 2021)
+## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (11 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...3.0.0-beta)
 
 Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) documentation.
@@ -9,6 +9,7 @@ Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedic
 * [CONJS-165] Adding initial message error value on Error object
 * [CONJS-166] Restrict authentication plugin list
 * [CONJS-167] Permit custom logger configuration
+* [CONJS-168] correct stream backpressure
 
 New Connection options
 

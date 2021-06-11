@@ -259,7 +259,7 @@ describe('Pool', () => {
         .query('SELECT SLEEP(1)')
         .then(() => {
           assert(
-            Date.now() - initTime >= 1999,
+            Date.now() - initTime >= 1985,
             'expected > 2s, but was ' + (Date.now() - initTime)
           );
           conn.release();
@@ -1096,8 +1096,6 @@ describe('Pool', () => {
     pool
       .getConnection()
       .then((conn) => {
-        const someWriterStream = fs.createWriteStream(fileName);
-
         let received = 0;
         const transformStream = new stream.Transform({
           objectMode: true,
@@ -1115,8 +1113,10 @@ describe('Pool', () => {
         const queryStream = conn.queryStream(
           "SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000"
         );
+        const someWriterStream = fs.createWriteStream(fileName);
 
-        stream.pipeline(queryStream, transformStream, someWriterStream, () => {
+        stream.pipeline(queryStream, transformStream, someWriterStream, (err) => {
+          if (err) queryStream.close();
           assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
           conn.query('SELECT 1').then((res) => {
             conn.end();
@@ -1128,6 +1128,57 @@ describe('Pool', () => {
         setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
       })
       .catch(done);
+  });
+
+  it("ensure pipe ending doesn't stall connection promise", async function () {
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
+      this.skip();
+    //sequence engine only exist in MariaDB
+    if (!shareConn.info.isMariaDB()) this.skip();
+    const ver = process.version.substring(1).split('.');
+    //promise pipeline doesn't exist before node.js 15.0
+    if (parseInt(ver[0]) < 15) this.skip();
+
+    this.timeout(10000);
+    const pool = base.createPool({ connectionLimit: 1 });
+
+    const conn = await pool.getConnection();
+    let received = 0;
+    const transformStream = new stream.Transform({
+      objectMode: true,
+      transform: function transformer(chunk, encoding, callback) {
+        callback(
+          null,
+          JSON.stringify(chunk, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          )
+        );
+        received++;
+      }
+    });
+
+    const queryStream = conn.queryStream("SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000");
+    const someWriterStream = fs.createWriteStream(fileName);
+    someWriterStream.on('close', () => {
+      queryStream.close();
+    });
+
+    setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
+    try {
+      const { pipeline } = require('stream/promises');
+      await pipeline(queryStream, transformStream, someWriterStream);
+      throw new Error('Error must have been thrown');
+    } catch (e) {
+      // eat expect error
+    }
+    assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
+    const res = await conn.query('SELECT 1');
+    conn.end();
+    pool.end();
   });
 
   it('test minimum idle decrease', function (done) {
