@@ -6,7 +6,8 @@
     "markdown"
   ],
   "extends": [
-    "prettier"
+    "prettier",
+    "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 2020
