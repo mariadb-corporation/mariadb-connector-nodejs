@@ -69,6 +69,20 @@ For compatibility with previous version or mysql/mysql driver, 3 options have be
 
 Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.   
 
+#### Other considerations
+
+mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
+This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise).
+
+example:
+```js
+  const res = await conn.query('call ??(?)', [myProc, 'myVal']);
+```
+has to use explicit escapeId:
+```js
+  const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
+```
+
 
 ## Recommendation
 
