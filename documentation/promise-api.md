@@ -136,12 +136,29 @@ DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
 
+
 ### Default options consideration
 
 For new project, enabling option `supportBigInt` is recommended (It will be in a future 3.x version).
 
 This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
 BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
+
+## Consideration for migration from mysql/mysql2
+
+### Experimental `??` syntax 
+mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
+This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise) (3.x version).
+
+example:
+```js
+  const res = await conn.query('call ??(?)', [myProc, 'myVal']);
+```
+has to use explicit escapeId:
+```js
+  const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
+```
+
 
 # Promise API
 
