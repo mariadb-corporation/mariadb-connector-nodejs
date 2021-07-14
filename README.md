@@ -101,10 +101,10 @@ pool.getConnection()
           return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
         })
         .then(res => { // res: { affectedRows: 1, insertId: 1, warningStatus: 0 }
-          conn.release(); // release to pool
+          conn.close(); // release to pool
         })
         .catch(err => {
-          conn.release(); // release to pool
+          conn.close(); // release to pool
         })
         
     }).catch(err => {
@@ -132,7 +132,7 @@ async function asyncFunction() {
   } catch (err) {
 	throw err;
   } finally {
-	if (conn) conn.release(); //release to pool
+	if (conn) conn.close(); //release to pool
   }
 }
 ```
