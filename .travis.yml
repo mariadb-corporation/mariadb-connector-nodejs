@@ -46,19 +46,19 @@ jobs:
     - env: srv=mariadb v=10.5 local=1
       node_js: 12
     - env: srv=mariadb v=10.6 BENCH=1 local=1
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=maxscale
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=mariadb-es v=10.5
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=skysql RUN_LONG_TEST=0
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=skysql-ha RUN_LONG_TEST=0
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=build v=10.6
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=mysql v=5.7
-    - if: env(CONNECTOR_TEST_SECRET_KEY)
+    - if: env(CONNECTOR_TEST_SECRET_KEY) IS present
       env: srv=mysql v=8.0
 
 script:
