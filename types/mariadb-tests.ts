@@ -195,6 +195,7 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  pool.taskQueueSize();
   function displayConn(conn: Connection): void {
     console.log(conn);
   }

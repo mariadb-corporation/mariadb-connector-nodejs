@@ -13,7 +13,7 @@ describe('packet', () => {
   ]);
 
   it('skipping integer', () => {
-    let packet = new Packet(Buffer.allocUnsafe(1000), 0, 1000);
+    let packet = new Packet().update(Buffer.allocUnsafe(1000), 0, 1000);
     packet.buf[0] = 0;
     packet.buf[1] = 10;
     packet.buf[12] = -5;

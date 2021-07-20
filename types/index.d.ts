@@ -483,6 +483,19 @@ export interface ConnectionInfo {
    * see https://mariadb.com/kb/en/library/connection/#capabilities
    */
   readonly serverCapabilities: number;
+
+  /**
+   * Indicate when connected if server is a MariaDB or MySQL one
+   */
+  isMariaDB(): boolean;
+
+  /**
+   * return true if server version > to indicate version
+   * @param major server major version
+   * @param minor server minor version
+   * @param patch server patch version
+   */
+  hasMinVersion(major: number, minor: number, patch: number): boolean;
 }
 
 export interface Prepare {
