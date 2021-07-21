@@ -34,7 +34,7 @@ connection.query("INSERT INTO BASKET(customerId) values (?)", [1], (err, res) =>
 ### Performance comparison  
 
 Some benchmark to do some 100 inserts with one parameter of 100 characters :
-(benchmark source - see [standard insert](../benchmarks/benchs/bench_promise_insert_pipelining.js) and [batch insert](../benchmarks/benchs/bench_promise_insert_batch.js) )
+(benchmark source - see [standard insert](benchmarks/benchs/insert_pipelining.js) and [batch insert](benchmarks/benchs/insert_batch.js) )
 <p align="center">
     <img src="./misc/batch-bench.png">
 </p>

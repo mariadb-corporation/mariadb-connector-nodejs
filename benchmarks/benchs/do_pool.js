@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-module.exports.title = 'do ? - random number';
+module.exports.title = 'do ? - random number using pool';
 module.exports.displaySql = 'do ?';
 module.exports.promise = true;
 module.exports.pool = true;

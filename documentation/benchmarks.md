@@ -53,16 +53,16 @@ The MariaDB Node.js Connector was then tested along side the following MySQL con
 Ignoring invalid configuration option passed to Connection: noControlAfterUse. This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration options to a Connection
 Ignoring invalid configuration option passed to Connection: noControlAfterUse. This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration options to a Connection
 benchmark: ./benchs/bench_do.js
-benchmark: ./benchs/bench_promise_do.js
-benchmark: ./benchs/bench_promise_insert.js
-benchmark: ./benchs/bench_promise_insert_batch.js
-benchmark: ./benchs/bench_promise_insert_pipelining.js
-benchmark: ./benchs/bench_promise_select_collation.js
-benchmark: ./benchs/bench_promise_select_one_user.js
-benchmark: ./benchs/bench_promise_select_one_user_random.js
+benchmark: ./benchs/do.js
+benchmark: ./benchs/insert.js
+benchmark: ./benchs/insert_batch.js
+benchmark: ./benchs/insert_pipelining.js
+benchmark: ./benchs/select_collation.js
+benchmark: ./benchs/select_one_user.js
+benchmark: ./benchs/select_one_user_random.js
 benchmark: ./benchs/bench_promise_select_param.js
-benchmark: ./benchs/bench_promise_select_random_param.js
-benchmark: ./benchs/bench_promise_select_random_param_pool.js
+benchmark: ./benchs/select_random_param.js
+benchmark: ./benchs/select_random_param_pool.js
 benchmark: ./benchs/bench_select_one_user.js
 benchmark: ./benchs/bench_select_one_user_random.js
 benchmark: ./benchs/bench_select_param.js
