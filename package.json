@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "3.0.0-beta",
+  "version": "3.0.1-beta",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
