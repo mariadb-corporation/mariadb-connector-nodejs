@@ -6,7 +6,7 @@ const ConnOptions = require('../../../lib/config/connection-options');
 describe('test connection options', () => {
   it('charset option', () => {
     let opt = new ConnOptions();
-    assert.equal(opt.collation.name, 'UTF8MB4_UNICODE_CI');
+    assert.equal(opt.collation, null);
 
     opt = new ConnOptions({ collation: 'utf8mb4_esperanto_ci' });
     assert.equal(opt.collation.name, 'UTF8MB4_ESPERANTO_CI');

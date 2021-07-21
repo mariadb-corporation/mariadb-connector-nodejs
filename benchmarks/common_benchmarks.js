@@ -130,9 +130,8 @@ function Bench() {
       });
   }
 
-  //To benchmark same things with mysql/mysql2, 2 options are changed compared to default values:
+  //To benchmark same things with mysql/mysql2, one options is changed compared to default values:
   // * checkDuplicate = false => normally, driver check there isn't some missing field if same identifier
-  // * noControlAfterUse = true => pool normally reset connection after use.
   const mariaConn = callbackMariadb.createConnection(
     Object.assign({ checkDuplicate: false }, config)
   );
@@ -150,7 +149,7 @@ function Bench() {
       connList['PROMISE_MARIADB'].drv = conn;
       conn.on('error', (err) => console.log('driver mariadb promise error :' + err));
       connList['PROMISE_MARIADB'].pool = mariadb.createPool(
-        Object.assign({ noControlAfterUse: true, checkDuplicate: false }, poolConfig)
+        Object.assign({ checkDuplicate: false }, poolConfig)
       );
       dbReady('promise-mariadb', this.driverLen);
     })
@@ -281,8 +280,7 @@ Bench.prototype.displayReport = function () {
     maximumFractionDigits: 1
   });
   const simpleFormatPerc = new Intl.NumberFormat('en-EN', {
-    style: 'percent',
-    maximumFractionDigits: 1
+    maximumFractionDigits: 2
   });
 
   console.log('');
@@ -327,8 +325,10 @@ Bench.prototype.displayReport = function () {
         this.fill(o.drvType, 16) +
         ' : ' +
         this.fill(simpleFormat.format(o.iteration), 8, false) +
-        ' ops/s  ' +
-        //'±' +this.fill(simpleFormat.format(o.variation), 6, false) + '%' +
+        ' ops/s ' +
+        '±' +
+        this.fill(simpleFormatPerc.format(o.variation), 6, false) +
+        '%' +
         (o.iteration === base
           ? ''
           : ' ( ' + this.fill((val > 0 ? '+' : '') + perc, 6, false) + '% )');

@@ -16,7 +16,7 @@ describe('test options', () => {
       password: undefined,
       database: undefined,
       prepareCacheLength: 256,
-      collation: Collations.fromName('UTF8MB4_UNICODE_CI'),
+      collation: undefined,
       initSql: undefined,
       connectTimeout: 10000,
       connectAttributes: false,
