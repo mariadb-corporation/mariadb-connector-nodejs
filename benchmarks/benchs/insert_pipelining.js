@@ -20,14 +20,13 @@ sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title = 'insert 100 characters';
 module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
-module.exports.promise = true;
 module.exports.benchFct = async function (conn, deferred) {
   const params = [randomString(100)];
   let ended = 0;
   const rows = await conn.query(sqlInsert, params);
   // let val = Array.isArray(rows) ? rows[0] : rows;
   // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-  deferred.resolve();
+  deferred();
 };
 
 module.exports.initFct = function (conn) {

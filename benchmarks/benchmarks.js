@@ -19,7 +19,6 @@ const launchBenchs = function (path) {
         m.displaySql,
         m.benchFct,
         m.onComplete,
-        m.promise,
         m.pool,
         m.requireExecute
       );

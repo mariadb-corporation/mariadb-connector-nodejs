@@ -7,10 +7,10 @@ let bench;
 const launchBenchs = function (path) {
   bench = new Bench();
 
-  const test = 'select_random_param_pool.js';
+  const test = 'do_pool.js';
   const m = require(path + '/' + test);
   bench.initFcts.push([m.initFct, m.promise]);
-  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.promise, m.pool, m.requireExecute); //, bench.CONN.MYSQL);
+  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MYSQL);
 
   bench.suiteReady();
 };

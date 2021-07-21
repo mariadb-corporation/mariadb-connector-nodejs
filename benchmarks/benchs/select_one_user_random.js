@@ -4,7 +4,6 @@ module.exports.title =
   'select one mysql.user and a random number (no caching client side)';
 module.exports.displaySql =
   'select <all mysql.user fields>, <random field> from mysql.user u LIMIT 1';
-module.exports.promise = true;
 module.exports.benchFct = function (conn, deferred) {
   const rand = Math.floor(Math.random() * 50000000);
   conn
@@ -60,7 +59,7 @@ module.exports.benchFct = function (conn, deferred) {
     )
     .then((rows) => {
       // assert.equal(1, rows[0]["t" + rand]);
-      deferred.resolve();
+      deferred();
     })
     .catch((err) => {
       throw err;

@@ -6,8 +6,9 @@ const conf = require('../test/conf');
 const colors = require('colors');
 const mariadb = require('../promise');
 const callbackMariadb = require('../callback');
-
-let promiseMariasql, mariasql, promiseMysql, mysql, promiseMysql2, mysql2;
+const callThread = 100;
+let promiseMysql, promiseMysql2;
+let connectionLimit = 10;
 
 try {
   promiseMysql = require('promise-mysql');
@@ -17,26 +18,10 @@ try {
   promiseMysql2 = require('mysql2/promise');
 } catch (err) {}
 
-try {
-  promiseMariasql = require('mariasql-promise');
-} catch (err) {}
-
-try {
-  mysql = require('mysql');
-} catch (err) {}
-
-try {
-  mysql2 = require('mysql2');
-} catch (err) {}
-
-try {
-  mariasql = require('mariasql');
-} catch (err) {}
-
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};
-  this.driverLen = 2;
+  this.driverLen = 1;
 
   this.ready = 0;
   this.suiteReady = function () {
@@ -58,7 +43,7 @@ function Bench() {
   config.charsetNumber = 45;
   config.trace = false;
 
-  const poolConfig = Object.assign({ connectionLimit: 4 }, config);
+  const poolConfig = Object.assign({ connectionLimit: connectionLimit }, config);
   // config.debug = true;
   // if (!mariasql && process.platform === "win32") {
   //   config.socketPath = "\\\\.\\pipe\\MySQL";
@@ -72,57 +57,52 @@ function Bench() {
 
   if (promiseMysql) {
     this.driverLen++;
-    connList['PROMISE_MYSQL'] = { desc: 'promise-mysql', promise: true };
-    promiseMysql
-      .createConnection(Object.assign({}, config))
-      .then((conn) => {
-        promiseMysql
-          .createPool(poolConfig)
-          .then((pool) => {
-            connList['PROMISE_MYSQL'].drv = conn;
-            connList['PROMISE_MYSQL'].pool = pool;
-            dbReady('promise-mysql', this.driverLen);
-          })
-          .catch((err) => {
-            throw err;
-          });
+    connList['MYSQL'] = { desc: 'promise-mysql' };
+
+    var proms = [];
+    connList['MYSQL'].drv = [];
+    for (let i = 0; i < connectionLimit; i++) {
+      proms.push(
+        promiseMysql.createConnection(Object.assign({}, config)).then((conn) => {
+          connList['MYSQL'].drv.push(conn);
+          return Promise.resolve();
+        })
+      );
+    }
+    proms.push(
+      promiseMysql.createPool(poolConfig).then((pool) => {
+        connList['MYSQL'].pool = pool;
+        return Promise.resolve();
+      })
+    );
+
+    Promise.all(proms)
+      .then(() => {
+        dbReady('promise-mysql', this.driverLen);
       })
       .catch((err) => {
         throw err;
       });
   }
 
-  if (mysql) {
-    this.driverLen++;
-    connList['MYSQL'] = { desc: 'mysql', promise: false };
-    const conn = mysql.createConnection(Object.assign({}, config));
-    conn.connect((err) => {
-      connList['MYSQL'].drv = conn;
-      conn.on('error', (err) => console.log('driver mysql error :' + err));
-      dbReady('mysql', this.driverLen);
-    });
-  }
-
-  if (mysql2) {
-    this.driverLen++;
-    connList['MYSQL2'] = { desc: 'mysql2', promise: false };
-    const conn = mysql2.createConnection(Object.assign({}, config));
-    conn.connect(() => {
-      connList['MYSQL2'].drv = conn;
-      conn.on('error', (err) => console.log('driver mysql2 error :' + err));
-      dbReady('mysql2', this.driverLen);
-    });
-  }
-
   if (promiseMysql2) {
     this.driverLen++;
-    connList['PROMISE_MYSQL2'] = { desc: 'promise mysql2', promise: true };
-    promiseMysql2
-      .createConnection(Object.assign({}, config))
-      .then((conn) => {
-        connList['PROMISE_MYSQL2'].drv = conn;
-        conn.on('error', (err) => console.log('driver mysql2 promise error :' + err));
-        connList['PROMISE_MYSQL2'].pool = promiseMysql2.createPool(poolConfig);
+    connList['MYSQL2'] = { desc: 'mysql2' };
+
+    var proms = [];
+    connList['MYSQL2'].drv = [];
+    for (let i = 0; i < connectionLimit; i++) {
+      proms.push(
+        promiseMysql2.createConnection(Object.assign({}, config)).then((conn) => {
+          connList['MYSQL2'].drv.push(conn);
+          return Promise.resolve();
+        })
+      );
+    }
+    connList['MYSQL2'].pool = promiseMysql2.createPool(poolConfig);
+
+    Promise.all(proms)
+      .then(() => {
         dbReady('promise mysql2', this.driverLen);
       })
       .catch((err) => {
@@ -132,25 +112,22 @@ function Bench() {
 
   //To benchmark same things with mysql/mysql2, one options is changed compared to default values:
   // * checkDuplicate = false => normally, driver check there isn't some missing field if same identifier
-  const mariaConn = callbackMariadb.createConnection(
-    Object.assign({ checkDuplicate: false }, config)
-  );
-  connList['MARIADB'] = { desc: 'mariadb', promise: true };
-  mariaConn.connect(() => {
-    connList['MARIADB'].drv = mariaConn;
-    mariaConn.on('error', (err) => console.log('driver mariadb error :' + err));
-    dbReady('mariadb', this.driverLen);
-  });
+  connList['MARIADB'] = { desc: 'mariadb' };
 
-  connList['PROMISE_MARIADB'] = { desc: 'promise mariadb', promise: false };
-  mariadb
-    .createConnection(Object.assign({ checkDuplicate: false }, config))
-    .then((conn) => {
-      connList['PROMISE_MARIADB'].drv = conn;
-      conn.on('error', (err) => console.log('driver mariadb promise error :' + err));
-      connList['PROMISE_MARIADB'].pool = mariadb.createPool(
-        Object.assign({ checkDuplicate: false }, poolConfig)
-      );
+  var proms = [];
+  connList['MARIADB'].drv = [];
+  for (let i = 0; i < connectionLimit; i++) {
+    proms.push(
+      mariadb.createConnection(Object.assign({}, config)).then((conn) => {
+        connList['MARIADB'].drv.push(conn);
+        return Promise.resolve();
+      })
+    );
+  }
+  connList['MARIADB'].pool = mariadb.createPool(poolConfig);
+
+  Promise.all(proms)
+    .then(() => {
       dbReady('promise-mariadb', this.driverLen);
     })
     .catch((err) => {
@@ -166,30 +143,6 @@ function Bench() {
     configC.protocol = 'socket';
   }
 
-  if (promiseMariasql) {
-    this.driverLen++;
-    connList['PROMISE_MARIASQL'] = { desc: 'promise mariasql', promise: false };
-    promiseMariasql
-      .createConnection(configC)
-      .then((conn) => {
-        connList['PROMISE_MARIASQL'].drv = conn;
-        dbReady('promise-mariasql', this.driverLen);
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }
-
-  if (mariasql) {
-    this.driverLen++;
-    connList['MARIASQL'] = { desc: 'mariasql', drv: conn, promise: true };
-    const conn = mariasql.createConnection(configC);
-    conn.connect((err) => {
-      connList['MARIASQL'].drv = conn;
-      dbReady('mariasql', this.driverLen);
-    });
-  }
-
   this.initFcts = [];
   //200 is a minimum to have benchmark average variation of 1%
   this.minSamples = 200;
@@ -201,10 +154,7 @@ function Bench() {
       for (let i = 0; i < bench.initFcts.length; i++) {
         console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
         if (bench.initFcts[i][0]) {
-          bench.initFcts[i][0].call(
-            this,
-            bench.initFcts[i][1] ? bench.CONN.PROMISE_MARIADB.drv : bench.CONN.MARIADB.drv
-          );
+          bench.initFcts[i][0].call(this, bench.CONN.MARIADB.drv[0]);
         }
       }
       this.currentNb = 0;
@@ -217,7 +167,6 @@ function Bench() {
       if (this.currentNb < this.length) pingAll(connList);
       //to avoid mysql2 taking all the server memory
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
-      if (mysql2 && mysql2.clearParserCache) mysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
@@ -247,21 +196,18 @@ function Bench() {
 Bench.prototype.end = function (bench) {
   console.log('ending connectors');
   this.endConnection(this.CONN.MARIADB);
-  this.endConnection(this.CONN.PROMISE_MARIADB);
-  if (mysql) this.endConnection(this.CONN.MYSQL);
-  if (mysql2) this.endConnection(this.CONN.MYSQL2);
-  if (mariasql) this.endConnection(this.CONN.MARIASQL);
 
-  if (promiseMysql) this.endConnection(this.CONN.PROMISE_MYSQL);
-  if (promiseMysql2) this.endConnection(this.CONN.PROMISE_MYSQL2);
-  if (promiseMariasql) this.endConnection(this.CONN.PROMISE_MARIASQL);
+  if (promiseMysql) this.endConnection(this.CONN.MYSQL);
+  if (promiseMysql2) this.endConnection(this.CONN.MYSQL2);
   bench.displayReport();
 };
 
 Bench.prototype.endConnection = function (conn) {
   try {
     //using destroy, because MySQL driver fail when using end() for windows named pipe
-    conn.drv.destroy();
+    for (let i = 0; i < connectionLimit; i++) {
+      conn.drv[i].destroy();
+    }
   } catch (err) {
     console.log("ending error for connection '" + conn.desc + "'");
     console.log(err);
@@ -300,10 +246,10 @@ Bench.prototype.displayReport = function () {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === 'mysql' || o.drvType === 'promise-mysql') {
+      if (o.drvType === 'promise-mysql') {
         base = o.iteration;
       }
-      if (o.drvType === 'mysql2' || o.drvType === 'promise mysql2') {
+      if (o.drvType === 'promise mysql2') {
         base2 = o.iteration;
       }
       if (o.iteration > best) {
@@ -324,7 +270,7 @@ Bench.prototype.displayReport = function () {
         '   ' +
         this.fill(o.drvType, 16) +
         ' : ' +
-        this.fill(simpleFormat.format(o.iteration), 8, false) +
+        this.fill(simpleFormat.format(o.iteration * connectionLimit), 8, false) +
         ' ops/s ' +
         '±' +
         this.fill(simpleFormatPerc.format(o.variation), 6, false) +
@@ -358,16 +304,7 @@ Bench.prototype.fill = function (val, length, right) {
   return val;
 };
 
-Bench.prototype.add = function (
-  title,
-  displaySql,
-  fct,
-  onComplete,
-  isPromise,
-  usePool,
-  requireExecute,
-  conn
-) {
+Bench.prototype.add = function (title, displaySql, fct, onComplete, usePool, requireExecute, conn) {
   const self = this;
   const addTest = getAddTest(
     self,
@@ -383,53 +320,40 @@ Bench.prototype.add = function (
   if (conn) {
     addTest(conn, conn.desc);
   } else {
-    if (isPromise) {
-      addTest(self.CONN.PROMISE_MARIADB, 'warmup');
-    } else {
-      addTest(self.CONN.MARIADB, 'warmup');
-    }
+    addTest(self.CONN.MARIADB, 'warmup');
 
-    if (!requireExecute && !isPromise && mysql) {
+    if (!requireExecute && promiseMysql) {
       addTest(self.CONN.MYSQL, self.CONN.MYSQL.desc);
     }
 
-    if (!requireExecute && isPromise && promiseMysql) {
-      addTest(self.CONN.PROMISE_MYSQL, self.CONN.PROMISE_MYSQL.desc);
-    }
-
-    if (!isPromise && mysql2) {
+    if (promiseMysql2) {
       addTest(self.CONN.MYSQL2, self.CONN.MYSQL2.desc);
     }
 
-    if (isPromise && promiseMysql2) {
-      addTest(self.CONN.PROMISE_MYSQL2, self.CONN.PROMISE_MYSQL2.desc);
-    }
-
-    if (isPromise) {
-      addTest(self.CONN.PROMISE_MARIADB, self.CONN.PROMISE_MARIADB.desc);
-    } else {
-      addTest(self.CONN.MARIADB, self.CONN.MARIADB.desc);
-    }
-
-    if (!requireExecute && isPromise && promiseMariasql) {
-      addTest(self.CONN.PROMISE_MARIASQL, self.CONN.PROMISE_MARIASQL.desc);
-    }
-
-    if (!isPromise && mariasql) {
-      addTest(self.CONN.MARIASQL, self.CONN.MARIASQL.desc);
-    }
+    addTest(self.CONN.MARIADB, self.CONN.MARIADB.desc);
   }
 };
 
 const getAddTest = function (self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
   return function (conn, name) {
     suite.add({
-      name: title + ' - ' + name,
+      name: connectionLimit + ' simultaneous call - ' + title + ' - ' + name,
       fn: function (deferred) {
-        fct.call(self, usePool ? conn.pool : conn.drv, deferred, conn);
+        let nb = 0;
+        for (let i = 0; i < connectionLimit; i++) {
+          fct.call(
+            self,
+            usePool ? conn.pool : conn.drv[i],
+            () => {
+              nb++;
+              if (nb === connectionLimit) deferred.resolve();
+            },
+            conn
+          );
+        }
       },
       onComplete: () => {
-        if (onComplete) onComplete.call(self, usePool ? conn.pool : conn.drv);
+        if (onComplete) onComplete.call(self, usePool ? conn.pool : conn.drv[0]);
       },
       minSamples: minSamples,
       defer: true,
@@ -443,10 +367,13 @@ const getAddTest = function (self, suite, fct, minSamples, title, displaySql, on
 const pingAll = function (conns) {
   let keys = Object.keys(conns);
   for (let k = 0; k < keys.length; ++k) {
-    conns[keys[k]].drv.ping();
+    for (let i = 0; i < connectionLimit; ++i) {
+      conns[keys[k]].drv[i].ping();
+    }
     if (conns[keys[k]].pool) {
-      for (let i = 0; i < 4; i++) {
-        conns[keys[k]].pool.getConnection().then((conn) => {
+      for (let i = 0; i < connectionLimit; i++) {
+        const pool = conns[keys[k]].pool;
+        pool.getConnection().then((conn) => {
           conn
             .ping()
             .then(() => {
