@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-module.exports.title = 'select one mysql.user using execute promise';
+module.exports.title = 'select one mysql.user using execute';
 module.exports.displaySql = 'select <all mysql.user fields> from mysql.user u LIMIT 1';
 module.exports.promise = true;
 module.exports.requireExecute = true;
