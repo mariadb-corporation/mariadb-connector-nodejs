@@ -157,7 +157,7 @@ function Bench() {
   this.loadDriver('MARIADB', mariadb, false);
 
   //200 is a minimum run to ensure having a maximum variation of 1%
-  this.minSamples = 20;
+  this.minSamples = 200;
   this.initFcts = [];
 
   this.suite = new Benchmark.Suite('foo', {
@@ -184,7 +184,7 @@ function Bench() {
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
-        event.target.options.benchTitle + ' [ sql: ' + event.target.options.displaySql + ' ]';
+        event.target.options.benchTitle + '\n [ sql: ' + event.target.options.displaySql + ' ]';
       const iteration = 1 / event.target.times.period;
       const variation = event.target.stats.rme;
 
@@ -275,7 +275,7 @@ Bench.prototype.displayReport = function () {
     }
     //display results
     console.log('');
-    console.log('bench : ' + keys[i]);
+    console.log('bench : ' + keys[i].replace('\n', ''));
     const res = {title: keys[i]};
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
@@ -289,7 +289,7 @@ Bench.prototype.displayReport = function () {
         simpleFormat.format(o.iteration * connectionLimit),
         8,
         false
-      )} ops/s ±${this.fill(simpleFormatPerc.format(o.variation), 6, false)}% ${percText}`;
+      )} ops/s ±${o.variation}% ${percText}`;
       if (o.drvType.includes('mariadb')) {
         if (o.iteration < best) {
           console.log(tt.red);

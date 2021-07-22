@@ -25,8 +25,7 @@ sqlInsert = 'INSERT INTO testn.perfTestText(' + sqlCol + ') VALUES (?' + sqlPara
 sqlTable += ', PRIMARY KEY (id))';
 
 module.exports.title = 'insert 10 parameters of 100 characters';
-module.exports.displaySql =
-  'INSERT INTO testn.perfTestText VALUES (<100 ?>) (into BLACKHOLE ENGINE)';
+module.exports.displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
 module.exports.benchFct = function (conn, deferred) {
   const params = [];
   for (let i = 0; i < 10; i++) {

@@ -20,7 +20,7 @@ sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title =
   "100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)";
-module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
+module.exports.displaySql = 'INSERT INTO perfTestTextPipe VALUES (?)';
 const iterations = 100;
 module.exports.benchFct = function (conn, deferred, connType) {
   const params = [randomString(100)];

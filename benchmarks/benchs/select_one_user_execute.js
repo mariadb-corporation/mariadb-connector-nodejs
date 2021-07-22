@@ -1,7 +1,7 @@
 const assert = require('assert');
 
 module.exports.title = 'select one mysql.user using execute';
-module.exports.displaySql = 'select <all mysql.user fields> from mysql.user u LIMIT 1';
+module.exports.displaySql = 'select * from mysql.user LIMIT 1';
 module.exports.requireExecute = true;
 module.exports.benchFct = function (conn, deferred) {
   conn

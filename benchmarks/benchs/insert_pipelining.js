@@ -18,7 +18,7 @@ let sqlTable =
   ', PRIMARY KEY (id))';
 sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
-module.exports.title = 'insert 100 characters';
+module.exports.title = 'insert 100 characters pipelining';
 module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
 module.exports.benchFct = async function (conn, deferred) {
   const params = [randomString(100)];
