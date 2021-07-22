@@ -8,7 +8,69 @@ const mariadb = require('../promise');
 const callbackMariadb = require('../callback');
 const callThread = 100;
 let promiseMysql, promiseMysql2;
-let connectionLimit = 10;
+let connectionLimit = 1;
+
+const defaultImgJson = {
+  type: 'horizontalBar',
+  data: {
+    datasets: [
+      {
+        label: 'mysql 2.18.1',
+        backgroundColor: '#db4437',
+        data: [320]
+      },
+      {
+        label: 'mysql2 2.2.5',
+        backgroundColor: '#4285f4',
+        data: [450]
+      },
+      {
+        label: 'mariadb 3.0.1',
+        backgroundColor: '#ff9900',
+        data: [660]
+      }
+    ]
+  },
+  options: {
+    plugins: {
+      datalabels: {
+        anchor: 'end',
+        align: 'start',
+        color: '#fff',
+        font: {
+          weight: 'bold'
+        }
+      }
+    },
+    elements: {
+      rectangle: {
+        borderWidth: 0
+      }
+    },
+    responsive: true,
+    legend: {
+      position: 'right'
+    },
+    title: {
+      display: true,
+      text: 'Select * from mysql user limit 1'
+    },
+    scales: {
+      xAxes: [
+        {
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'operations per second'
+          },
+          ticks: {
+            beginAtZero: true
+          }
+        }
+      ]
+    }
+  }
+};
 
 try {
   promiseMysql = require('promise-mysql');
@@ -21,7 +83,7 @@ try {
 function Bench() {
   this.dbReady = 0;
   this.reportData = {};
-  this.driverLen = 1;
+  this.driverLen = 0;
 
   this.ready = 0;
   this.suiteReady = function () {
@@ -31,121 +93,72 @@ function Bench() {
     }
   };
 
+  this.loadDriver = (type, base, poolPromise) => {
+    this.driverLen++;
+    connList[type] = { desc: type.toLowerCase() };
+
+    const proms = [];
+    connList[type].drv = [];
+    for (let i = 0; i < connectionLimit; i++) {
+      proms.push(
+        base.createConnection(Object.assign({}, config)).then((conn) => {
+          connList[type].drv.push(conn);
+          return Promise.resolve();
+        })
+      );
+    }
+    if (poolPromise) {
+      proms.push(
+        base.createPool(poolConfig).then((pool) => {
+          connList[type].pool = pool;
+          return Promise.resolve();
+        })
+      );
+    } else {
+      connList[type].pool = base.createPool(poolConfig);
+    }
+
+    Promise.all(proms)
+      .then(() => {
+        dbReady(type, this.driverLen);
+      })
+      .catch((err) => {
+        throw err;
+      });
+  };
+
   const dbReady = function (name, driverLen) {
     bench.dbReady++;
-    console.log('driver for ' + name + ' connected (' + bench.dbReady + '/' + driverLen + ')');
+    console.log('driver for ' + name + ' connected [' + bench.dbReady + '/' + driverLen + ']');
     if (bench.dbReady === driverLen) {
       bench.suiteReady();
     }
   };
 
+  /****************************
+   * Common configuration
+   ****************************/
   const config = conf.baseConfig;
   config.charsetNumber = 45;
   config.trace = false;
-
+  //config.checkDuplicate = false; // to benchmark the same behavior
   const poolConfig = Object.assign({ connectionLimit: connectionLimit }, config);
-  // config.debug = true;
-  // if (!mariasql && process.platform === "win32") {
-  //   config.socketPath = "\\\\.\\pipe\\MySQL";
-  // }
 
-  console.log(config);
+  console.log(poolConfig);
 
   this.CONN = {};
+
   const bench = this;
   const connList = this.CONN;
 
-  if (promiseMysql) {
-    this.driverLen++;
-    connList['MYSQL'] = { desc: 'promise-mysql' };
+  // load pool/connections for available drivers
+  if (promiseMysql) this.loadDriver('MYSQL', promiseMysql, true);
+  if (promiseMysql2) this.loadDriver('MYSQL2', promiseMysql2, false);
+  this.loadDriver('MARIADB', mariadb, false);
 
-    var proms = [];
-    connList['MYSQL'].drv = [];
-    for (let i = 0; i < connectionLimit; i++) {
-      proms.push(
-        promiseMysql.createConnection(Object.assign({}, config)).then((conn) => {
-          connList['MYSQL'].drv.push(conn);
-          return Promise.resolve();
-        })
-      );
-    }
-    proms.push(
-      promiseMysql.createPool(poolConfig).then((pool) => {
-        connList['MYSQL'].pool = pool;
-        return Promise.resolve();
-      })
-    );
-
-    Promise.all(proms)
-      .then(() => {
-        dbReady('promise-mysql', this.driverLen);
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }
-
-  if (promiseMysql2) {
-    this.driverLen++;
-    connList['MYSQL2'] = { desc: 'mysql2' };
-
-    var proms = [];
-    connList['MYSQL2'].drv = [];
-    for (let i = 0; i < connectionLimit; i++) {
-      proms.push(
-        promiseMysql2.createConnection(Object.assign({}, config)).then((conn) => {
-          connList['MYSQL2'].drv.push(conn);
-          return Promise.resolve();
-        })
-      );
-    }
-    connList['MYSQL2'].pool = promiseMysql2.createPool(poolConfig);
-
-    Promise.all(proms)
-      .then(() => {
-        dbReady('promise mysql2', this.driverLen);
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }
-
-  //To benchmark same things with mysql/mysql2, one options is changed compared to default values:
-  // * checkDuplicate = false => normally, driver check there isn't some missing field if same identifier
-  connList['MARIADB'] = { desc: 'mariadb' };
-
-  var proms = [];
-  connList['MARIADB'].drv = [];
-  for (let i = 0; i < connectionLimit; i++) {
-    proms.push(
-      mariadb.createConnection(Object.assign({}, config)).then((conn) => {
-        connList['MARIADB'].drv.push(conn);
-        return Promise.resolve();
-      })
-    );
-  }
-  connList['MARIADB'].pool = mariadb.createPool(poolConfig);
-
-  Promise.all(proms)
-    .then(() => {
-      dbReady('promise-mariadb', this.driverLen);
-    })
-    .catch((err) => {
-      throw err;
-    });
-
-  const configC = Object.assign({}, config);
-  configC.charset = 'utf8mb4';
-  configC.db = config.database;
-  configC.metadata = true;
-  if (config.socketPath != null) {
-    configC.unixSocket = config.socketPath;
-    configC.protocol = 'socket';
-  }
-
+  //200 is a minimum run to ensure having a maximum variation of 1%
+  this.minSamples = 20;
   this.initFcts = [];
-  //200 is a minimum to have benchmark average variation of 1%
-  this.minSamples = 200;
 
   this.suite = new Benchmark.Suite('foo', {
     // called when the suite starts running
@@ -159,6 +172,7 @@ function Bench() {
       }
       this.currentNb = 0;
       console.log('initializing test data done');
+      console.log('simultaneous call: ' + connectionLimit);
     },
 
     // called between running benchmarks
@@ -170,7 +184,7 @@ function Bench() {
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
       const benchTitle =
-        event.target.options.benchTitle + ' ( sql: ' + event.target.options.displaySql + ' )';
+        event.target.options.benchTitle + ' [ sql: ' + event.target.options.displaySql + ' ]';
       const iteration = 1 / event.target.times.period;
       const variation = event.target.stats.rme;
 
@@ -246,10 +260,10 @@ Bench.prototype.displayReport = function () {
 
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
-      if (o.drvType === 'promise-mysql') {
+      if (o.drvType === 'mysql') {
         base = o.iteration;
       }
-      if (o.drvType === 'promise mysql2') {
+      if (o.drvType === 'mysql2') {
         base2 = o.iteration;
       }
       if (o.iteration > best) {
@@ -262,22 +276,20 @@ Bench.prototype.displayReport = function () {
     //display results
     console.log('');
     console.log('bench : ' + keys[i]);
+    const res = {title: keys[i]};
     for (let j = 0; j < data.length; j++) {
       let o = data[j];
       const val = (100 * (o.iteration - base)) / base;
-      const perc = simpleFormat.format(val);
-      const tt =
-        '   ' +
-        this.fill(o.drvType, 16) +
-        ' : ' +
-        this.fill(simpleFormat.format(o.iteration * connectionLimit), 8, false) +
-        ' ops/s ' +
-        '±' +
-        this.fill(simpleFormatPerc.format(o.variation), 6, false) +
-        '%' +
-        (o.iteration === base
-          ? ''
-          : ' ( ' + this.fill((val > 0 ? '+' : '') + perc, 6, false) + '% )');
+      res[o.drvType] = o.iteration;
+      let percText = '';
+      if (o.iteration !== base) {
+        percText = ` ( ${this.fill((val > 0 ? '+' : '') + simpleFormat.format(val), 6, false)}% )`;
+      }
+      const tt = `   ${this.fill(o.drvType, 16)} : ${this.fill(
+        simpleFormat.format(o.iteration * connectionLimit),
+        8,
+        false
+      )} ops/s ±${this.fill(simpleFormatPerc.format(o.variation), 6, false)}% ${percText}`;
       if (o.drvType.includes('mariadb')) {
         if (o.iteration < best) {
           console.log(tt.red);
@@ -288,6 +300,7 @@ Bench.prototype.displayReport = function () {
         console.log(tt);
       }
     }
+    console.log(getImg(res));
   }
 };
 
@@ -337,7 +350,7 @@ Bench.prototype.add = function (title, displaySql, fct, onComplete, usePool, req
 const getAddTest = function (self, suite, fct, minSamples, title, displaySql, onComplete, usePool) {
   return function (conn, name) {
     suite.add({
-      name: connectionLimit + ' simultaneous call - ' + title + ' - ' + name,
+      name: title + ' - ' + name,
       fn: function (deferred) {
         let nb = 0;
         for (let i = 0; i < connectionLimit; i++) {
@@ -386,6 +399,54 @@ const pingAll = function (conns) {
       }
     }
   }
+};
+
+const getImg = (data) => {
+  const pjson = require('../package-lock.json');
+  const mysql2Version = pjson.packages['node_modules/mysql2']
+    ? pjson.packages['node_modules/mysql2'].version
+    : null;
+  const mysqlVersion = pjson.packages['node_modules/mysql']
+    ? pjson.packages['node_modules/mysql'].version
+    : null;
+  const mariadbVersion = pjson.packages[''] ? pjson.packages[''].version : null;
+
+  //clone
+  const resJson = JSON.parse(JSON.stringify(defaultImgJson));
+
+  if (data.mysql) {
+    resJson.data.datasets[0].label = 'mysql ' + mysqlVersion;
+    resJson.data.datasets[0].data = [Math.round(data.mysql)];
+  }
+
+  if (data.mysql2) {
+    resJson.data.datasets[1].label = 'mysql2 ' + mysql2Version;
+    resJson.data.datasets[1].data = [Math.round(data.mysql2)];
+  }
+
+  resJson.data.datasets[2].label = 'mariadb ' + mariadbVersion;
+  resJson.data.datasets[2].data = [Math.round(data.mariadb)];
+  if (data.mysql2 && data.mysql) {
+    return (
+      'https://quickchart.io/chart/render/zm-e2bd7f00-c7ca-4412-84e5-5284055056b5?data1=' +
+      Math.round(data.mysql) +
+      '&data2=' +
+      Math.round(data.mysql2) +
+      '&data3=' +
+      Math.round(data.mariadb) +
+      '&title=' +
+      encodeURIComponent(data.title)
+    );
+  }
+
+  if (!data.mysql2) resJson.data.datasets.splice(1, 1);
+  if (!data.mysql) resJson.data.datasets.splice(0, 1);
+  resJson.options.title.text = data.title;
+
+  return (
+    'https://quickchart.io/chart?devicePixelRatio=1.0&h=160&w=520&c=' +
+    encodeURIComponent(JSON.stringify(resJson))
+  );
 };
 
 module.exports = Bench;

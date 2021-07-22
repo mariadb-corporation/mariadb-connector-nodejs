@@ -1,7 +1,6 @@
 const assert = require('assert');
 
-module.exports.title =
-  'select one mysql.user and a random number (no caching client side)';
+module.exports.title = 'select one mysql.user and a random number [no caching client side]';
 module.exports.displaySql =
   'select <all mysql.user fields>, <random field> from mysql.user u LIMIT 1';
 module.exports.benchFct = function (conn, deferred) {
