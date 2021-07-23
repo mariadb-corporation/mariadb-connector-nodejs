@@ -14,15 +14,7 @@ const launchBenchs = function (path) {
       console.log('benchmark: ./benchs/' + list[i]);
       const m = require('./benchs/' + list[i]);
       bench.initFcts.push([m.initFct, m.promise]);
-      bench.add(
-        m.title,
-        m.displaySql,
-        m.benchFct,
-        m.onComplete,
-        m.promise,
-        m.pool,
-        m.requireExecute
-      );
+      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute);
     }
     bench.suiteReady();
   });

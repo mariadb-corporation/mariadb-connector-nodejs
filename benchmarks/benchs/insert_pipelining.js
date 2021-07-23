@@ -18,27 +18,15 @@ let sqlTable =
   ', PRIMARY KEY (id))';
 sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
-module.exports.title = '100 * insert 100 characters using promise';
+module.exports.title = 'insert 100 characters pipelining';
 module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
-const iterations = 100;
-module.exports.promise = true;
-module.exports.benchFct = function (conn, deferred) {
+module.exports.benchFct = async function (conn, deferred) {
   const params = [randomString(100)];
   let ended = 0;
-  for (let i = 0; i < iterations; i++) {
-    conn
-      .query(sqlInsert, params)
-      .then((rows) => {
-        // let val = Array.isArray(rows) ? rows[0] : rows;
-        // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-        if (++ended === iterations) {
-          deferred.resolve();
-        }
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }
+  const rows = await conn.query(sqlInsert, params);
+  // let val = Array.isArray(rows) ? rows[0] : rows;
+  // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
+  deferred();
 };
 
 module.exports.initFct = function (conn) {
