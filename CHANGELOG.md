@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.1-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1-rc) (29 Jul 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-beta...3.0.1-rc)
+
+* [CONJS-168] stream backpressure not handled well
+* [CONJS-172] performance improvement for multi-line result-set + update perf result with recent mysql/mysql2 drivers see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/benchmarks.md) results. 
+
 ## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (11 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...3.0.0-beta)
 

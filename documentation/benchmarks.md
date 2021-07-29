@@ -40,7 +40,7 @@ benchmarks runs the same command 10 different threads (each one having a dedicat
 
 ``` 
 
-> mariadb@3.0.1-beta benchmark
+> mariadb@3.0.1-rc benchmark
 > node ./benchmarks/benchmarks.js
 
 {
