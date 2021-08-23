@@ -108,6 +108,20 @@ describe('Pool', () => {
     pool.end();
   });
 
+  it('query with null placeholder', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    let rows = await pool.query('select ? as a', [null]);
+    assert.deepEqual(rows, [{ a: null }]);
+    await pool.end();
+  });
+
+  it('query with null placeholder no array', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    let rows = await pool.query('select ? as a', null);
+    assert.deepEqual(rows, [{ a: null }]);
+    await pool.end();
+  });
+
   it('pool with wrong authentication', function (done) {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host beeing blocked
     this.timeout(10000);

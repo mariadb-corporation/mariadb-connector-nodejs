@@ -20,6 +20,16 @@ describe('basic query', () => {
       .catch(done);
   });
 
+  it('query with null placeholder', async function () {
+    let rows = await shareConn.query('select ? as a', [null]);
+    assert.deepEqual(rows, [{ a: null }]);
+  });
+
+  it('query with null placeholder no array', async function () {
+    let rows = await shareConn.query('select ? as a', null);
+    assert.deepEqual(rows, [{ a: null }]);
+  });
+
   it('parameter last', async () => {
     const value = "'`\\";
     const conn = await base.createConnection();
