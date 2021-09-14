@@ -185,7 +185,7 @@ DB_PWD=secretPasswrd
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
-* [`connection.prepare(sql) → Promise`](#connectionpreparesql---promise): Prepares a query.
+* [`connection.prepare(sql) → Promise`](#connectionpreparesql--promise): Prepares a query.
 * [`connection.execute(sql[, values]) → Promise`](#connectionexecutesql-values--promise): Prepare and Executes a query.
 * [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values--promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
