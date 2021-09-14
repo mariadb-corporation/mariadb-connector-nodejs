@@ -136,12 +136,29 @@ DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
 
+
 ### Default options consideration
 
 For new project, enabling option `supportBigInt` is recommended (It will be in a future 3.x version).
 
 This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
 BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
+
+## Consideration for migration from mysql/mysql2
+
+### Experimental `??` syntax 
+mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
+This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise) (3.x version).
+
+example:
+```js
+  const res = await conn.query('call ??(?)', [myProc, 'myVal']);
+```
+has to use explicit escapeId:
+```js
+  const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
+```
+
 
 # Promise API
 
@@ -438,7 +455,7 @@ connection
 
 ### Placeholder
 
-To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringfy`).
+To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringify`).
 
 When streaming, objects that implement Readable are streamed automatically.  But, there are two server system variables that may interfere:
 
