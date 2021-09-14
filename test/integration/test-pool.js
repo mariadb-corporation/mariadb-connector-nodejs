@@ -253,7 +253,7 @@ describe('Pool', () => {
       });
   });
 
-  it('create pool', function (done) {
+  it('create pool', async function () {
     if (
       process.env.srv === 'maxscale' ||
       process.env.srv === 'skysql' ||
@@ -263,26 +263,15 @@ describe('Pool', () => {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
     const initTime = Date.now();
-    pool.getConnection().then((conn) => {
-      conn.query('SELECT SLEEP(1)').then(() => {
-        conn.release();
-      });
-    });
-    pool.getConnection().then((conn) => {
-      conn
-        .query('SELECT SLEEP(1)')
-        .then(() => {
-          assert(
-            Date.now() - initTime >= 1999,
-            'expected > 2s, but was ' + (Date.now() - initTime)
-          );
-          conn.release();
-          return pool.end();
-        })
-        .then(() => {
-          done();
-        });
-    });
+    let conn = await pool.getConnection();
+    await conn.query('SELECT SLEEP(1)');
+    conn.release();
+
+    await pool.getConnection();
+    await conn.query('SELECT SLEEP(1)');
+    assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
+    conn.release();
+    await pool.end();
   });
 
   it('create pool with multipleStatement', function (done) {
