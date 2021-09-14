@@ -169,6 +169,34 @@ describe('batch', function () {
     conn.end();
   };
 
+  const batchWithReturning = async (useBulk) => {
+    const conn = await base.createConnection({ bulk: useBulk });
+    await conn.query('drop table if exists bar');
+    await conn.query('create table bar (id bigint not null primary key)');
+    let res = await conn.batch('insert into bar (id) values (?) returning id', [
+      [1],
+      [2],
+      [3],
+      [4]
+    ]);
+    assert.deepEqual(res, [{ id: 1n }, { id: 2n }, { id: 3n }, { id: 4n }]);
+
+    res = await conn.batch(
+      { sql: 'insert into bar (id) values (?) returning id', rowsAsArray: true },
+      [[5], [6], [7], [8]]
+    );
+    assert.deepEqual(res, [[5n], [6n], [7n], [8n]]);
+
+    res = await conn.batch('insert into bar (id) values (?) returning id', [
+      [9],
+      ['10'],
+      [11],
+      [12]
+    ]);
+    assert.deepEqual(res, [{ id: 9n }, { id: 10n }, { id: 11n }, { id: 12n }]);
+    conn.end();
+  };
+
   const simpleBatchWithOptions = async (useCompression, useBulk) => {
     const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
     conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
@@ -736,6 +764,12 @@ describe('batch', function () {
       await simpleBatchWithOptions(useCompression, true);
     });
 
+    it('batch with returning', async function () {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 5, 12)) this.skip();
+      await batchWithReturning(true);
+    });
+
     it('batch without value', async function () {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -1088,6 +1122,12 @@ describe('batch', function () {
         conn.end();
       }
     };
+
+    it('batch with returning', async function () {
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 5, 12)) this.skip();
+      await batchWithReturning(false);
+    });
 
     it('non rewritable batch', async function () {
       this.timeout(30000);

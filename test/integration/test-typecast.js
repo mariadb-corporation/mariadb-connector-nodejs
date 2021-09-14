@@ -65,7 +65,7 @@ describe('TypeCast', () => {
   it('cast fields', async function () {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
+      assert.equal(field.columnLength, shareConn.info.collation.maxLength * 6);
       return next();
     };
     const rows = await shareConn.query({

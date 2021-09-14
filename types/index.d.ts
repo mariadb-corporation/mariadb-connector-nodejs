@@ -885,6 +885,7 @@ export interface Collation {
   index: number;
   name: string;
   encoding: string;
+  maxLength: number;
   fromEncoding(encoding: string): Collation;
   fromIndex(index: number): Collation;
   fromName(name: string): Collation;
