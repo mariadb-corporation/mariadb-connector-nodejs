@@ -108,6 +108,36 @@ describe('Pool', () => {
     pool.end();
   });
 
+  it('undefined query', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    try {
+      await pool.query(undefined);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert(err.message.includes('sql parameter is mandatory'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45049);
+      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('undefined batch', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    try {
+      await pool.batch(undefined);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert(err.message.includes('sql parameter is mandatory'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45049);
+      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('query with null placeholder', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
     let rows = await pool.query('select ? as a', [null]);
@@ -185,7 +215,7 @@ describe('Pool', () => {
       });
   });
 
-  it('pool with wrong authentication connection', function (done) {
+  it('pool with wrong authentication connection', async function () {
     if (
       process.env.srv === 'maxscale' ||
       process.env.srv === 'skysql' ||
@@ -193,64 +223,43 @@ describe('Pool', () => {
     )
       this.skip();
     this.timeout(10000);
-    const pool = base.createPool({
-      acquireTimeout: 4000,
-      initializationTimeout: 2000,
-      user: 'wrongAuthentication'
-    });
-    pool
-      .getConnection()
-      .then(() => {
-        pool.end();
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
-        assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45028 ||
-            err.errno === 45025 ||
-            err.errno === 45044,
-          err.message
-        );
-        pool
-          .getConnection()
-          .then(() => {
-            pool.end();
-            done(new Error('must have thrown error'));
-          })
-          .catch((err) => {
-            pool.end();
-            assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028 ||
-                err.errno === 45025 ||
-                err.errno === 45044,
-              err.message
-            );
-            done();
-          });
+    let err;
+    let pool;
+    try {
+      pool = base.createPool({
+        acquireTimeout: 4000,
+        initializationTimeout: 2000,
+        user: 'wrongAuthentication'
       });
-    pool
-      .getConnection()
-      .then(() => {
-        pool.end();
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
-        assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45028 ||
-            err.errno === 45025 ||
-            err.errno === 45044,
-          err.message
-        );
-      });
+      await pool.getConnection();
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(
+        err.errno === 1524 ||
+          err.errno === 1045 ||
+          err.errno === 1698 ||
+          err.errno === 45028 ||
+          err.errno === 45025 ||
+          err.errno === 45044,
+        err.message
+      );
+    }
+    try {
+      await pool.getConnection();
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(
+        err.errno === 1524 ||
+          err.errno === 1045 ||
+          err.errno === 1698 ||
+          err.errno === 45028 ||
+          err.errno === 45025 ||
+          err.errno === 45044,
+        err.message
+      );
+    } finally {
+      pool.end();
+    }
   });
 
   it('create pool', async function () {
