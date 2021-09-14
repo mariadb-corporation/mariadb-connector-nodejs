@@ -83,6 +83,7 @@ has to use explicit escapeId:
   const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
 ```
 
+Cluster configuration `removeNodeErrorCount` default to `Infinity` when mysql/mysql2 default to value `5`. This avoids removing nodes without explicitly saying so.
 
 ## Recommendation
 
@@ -395,7 +396,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed|*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed. Default to Infinity since 3.0, was 5 before|*integer* | Infinity |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 1000|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 

@@ -83,7 +83,7 @@ describe('cluster', function () {
 
     it('pool full', function (done) {
       this.timeout(30000);
-      const poolCluster = basePromise.createPoolCluster();
+      const poolCluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
@@ -277,7 +277,7 @@ describe('cluster', function () {
     });
 
     it("won't use bad host pools", function (done) {
-      const poolCluster = basePromise.createPoolCluster();
+      const poolCluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
       poolCluster.on('remove', (node) => {
         removedNode.push(node);
@@ -724,7 +724,7 @@ describe('cluster', function () {
 
     it('pool full', function (done) {
       this.timeout(30000);
-      const poolCluster = baseCallback.createPoolCluster();
+      const poolCluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
@@ -915,7 +915,7 @@ describe('cluster', function () {
     });
 
     it("won't use bad host pools", function (done) {
-      const poolCluster = baseCallback.createPoolCluster();
+      const poolCluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
       poolCluster.on('remove', (node) => {
         removedNode.push(node);
