@@ -11,7 +11,7 @@ describe('stored procedure', () => {
       'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
     );
     await shareConn.query(
-      'CREATE OR REPLACE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end'
+      'CREATE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end'
     );
   });
 
