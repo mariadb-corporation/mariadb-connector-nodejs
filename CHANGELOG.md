@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.5.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.5) (???)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...2.5.5)
+
+* [CONJS-170] Pool.query(undefined) never release connection
+* [CONJS-173] not permitting providing null as a value without an array
+ 
 ## [2.5.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.4) (08 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.3...2.5.4)
 
