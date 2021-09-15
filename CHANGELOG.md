@@ -1,10 +1,18 @@
 # Change Log
 
-## [3.0.1-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1-rc) (29 Jul 2021)
+## [3.0.1-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1-rc) (???)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-beta...3.0.1-rc)
 
+Notable change:
 * [CONJS-168] stream backpressure not handled well
 * [CONJS-172] performance improvement for multi-line result-set + update perf result with recent mysql/mysql2 drivers see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/benchmarks.md) results. 
+* [CONJS-168] correct stream backpressure
+* [CONJS-176] Change Pool cluster default option removeNodeErrorCount value to Infinity
+
+* Corrections:
+* [CONJS-125] permit using batch with returning clause
+* [CONJS-170] Pool.query(undefined) never release connection
+* [CONJS-173] not permitting providing null as a value without an array
 
 ## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (11 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...3.0.0-beta)
@@ -15,7 +23,6 @@ Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedic
 * [CONJS-165] Adding initial message error value on Error object
 * [CONJS-166] Restrict authentication plugin list
 * [CONJS-167] Permit custom logger configuration
-* [CONJS-168] correct stream backpressure
 
 New Connection options
 
