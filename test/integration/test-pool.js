@@ -278,7 +278,8 @@ describe('Pool', () => {
 
     await pool.getConnection();
     await conn.query('SELECT SLEEP(1)');
-    assert(Date.now() - initTime >= 1999, 'expected > 2s, but was ' + (Date.now() - initTime));
+    const time = Date.now() - initTime;
+    assert(time >= 1980, 'expected > 2s, but was ' + time);
     conn.release();
     await pool.end();
   });
