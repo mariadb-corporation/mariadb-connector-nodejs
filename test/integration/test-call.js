@@ -5,25 +5,20 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('stored procedure', () => {
-  before(function (done) {
+  before(async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    shareConn
-      .query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end')
-      .then(() => {
-        done();
-      })
-      .catch(done);
+    await shareConn.query(
+      'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
+    );
+    await shareConn.query(
+      'CREATE OR REPLACE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end'
+    );
   });
 
-  after((done) => {
-    shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam').catch((err) => {});
-    shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple').catch((err) => {});
-    shareConn
-      .query('DROP FUNCTION IF EXISTS stmtSimpleFunct')
-      .then(() => {
-        done();
-      })
-      .catch((err) => {});
+  after(async () => {
+    await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
+    await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
+    await shareConn.query('DROP FUNCTION IF EXISTS stmtSimpleFunct');
   });
 
   it('simple call query', function (done) {
@@ -47,6 +42,15 @@ describe('stored procedure', () => {
           .catch(finish);
       })
       .catch(done);
+  });
+
+  it('output call query', async function () {
+    await shareConn.query('call someProc(?,@myOutputValue)', [2]);
+    const res = await shareConn.query('SELECT @myOutputValue');
+    assert.equal(res[0]['@myOutputValue'], 4);
+
+    const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
+    assert.equal(res2[0][0]['p2'], 4);
   });
 
   it('simple function', function (done) {

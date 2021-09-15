@@ -1501,3 +1501,32 @@ northSlaves.getConnection()
 * `filteredPoolCluster.getConnection() → Promise` : Creates a new connection from pools that corresponds to pattern .
 * `filteredPoolCluster.query(sql[, values]) → Promise` : this is a shortcut to get a connection from pools that corresponds to pattern, execute a query and release connection.
 
+## Stored procedure with output parameter
+
+Output parameters can be retrieved with 2 differents ways:
+
+### Using simple query
+solution is to define output parameters as user-defined variables and retrieving them afterwhile.
+
+```javascript
+//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
+// begin set p2 = p1 * 2; end
+await shareConn.query('call multiplyBy2(?,@myOutputValue)', [2]);
+const res = await shareConn.query('SELECT @myOutputValue');
+// res = [{ '@myOutputValue': 4n }]
+```
+
+### Using execute
+(only when using 3.x version or the driver)
+execute use another protocol that permits to return output parameters directly.
+(OUT parameters must have null value) 
+
+```javascript
+//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
+// begin set p2 = p1 * 2; end
+const res = await shareConn.execute('call multiplyBy2(?, ?)', [2, null]);
+// res = [
+//   [ { p2: 4 }],
+//   OkPacket { affectedRows: 0, insertId: 0n, warningStatus: 0 }
+// ]
+```
