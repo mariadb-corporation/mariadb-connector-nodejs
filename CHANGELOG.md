@@ -8,6 +8,7 @@ Notable change:
 * [CONJS-172] performance improvement for multi-line result-set + update perf result with recent mysql/mysql2 drivers see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/benchmarks.md) results. 
 * [CONJS-168] correct stream backpressure
 * [CONJS-176] Change Pool cluster default option removeNodeErrorCount value to Infinity
+* [CONJS-175] Missing leakDetectionTimeout option in Typescript description
 
 * Corrections:
 * [CONJS-125] permit using batch with returning clause

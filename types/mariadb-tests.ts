@@ -23,7 +23,8 @@ function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
     {
       host: baseConfig.host,
       user: baseConfig.user,
-      password: baseConfig.password
+      password: baseConfig.password,
+      leakDetectionTimeout: 100
     },
     options
   );
