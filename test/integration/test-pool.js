@@ -296,10 +296,8 @@ describe('Pool', () => {
       conn
         .query('SELECT SLEEP(1)')
         .then(() => {
-          assert(
-            Date.now() - initTime >= 1985,
-            'expected > 2s, but was ' + (Date.now() - initTime)
-          );
+          const time = Date.now() - initTime;
+          assert(time >= 1980, 'expected > 2s, but was ' + time);
           conn.release();
           return pool.end();
         })
