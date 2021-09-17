@@ -104,7 +104,7 @@ describe('cluster', function () {
             })
             .catch((err) => {
               expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: retrieve connection from pool timeout"
+                "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
               );
               poolCluster
                 .getConnection('PoolNode-0')
@@ -744,7 +744,7 @@ describe('cluster', function () {
               done(new Error('must have thrown an error !'));
             } else {
               expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: retrieve connection from pool timeout"
+                "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
               );
               conn.end();
               poolCluster.end();

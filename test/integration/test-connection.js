@@ -465,11 +465,7 @@ describe('connection', () => {
       connectTimeout: 1000
     });
     conn.connect((err) => {
-      assert.isTrue(
-        err.message.includes(
-          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-        )
-      );
+      assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
       assert.isTrue(
         Date.now() - initTime >= 990,
         'expected > 990, but was ' + (Date.now() - initTime)

@@ -168,7 +168,7 @@ describe('Pool', () => {
   });
 
   it('pool with wrong authentication', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host beeing blocked
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const pool = base.createPool({
       acquireTimeout: 4000,

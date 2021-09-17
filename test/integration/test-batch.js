@@ -653,7 +653,9 @@ describe('batch', function () {
     assert.equal(res.affectedRows, 1000000);
     res = await conn.query(
       'select count(*) as a from `more16MNamedPlaceHolders` WHERE id = 1 AND id3 = 2 AND t = :t',
-      { t: str }
+      {
+        t: str
+      }
     );
     assert.equal(res[0].a, 1000000);
 
