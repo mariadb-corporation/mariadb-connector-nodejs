@@ -14,8 +14,7 @@ function randomString(length) {
 }
 
 let sqlTable =
-  'CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' +
-  ', PRIMARY KEY (id))';
+  'CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
 sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title =

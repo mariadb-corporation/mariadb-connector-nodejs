@@ -57,24 +57,15 @@ describe('Pool', () => {
 
     pool.on('connection', (conn) => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
-      assert.equal(
-        pool.escape(Buffer.from("let's rocks\n😊 🤘")),
-        "_binary'let\\'s rocks\\n😊 🤘'"
-      );
+      assert.equal(pool.escape(Buffer.from("let's rocks\n😊 🤘")), "_binary'let\\'s rocks\\n😊 🤘'");
       assert.equal(pool.escape(19925.1), '19925.1');
       let prefix =
         (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 1, 4)) ||
         (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 6))
           ? 'ST_'
           : '';
-      assert.equal(
-        pool.escape({ type: 'Point', coordinates: [20, 10] }),
-        prefix + "PointFromText('POINT(20 10)')"
-      );
-      assert.equal(
-        pool.escape({ id: 2, val: "t'est" }),
-        '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\''
-      );
+      assert.equal(pool.escape({ type: 'Point', coordinates: [20, 10] }), prefix + "PointFromText('POINT(20 10)')");
+      assert.equal(pool.escape({ id: 2, val: "t'est" }), '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\'');
       const fctStr = new Object();
       fctStr.toSqlString = () => {
         return "bla'bla";
@@ -231,12 +222,7 @@ describe('Pool', () => {
   });
 
   it('pool with wrong authentication connection', async function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     let err;
     let pool;
@@ -278,12 +264,7 @@ describe('Pool', () => {
   });
 
   it('create pool', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
     const initTime = Date.now();
@@ -315,12 +296,7 @@ describe('Pool', () => {
   });
 
   it('create pool with multipleStatement', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 5,
@@ -442,12 +418,7 @@ describe('Pool', () => {
   });
 
   it('pool ending during requests', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     const initial = new Date();
     const pool = base.createPool({ connectionLimit: 1 });
@@ -551,12 +522,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
     let errorThrown = false;
     pool
@@ -580,12 +546,7 @@ describe('Pool', () => {
   });
 
   it('pool leakDetectionTimeout timeout', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 1,
       acquireTimeout: 200,
@@ -608,12 +569,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout recovery', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -665,12 +621,7 @@ describe('Pool', () => {
   });
 
   it('pool query timeout', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
     const initTime = Date.now();
@@ -711,10 +662,7 @@ describe('Pool', () => {
           assert.equal(err.errno, 45028);
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
           const elapse = Date.now() - initTime;
-          assert.isOk(
-            elapse >= 470 && elapse < 600,
-            'elapse time was ' + elapse + ' but must be just after 500'
-          );
+          assert.isOk(elapse >= 470 && elapse < 600, 'elapse time was ' + elapse + ' but must be just after 500');
         } catch (e) {
           console.log('elapse:' + elapse);
 
@@ -735,10 +683,7 @@ describe('Pool', () => {
             assert.equal(err.errno, 45028);
             assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
             const elapse = Date.now() - initTime;
-            assert.isOk(
-              elapse >= 670 && elapse < 800,
-              'elapse time was ' + elapse + ' but must be just after 700'
-            );
+            assert.isOk(elapse >= 670 && elapse < 800, 'elapse time was ' + elapse + ' but must be just after 700');
             done();
           } catch (e) {
             console.log(e);
@@ -799,12 +744,7 @@ describe('Pool', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -848,12 +788,7 @@ describe('Pool', () => {
   });
 
   it('query fail handling', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -895,12 +830,7 @@ describe('Pool', () => {
   });
 
   it('connection end', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -934,12 +864,7 @@ describe('Pool', () => {
   });
 
   it('connection release alias', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -973,12 +898,7 @@ describe('Pool', () => {
   });
 
   it('connection destroy', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -1114,12 +1034,7 @@ describe('Pool', () => {
   });
 
   it("ensure pipe ending doesn't stall connection", function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //sequence engine only exist in MariaDB
     if (!shareConn.info.isMariaDB()) this.skip();
     const ver = process.version.substring(1).split('.');
@@ -1138,17 +1053,13 @@ describe('Pool', () => {
           transform: function transformer(chunk, encoding, callback) {
             callback(
               null,
-              JSON.stringify(chunk, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-              )
+              JSON.stringify(chunk, (key, value) => (typeof value === 'bigint' ? value.toString() : value))
             );
             received++;
           }
         });
 
-        const queryStream = conn.queryStream(
-          "SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000"
-        );
+        const queryStream = conn.queryStream("SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000");
         const someWriterStream = fs.createWriteStream(fileName);
 
         stream.pipeline(queryStream, transformStream, someWriterStream, (err) => {
@@ -1167,12 +1078,7 @@ describe('Pool', () => {
   });
 
   it("ensure pipe ending doesn't stall connection promise", async function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //sequence engine only exist in MariaDB
     if (!shareConn.info.isMariaDB()) this.skip();
     const ver = process.version.substring(1).split('.');
@@ -1189,9 +1095,7 @@ describe('Pool', () => {
       transform: function transformer(chunk, encoding, callback) {
         callback(
           null,
-          JSON.stringify(chunk, (key, value) =>
-            typeof value === 'bigint' ? value.toString() : value
-          )
+          JSON.stringify(chunk, (key, value) => (typeof value === 'bigint' ? value.toString() : value))
         );
         received++;
       }
@@ -1218,12 +1122,7 @@ describe('Pool', () => {
   });
 
   it('test minimum idle decrease', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(30000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -1242,14 +1141,10 @@ describe('Pool', () => {
         .then(() => {
           setTimeout(() => {
             assert.isTrue(
-              pool.totalConnections() === 8 ||
-                pool.totalConnections() === 9 ||
-                pool.totalConnections() === 10
+              pool.totalConnections() === 8 || pool.totalConnections() === 9 || pool.totalConnections() === 10
             );
             assert.isTrue(
-              pool.idleConnections() === 8 ||
-                pool.idleConnections() === 9 ||
-                pool.idleConnections() === 10
+              pool.idleConnections() === 8 || pool.idleConnections() === 9 || pool.idleConnections() === 10
             );
           }, 5);
 
@@ -1292,12 +1187,7 @@ describe('Pool', () => {
   });
 
   it('test minimum idle', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -1318,12 +1208,7 @@ describe('Pool', () => {
   });
 
   it('pool immediate error', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({});
     pool
       .getConnection()
@@ -1340,12 +1225,7 @@ describe('Pool', () => {
   });
 
   it('pool server defect timeout', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
@@ -1379,10 +1259,7 @@ describe('Pool', () => {
             done(new Error('must have thrown error !' + (Date.now() - initTime)));
           })
           .catch((err) => {
-            assert.isTrue(
-              Date.now() - initTime > 995,
-              'expected > 1000, but was ' + (Date.now() - initTime)
-            );
+            assert.isTrue(Date.now() - initTime > 995, 'expected > 1000, but was ' + (Date.now() - initTime));
             pool
               .getConnection()
               .then((conn2) => {

@@ -185,29 +185,21 @@ describe('prepare and execute callback', () => {
     const conn = base.createCallbackConnection({ namedPlaceholders: true });
     conn.connect((err) => {
       if (err) return done(err);
-      conn.execute(
-        'select :param2 as a, :param1 as b',
-        { param1: 2, param2: 3 },
-        (err, res, meta) => {
-          if (err) return done(err);
-          assert.isTrue(res[0].a === 3 || res[0].a === 3n);
-          assert.isTrue(res[0].b === 2 || res[0].b === 2n);
-          conn.execute(
-            'select :param2 as a, :param1 as b',
-            { param1: 2, param3: 3 },
-            (err, res, meta) => {
-              if (err) {
-                assert.isTrue(err.message.includes('Parameter named param2 is not set'));
-                done();
-                conn.end();
-                return;
-              }
-              done(new Error('must have throw error'));
-              conn.end();
-            }
-          );
-        }
-      );
+      conn.execute('select :param2 as a, :param1 as b', { param1: 2, param2: 3 }, (err, res, meta) => {
+        if (err) return done(err);
+        assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+        assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+        conn.execute('select :param2 as a, :param1 as b', { param1: 2, param3: 3 }, (err, res, meta) => {
+          if (err) {
+            assert.isTrue(err.message.includes('Parameter named param2 is not set'));
+            done();
+            conn.end();
+            return;
+          }
+          done(new Error('must have throw error'));
+          conn.end();
+        });
+      });
     });
   });
 });

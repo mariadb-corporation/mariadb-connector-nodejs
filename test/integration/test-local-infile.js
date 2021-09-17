@@ -139,9 +139,7 @@ describe('local-infile', () => {
       );
       throw new Error('must have thrown error !');
     } catch (err) {
-      assert(
-        err.message.includes('LOCAL INFILE command failed: ENOENT: no such file or directory')
-      );
+      assert(err.message.includes('LOCAL INFILE command failed: ENOENT: no such file or directory'));
       assert.equal(err.sqlState, '22000');
       assert(!err.fatal);
       conn.end();
@@ -322,14 +320,7 @@ describe('local-infile', () => {
     for (let i = 0; i < size; i++) {
       if (rows[i].t1 !== 'a' + padStartZero(i, 8) && rows[i].t2 !== 'b') {
         console.log(
-          'result differ (no:' +
-            i +
-            ') t1=' +
-            rows[i].t1 +
-            ' != ' +
-            padStartZero(i, 8) +
-            ' t2=' +
-            rows[i].t2
+          'result differ (no:' + i + ') t1=' + rows[i].t1 + ' != ' + padStartZero(i, 8) + ' t2=' + rows[i].t2
         );
       }
     }

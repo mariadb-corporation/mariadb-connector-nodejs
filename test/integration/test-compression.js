@@ -50,20 +50,13 @@ describe('Compression', function () {
     this.timeout(60000);
     if (maxAllowedSize < 35000000) this.skip();
 
-    conn.query(
-      'CREATE TEMPORARY TABLE compressTab (t1 LONGTEXT, t2 LONGTEXT, t3 LONGTEXT, t4 LONGTEXT)'
-    );
+    conn.query('CREATE TEMPORARY TABLE compressTab (t1 LONGTEXT, t2 LONGTEXT, t3 LONGTEXT, t4 LONGTEXT)');
 
     const longText = generateLongText(20000000);
     const mediumText = generateLongText(10000000);
     const smallIntText = generateLongText(60000);
     conn
-      .query('INSERT INTO compressTab values (?,?,?,?)', [
-        longText,
-        mediumText,
-        smallIntText,
-        'expected'
-      ])
+      .query('INSERT INTO compressTab values (?,?,?,?)', [longText, mediumText, smallIntText, 'expected'])
       .then(() => {
         done();
       })

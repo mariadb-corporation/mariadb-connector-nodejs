@@ -119,8 +119,7 @@ function Bench() {
       if (promiseMysql2 && promiseMysql2.clearParserCache) promiseMysql2.clearParserCache();
       console.log(event.target.toString());
       const drvType = event.target.options.drvType;
-      const benchTitle =
-        event.target.options.benchTitle + '\n [ sql: ' + event.target.options.displaySql + ' ]';
+      const benchTitle = event.target.options.benchTitle + '\n [ sql: ' + event.target.options.displaySql + ' ]';
       const iteration = 1 / event.target.times.period;
       const variation = event.target.stats.rme;
 
@@ -259,16 +258,7 @@ Bench.prototype.fill = function (val, length, right) {
 
 Bench.prototype.add = function (title, displaySql, fct, onComplete, usePool, requireExecute, conn) {
   const self = this;
-  const addTest = getAddTest(
-    self,
-    this.suite,
-    fct,
-    this.minSamples,
-    title,
-    displaySql,
-    onComplete,
-    usePool
-  );
+  const addTest = getAddTest(self, this.suite, fct, this.minSamples, title, displaySql, onComplete, usePool);
 
   if (conn) {
     addTest(conn, conn.desc);

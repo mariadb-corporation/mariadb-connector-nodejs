@@ -12,14 +12,10 @@ describe('change user', () => {
       await shareConn.query("DROP USER IF EXISTS ChangeUser2@'%'");
       await shareConn.query('CREATE DATABASE IF NOT EXISTS test');
       await shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-      await shareConn.query(
-        'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'"
-      );
+      await shareConn.query('GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'");
       await shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
       await shareConn.query(
-        'GRANT SELECT,EXECUTE ON `' +
-          Conf.baseConfig.database +
-          "`.* TO ChangeUser2@'%' with grant option"
+        'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser2@'%' with grant option"
       );
       await shareConn.query('FLUSH PRIVILEGES');
     }

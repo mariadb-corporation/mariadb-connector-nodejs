@@ -33,9 +33,7 @@ describe('initial connection commands', () => {
         sessionVariables: { wait_timeout: 10000, interactive_timeout: 2540 }
       });
       const rows = await conn.query('SELECT @@wait_timeout, @@interactive_timeout');
-      assert.deepEqual(rows, [
-        { '@@wait_timeout': BigInt(10000), '@@interactive_timeout': BigInt(2540) }
-      ]);
+      assert.deepEqual(rows, [{ '@@wait_timeout': BigInt(10000), '@@interactive_timeout': BigInt(2540) }]);
       conn.end();
     });
 

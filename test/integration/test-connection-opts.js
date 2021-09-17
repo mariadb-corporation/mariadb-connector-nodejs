@@ -63,10 +63,9 @@ describe('connection option', () => {
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')]);
     // = 1999-12-31T23:00:00.000Z
     assert.deepEqual(res[0].tt, '946681200.000');
-    res = await conn.query(
-      "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
-      [new Date('2000-01-01T00:00:00Z')]
-    );
+    res = await conn.query("SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2", [
+      new Date('2000-01-01T00:00:00Z')
+    ]);
     assert.deepEqual(res[0].tt1, new Date('2003-12-31T13:00:00+01:00'));
     assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
     conn.end();
@@ -78,10 +77,7 @@ describe('connection option', () => {
     let d = new Date('2000-01-01T00:00:00Z');
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [d]);
     assert.equal(Number(res[0].tt), d.getTime() / 1000);
-    res = await conn.query(
-      "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
-      [d]
-    );
+    res = await conn.query("SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2", [d]);
     assert.deepEqual(res[0].tt1, new Date('2003-12-31T12:00:00Z'));
     assert.deepEqual(res[0].tt2, d);
     conn.end();
@@ -92,10 +88,9 @@ describe('connection option', () => {
     conn.query("SET SESSION time_zone = '+01:00'");
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')]);
     assert.deepEqual(res[0].tt, 946688400n);
-    res = await conn.query(
-      "SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2",
-      [new Date('2000-01-01T00:00:00Z')]
-    );
+    res = await conn.query("SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2", [
+      new Date('2000-01-01T00:00:00Z')
+    ]);
     assert.deepEqual(res[0].tt1, new Date('2003-12-31T11:00:00+01:00'));
     assert.deepEqual(res[0].tt2, new Date('2000-01-01T01:00:00+01:00'));
     conn.end();
@@ -186,12 +181,7 @@ describe('connection option', () => {
   });
 
   it('Server with different tz', async function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
 
@@ -365,9 +355,7 @@ describe('connection option', () => {
         })
         .catch((err) => {
           assert.isTrue(
-            err.message.includes(
-              'Can only use queryTimeout for MariaDB server after 10.1.1. queryTimeout value:'
-            )
+            err.message.includes('Can only use queryTimeout for MariaDB server after 10.1.1. queryTimeout value:')
           );
           assert.equal(err.errno, 45038);
           assert.equal(err.sqlState, 'HY000');

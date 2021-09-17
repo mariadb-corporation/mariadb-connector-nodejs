@@ -7,14 +7,9 @@ const Conf = require('../conf');
 describe('test socket', () => {
   it('named pipe', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (
-      !process.env.LOCAL_SOCKET_AVAILABLE ||
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql-ha'
-    )
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha')
       this.skip();
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
-      this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
     const test = this;
     shareConn
       .query('select @@version_compile_os,@@socket soc, @@named_pipe pipeEnable')
@@ -55,8 +50,7 @@ describe('test socket', () => {
   it('named pipe error', function (done) {
     if (process.platform !== 'win32') this.skip();
     if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
-      this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
 
     shareConn
       .query('select @@version_compile_os,@@socket soc')

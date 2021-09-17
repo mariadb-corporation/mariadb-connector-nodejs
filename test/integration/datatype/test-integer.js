@@ -144,16 +144,14 @@ describe('integer with big value', () => {
     });
     assert.strictEqual(rows.insertId, '134');
 
-    rows = await shareConn.query(
-      { sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true },
-      ['9007199254741991']
-    );
+    rows = await shareConn.query({ sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true }, [
+      '9007199254741991'
+    ]);
     assert.strictEqual(rows.insertId, 9007199254741991);
 
-    rows = await shareConn.query(
-      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true },
-      ['9007199254741992']
-    );
+    rows = await shareConn.query({ sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true }, [
+      '9007199254741992'
+    ]);
     assert.strictEqual(rows.insertId, '9007199254741992');
 
     rows = await shareConn.query(
@@ -162,16 +160,14 @@ describe('integer with big value', () => {
     );
     assert.strictEqual(rows.insertId, '9007199254741993');
 
-    rows = await shareConn.execute(
-      { sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true },
-      ['9007199254741994']
-    );
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true }, [
+      '9007199254741994'
+    ]);
     assert.strictEqual(rows.insertId, 9007199254741994);
 
-    rows = await shareConn.execute(
-      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true },
-      ['9007199254741995']
-    );
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true }, [
+      '9007199254741995'
+    ]);
     assert.strictEqual(rows.insertId, '9007199254741995');
 
     rows = await shareConn.execute(
@@ -344,12 +340,8 @@ describe('integer with big value', () => {
       'CREATE TABLE intAllField (' +
         't1 TINYINT(1), t2 SMALLINT(1), t3 MEDIUMINT(1), t4 INT(1), t5 BIGINT(1), t6 DECIMAL(1), t7 FLOAT, t8 DOUBLE)'
     );
-    await shareConn.query(
-      'INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)'
-    );
-    await shareConn.execute(
-      'INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)'
-    );
+    await shareConn.query('INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)');
+    await shareConn.execute('INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)');
     await shareConn.query('INSERT INTO intAllField VALUES (0, 0, 0, 0, 0, 0, 0, 0)');
     await shareConn.query('INSERT INTO intAllField VALUES (1, 1, 1, 1, 1, 1, 1, 1)');
     await shareConn.execute('INSERT INTO intAllField VALUES (2, 2, 2, 2, 2, 2, 2, 2)');

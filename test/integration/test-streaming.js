@@ -85,12 +85,7 @@ describe('streaming', () => {
     const r2 = fs.createReadStream(halfFileName);
     await shareConn.query('truncate Streaming');
     await shareConn.beginTransaction();
-    await shareConn.query('insert into Streaming(b, c, d, e) values(?, ?, ?, ?)', [
-      r,
-      't1',
-      r2,
-      't2'
-    ]);
+    await shareConn.query('insert into Streaming(b, c, d, e) values(?, ?, ?, ?)', [r, 't1', r2, 't2']);
     const rows = await shareConn.query('SELECT * from Streaming');
     assert.equal(size / 2, rows[0].b.length);
     assert.equal(size / 2, rows[0].d.length);
@@ -104,12 +99,7 @@ describe('streaming', () => {
     const r2 = fs.createReadStream(halfFileName);
     await shareConn.query('truncate Streaming');
     await shareConn.beginTransaction();
-    await shareConn.query('insert into Streaming(c, b, e, d) values(?, ?, ?, ?)', [
-      't1',
-      r,
-      't2',
-      r2
-    ]);
+    await shareConn.query('insert into Streaming(c, b, e, d) values(?, ?, ?, ?)', ['t1', r, 't2', r2]);
     const rows = await shareConn.query('SELECT * from Streaming');
     assert.equal(size / 2, rows[0].b.length);
     assert.equal(size / 2, rows[0].d.length);

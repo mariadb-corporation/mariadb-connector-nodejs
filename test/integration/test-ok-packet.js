@@ -8,9 +8,7 @@ describe('ok packet', () => {
     shareConn
       .query('DROP TABLE IF EXISTS autoInc')
       .then(() => {
-        return shareConn.query(
-          'CREATE TABLE autoInc (id BIGINT not null primary key auto_increment)'
-        );
+        return shareConn.query('CREATE TABLE autoInc (id BIGINT not null primary key auto_increment)');
       })
       .then(() => {
         return shareConn.query('INSERT INTO autoInc values ()');
@@ -66,9 +64,7 @@ describe('ok packet', () => {
     shareConn
       .query('DROP TABLE IF EXISTS negAutoInc')
       .then(() => {
-        return shareConn.query(
-          'CREATE TABLE negAutoInc (id BIGINT not null primary key auto_increment)'
-        );
+        return shareConn.query('CREATE TABLE negAutoInc (id BIGINT not null primary key auto_increment)');
       })
       .then(() => {
         return shareConn.query('INSERT INTO negAutoInc values (-9007199254740990)');

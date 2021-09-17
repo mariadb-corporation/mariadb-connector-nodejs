@@ -20,10 +20,7 @@ describe('datetime', () => {
       await shareConn.query('CREATE TABLE table_date (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))');
       await shareConn.query('INSERT INTO table_date VALUES (?, ?, ?)', [date, date2, date3]);
       await shareConn.query('INSERT INTO table_date VALUES (?, ?, ?)', [null, null, null]);
-      if (
-        shareConn.info.isMariaDB() ||
-        (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7))
-      ) {
+      if (shareConn.info.isMariaDB() || (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7))) {
         await shareConn.query('INSERT INTO table_date VALUES (?, ?, ?)', [
           '0000-00-00',
           '0000-00-00 00:00:00',

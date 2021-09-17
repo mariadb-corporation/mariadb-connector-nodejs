@@ -32,18 +32,14 @@ describe('TypeCast', () => {
 
   it('connection level typecast function', async function () {
     const conn = await base.createConnection({ typeCast: changeCaseCast });
-    const rows = await conn.query(
-      "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r"
-    );
+    const rows = await conn.query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r");
     assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
     conn.end();
   });
 
   it('connection level typecast function execute', async function () {
     const conn = await base.createConnection({ typeCast: changeCaseCast });
-    const rows = await conn.execute(
-      "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r"
-    );
+    const rows = await conn.execute("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r");
     assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
     conn.end();
   });
@@ -108,9 +104,7 @@ describe('TypeCast', () => {
     await conn.query('DROP TABLE IF EXISTS tinyToBool');
     await conn.query('CREATE TABLE tinyToBool(b1 TINYINT(1), b2 TINYINT(2), b3 SMALLINT, b4 INT)');
     await conn.beginTransaction();
-    await conn.query(
-      'INSERT INTO tinyToBool VALUES (0,0,0,0), (1,1,1,1), (2,2,2,2), (null,null,null,null)'
-    );
+    await conn.query('INSERT INTO tinyToBool VALUES (0,0,0,0), (1,1,1,1), (2,2,2,2), (null,null,null,null)');
     let rows = await conn.query('SELECT * from tinyToBool');
     assert.deepEqual(rows, [
       { b1: false, b2: 0, b3: 1, b4: 1 },
@@ -144,9 +138,7 @@ describe('TypeCast', () => {
     await conn.query('DROP TABLE IF EXISTS stupidCast');
     await conn.query('CREATE TABLE stupidCast(b1 TINYINT(1), b2 varchar(3))');
     await conn.beginTransaction();
-    await conn.query(
-      "INSERT INTO stupidCast VALUES (0,'0.1'), (1,'1.1')," + " (2,'2.2'), (null,null)"
-    );
+    await conn.query("INSERT INTO stupidCast VALUES (0,'0.1'), (1,'1.1')," + " (2,'2.2'), (null,null)");
     const expected = [
       { b1: 0, b2: 0.1 },
       { b1: 1, b2: 1.1 },

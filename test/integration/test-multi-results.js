@@ -327,9 +327,7 @@ describe('multi-results', () => {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //using sequence engine
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1)) this.skip();
-    const rows = await multiStmtConn.query(
-      'select * from seq_1_to_2; DO 1;select * from seq_2_to_3'
-    );
+    const rows = await multiStmtConn.query('select * from seq_1_to_2; DO 1;select * from seq_2_to_3');
     assert.equal(rows.length, 3);
     assert.deepEqual(rows[0], [{ seq: 1n }, { seq: 2n }]);
     assert.deepEqual(rows[1], {

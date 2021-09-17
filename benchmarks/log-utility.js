@@ -64,12 +64,8 @@ const defaultImgJson = {
 
 module.exports.getImg = (data) => {
   const pjson = require('../package-lock.json');
-  const mysql2Version = pjson.packages['node_modules/mysql2']
-    ? pjson.packages['node_modules/mysql2'].version
-    : null;
-  const mysqlVersion = pjson.packages['node_modules/mysql']
-    ? pjson.packages['node_modules/mysql'].version
-    : null;
+  const mysql2Version = pjson.packages['node_modules/mysql2'] ? pjson.packages['node_modules/mysql2'].version : null;
+  const mysqlVersion = pjson.packages['node_modules/mysql'] ? pjson.packages['node_modules/mysql'].version : null;
   const mariadbVersion = pjson.packages[''] ? pjson.packages[''].version : null;
 
   //clone
@@ -105,7 +101,6 @@ module.exports.getImg = (data) => {
   resJson.options.title.text = data.title;
 
   return (
-    'https://quickchart.io/chart?devicePixelRatio=1.0&h=160&w=520&c=' +
-    encodeURIComponent(JSON.stringify(resJson))
+    'https://quickchart.io/chart?devicePixelRatio=1.0&h=160&w=520&c=' + encodeURIComponent(JSON.stringify(resJson))
   );
 };

@@ -20,13 +20,9 @@ describe('string', () => {
 
     const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
     await shareConn.query('DROP TABLE IF EXISTS buf_utf8_chars');
-    await shareConn.query(
-      'CREATE TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
-    );
+    await shareConn.query('CREATE TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)');
     await shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', buf);
-    let results = await shareConn.query(
-      "SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars"
-    );
+    let results = await shareConn.query("SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars");
     assert.equal(results[0].t1, '🤘💪');
     assert.equal(results[0].t2, '🤘💪');
     assert.equal(results[0].tt, '🤘💪');
@@ -41,9 +37,7 @@ describe('string', () => {
   it('utf8 strings', async function () {
     if (!base.utf8Collation()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS buf_utf8_string');
-    await shareConn.query(
-      'CREATE TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)'
-    );
+    await shareConn.query('CREATE TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)');
 
     //F0 9F 98 8E 😎 unicode 6 smiling face with sunglasses
     //F0 9F 8C B6 🌶 unicode 7 hot pepper

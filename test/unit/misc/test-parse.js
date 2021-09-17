@@ -12,11 +12,7 @@ describe('parse', () => {
     ];
 
     it('select', () => {
-      const res = Parse.searchPlaceholder(
-        'select \'\\\'\' as a, :id2 as b, "\\"" as c, :id1 as d',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('select \'\\\'\' as a, :id2 as b, "\\"" as c, :id1 as d', null, values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id2', 'id1'],
         sql: 'select \'\\\'\' as a, ? as b, "\\"" as c, ? as d'
@@ -155,11 +151,7 @@ describe('parse', () => {
     });
 
     it('semicolon with empty data after', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO table (column1) VALUES (:id1); ',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO table (column1) VALUES (:id1); ', null, values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id1'],
         sql: 'INSERT INTO table (column1) VALUES (?); '
@@ -167,11 +159,7 @@ describe('parse', () => {
     });
 
     it('semicolon not rewritable if not at end', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO table (column1) VALUES (:id1); SELECT 1',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO table (column1) VALUES (:id1); SELECT 1', null, values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id1'],
         sql: 'INSERT INTO table (column1) VALUES (?); SELECT 1'
@@ -187,11 +175,7 @@ describe('parse', () => {
     });
 
     it('line finished comment', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO tt (tt) VALUES --fin\n (:id1)',
-        null,
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO tt (tt) VALUES --fin\n (:id1)', null, values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id1'],
         sql: 'INSERT INTO tt (tt) VALUES --fin\n (?)'
@@ -199,10 +183,7 @@ describe('parse', () => {
     });
 
     it('multiple parenthesis', () => {
-      const res = Parse.searchPlaceholder(
-        'INSERT INTO select_tt (tt, tt2) VALUES (LAST_INSERT_ID(), :id1)',
-        values
-      );
+      const res = Parse.searchPlaceholder('INSERT INTO select_tt (tt, tt2) VALUES (LAST_INSERT_ID(), :id1)', values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id1'],
         sql: 'INSERT INTO select_tt (tt, tt2) VALUES (LAST_INSERT_ID(), ?)'

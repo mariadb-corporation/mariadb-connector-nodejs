@@ -347,9 +347,7 @@ describe('batch callback', function () {
           }
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes(" doesn't exist"));
-          assert.isTrue(
-            err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)')
-          );
+          assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
           assert.equal(err.errno, 1146);
           assert.equal(err.sqlState, '42S02');
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
@@ -411,10 +409,7 @@ describe('batch callback', function () {
             ],
             (err, res) => {
               if (err) {
-                assert.isTrue(
-                  err.message.includes("Data too long for column 't' at row 1"),
-                  err.message
-                );
+                assert.isTrue(err.message.includes("Data too long for column 't' at row 1"), err.message);
                 conn.query('DROP TABLE simpleBatch', (err, res) => {
                   conn.end(() => {
                     done();
@@ -609,9 +604,7 @@ describe('batch callback', function () {
           }
           assert.isTrue(err != null);
           assert.isTrue(err.message.includes(" doesn't exist"));
-          assert.isTrue(
-            err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)')
-          );
+          assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
           assert.equal(err.errno, 1146);
           assert.equal(err.sqlState, '42S02');
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
@@ -898,10 +891,8 @@ describe('batch callback', function () {
           })
           .catch((err) => {
             assert.isTrue(
-              err.message.includes(
-                'Parameter at position 1 is not set for values 1',
-                err.message
-              ) || err.message.includes('Parameter at position 1 is undefined', err.message)
+              err.message.includes('Parameter at position 1 is not set for values 1', err.message) ||
+                err.message.includes('Parameter at position 1 is undefined', err.message)
             );
             conn.query('DROP TABLE IF EXISTS blabla');
             conn.end();

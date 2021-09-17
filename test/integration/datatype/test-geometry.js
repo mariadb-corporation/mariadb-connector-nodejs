@@ -52,10 +52,7 @@ describe('geometry data type', () => {
         (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 6)))
         ? 'ST_'
         : '';
-    assert.equal(
-      shareConn.escape({ type: 'Point', coordinates: [20, 10] }),
-      prefix + "PointFromText('POINT(20 10)')"
-    );
+    assert.equal(shareConn.escape({ type: 'Point', coordinates: [20, 10] }), prefix + "PointFromText('POINT(20 10)')");
     assert.equal(
       shareConn.escape({
         type: 'LineString',
@@ -172,15 +169,9 @@ describe('geometry data type', () => {
     if (!shareConn.info.isMariaDB()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_point_insert');
     await shareConn.query('CREATE TABLE gis_point_insert (g POINT)');
-    await shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [
-      { type: 'Point', coordinates: [10, 10] }
-    ]);
-    await shareConn.execute('INSERT INTO gis_point_insert VALUES (?)', [
-      { type: 'Point', coordinates: [20, 10] }
-    ]);
-    await shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [
-      { type: 'Point', coordinates: [] }
-    ]);
+    await shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [{ type: 'Point', coordinates: [10, 10] }]);
+    await shareConn.execute('INSERT INTO gis_point_insert VALUES (?)', [{ type: 'Point', coordinates: [20, 10] }]);
+    await shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [{ type: 'Point', coordinates: [] }]);
     await shareConn.query('INSERT INTO gis_point_insert VALUES (?)', [{ type: 'Point' }]);
     const expected = [
       {
@@ -728,12 +719,8 @@ describe('geometry data type', () => {
     await shareConn.execute('INSERT INTO gis_multi_point_insert VALUES (?)', [
       { type: 'MultiPoint', coordinates: [[10, 0]] }
     ]);
-    await shareConn.query('INSERT INTO gis_multi_point_insert VALUES (?)', [
-      { type: 'MultiPoint', coordinates: [] }
-    ]);
-    await shareConn.query('INSERT INTO gis_multi_point_insert VALUES (?)', [
-      { type: 'MultiPoint' }
-    ]);
+    await shareConn.query('INSERT INTO gis_multi_point_insert VALUES (?)', [{ type: 'MultiPoint', coordinates: [] }]);
+    await shareConn.query('INSERT INTO gis_multi_point_insert VALUES (?)', [{ type: 'MultiPoint' }]);
     const expected = [
       {
         g: {
@@ -884,9 +871,7 @@ describe('geometry data type', () => {
     await shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
       { type: 'MultiLineString', coordinates: [] }
     ]);
-    await shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [
-      { type: 'MultiLineString' }
-    ]);
+    await shareConn.query('INSERT INTO gis_multi_line_insert VALUES (?)', [{ type: 'MultiLineString' }]);
     const expected = [
       {
         g: {
@@ -1131,9 +1116,7 @@ describe('geometry data type', () => {
         coordinates: []
       }
     ]);
-    await shareConn.query('INSERT INTO gis_multi_polygon_insert VALUES (?)', [
-      { type: 'MultiPolygon' }
-    ]);
+    await shareConn.query('INSERT INTO gis_multi_polygon_insert VALUES (?)', [{ type: 'MultiPolygon' }]);
     const expected = [
       {
         g: {
@@ -1247,8 +1230,7 @@ describe('geometry data type', () => {
         '    (ST_GeometryFromWKB(ST_AsWKB(GeometryCollection(Point(44, 6), LineString(Point(3, 6), Point(7, 9))))))' +
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)
           ? ''
-          : ",(ST_GeomFromText('GeometryCollection()')),\n" +
-            "    (ST_GeomFromText('GeometryCollection EMPTY'))")
+          : ",(ST_GeomFromText('GeometryCollection()')),\n" + "    (ST_GeomFromText('GeometryCollection EMPTY'))")
     );
     let expectedValue = [
       {

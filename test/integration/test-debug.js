@@ -124,11 +124,7 @@ describe('debug', () => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               const serverVersion = conn.serverVersion();
-              if (
-                process.env.srv === 'maxscale' ||
-                process.env.srv === 'skysql' ||
-                process.env.srv === 'skysql-ha'
-              )
+              if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
                 compress = false;
               const rangeWithEOF = compress ? [1500, 1900] : [1800, 3250];
               const rangeWithoutEOF = compress ? [1500, 1900] : [2350, 3150];
@@ -141,9 +137,7 @@ describe('debug', () => {
               assert.isTrue(data.includes('CLOSE PREPARE:'));
               if (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) {
                 assert.isTrue(data.includes('BULK:'));
-                assert.isTrue(
-                  data.includes('INSERT INTO debugVoid VALUES (?) - parameters:[[1],[2]]')
-                );
+                assert.isTrue(data.includes('INSERT INTO debugVoid VALUES (?) - parameters:[[1],[2]]'));
               }
               assert.isTrue(data.includes('QUIT'));
               if (
@@ -193,12 +187,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
 
     const buf = Buffer.alloc(5000, 'z');
     base

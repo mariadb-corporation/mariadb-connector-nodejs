@@ -130,11 +130,7 @@ describe('Error', () => {
               assert.equal(err.sqlState, 'HY000');
             } else {
               assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(
-                err.message.includes(
-                  "sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"
-                )
-              );
+              assert.isTrue(err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"));
               assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
               assert.equal(err.errno, 1064);
               assert.equal(err.sqlState, 42000);
@@ -232,11 +228,7 @@ describe('Error', () => {
               assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
-            assert.isTrue(
-              err.message.includes(
-                "sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"
-              )
-            );
+            assert.isTrue(err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"));
             assert.equal(err.sql, "wrong query :par1, :par2 - parameters:{'par1':'some par...}");
 
             conn.end();
@@ -307,9 +299,7 @@ describe('Error', () => {
               })
               .catch((err) => {
                 assert.isTrue(err != null);
-                assert.isTrue(
-                  err.message.includes('Cannot execute new commands: connection closed')
-                );
+                assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
                 assert.isTrue(err.message.includes('sql: DO 1 - parameters:[]'));
                 assert.isTrue(err.fatal);
                 assert.equal(err.sqlState, '08S01');
@@ -388,12 +378,7 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -434,12 +419,7 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     base
       .createConnection()
@@ -455,10 +435,7 @@ describe('Error', () => {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(
-                err.message.includes('socket has unexpectedly been closed'),
-                err.message
-              );
+              assert.isTrue(err.message.includes('socket has unexpectedly been closed'), err.message);
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_SOCKET_UNEXPECTED_CLOSE');
             }
@@ -484,8 +461,7 @@ describe('Error', () => {
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(
-        err.message.includes('close forced') ||
-          err.message.includes('socket has unexpectedly been closed')
+        err.message.includes('close forced') || err.message.includes('socket has unexpectedly been closed')
       );
     }
   });
@@ -544,11 +520,7 @@ describe('Error', () => {
         return shareConn.query('CREATE TABLE undefinedParameter (id int, id2 int, id3 int)');
       })
       .then(() => {
-        return shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [
-          1,
-          undefined,
-          3
-        ]);
+        return shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [1, undefined, 3]);
       })
       .then(() => {
         done(new Error('must have thrown error !'));

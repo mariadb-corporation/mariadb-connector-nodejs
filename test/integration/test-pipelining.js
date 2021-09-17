@@ -8,10 +8,7 @@ describe('pipelining', () => {
   const iterations = 500;
 
   before(function (done) {
-    Promise.all([
-      base.createConnection({ pipelining: false }),
-      base.createConnection({ pipelining: true })
-    ])
+    Promise.all([base.createConnection({ pipelining: false }), base.createConnection({ pipelining: true })])
       .then((connections) => {
         conn1 = connections[0];
         conn2 = connections[1];
@@ -92,10 +89,7 @@ describe('pipelining', () => {
         if (shareConn.info.hasMinVersion(10, 2, 0)) {
           //before 10.1, speed is sometime nearly equivalent using pipelining or not
           //remove speed test then to avoid random error in CIs
-          if (
-            diff[0] < pipelineDiff[0] ||
-            (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])
-          ) {
+          if (diff[0] < pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])) {
             console.log(
               'time to insert 1000 : std=' +
                 Math.floor(diff[0] * 1000 + diff[1] / 1000000) +

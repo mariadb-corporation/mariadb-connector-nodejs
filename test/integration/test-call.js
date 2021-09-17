@@ -12,15 +12,10 @@ describe('stored procedure', () => {
     await shareConn.query('DROP PROCEDURE IF EXISTS someProc');
     await shareConn.query('DROP FUNCTION IF EXISTS stmtSimpleFunct');
 
+    await shareConn.query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end');
+    await shareConn.query('CREATE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end');
     await shareConn.query(
-      'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
-    );
-    await shareConn.query(
-      'CREATE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end'
-    );
-    await shareConn.query(
-      'CREATE FUNCTION stmtSimpleFunct ' +
-        '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
+      'CREATE FUNCTION stmtSimpleFunct ' + '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
     );
   });
 
@@ -82,9 +77,7 @@ describe('stored procedure', () => {
         done(new Error('must not be possible since output parameter is not a variable'));
       })
       .catch((err) => {
-        assert.ok(
-          err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger')
-        );
+        assert.ok(err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger'));
         done();
       });
   });

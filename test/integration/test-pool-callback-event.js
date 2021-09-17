@@ -10,8 +10,7 @@ const os = require('os');
 
 describe('Pool callback event', () => {
   before(function () {
-    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null)
-      this.skip();
+    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null) this.skip();
   });
 
   it('pool connection creation', function (done) {

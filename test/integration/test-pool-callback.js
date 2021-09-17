@@ -6,12 +6,7 @@ const Conf = require('../conf');
 
 describe('Pool callback', () => {
   before(function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
   });
 
   it('pool with wrong authentication', function (done) {
@@ -232,10 +227,7 @@ describe('Pool callback', () => {
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
       const elapse = Date.now() - initTime;
-      assert.isOk(
-        elapse >= 499 && elapse < 550,
-        'elapse time was ' + elapse + ' but must be just after 500'
-      );
+      assert.isOk(elapse >= 499 && elapse < 550, 'elapse time was ' + elapse + ' but must be just after 500');
     });
     setTimeout(() => {
       pool.query('SELECT 3', (err) => {
@@ -244,10 +236,7 @@ describe('Pool callback', () => {
         assert.equal(err.errno, 45028);
         assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
         const elapse = Date.now() - initTime;
-        assert.isOk(
-          elapse >= 698 && elapse < 750,
-          'elapse time was ' + elapse + ' but must be just after 700'
-        );
+        assert.isOk(elapse >= 698 && elapse < 750, 'elapse time was ' + elapse + ' but must be just after 700');
         done();
       });
     }, 200);
@@ -527,47 +516,44 @@ describe('Pool callback', () => {
       resetAfterUse: false
     });
     pool.query('DROP TABLE IF EXISTS parse', (err, res) => {
-      pool.query(
-        'CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)',
-        (err, res) => {
-          pool.batch(
-            'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
-            [
-              [1, 'john'],
-              [2, 'jack']
-            ],
-            (err, res) => {
-              if (err) {
-                done(err);
-              } else {
-                assert.equal(res.affectedRows, 2);
-                pool.query('select * from `parse`', (err2, res2) => {
-                  assert.deepEqual(res2, [
-                    {
-                      id: 1,
-                      id2: 1,
-                      id3: 2,
-                      t: 'john',
-                      id4: 3
-                    },
-                    {
-                      id: 1,
-                      id2: 2,
-                      id3: 2,
-                      t: 'jack',
-                      id4: 3
-                    }
-                  ]);
-                  pool.query('DROP TABLE parse');
-                  pool.end(() => {
-                    done();
-                  });
+      pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)', (err, res) => {
+        pool.batch(
+          'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
+          [
+            [1, 'john'],
+            [2, 'jack']
+          ],
+          (err, res) => {
+            if (err) {
+              done(err);
+            } else {
+              assert.equal(res.affectedRows, 2);
+              pool.query('select * from `parse`', (err2, res2) => {
+                assert.deepEqual(res2, [
+                  {
+                    id: 1,
+                    id2: 1,
+                    id3: 2,
+                    t: 'john',
+                    id4: 3
+                  },
+                  {
+                    id: 1,
+                    id2: 2,
+                    id3: 2,
+                    t: 'jack',
+                    id4: 3
+                  }
+                ]);
+                pool.query('DROP TABLE parse');
+                pool.end(() => {
+                  done();
                 });
-              }
+              });
             }
-          );
-        }
-      );
+          }
+        );
+      });
     });
   });
 
@@ -602,32 +588,28 @@ describe('Pool callback', () => {
             pool.end();
             done(err);
           } else {
-            pool.batch(
-              'INSERT INTO `singleBatchArrayCallback` values (?)',
-              [1, 2, 3],
-              (err, res) => {
-                if (err) {
+            pool.batch('INSERT INTO `singleBatchArrayCallback` values (?)', [1, 2, 3], (err, res) => {
+              if (err) {
+                pool.end();
+                done(err);
+              } else {
+                pool.query('select * from `singleBatchArrayCallback`', (err, res) => {
+                  assert.deepEqual(res, [
+                    {
+                      id: 1
+                    },
+                    {
+                      id: 2
+                    },
+                    {
+                      id: 3
+                    }
+                  ]);
                   pool.end();
-                  done(err);
-                } else {
-                  pool.query('select * from `singleBatchArrayCallback`', (err, res) => {
-                    assert.deepEqual(res, [
-                      {
-                        id: 1
-                      },
-                      {
-                        id: 2
-                      },
-                      {
-                        id: 3
-                      }
-                    ]);
-                    pool.end();
-                    done();
-                  });
-                }
+                  done();
+                });
               }
-            );
+            });
           }
         });
       }

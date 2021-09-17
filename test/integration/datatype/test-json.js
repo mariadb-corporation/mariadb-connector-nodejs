@@ -40,9 +40,7 @@ describe('json', () => {
       [obj]
     );
     await shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
-    await shareConn.execute('INSERT INTO `test-json-insert-type` values (?)', [
-      JSON.stringify(obj2)
-    ]);
+    await shareConn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
     const rows = await shareConn.query('SELECT * FROM `test-json-insert-type`');
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
@@ -86,17 +84,9 @@ describe('json', () => {
     const jsonString = JSON.stringify(obj);
 
     await shareConn.query('DROP TABLE IF EXISTS `test-json-return-type`');
+    await shareConn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
     await shareConn.query(
-      'CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)'
-    );
-    await shareConn.query(
-      "INSERT INTO `test-json-return-type` values ('" +
-        jsonString +
-        "','" +
-        jsonString +
-        "','" +
-        jsonString +
-        "')"
+      "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );
     let rows = await shareConn.query('SELECT * FROM `test-json-return-type`');
     if (shareConn.info.isMariaDB()) {
@@ -152,17 +142,9 @@ describe('json', () => {
     const obj = { id: 2, val: 'test' };
     const jsonString = JSON.stringify(obj);
     await conn.query('DROP TABLE IF EXISTS `test-json-return-type`');
+    await conn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
     await conn.query(
-      'CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)'
-    );
-    await conn.query(
-      "INSERT INTO `test-json-return-type` values ('" +
-        jsonString +
-        "','" +
-        jsonString +
-        "','" +
-        jsonString +
-        "')"
+      "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );
 
     let rows = await conn.query('SELECT * FROM `test-json-return-type`');

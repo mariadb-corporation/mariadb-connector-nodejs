@@ -189,9 +189,7 @@ describe('cluster', function () {
           });
         })
         .catch((err) => {
-          expect(err.message).to.equal(
-            "Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'"
-          );
+          expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");
           poolCluster.end().then(() => {
             done();
           });
@@ -429,11 +427,7 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (
-        process.env.srv === 'maxscale' ||
-        process.env.srv === 'skysql' ||
-        process.env.srv === 'skysql-ha'
-      )
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
         this.skip();
       this.timeout(10000);
       const poolCluster = basePromise.createPoolCluster({});
@@ -473,11 +467,7 @@ describe('cluster', function () {
     });
 
     it('socket close connection during query', function (done) {
-      if (
-        process.env.srv === 'maxscale' ||
-        process.env.srv === 'skysql' ||
-        process.env.srv === 'skysql-ha'
-      )
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
         this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
@@ -658,9 +648,7 @@ describe('cluster', function () {
       await filteredCluster.query('FLUSH TABLES');
       const promises = [];
       for (let i = 0; i < 60; i++) {
-        promises.push(
-          filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [[1], [2], [3]])
-        );
+        promises.push(filteredCluster.batch('INSERT INTO filteredSimpleBatch(val) values (?)', [[1], [2], [3]]));
       }
       await Promise.all(promises);
       const res = await filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
@@ -787,9 +775,7 @@ describe('cluster', function () {
       poolCluster.getConnection(/^node*/, (err, conn) => {
         poolCluster.end(() => {
           if (err) {
-            expect(err.message).to.equal(
-              "Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'"
-            );
+            expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");
             done();
           } else {
             done(new Error('must have thrown an error'));

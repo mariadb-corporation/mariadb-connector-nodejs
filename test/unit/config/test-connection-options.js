@@ -46,8 +46,7 @@ describe('test connection options', () => {
     } catch (e) {
       assert.isTrue(
         e.message.includes(
-          'enabling options `permitLocalInfile` ' +
-            'and `pipelining` is not possible, options are incompatible.'
+          'enabling options `permitLocalInfile` ' + 'and `pipelining` is not possible, options are incompatible.'
         )
       );
     }
@@ -67,19 +66,13 @@ describe('test connection options', () => {
       new ConnOptions({ timezone: '+02:20' });
       throw new Error('Must have thrown error');
     } catch (e) {
-      assert.isTrue(
-        e.message.includes(
-          "timezone format incompatible with IANA standard timezone format was '+02:20'"
-        )
-      );
+      assert.isTrue(e.message.includes("timezone format incompatible with IANA standard timezone format was '+02:20'"));
     }
   });
 
   it('wrong format', () => {
     try {
-      new ConnOptions(
-        'mariasdb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true'
-      );
+      new ConnOptions('mariasdb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true');
     } catch (e) {
       e.message.includes('error parsing connection string');
     }
