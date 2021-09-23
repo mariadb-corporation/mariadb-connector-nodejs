@@ -60,7 +60,7 @@ describe('prepare and execute', () => {
   });
 
   it('prepare close with cache', async () => {
-    const conn = await base.createConnection({ prepareCacheLength: 2, debug: true });
+    const conn = await base.createConnection({ prepareCacheLength: 2 });
     for (let i = 0; i < 10; i++) {
       const prepare = await conn.prepare('select ' + i + ',?', [i]);
       assert.equal(prepare.parameters.length, 1);

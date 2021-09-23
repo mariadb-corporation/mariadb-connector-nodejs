@@ -4,7 +4,7 @@ require('please-upgrade-node')(pkg);
 
 const ConnectionCallback = require('./lib/connection-callback');
 const PoolClusterCallback = require('./lib/pool-cluster-callback');
-const PoolCallback = require('./lib/pool-callback');
+const Pool = require('./lib/pool');
 
 const ConnOptions = require('./lib/config/connection-options');
 const PoolOptions = require('./lib/config/pool-options');
@@ -30,9 +30,7 @@ module.exports.createConnection = function createConnection(opts) {
 
 exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
-  const pool = new PoolCallback(options);
-  pool.initialize();
-  return pool;
+  return new Pool(options, true);
 };
 
 exports.createPoolCluster = function createPoolCluster(opts) {

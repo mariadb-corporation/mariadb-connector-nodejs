@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "3.0.1-rc",
+  "version": "3.0.0-rc",
   "description": "fast mariadb/mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -40,7 +40,7 @@
     "callback.js"
   ],
   "engines": {
-    "node": ">= 12"
+    "node": ">= 14"
   },
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1-or-later",
@@ -57,7 +57,7 @@
     "promise-mysql": "^5.0.3"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0-alpha.48",
     "@typescript-eslint/parser": "^4.24.0",
     "benchmark": "^2.1.4",
     "chai": "^4.3.4",
@@ -65,7 +65,7 @@
     "colors": "^1.4.0",
     "dom-parser": "^0.1.6",
     "error-stack-parser": "^2.0.6",
-    "eslint": "^7.28.0",
+    "eslint": "^8.0.0-beta.2",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-markdown": "^2.2.0",
     "eslint-plugin-prettier": "^3.4.0",

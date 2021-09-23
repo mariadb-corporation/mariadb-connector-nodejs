@@ -675,9 +675,10 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({});
     pool.getConnection((err, conn) => {
       if (err) {
-        assert(err.message.includes('Cannot create new connection to pool, pool closed'));
-        assert.equal(err.sqlState, '08S01');
-        assert.equal(err.errno, 45035);
+        assert(err.message.includes('Cannot add request to pool, pool is closed'));
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.errno, 45027);
+        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
         done();
       } else {
         done(new Error('must have thrown an Exception'));
