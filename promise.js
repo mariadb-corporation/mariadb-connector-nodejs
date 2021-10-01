@@ -4,7 +4,8 @@ const pkg = require('./package.json');
 require('please-upgrade-node')(pkg);
 
 const Connection = require('./lib/connection');
-const PoolBase = require('./lib/pool');
+const ConnectionPromise = require('./lib/connection-promise');
+const PoolPromise = require('./lib/pool-promise');
 const PoolCluster = require('./lib/pool-cluster');
 
 const ConnOptions = require('./lib/config/connection-options');
@@ -28,7 +29,10 @@ module.exports.defaultOptions = function defaultOptions(opts) {
 module.exports.createConnection = function createConnection(opts) {
   try {
     const options = new ConnOptions(opts);
-    return new Connection(options).connect();
+    const conn = new Connection(options);
+    const connPromise = new ConnectionPromise(conn);
+
+    return conn.connect().then(() => Promise.resolve(connPromise));
   } catch (err) {
     return Promise.reject(err);
   }
@@ -36,7 +40,7 @@ module.exports.createConnection = function createConnection(opts) {
 
 module.exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
-  return new PoolBase(options, false);
+  return new PoolPromise(options);
 };
 
 module.exports.createPoolCluster = function createPoolCluster(opts) {

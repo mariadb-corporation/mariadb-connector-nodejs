@@ -4,11 +4,12 @@ require('please-upgrade-node')(pkg);
 
 const ConnectionCallback = require('./lib/connection-callback');
 const PoolClusterCallback = require('./lib/pool-cluster-callback');
-const Pool = require('./lib/pool');
+const PoolCallback = require('./lib/pool-callback');
 
 const ConnOptions = require('./lib/config/connection-options');
 const PoolOptions = require('./lib/config/pool-options');
 const PoolClusterOptions = require('./lib/config/pool-cluster-options');
+const Connection = require('./lib/connection');
 
 module.exports.version = require('./package.json').version;
 module.exports.SqlError = require('./lib/misc/errors').SqlError;
@@ -25,12 +26,22 @@ module.exports.defaultOptions = function defaultOptions(opts) {
 };
 
 module.exports.createConnection = function createConnection(opts) {
-  return new ConnectionCallback(new ConnOptions(opts));
+  const conn = new Connection(new ConnOptions(opts));
+  const connCallback = new ConnectionCallback(conn);
+  conn
+    .connect()
+    .then(
+      function () {
+        connCallback.emit('connect');
+      }.bind(connCallback)
+    )
+    .catch(connCallback.emit.bind(connCallback, 'connect'));
+  return connCallback;
 };
 
 exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
-  return new Pool(options, true);
+  return new PoolCallback(options);
 };
 
 exports.createPoolCluster = function createPoolCluster(opts) {

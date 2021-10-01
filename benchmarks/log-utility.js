@@ -1,5 +1,6 @@
 'use strict';
 
+const pjson = require('../package-lock.json');
 const defaultImgJson = {
   type: 'horizontalBar',
   data: {
@@ -62,11 +63,25 @@ const defaultImgJson = {
   }
 };
 
+const getVersion = function (pjson, drv) {
+  if (pjson.packages && pjson.packages['node_modules/' + drv]) {
+    return pjson.packages['node_modules/' + drv].version;
+  }
+  if (pjson.dependencies && pjson.dependencies[drv]) {
+    return pjson.dependencies[drv].version;
+  }
+  return null;
+};
+
 module.exports.getImg = (data) => {
   const pjson = require('../package-lock.json');
-  const mysql2Version = pjson.packages['node_modules/mysql2'] ? pjson.packages['node_modules/mysql2'].version : null;
-  const mysqlVersion = pjson.packages['node_modules/mysql'] ? pjson.packages['node_modules/mysql'].version : null;
-  const mariadbVersion = pjson.packages[''] ? pjson.packages[''].version : null;
+  const mysql2Version = getVersion(pjson, 'mysql2');
+  const mysqlVersion = getVersion(pjson, 'mysql');
+  const mariadbVersion = pjson.packages
+    ? pjson.packages['']
+      ? pjson.packages[''].version
+      : pjson.version
+    : pjson.version;
 
   //clone
   const resJson = JSON.parse(JSON.stringify(defaultImgJson));

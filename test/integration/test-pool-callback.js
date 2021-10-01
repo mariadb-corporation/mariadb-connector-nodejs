@@ -90,18 +90,28 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     const initTime = Date.now();
     pool.getConnection((err, conn) => {
-      conn.query('SELECT SLEEP(1)', () => {
+      if (err) done(err);
+      conn.query('SELECT SLEEP(1)', (err, rows) => {
+        if (err) done(err);
         conn.release();
       });
     });
     pool.getConnection((err, conn) => {
-      conn.query('SELECT SLEEP(1)', () => {
-        assert(Date.now() - initTime >= 1985, 'expected > 2s, but was ' + (Date.now() - initTime));
-        conn.release();
-        pool.end((err) => {
-          done();
+      if (err) {
+        done(err);
+      } else {
+        conn.query('SELECT SLEEP(1)', () => {
+          if (err) {
+            done(err);
+          } else {
+            assert(Date.now() - initTime >= 1985, 'expected > 2s, but was ' + (Date.now() - initTime));
+            conn.release();
+            pool.end((err) => {
+              done();
+            });
+          }
         });
-      });
+      }
     });
   });
 

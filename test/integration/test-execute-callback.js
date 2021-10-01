@@ -73,7 +73,10 @@ describe('prepare and execute callback', () => {
       if (err) return done(err);
       for (let i = 0; i < 10; i++) {
         conn.prepare('select ' + i + ',?', (err, prepare) => {
-          if (err) return done(err);
+          if (err) {
+            console.log(err);
+            return done(err);
+          }
           assert.equal(prepare.parameters.length, 1);
           assert.equal(prepare.columns.length, 2);
           prepare.close();

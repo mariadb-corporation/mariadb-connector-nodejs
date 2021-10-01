@@ -146,7 +146,7 @@ describe('connection', () => {
     try {
       conn.connect();
     } catch (err) {
-      assert.isTrue(err.message.includes('missing callback parameter'));
+      assert.isTrue(err.message.includes('missing mandatory callback parameter'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45016);
       assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -216,30 +216,23 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('multiple connection.connect() with promise', function (done) {
+  it('multiple connection end with promise', function (done) {
     let conn;
     base
-      .createConnection()
-      .then((newConn) => {
-        conn = newConn;
-        return newConn.connect();
+      .createConnection({
+        logger: {
+          error: (msg) => {}
+        }
       })
-      .then((newConn) => {
-        return newConn.end();
+      .then((con) => {
+        conn = con;
+        return conn.end();
       })
       .then(() => {
         return conn.end();
       })
       .then(() => {
-        conn
-          .connect()
-          .then(() => {
-            done(new Error('must have thrown error'));
-          })
-          .catch((err) => {
-            assert.isTrue(err.message.includes('Connection closed'));
-            done();
-          });
+        done();
       })
       .catch(done);
   });
@@ -266,7 +259,7 @@ describe('connection', () => {
     conn
       .connect()
       .then(() => {
-        return conn.end();
+        return new Promise(conn.end.bind(conn));
       })
       .catch(() => {});
 
@@ -282,45 +275,32 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('connection.ping()', function (done) {
-    const conn = new Connection(new ConnOptions(Conf.baseConfig));
-    conn.connect().then(() => {
-      conn.ping();
-      conn
-        .ping()
-        .then(() => {
-          conn
-            .ping(-2)
-            .then(() => {
-              done(new Error('must have thrown error'));
-            })
-            .catch((err) => {
-              assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
-              conn
-                .ping(200)
-                .then(() => {
-                  conn.query('SELECT SLEEP(1)');
-                  const initTime = Date.now();
-                  conn
-                    .ping(200)
-                    .then(() => {
-                      done(new Error('must have thrown error after ' + (Date.now() - initTime)));
-                    })
-                    .catch((err) => {
-                      assert.isTrue(
-                        Date.now() - initTime > 195,
-                        'expected > 195, without waiting for SLEEP to finish, but was ' + (Date.now() - initTime)
-                      );
-                      assert.isTrue(err.message.includes('Ping timeout'));
-                      assert.isFalse(conn.isValid());
-                      done();
-                    });
-                })
-                .catch(done);
-            });
-        })
-        .catch(done);
-    });
+  it('connection.ping()', async () => {
+    const conn = await base.createConnection();
+    conn.ping();
+    await conn.ping();
+    try {
+      await conn.ping(-2);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
+    }
+    await conn.ping(200);
+
+    conn.query('SELECT SLEEP(1)');
+    const initTime = Date.now();
+
+    try {
+      await conn.ping(200);
+      throw new Error('must have thrown error after ' + (Date.now() - initTime));
+    } catch (err) {
+      assert.isTrue(
+        Date.now() - initTime > 195,
+        'expected > 195, without waiting for SLEEP to finish, but was ' + (Date.now() - initTime)
+      );
+      assert.isTrue(err.message.includes('Ping timeout'));
+      assert.isFalse(conn.isValid());
+    }
   });
 
   it('connection.ping() with callback', function (done) {
@@ -476,7 +456,6 @@ describe('connection', () => {
         done();
       });
   });
-
   it('connection timeout', function (done) {
     base
       .createConnection({
@@ -506,7 +485,6 @@ describe('connection', () => {
     conn.end();
     done();
   });
-
   it('connection without database', (done) => {
     base
       .createConnection({
@@ -615,42 +593,46 @@ describe('connection', () => {
       password: 'myPwd',
       allowPublicKeyRetrieval: true
     });
+    conn.on('error', (err) => {});
     conn.connect((err) => {
-      if (!err) done(new Error('must have thrown error'));
-      switch (err.errno) {
-        case 45025:
-          //Client does not support authentication protocol
-          assert.equal(err.sqlState, '08004');
-          break;
+      if (!err) {
+        done(new Error('must have thrown error'));
+      } else {
+        switch (err.errno) {
+          case 45025:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08004');
+            break;
 
-        case 1251:
-          //authentication method unavailable
-          assert.equal(err.sqlState, '08004');
-          break;
+          case 1251:
+            //authentication method unavailable
+            assert.equal(err.sqlState, '08004');
+            break;
 
-        case 1524:
-          //GSSAPI plugin not loaded
-          assert.equal(err.sqlState, 'HY000');
-          break;
+          case 1524:
+            //GSSAPI plugin not loaded
+            assert.equal(err.sqlState, 'HY000');
+            break;
 
-        case 1045:
-          assert.equal(err.sqlState, '28000');
-          break;
+          case 1045:
+            assert.equal(err.sqlState, '28000');
+            break;
 
-        case 1044:
-          //mysql
-          assert.equal(err.sqlState, '42000');
-          break;
+          case 1044:
+            //mysql
+            assert.equal(err.sqlState, '42000');
+            break;
 
-        case 1698:
-          assert.equal(err.sqlState, '28000');
-          break;
+          case 1698:
+            assert.equal(err.sqlState, '28000');
+            break;
 
-        default:
-          done(err);
-          return;
+          default:
+            done(err);
+            return;
+        }
+        done();
       }
-      done();
     });
   });
 
@@ -700,10 +682,13 @@ describe('connection', () => {
 
   it('connection error connect event', function (done) {
     const conn = base.createCallbackConnection({ user: 'fooUser' });
+    conn.on('error', (err) => {});
     conn.connect((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
-      } else done();
+      } else {
+        done();
+      }
     });
   });
 
@@ -727,7 +712,7 @@ describe('connection', () => {
       .connect()
       .then(() => {
         assert.isTrue(conn.isValid());
-        return conn.end();
+        return new Promise(conn.end.bind(conn));
       })
       .then(() => {
         assert.isTrue(!conn.isValid());

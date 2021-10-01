@@ -103,7 +103,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -118,7 +118,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -133,7 +133,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -494,24 +494,27 @@ describe('Pool', () => {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
-      connectionLimit: 10,
+      connectionLimit: 2,
       acquireTimeout: 800,
       leakDetectionTimeout: 1250
     });
     let errorThrown = false;
     setTimeout(() => {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 2; i++) {
         pool.query('SELECT SLEEP(1)').catch(done);
       }
 
-      for (let i = 0; i < 10; i++) {
-        pool.getConnection().catch((err) => {
-          assert(err.message.includes('retrieve connection from pool timeout'));
-          assert.equal(err.sqlState, 'HY000');
-          assert.equal(err.errno, 45028);
-          assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
-          errorThrown = true;
-        });
+      for (let i = 0; i < 2; i++) {
+        pool
+          .getConnection()
+          .then(() => done(new Error('must have thrown error')))
+          .catch((err) => {
+            assert(err.message.includes('retrieve connection from pool timeout'));
+            assert.equal(err.sqlState, 'HY000');
+            assert.equal(err.errno, 45028);
+            assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+            errorThrown = true;
+          });
       }
       for (let i = 0; i < 100; i++) {
         setTimeout(() => {
@@ -1139,8 +1142,7 @@ describe('Pool', () => {
       port: proxy.port(),
       acquireTimeout: 1000,
       minDelayValidation: 0,
-      connectionLimit: 1,
-      noControlAfterUse: true
+      connectionLimit: 1
     });
 
     // test use proxy that stop answer for 1.5s,
@@ -1151,7 +1153,7 @@ describe('Pool', () => {
     setTimeout(() => {
       proxy.resumeRemote();
     }, 1500);
-    conn.release();
+    await conn.release();
     try {
       await pool.getConnection();
       throw new Error('must have thrown error !' + (Date.now() - initTime));
