@@ -23,8 +23,8 @@ describe('cluster', function () {
     });
 
     it('no node', function (done) {
-      const poolCluster = basePromise.createPoolCluster();
-      poolCluster
+      const cluster = basePromise.createPoolCluster();
+      cluster
         .getConnection()
         .then(() => {
           done(new Error('must have thrown an error !'));
@@ -38,42 +38,42 @@ describe('cluster', function () {
     });
 
     it('no pattern match', function (done) {
-      const poolCluster = basePromise.createPoolCluster();
+      const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster
+      cluster.add('node1', connOption1);
+      cluster
         .getConnection(/^M*$/)
         .then(() => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(new Error('must have thrown an error !'));
           });
         })
         .catch((err) => {
           expect(err.message).to.have.string("No node found for pattern '/^M*$/'");
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         });
     });
 
     it('default id', function (done) {
-      const poolCluster = basePromise.createPoolCluster();
+      const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
         resetAfterUse: false
       });
 
-      poolCluster.add(connOption1);
-      poolCluster
+      cluster.add(connOption1);
+      cluster
         .getConnection('PoolNode-0')
         .then((conn) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             conn.end();
             done();
           });
@@ -83,7 +83,7 @@ describe('cluster', function () {
 
     it('pool full', function (done) {
       this.timeout(30000);
-      const poolCluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
+      const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
@@ -92,34 +92,34 @@ describe('cluster', function () {
         acquireTimeout: 500
       });
 
-      poolCluster.add(connOption1);
-      poolCluster
+      cluster.add(connOption1);
+      cluster
         .getConnection('PoolNode-0')
         .then((conn) => {
-          poolCluster
+          cluster
             .getConnection('PoolNode-0')
             .then(() => {
-              poolCluster.end();
+              cluster.end();
               done(new Error('must have thrown an error !'));
             })
             .catch((err) => {
               expect(err.message).to.have.string(
                 "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
               );
-              poolCluster
+              cluster
                 .getConnection('PoolNode-0')
                 .then(() => {
-                  poolCluster.end();
+                  cluster.end();
                   done(new Error('must have thrown an error !'));
                 })
                 .catch((err) => {
                   expect(err.message).to.have.string(
                     'No node have been added to cluster or nodes have been removed due to too much connection error'
                   );
-                  poolCluster
+                  cluster
                     .getConnection('PoolNode-0')
                     .then(() => {
-                      poolCluster.end();
+                      cluster.end();
                       done(new Error('must have thrown an error !'));
                     })
                     .catch((err) => {
@@ -128,7 +128,7 @@ describe('cluster', function () {
                           ' to too much connection error'
                       );
                       conn.end();
-                      poolCluster.end().then(() => {
+                      cluster.end().then(() => {
                         done();
                       });
                     });
@@ -139,28 +139,28 @@ describe('cluster', function () {
     });
 
     it('cluster add error', function (done) {
-      const poolCluster = basePromise.createPoolCluster();
+      const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         connectionLimit: 1
       });
 
-      poolCluster.add('node1', connOption1);
+      cluster.add('node1', connOption1);
       try {
-        poolCluster.add('node1', connOption1);
-        poolCluster.end().then(() => {
+        cluster.add('node1', connOption1);
+        cluster.end().then(() => {
           return done(new Error('must have thrown an error'));
         });
       } catch (e) {
         assert.isTrue(e.message.includes("Node identifier 'node1' already exist"));
-        poolCluster.end().then(() => {
+        cluster.end().then(() => {
           done();
         });
       }
     });
 
     it('end no configuration', function (done) {
-      const poolCluster = basePromise.createPoolCluster();
-      poolCluster
+      const cluster = basePromise.createPoolCluster();
+      cluster
         .end()
         .then(() => {
           done();
@@ -169,55 +169,55 @@ describe('cluster', function () {
     });
 
     it('select good pool', async function () {
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        const res = await getConnectionAndCheck(poolCluster, /^node[01]$/);
+        const res = await getConnectionAndCheck(cluster, /^node[01]$/);
         expect(res).to.equal('node1');
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('test wrong selector', function (done) {
-      const poolCluster = get3NodeCluster({ defaultSelector: 'WRONG' });
+      const cluster = get3NodeCluster({ defaultSelector: 'WRONG' });
 
-      poolCluster
+      cluster
         .getConnection(/^node*/)
         .then(() => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(new Error('must have thrown an error'));
           });
         })
         .catch((err) => {
           expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         });
     });
 
     it('select round-robin pools', async function () {
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        const nodes = await testTimes(poolCluster);
+        const nodes = await testTimes(cluster);
         expect(nodes['node1']).to.equal(3);
         expect(nodes['node2']).to.equal(3);
         expect(nodes['node3']).to.equal(3);
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('remove/add nodes during use', async function () {
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        let nodes = await testTimes(poolCluster);
+        let nodes = await testTimes(cluster);
         expect(nodes['node1']).to.equal(3);
         expect(nodes['node2']).to.equal(3);
         expect(nodes['node3']).to.equal(3);
 
-        poolCluster.remove(/^node2/);
-        poolCluster.add(
+        cluster.remove(/^node2/);
+        cluster.add(
           'node4',
           Object.assign({}, Conf.baseConfig, {
             initSql: "set @node='node4'",
@@ -225,32 +225,32 @@ describe('cluster', function () {
             resetAfterUse: false
           })
         );
-        nodes = await testTimes(poolCluster);
+        nodes = await testTimes(cluster);
         expect(nodes['node1']).to.equal(3);
         expect(nodes['node2']).to.be.undefined;
         expect(nodes['node3']).to.equal(3);
         expect(nodes['node4']).to.equal(3);
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('select ordered pools', async function () {
-      const poolCluster = get3NodeCluster({ defaultSelector: 'ORDER' });
+      const cluster = get3NodeCluster({ defaultSelector: 'ORDER' });
       try {
-        const nodes = await testTimes(poolCluster);
+        const nodes = await testTimes(cluster);
         expect(nodes['node1']).to.equal(9);
         expect(nodes['node2']).to.be.undefined;
         expect(nodes['node3']).to.be.undefined;
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('select random pools', async function () {
-      const poolCluster = get3NodeCluster({ defaultSelector: 'RANDOM' });
+      const cluster = get3NodeCluster({ defaultSelector: 'RANDOM' });
       try {
-        const nodes = await testTimes(poolCluster, /^node*/, 60);
+        const nodes = await testTimes(cluster, /^node*/, 60);
         expect(nodes['node1']).to.be.below(40);
         expect(nodes['node1']).to.be.at.least(5);
         expect(nodes['node2']).to.be.below(40);
@@ -258,26 +258,26 @@ describe('cluster', function () {
         expect(nodes['node3']).to.be.below(40);
         expect(nodes['node3']).to.be.at.least(5);
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('ensure selector filter', async function () {
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        const nodes = await testTimes(poolCluster, /^node[12]/, 60);
+        const nodes = await testTimes(cluster, /^node[12]/, 60);
         expect(nodes['node1']).to.equal(30);
         expect(nodes['node2']).to.equal(30);
         expect(nodes['node3']).to.be.undefined;
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it("won't use bad host pools", function (done) {
-      const poolCluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
+      const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
@@ -299,11 +299,11 @@ describe('cluster', function () {
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
 
-      testTimes(poolCluster, /^node[12]*/, 20)
+      testTimes(cluster, /^node[12]*/, 20)
         .then((nodes) => {
           expect(nodes['node1']).to.equal(10);
           expect(nodes['node2']).to.equal(10);
@@ -312,15 +312,15 @@ describe('cluster', function () {
             expect(removedNode).to.have.length(1);
             expect(removedNode[0]).to.equal('node3');
 
-            const nodesConf = poolCluster.__tests.getNodes();
+            const nodesConf = cluster.__tests.getNodes();
             expect(Object.keys(nodesConf)).to.have.length(2);
-            poolCluster.end().then(() => {
+            cluster.end().then(() => {
               done();
             });
           }, 100);
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
@@ -328,12 +328,12 @@ describe('cluster', function () {
 
     it("won't use bad host pools with rejection", function (done) {
       this.timeout(20000);
-      const poolCluster = basePromise.createPoolCluster({
+      const cluster = basePromise.createPoolCluster({
         canRetry: false,
         removeNodeErrorCount: 2
       });
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
 
@@ -356,11 +356,11 @@ describe('cluster', function () {
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
 
-      testTimesWithError(poolCluster, /^node*/, 10).then((nodes) => {
+      testTimesWithError(cluster, /^node*/, 10).then((nodes) => {
         expect(nodes['node1']).to.equal(4);
         expect(nodes['node2']).to.equal(3);
         expect(nodes['error']).to.equal(3);
@@ -368,7 +368,7 @@ describe('cluster', function () {
           expect(removedNode).to.have.length(1);
           expect(removedNode[0]).to.equal('node3');
 
-          poolCluster
+          cluster
             .end()
             .then(() => {
               done();
@@ -382,14 +382,14 @@ describe('cluster', function () {
       if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       this.timeout(30000);
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
-      const poolCluster = cl.cluster;
+      const cluster = cl.cluster;
       const proxy = cl.proxy;
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
 
-      testTimesWithError(poolCluster, /^node*/, 10).then((nodes) => {
+      testTimesWithError(cluster, /^node*/, 10).then((nodes) => {
         expect(nodes['node1']).to.equal(4);
         expect(nodes['node2']).to.equal(3);
         expect(nodes['node3']).to.equal(3);
@@ -397,7 +397,7 @@ describe('cluster', function () {
         proxy.close();
         //wait for socket to end.
         setTimeout(() => {
-          testTimesWithError(poolCluster, /^node*/, 10).then((nodes) => {
+          testTimesWithError(cluster, /^node*/, 10).then((nodes) => {
             proxy.resume();
             expect(nodes['node1']).to.equal(5);
             expect(nodes['node2']).to.be.undefined;
@@ -405,9 +405,9 @@ describe('cluster', function () {
             setTimeout(() => {
               expect(removedNode).to.have.length(0);
               setTimeout(() => {
-                testTimesWithError(poolCluster, /^node*/, 10)
+                testTimesWithError(cluster, /^node*/, 10)
                   .then((node2s) => {
-                    poolCluster.end().then(() => {
+                    cluster.end().then(() => {
                       proxy.close();
                     });
                     expect([3, 4]).to.contain.members([node2s['node1']]);
@@ -430,7 +430,7 @@ describe('cluster', function () {
       if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
         this.skip();
       this.timeout(10000);
-      const poolCluster = basePromise.createPoolCluster({});
+      const cluster = basePromise.createPoolCluster({});
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: ["set @node='node1'", 'SET @@wait_timeout=2'],
@@ -448,11 +448,11 @@ describe('cluster', function () {
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
 
-      const filteredCluster = poolCluster.of(/^node[12]/);
+      const filteredCluster = cluster.of(/^node[12]/);
       filteredCluster
         .query('KILL CONNECTION_ID()')
         .then(() => {
@@ -460,7 +460,7 @@ describe('cluster', function () {
         })
         .catch((err) => {
           assert.equal(err.sqlState, '70100');
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         });
@@ -471,7 +471,7 @@ describe('cluster', function () {
         this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
-      const poolCluster = basePromise.createPoolCluster({});
+      const cluster = basePromise.createPoolCluster({});
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: ["set @node='node1'", 'SET @@wait_timeout=2'],
@@ -492,17 +492,17 @@ describe('cluster', function () {
         acquireTimeout: 10
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
-      const filteredCluster = poolCluster.of(/^node2/);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
+      const filteredCluster = cluster.of(/^node2/);
       filteredCluster
         .query(
           'SET STATEMENT max_statement_time=1 FOR select c1.* from information_schema.columns as c1,  information_schema.tables, information_schema.tables as t2'
         )
         .catch((err) => {
           //dismiss error
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         });
@@ -510,9 +510,9 @@ describe('cluster', function () {
 
     it('get filtered', async function () {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        const filteredCluster = poolCluster.of(/^node[12]/);
+        const filteredCluster = cluster.of(/^node[12]/);
         const promises = [];
         for (let i = 0; i < 60; i++) {
           promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
@@ -530,14 +530,14 @@ describe('cluster', function () {
         expect(nodes['node2']).to.equal(30);
         expect(nodes['node3']).to.be.undefined;
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('query on filtered', function (done) {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
 
       const promises = [];
       for (let i = 0; i < 60; i++) {
@@ -557,12 +557,12 @@ describe('cluster', function () {
           expect(nodes['node1']).to.equal(30);
           expect(nodes['node2']).to.equal(30);
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
@@ -570,8 +570,8 @@ describe('cluster', function () {
 
     it('query on filtered ORDER', function (done) {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/, 'ORDER');
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/, 'ORDER');
 
       const promises = [];
       for (let i = 0; i < 60; i++) {
@@ -591,12 +591,12 @@ describe('cluster', function () {
           expect(nodes['node1']).to.equal(60);
           expect(nodes['node2']).to.be.undefined;
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
@@ -604,8 +604,8 @@ describe('cluster', function () {
 
     it('execute on filtered ORDER', function (done) {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/, 'ORDER');
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/, 'ORDER');
 
       const promises = [];
       for (let i = 0; i < 60; i++) {
@@ -625,12 +625,12 @@ describe('cluster', function () {
           expect(nodes['node1']).to.equal(60);
           expect(nodes['node2']).to.be.undefined;
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
@@ -638,8 +638,8 @@ describe('cluster', function () {
 
     it('batch on filtered', async function () {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
 
       await filteredCluster.query('DROP TABLE IF EXISTS filteredSimpleBatch');
       await filteredCluster.query(
@@ -653,24 +653,24 @@ describe('cluster', function () {
       await Promise.all(promises);
       const res = await filteredCluster.query('SELECT count(*) as nb FROM filteredSimpleBatch');
       expect(res[0].nb).to.equal(180n);
-      await poolCluster.end();
+      await cluster.end();
     });
 
     it('batch error on filtered', function (done) {
       this.timeout(10000);
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
 
       filteredCluster
         .batch('INSERT INTO notexistingtable(val) values (?)', [[1], [2], [3]])
         .then((res) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(new Error('must have thrown an error !'));
           });
         })
         .catch((err) => {
           expect(err.message).to.have.string("notexistingtable' doesn't exist");
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         });
@@ -688,8 +688,8 @@ describe('cluster', function () {
     });
 
     it('no node', function (done) {
-      const poolCluster = baseCallback.createPoolCluster();
-      poolCluster.getConnection((err, conn) => {
+      const cluster = baseCallback.createPoolCluster();
+      cluster.getConnection((err, conn) => {
         if (err) {
           expect(err.message).to.equal(
             'No node have been added to cluster or nodes have been removed due to too much connection error'
@@ -702,8 +702,8 @@ describe('cluster', function () {
     });
 
     it('end with callback', function (done) {
-      const poolCluster = baseCallback.createPoolCluster();
-      poolCluster.end((err) => {
+      const cluster = baseCallback.createPoolCluster();
+      cluster.end((err) => {
         if (err) {
           done(err);
         } else done();
@@ -712,7 +712,7 @@ describe('cluster', function () {
 
     it('pool full', function (done) {
       this.timeout(30000);
-      const poolCluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
+      const cluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
@@ -721,21 +721,21 @@ describe('cluster', function () {
         acquireTimeout: 500
       });
 
-      poolCluster.add(connOption1);
-      poolCluster.getConnection('PoolNode-0', (err, conn) => {
+      cluster.add(connOption1);
+      cluster.getConnection('PoolNode-0', (err, conn) => {
         if (err) {
           done(err);
         } else {
-          poolCluster.getConnection('PoolNode-0', (err, conn2) => {
+          cluster.getConnection('PoolNode-0', (err, conn2) => {
             if (!err) {
-              poolCluster.end();
+              cluster.end();
               done(new Error('must have thrown an error !'));
             } else {
               expect(err.message).to.have.string(
                 "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
               );
               conn.end();
-              poolCluster.end();
+              cluster.end();
               done();
             }
           });
@@ -744,9 +744,9 @@ describe('cluster', function () {
     });
 
     it('end with bad callback parameter', function (done) {
-      const poolCluster = baseCallback.createPoolCluster();
+      const cluster = baseCallback.createPoolCluster();
       try {
-        poolCluster.end('wrong callback');
+        cluster.end('wrong callback');
         done(new Error('must have thrown an error !'));
       } catch (err) {
         expect(err.message).to.equal('callback parameter must be a function');
@@ -755,10 +755,10 @@ describe('cluster', function () {
     });
 
     it('select good pool', function (done) {
-      const poolCluster = get3NodeCallbackCluster();
+      const cluster = get3NodeCallbackCluster();
 
-      getConnectionAndCheckCallback(poolCluster, /^node[01]$/, (err, res) => {
-        poolCluster.end(() => {
+      getConnectionAndCheckCallback(cluster, /^node[01]$/, (err, res) => {
+        cluster.end(() => {
           if (err) {
             done(err);
           } else {
@@ -770,10 +770,10 @@ describe('cluster', function () {
     });
 
     it('test wrong selector', function (done) {
-      const poolCluster = get3NodeCallbackCluster({ defaultSelector: 'WRONG' });
+      const cluster = get3NodeCallbackCluster({ defaultSelector: 'WRONG' });
 
-      poolCluster.getConnection(/^node*/, (err, conn) => {
-        poolCluster.end(() => {
+      cluster.getConnection(/^node*/, (err, conn) => {
+        cluster.end(() => {
           if (err) {
             expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");
             done();
@@ -785,10 +785,10 @@ describe('cluster', function () {
     });
 
     it('select round-robin pools', function (done) {
-      const poolCluster = get3NodeCallbackCluster();
+      const cluster = get3NodeCallbackCluster();
 
-      testTimesCallback(poolCluster, (err, nodes) => {
-        poolCluster.end(() => {
+      testTimesCallback(cluster, (err, nodes) => {
+        cluster.end(() => {
           if (err) {
             done(err);
           } else {
@@ -802,10 +802,10 @@ describe('cluster', function () {
     });
 
     it('remove/add nodes during use', function (done) {
-      const poolCluster = get3NodeCallbackCluster();
-      testTimesCallback(poolCluster, (err, nodes) => {
+      const cluster = get3NodeCallbackCluster();
+      testTimesCallback(cluster, (err, nodes) => {
         if (err) {
-          poolCluster.end(() => {
+          cluster.end(() => {
             done(err);
           });
         } else {
@@ -813,8 +813,8 @@ describe('cluster', function () {
           expect(nodes['node2']).to.equal(3);
           expect(nodes['node3']).to.equal(3);
 
-          poolCluster.remove(/^node2/);
-          poolCluster.add(
+          cluster.remove(/^node2/);
+          cluster.add(
             'node4',
             Object.assign({}, Conf.baseConfig, {
               initSql: "set @node='node4'",
@@ -822,9 +822,9 @@ describe('cluster', function () {
               resetAfterUse: false
             })
           );
-          testTimesCallback(poolCluster, (err, nodes) => {
+          testTimesCallback(cluster, (err, nodes) => {
             if (err) {
-              poolCluster.end(() => {
+              cluster.end(() => {
                 done(err);
               });
             } else {
@@ -832,7 +832,7 @@ describe('cluster', function () {
               expect(nodes['node2']).to.be.undefined;
               expect(nodes['node3']).to.equal(3);
               expect(nodes['node4']).to.equal(3);
-              poolCluster.end(() => {
+              cluster.end(() => {
                 done();
               });
             }
@@ -842,18 +842,18 @@ describe('cluster', function () {
     });
 
     it('select ordered pools', function (done) {
-      const poolCluster = get3NodeCallbackCluster({ defaultSelector: 'ORDER' });
+      const cluster = get3NodeCallbackCluster({ defaultSelector: 'ORDER' });
 
-      testTimesCallback(poolCluster, (err, nodes) => {
+      testTimesCallback(cluster, (err, nodes) => {
         if (err) {
-          poolCluster.end(() => {
+          cluster.end(() => {
             done(err);
           });
         } else {
           expect(nodes['node1']).to.equal(9);
           expect(nodes['node2']).to.be.undefined;
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end(() => {
+          cluster.end(() => {
             done();
           });
         }
@@ -861,11 +861,11 @@ describe('cluster', function () {
     });
 
     it('select random pools', function (done) {
-      const poolCluster = get3NodeCallbackCluster({
+      const cluster = get3NodeCallbackCluster({
         defaultSelector: 'RANDOM'
       });
       const cb = (err, nodes) => {
-        poolCluster.end(() => {
+        cluster.end(() => {
           if (err) {
             done(err);
           } else {
@@ -880,13 +880,13 @@ describe('cluster', function () {
         });
       };
 
-      testTimesCallback(poolCluster, cb, /^node*/, 60);
+      testTimesCallback(cluster, cb, /^node*/, 60);
     });
 
     it('ensure selector filter', function (done) {
-      const poolCluster = get3NodeCallbackCluster();
+      const cluster = get3NodeCallbackCluster();
       const cb = (err, nodes) => {
-        poolCluster.end(() => {
+        cluster.end(() => {
           if (err) {
             done(err);
           } else {
@@ -897,13 +897,13 @@ describe('cluster', function () {
           }
         });
       };
-      testTimesCallback(poolCluster, cb, /^node[12]/, 60);
+      testTimesCallback(cluster, cb, /^node[12]/, 60);
     });
 
     it("won't use bad host pools", function (done) {
-      const poolCluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
+      const cluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
 
@@ -926,12 +926,12 @@ describe('cluster', function () {
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
       const cb = (err, nodes) => {
         if (err) {
-          poolCluster.end(() => {
+          cluster.end(() => {
             done(err);
           });
         } else {
@@ -942,25 +942,25 @@ describe('cluster', function () {
             expect(removedNode).to.have.length(1);
             expect(removedNode[0]).to.equal('node3');
 
-            const nodesConf = poolCluster.__tests.getNodes();
+            const nodesConf = cluster.__tests.getNodes();
             expect(Object.keys(nodesConf)).to.have.length(2);
-            poolCluster.end(() => {
+            cluster.end(() => {
               done();
             });
           }, 100);
         }
       };
-      testTimesCallback(poolCluster, cb, /^node[12]*/, 20);
+      testTimesCallback(cluster, cb, /^node[12]*/, 20);
     });
 
     it("won't use bad host pools with rejection", function (done) {
       this.timeout(20000);
-      const poolCluster = baseCallback.createPoolCluster({
+      const cluster = baseCallback.createPoolCluster({
         canRetry: false,
         removeNodeErrorCount: 2
       });
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
 
@@ -983,13 +983,13 @@ describe('cluster', function () {
         resetAfterUse: false
       });
 
-      poolCluster.add('node1', connOption1);
-      poolCluster.add('node2', connOption2);
-      poolCluster.add('node3', connOption3);
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      cluster.add('node3', connOption3);
 
       const cb = (err, nodes) => {
         if (err) {
-          poolCluster.end(() => {
+          cluster.end(() => {
             done(err);
           });
         } else {
@@ -1000,28 +1000,28 @@ describe('cluster', function () {
             expect(removedNode).to.have.length(1);
             expect(removedNode[0]).to.equal('node3');
 
-            poolCluster.end(() => {
+            cluster.end(() => {
               done();
             });
           }, 100);
         }
       };
 
-      testTimesCallback(poolCluster, cb, /^node*/, 10);
+      testTimesCallback(cluster, cb, /^node*/, 10);
     });
 
     it('reusing node after timeout', function (done) {
       this.timeout(20000);
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
-      const poolCluster = cl.cluster;
+      const cluster = cl.cluster;
       const proxy = cl.proxy;
       let removedNode = [];
-      poolCluster.on('remove', (node) => {
+      cluster.on('remove', (node) => {
         removedNode.push(node);
       });
 
       testTimesCallback(
-        poolCluster,
+        cluster,
         (err, nodes) => {
           expect(nodes['node1']).to.equal(4);
           expect(nodes['node2']).to.equal(3);
@@ -1031,7 +1031,7 @@ describe('cluster', function () {
           //wait for socket to end.
           setTimeout(() => {
             testTimesCallback(
-              poolCluster,
+              cluster,
               (err, nodes) => {
                 expect(nodes['node1']).to.equal(5);
                 expect(nodes['node2']).to.be.undefined;
@@ -1042,9 +1042,9 @@ describe('cluster', function () {
                 proxy.resume();
                 setTimeout(() => {
                   testTimesCallback(
-                    poolCluster,
+                    cluster,
                     (err, nodes) => {
-                      poolCluster.end(() => {
+                      cluster.end(() => {
                         proxy.close();
                       });
                       expect([3, 4]).to.contain.members([nodes['node1']]);
@@ -1069,9 +1069,9 @@ describe('cluster', function () {
 
     it('get filtered', async function () {
       this.timeout(20000);
-      const poolCluster = get3NodeCluster();
+      const cluster = get3NodeCluster();
       try {
-        const filteredCluster = poolCluster.of(/^node[12]/);
+        const filteredCluster = cluster.of(/^node[12]/);
         const promises = [];
         for (let i = 0; i < 60; i++) {
           promises.push(getConnectionAndCheck(filteredCluster, /^node[12]/));
@@ -1089,13 +1089,13 @@ describe('cluster', function () {
         expect(nodes['node2']).to.equal(30);
         expect(nodes['node3']).to.be.undefined;
       } finally {
-        await poolCluster.end();
+        await cluster.end();
       }
     });
 
     it('query on filtered', function (done) {
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
 
       const promises = [];
       for (let i = 0; i < 60; i++) {
@@ -1115,20 +1115,20 @@ describe('cluster', function () {
           expect(nodes['node1']).to.equal(30);
           expect(nodes['node2']).to.equal(30);
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
     });
 
     it('query on filtered ORDER', function (done) {
-      const poolCluster = get3NodeCluster();
-      const filteredCluster = poolCluster.of(/^node[12]/, 'ORDER');
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/, 'ORDER');
 
       const promises = [];
       for (let i = 0; i < 60; i++) {
@@ -1148,12 +1148,12 @@ describe('cluster', function () {
           expect(nodes['node1']).to.equal(60);
           expect(nodes['node2']).to.be.undefined;
           expect(nodes['node3']).to.be.undefined;
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done();
           });
         })
         .catch((err) => {
-          poolCluster.end().then(() => {
+          cluster.end().then(() => {
             done(err);
           });
         });
@@ -1161,7 +1161,7 @@ describe('cluster', function () {
   });
 
   const get3NodeCallbackCluster = (opts) => {
-    const poolCluster = baseCallback.createPoolCluster(opts);
+    const cluster = baseCallback.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
@@ -1182,14 +1182,14 @@ describe('cluster', function () {
       trace: true
     });
 
-    poolCluster.add('node1', connOption1);
-    poolCluster.add('node2', connOption2);
-    poolCluster.add('node3', connOption3);
-    return poolCluster;
+    cluster.add('node1', connOption1);
+    cluster.add('node2', connOption2);
+    cluster.add('node3', connOption3);
+    return cluster;
   };
 
   const get3NodeCluster = (opts) => {
-    const poolCluster = basePromise.createPoolCluster(opts);
+    const cluster = basePromise.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
@@ -1210,14 +1210,14 @@ describe('cluster', function () {
       trace: true
     });
 
-    poolCluster.add('node1', connOption1);
-    poolCluster.add('node2', connOption2);
-    poolCluster.add('node3', connOption3);
-    return poolCluster;
+    cluster.add('node1', connOption1);
+    cluster.add('node2', connOption2);
+    cluster.add('node3', connOption3);
+    return cluster;
   };
 
   const get3NodeClusterWithProxy = (opts, base) => {
-    const poolCluster = base.createPoolCluster(opts);
+    const cluster = base.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
       initSql: "set @node='node1'",
@@ -1250,16 +1250,16 @@ describe('cluster', function () {
       trace: true
     });
 
-    poolCluster.add('node1', connOption1);
-    poolCluster.add('node2', connOption2);
-    poolCluster.add('node3', connOption3);
-    return { cluster: poolCluster, proxy: proxy };
+    cluster.add('node1', connOption1);
+    cluster.add('node2', connOption2);
+    cluster.add('node3', connOption3);
+    return { cluster: cluster, proxy: proxy };
   };
 
-  const testTimes = async (poolCluster, filter, number) => {
+  const testTimes = async (cluster, filter, number) => {
     const promises = [];
     for (let i = 0; i < (number ? number : 9); i++) {
-      promises.push(getConnectionAndCheck(poolCluster, filter));
+      promises.push(getConnectionAndCheck(cluster, filter));
     }
     const results = await Promise.all(promises);
     const nodes = {};
@@ -1273,10 +1273,10 @@ describe('cluster', function () {
     return nodes;
   };
 
-  const testTimesWithError = (poolCluster, filter, number) => {
+  const testTimesWithError = (cluster, filter, number) => {
     const promises = [];
     for (let i = 0; i < (number ? number : 9); i++) {
-      promises.push(getConnectionAndCheck(poolCluster, filter));
+      promises.push(getConnectionAndCheck(cluster, filter));
     }
     return Promise.all(promises.map((p) => p.catch((e) => e))).then((results) => {
       const nodes = {};
@@ -1295,12 +1295,12 @@ describe('cluster', function () {
     });
   };
 
-  const testTimesCallback = (poolCluster, cb, filter, number) => {
+  const testTimesCallback = (cluster, cb, filter, number) => {
     const results = [];
     let idx = 0;
     if (!number) number = 9;
     for (let i = 0; i < number; i++) {
-      getConnectionAndCheckCallback(poolCluster, filter, (err, res) => {
+      getConnectionAndCheckCallback(cluster, filter, (err, res) => {
         idx++;
         if (err) {
           if (results['error']) {

@@ -1150,9 +1150,6 @@ describe('Pool', () => {
     // (minDelayValidation is set to 0, to ensure ping is done each time for existing connection)
     const conn = await pool.getConnection();
     proxy.suspendRemote();
-    setTimeout(() => {
-      proxy.resumeRemote();
-    }, 1500);
     await conn.release();
     try {
       await pool.getConnection();
@@ -1165,6 +1162,7 @@ describe('Pool', () => {
 
       assert.isTrue(Date.now() - initTime > 995, 'expected > 1000, but was ' + (Date.now() - initTime));
       try {
+        proxy.resumeRemote();
         const conn2 = await pool.getConnection();
         await conn2.release();
       } catch (e2) {
