@@ -27,7 +27,8 @@ export interface LoggerConfig {
 
 export interface QueryConfig {
   /**
-   * Presents result-sets by table to avoid results with colliding fields. See the query() description for more information.
+   * Presents result-sets by table to avoid results with colliding fields.
+   * See the query() description for more information.
    */
   nestTables?: boolean | string;
 
@@ -303,7 +304,9 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   maxAllowedPacket?: number;
 
   /**
-   * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout) (use pool option idleTimeout for that).
+   * permit to enable socket keep alive, setting delay. 0 means not enabled. Keep in mind that this don't reset server
+   * [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout)
+   * (use pool option idleTimeout for that).
    * in ms
    * (Default: 0)
    */
@@ -322,7 +325,8 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   cachingRsaPublicKey?: string;
 
   /**
-   * Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server to send public key.
+   * Indicate that if `rsaPublicKey` or `cachingRsaPublicKey` public key are not provided, if client can ask server
+   * to send public key.
    * default: false
    */
   allowPublicKeyRetrieval?: boolean;
@@ -344,8 +348,9 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
 
 export interface PoolConfig extends ConnectionConfig {
   /**
-   * The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from connectTimeout,
-   * because acquiring a pool connection does not always involve making a connection. (Default: 10 seconds)
+   * The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from
+   * connectTimeout, because acquiring a pool connection does not always involve making a connection.
+   * (Default: 10 seconds)
    */
   acquireTimeout?: number;
 
@@ -620,9 +625,11 @@ export interface Connection {
   escape(value: any): string;
 
   /**
-   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed by '`' character if content doesn't satisfy:
+   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed
+   * by '`' character if content doesn't satisfy:
    * <OL>
-   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)</LI>
+   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign,
+   *  underscore)</LI>
    *  <LI>Extended: U+0080 .. U+FFFF and escaping '`' character if needed.</LI>
    * </OL>
    * @param identifier identifier
@@ -695,9 +702,11 @@ export interface Pool {
   escape(value: any): string;
 
   /**
-   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed by '`' character if content doesn't satisfy:
+   * This function permit to escape a Identifier properly . See Identifier Names for escaping. Value will be enclosed
+   * by '`' character if content doesn't satisfy:
    * <OL>
-   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign, underscore)</LI>
+   *  <LI>ASCII: [0-9,a-z,A-Z$_] (numerals 0-9, basic Latin letters, both lowercase and uppercase, dollar sign,
+   *  underscore)</LI>
    *  <LI>Extended: U+0080 .. U+FFFF and escaping '`' character if needed.</LI>
    * </OL>
    * @param identifier identifier

@@ -10,11 +10,12 @@
     "plugin:prettier/recommended"
   ],
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2022,
+    "sourceType": "module"
   },
   "env": {
     "node": true,
-     "es6": true
+    "es2021": true
   },
   "rules": {
     "linebreak-style": ["error", "unix"],

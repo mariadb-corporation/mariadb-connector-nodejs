@@ -22,32 +22,27 @@ describe('Pool', () => {
     });
   });
 
-  it('pool metaAsArray', function (done) {
+  it('pool metaAsArray', async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       metaAsArray: true,
       multipleStatements: true,
       connectionLimit: 1
     });
-    pool
-      .query(
+    try {
+      const res = await pool.query(
         'DROP TABLE IF EXISTS t; ' +
           'CREATE TABLE t (i int);\n' +
           'INSERT INTO t(i) VALUES (1);\n' +
           'SELECT i FROM t; '
-      )
-      .then((res) => {
-        assert.equal(2, res.length);
-        assert.equal(4, res[0].length);
-        assert.equal(4, res[1].length);
-        assert.equal('i', res[1][3][0].name());
-        pool.end();
-        done();
-      })
-      .catch((err) => {
-        pool.end();
-        done(err);
-      });
+      );
+      assert.equal(2, res.length);
+      assert.equal(4, res[0].length);
+      assert.equal(4, res[1].length);
+      assert.equal('i', res[1][3][0].name());
+    } finally {
+      await pool.end();
+    }
   });
 
   it('pool escape', function (done) {
@@ -55,7 +50,7 @@ describe('Pool', () => {
     const pool = base.createPool({ connectionLimit: 1 });
     const pool2 = base.createPool({ connectionLimit: 1, arrayParenthesis: true });
 
-    pool.on('connection', (conn) => {
+    pool.on('connection', async (conn) => {
       assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
       assert.equal(pool.escape(Buffer.from("let's rocks\n😊 🤘")), "_binary'let\\'s rocks\\n😊 🤘'");
       assert.equal(pool.escape(19925.1), '19925.1');
@@ -83,20 +78,20 @@ describe('Pool', () => {
       assert.equal(pool.escapeId('f:a'), '`f:a`');
       assert.equal(pool.escapeId('`f:a`'), '`f:a`');
       assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
-      pool.end();
-      pool2.end();
+      await pool.end();
+      await pool2.end();
       done();
     });
   });
 
-  it('pool escape on init', function () {
+  it('pool escape on init', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
     assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
     assert.equal(pool.escapeId('good_$one'), '`good_$one`');
     assert.equal(pool.escapeId('f:a'), '`f:a`');
     assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
 
-    pool.end();
+    await pool.end();
   });
 
   it('undefined query', async function () {
@@ -108,7 +103,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -123,7 +118,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -138,7 +133,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -158,7 +153,7 @@ describe('Pool', () => {
     await pool.end();
   });
 
-  it('pool with wrong authentication', function (done) {
+  it('pool with wrong authentication', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const pool = base.createPool({
@@ -166,13 +161,12 @@ describe('Pool', () => {
       initializationTimeout: 2000,
       user: 'wrongAuthentication'
     });
-    pool
-      .query('SELECT 1')
-      .then(() => {
+    setTimeout(async () => {
+      try {
+        await pool.query('SELECT 2');
         pool.end();
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
+        throw new Error('must have thrown error');
+      } catch (err) {
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -182,49 +176,44 @@ describe('Pool', () => {
             err.errno === 45044,
           err.message
         );
-        pool
-          .query('SELECT 3')
-          .then(() => {
-            pool.end();
-            done(new Error('must have thrown error'));
-          })
-          .catch((err) => {
-            pool.end();
-            assert.isTrue(
-              err.errno === 1524 ||
-                err.errno === 1045 ||
-                err.errno === 1698 ||
-                err.errno === 45028 ||
-                err.errno === 45025 ||
-                err.errno === 45044,
-              err.message
-            );
-            done();
-          });
-      });
-    pool
-      .query('SELECT 2')
-      .then(() => {
-        pool.end();
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
+      }
+    }, 0);
+    try {
+      await pool.query('SELECT 1');
+      await pool.end();
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(
+        err.errno === 1524 ||
+          err.errno === 1045 ||
+          err.errno === 1698 ||
+          err.errno === 45025 ||
+          err.errno === 45028 ||
+          err.errno === 45044,
+        err.message
+      );
+      try {
+        await pool.query('SELECT 3');
+        throw new Error('must have thrown error');
+      } catch (err) {
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
             err.errno === 1698 ||
-            err.errno === 45025 ||
             err.errno === 45028 ||
+            err.errno === 45025 ||
             err.errno === 45044,
           err.message
         );
-      });
+      } finally {
+        await pool.end();
+      }
+    }
   });
 
   it('pool with wrong authentication connection', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
-    let err;
     let pool;
     try {
       pool = base.createPool({
@@ -295,180 +284,121 @@ describe('Pool', () => {
     await pool.end();
   });
 
-  it('create pool with multipleStatement', function (done) {
+  it('create pool with multipleStatement', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
       connectionLimit: 5,
       multipleStatements: true
     });
-    pool
-      .query("select '1'; select '2'")
-      .then((results) => {
-        //select 1 results
-        assert.deepEqual(results, [[{ 1: '1' }], [{ 2: '2' }]]);
-        pool.end();
-        done();
-      })
-      .catch((err) => {
-        pool.end();
-        done(err);
-      });
+
+    const results = await pool.query("select '1'; select '2'");
+    assert.deepEqual(results, [[{ 1: '1' }], [{ 2: '2' }]]);
+    await pool.end();
   });
 
-  it('ensure commit', function (done) {
-    shareConn
-      .query('DROP TABLE IF EXISTS ensureCommit')
-      .then(() => {
-        return shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
-      })
-      .then(() => {
-        return shareConn.query("INSERT INTO ensureCommit values ('john')");
-      })
-      .then((res) => {
-        const pool = base.createPool({ connectionLimit: 1 });
-        pool.getConnection().then((conn) => {
-          conn
-            .beginTransaction()
-            .then(() => {
-              return conn.query("UPDATE ensureCommit SET firstName='Tom'");
-            })
-            .then(() => {
-              return conn.commit();
-            })
-            .then(() => {
-              conn.end();
-              return shareConn.query('SELECT * FROM ensureCommit');
-            })
-            .then((res) => {
-              assert.deepEqual(res, [{ firstName: 'Tom' }]);
-              return pool.end();
-            })
-            .then(() => {
-              done();
-            })
-            .catch((err) => {
-              conn.rollback();
-              done(err);
-            });
-        });
-      })
-      .catch(done);
-  });
+  it('ensure commit', async function () {
+    await shareConn.query('DROP TABLE IF EXISTS ensureCommit');
+    await shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
+    await shareConn.query("INSERT INTO ensureCommit values ('john')");
 
-  it('pool without control after use', function (done) {
-    shareConn
-      .query('DROP TABLE IF EXISTS ensureCommit')
-      .then(() => {
-        return shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
-      })
-      .then(() => {
-        return shareConn.query("INSERT INTO ensureCommit values ('john')");
-      })
-      .then((res) => {
-        const pool = base.createPool({
-          connectionLimit: 1,
-          noControlAfterUse: true
-        });
-        pool.getConnection().then((conn) => {
-          conn
-            .beginTransaction()
-            .then(() => {
-              return conn.query("UPDATE ensureCommit SET firstName='Tom'");
-            })
-            .then(() => {
-              return conn.commit();
-            })
-            .then(() => {
-              conn.end();
-              return shareConn.query('SELECT * FROM ensureCommit');
-            })
-            .then((res) => {
-              assert.deepEqual(res, [{ firstName: 'Tom' }]);
-              return pool.end();
-            })
-            .then(() => {
-              done();
-            })
-            .catch((err) => {
-              conn.rollback();
-              done(err);
-            });
-        });
-      })
-      .catch(done);
-  });
-
-  it('double end', function (done) {
     const pool = base.createPool({ connectionLimit: 1 });
-    pool.getConnection().then((conn) => {
-      conn.end();
-      pool.end().then(() => {
-        pool
-          .end()
-          .then(() => {
-            done(new Error('must have thrown an error !'));
-          })
-          .catch((err) => {
-            assert.isTrue(err.message.includes('pool is already closed'));
-            done();
-          });
-      });
-    });
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+    try {
+      await conn.query("UPDATE ensureCommit SET firstName='Tom'");
+      await conn.commit();
+      await conn.end();
+      const res = await shareConn.query('SELECT * FROM ensureCommit');
+      assert.deepEqual(res, [{ firstName: 'Tom' }]);
+    } finally {
+      conn.rollback();
+      await pool.end();
+    }
   });
 
-  it('pool ending during requests', function (done) {
+  it('pool without control after use', async function () {
+    await shareConn.query('DROP TABLE IF EXISTS ensureCommit');
+    await shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
+    await shareConn.query("INSERT INTO ensureCommit values ('john')");
+    const pool = base.createPool({
+      connectionLimit: 1,
+      noControlAfterUse: true
+    });
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+    try {
+      await conn.query("UPDATE ensureCommit SET firstName='Tom'");
+      await conn.commit();
+      await conn.end();
+      const res = await shareConn.query('SELECT * FROM ensureCommit');
+      assert.deepEqual(res, [{ firstName: 'Tom' }]);
+    } finally {
+      conn.rollback();
+      await pool.end();
+    }
+  });
+
+  it('double end', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    const conn = await pool.getConnection();
+    await conn.end();
+    await pool.end();
+    try {
+      await pool.end();
+      throw new Error('must have thrown an error !');
+    } catch (err) {
+      assert.isTrue(err.message.includes('pool is already closed'));
+    }
+  });
+
+  it('pool ending during requests', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
-    const initial = new Date();
     const pool = base.createPool({ connectionLimit: 1 });
-    pool.getConnection().then((conn) => {
-      conn.end().then(() => {
-        const reflect = (p) =>
-          p.then(
-            (v) => ({ v, status: 'resolved' }),
-            (e) => ({ e, status: 'rejected' })
-          );
+    const conn = await pool.getConnection();
+    await conn.end();
+    const reflect = (p) =>
+      p.then(
+        (v) => ({ v, status: 'resolved' }),
+        (e) => ({ e, status: 'rejected' })
+      );
 
-        const requests = [];
-        for (let i = 0; i < 10000; i++) {
-          requests.push(pool.query('SELECT ' + i));
+    const requests = [];
+    for (let i = 0; i < 10000; i++) {
+      requests.push(pool.query('SELECT ' + i));
+    }
+
+    setTimeout(pool.end.bind(pool), 200);
+
+    const handle = setTimeout(async () => {
+      const results = await Promise.all(requests.map(reflect));
+      let success = 0,
+        error = 0;
+      results.forEach((x) => {
+        if (x.status === 'resolved') {
+          success++;
+        } else {
+          error++;
         }
-
-        setTimeout(pool.end, 200);
-        const handle = setTimeout(() => {
-          Promise.all(requests.map(reflect)).then((results) => {
-            let success = 0,
-              error = 0;
-            results.forEach((x) => {
-              if (x.status === 'resolved') {
-                success++;
-              } else {
-                error++;
-              }
-            });
-            console.log('error: ' + error + ' success:' + success);
-          });
-        }, 9500);
-
-        Promise.all(requests.map(reflect)).then((results) => {
-          let success = 0,
-            error = 0;
-          results.forEach((x) => {
-            if (x.status === 'resolved') {
-              success++;
-            } else {
-              error++;
-            }
-          });
-          console.log('error:' + error + ' success:' + success);
-          assert.isTrue(error > 0, 'error: ' + error + ' success:' + success);
-          assert.isTrue(success > 0, 'error: ' + error + ' success:' + success);
-          clearTimeout(handle);
-          done();
-        });
       });
+      console.log('error: ' + error + ' success:' + success);
+    }, 9500);
+
+    const results = await Promise.all(requests.map(reflect));
+    let success = 0,
+      error = 0;
+    results.forEach((x) => {
+      if (x.status === 'resolved') {
+        success++;
+      } else {
+        error++;
+      }
     });
+    console.log('error:' + error + ' success:' + success);
+    assert.isTrue(error > 0, 'error: ' + error + ' success:' + success);
+    assert.isTrue(success > 0, 'error: ' + error + ' success:' + success);
+    clearTimeout(handle);
   });
 
   it('pool wrong query', async function () {
@@ -495,30 +425,32 @@ describe('Pool', () => {
     }
   });
 
-  it('pool getConnection after close', function (done) {
+  it('pool getConnection after close', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
-    pool.end().then(() => {
-      pool.getConnection().catch((err) => {
-        assert(err.message.includes('pool is closed'));
-        assert.equal(err.sqlState, 'HY000');
-        assert.equal(err.errno, 45027);
-        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
-        done();
-      });
-    });
+    await pool.end();
+    try {
+      await pool.getConnection();
+      throw new Error('must have throw error');
+    } catch (err) {
+      assert(err.message.includes('pool is closed'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45027);
+      assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
+    }
   });
 
-  it('pool query after close', function (done) {
+  it('pool query after close', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
-    pool.end().then(() => {
-      pool.query('select ?', 1).catch((err) => {
-        assert(err.message.includes('pool is closed'));
-        assert.equal(err.sqlState, 'HY000');
-        assert.equal(err.errno, 45027);
-        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
-        done();
-      });
-    });
+    await pool.end();
+    try {
+      await pool.query('select ?', 1);
+      throw new Error('must have throw error');
+    } catch (err) {
+      assert(err.message.includes('pool is closed'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45027);
+      assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
+    }
   });
 
   it('pool getConnection timeout', function (done) {
@@ -545,54 +477,44 @@ describe('Pool', () => {
     });
   });
 
-  it('pool leakDetectionTimeout timeout', function (done) {
+  it('pool leakDetectionTimeout timeout', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 1,
       acquireTimeout: 200,
       leakDetectionTimeout: 300
     });
-    pool
-      .getConnection()
-      .then((conn) => {
-        conn
-          .query('SELECT SLEEP(1)')
-          .then(() => {
-            //must have log 2 message to console.
-            conn.release();
-            pool.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+    const conn = await pool.getConnection();
+    await conn.query('SELECT SLEEP(1)');
+    await conn.release();
+    await pool.end();
   });
 
   it('pool getConnection timeout recovery', function (done) {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({
-      connectionLimit: 10,
+      connectionLimit: 2,
       acquireTimeout: 800,
       leakDetectionTimeout: 1250
     });
     let errorThrown = false;
     setTimeout(() => {
-      for (let i = 0; i < 10; i++) {
-        pool.query('SELECT SLEEP(1)').catch((err) => {
-          console.log('SLEEP ERROR');
-          done(err);
-        });
+      for (let i = 0; i < 2; i++) {
+        pool.query('SELECT SLEEP(1)').catch(done);
       }
 
-      for (let i = 0; i < 10; i++) {
-        pool.getConnection().catch((err) => {
-          assert(err.message.includes('retrieve connection from pool timeout'));
-          assert.equal(err.sqlState, 'HY000');
-          assert.equal(err.errno, 45028);
-          assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
-          errorThrown = true;
-        });
+      for (let i = 0; i < 2; i++) {
+        pool
+          .getConnection()
+          .then(() => done(new Error('must have thrown error')))
+          .catch((err) => {
+            assert(err.message.includes('retrieve connection from pool timeout'));
+            assert.equal(err.sqlState, 'HY000');
+            assert.equal(err.errno, 45028);
+            assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+            errorThrown = true;
+          });
       }
       for (let i = 0; i < 100; i++) {
         setTimeout(() => {
@@ -606,16 +528,12 @@ describe('Pool', () => {
             });
         }, 1100);
       }
-      setTimeout(() => {
-        pool
-          .getConnection()
-          .then((conn) => {
-            assert.isOk(errorThrown);
-            conn.release();
-            pool.end();
-            done();
-          })
-          .catch(done);
+      setTimeout(async () => {
+        const conn = await pool.getConnection();
+        assert.isOk(errorThrown);
+        await conn.release();
+        await pool.end();
+        done();
       }, 1200);
     }, 1000);
   });
@@ -625,14 +543,9 @@ describe('Pool', () => {
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 500 });
     const initTime = Date.now();
-    pool
-      .query('SELECT SLEEP(2)')
-      .then(() => {
-        pool.end();
-      })
-      .catch(() => {
-        pool.end();
-      });
+    pool.query('SELECT SLEEP(2)').finally(() => {
+      pool.end();
+    });
 
     pool
       .query('SELECT 1')
@@ -647,7 +560,6 @@ describe('Pool', () => {
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
         } catch (e) {
           console.log(e);
-          console.log(err);
         }
       });
     pool
@@ -670,26 +582,24 @@ describe('Pool', () => {
           console.log(err);
         }
       });
-    setTimeout(() => {
-      pool
-        .query('SELECT 3')
-        .then(() => {
-          done(new Error('must have thrown error 3 !'));
-        })
-        .catch((err) => {
-          try {
-            assert(err.message.includes('retrieve connection from pool timeout'));
-            assert.equal(err.sqlState, 'HY000');
-            assert.equal(err.errno, 45028);
-            assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
-            const elapse = Date.now() - initTime;
-            assert.isOk(elapse >= 670 && elapse < 800, 'elapse time was ' + elapse + ' but must be just after 700');
-            done();
-          } catch (e) {
-            console.log(e);
-            done(e);
-          }
-        });
+    setTimeout(async () => {
+      try {
+        await pool.query('SELECT 3');
+        done(new Error('must have thrown error 3 !'));
+      } catch (err) {
+        try {
+          assert(err.message.includes('retrieve connection from pool timeout'));
+          assert.equal(err.sqlState, 'HY000');
+          assert.equal(err.errno, 45028);
+          assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+          const elapse = Date.now() - initTime;
+          assert.isOk(elapse >= 670 && elapse < 800, 'elapse time was ' + elapse + ' but must be just after 700');
+          done();
+        } catch (e) {
+          console.log(e);
+          done(e);
+        }
+      }
     }, 200);
   });
 
@@ -724,20 +634,20 @@ describe('Pool', () => {
         assert.equal(pool.idleConnections(), 0);
         assert.equal(pool.taskQueueSize(), 9990);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           closed = true;
-          pool
-            .end()
-            .then(() => {
-              if (Conf.baseConfig.host === 'localhost') {
-                assert.equal(pool.activeConnections(), 0);
-                assert.equal(pool.totalConnections(), 0);
-                assert.equal(pool.idleConnections(), 0);
-                assert.equal(pool.taskQueueSize(), 0);
-              }
-              done();
-            })
-            .catch(done);
+          try {
+            await pool.end();
+            if (Conf.baseConfig.host === 'localhost') {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 0);
+              assert.equal(pool.idleConnections(), 0);
+              assert.equal(pool.taskQueueSize(), 0);
+            }
+            done();
+          } catch (e) {
+            done(e);
+          }
         }, 5000);
       });
     }, 8000);
@@ -749,41 +659,37 @@ describe('Pool', () => {
       connectionLimit: 2,
       minDelayValidation: 200
     });
-    setTimeout(() => {
+    setTimeout(async () => {
       //check available connections in pool
       assert.equal(pool.activeConnections(), 0);
       assert.equal(pool.totalConnections(), 2);
       assert.equal(pool.idleConnections(), 2);
       assert.equal(pool.taskQueueSize(), 0);
 
-      pool
-        .getConnection()
-        .then((conn) => {
+      const conn = await pool.getConnection();
+      assert.equal(pool.activeConnections(), 1);
+      assert.equal(pool.totalConnections(), 2);
+      assert.equal(pool.idleConnections(), 1);
+      assert.equal(pool.taskQueueSize(), 0);
+      try {
+        await conn.query('KILL CONNECTION_ID()');
+        done(new Error('must have thrown error'));
+      } catch (err) {
+        try {
+          assert.equal(err.sqlState, 70100);
           assert.equal(pool.activeConnections(), 1);
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
           assert.equal(pool.taskQueueSize(), 0);
-
-          conn.query('KILL CONNECTION_ID()').catch((err) => {
-            assert.equal(err.sqlState, 70100);
-            assert.equal(pool.activeConnections(), 1);
-            assert.equal(pool.totalConnections(), 2);
-            assert.equal(pool.idleConnections(), 1);
-            assert.equal(pool.taskQueueSize(), 0);
-            conn
-              .end()
-              .then(() => {
-                assert.equal(pool.activeConnections(), 0);
-                assert.equal(pool.taskQueueSize(), 0);
-                return pool.end();
-              })
-              .then(() => {
-                done();
-              })
-              .catch(done);
-          });
-        })
-        .catch(done);
+          await conn.end();
+          assert.equal(pool.activeConnections(), 0);
+          assert.equal(pool.taskQueueSize(), 0);
+          await pool.end();
+          done();
+        } catch (e) {
+          done(e);
+        }
+      }
     }, 500);
   });
 
@@ -1030,7 +936,7 @@ describe('Pool', () => {
         id: 3
       }
     ]);
-    pool.end();
+    await pool.end();
   });
 
   it("ensure pipe ending doesn't stall connection", function (done) {
@@ -1062,14 +968,13 @@ describe('Pool', () => {
         const queryStream = conn.queryStream("SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000");
         const someWriterStream = fs.createWriteStream(fileName);
 
-        stream.pipeline(queryStream, transformStream, someWriterStream, (err) => {
+        stream.pipeline(queryStream, transformStream, someWriterStream, async (err) => {
           if (err) queryStream.close();
           assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
-          conn.query('SELECT 1').then((res) => {
-            conn.end();
-            pool.end();
-            done();
-          });
+          await conn.query('SELECT 1');
+          await conn.end();
+          await pool.end();
+          done();
         });
 
         setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
@@ -1117,8 +1022,8 @@ describe('Pool', () => {
     }
     assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
     const res = await conn.query('SELECT 1');
-    conn.end();
-    pool.end();
+    await conn.end();
+    await pool.end();
   });
 
   it('test minimum idle decrease', function (done) {
@@ -1156,12 +1061,12 @@ describe('Pool', () => {
             assert.isTrue(pool.idleConnections() === 8 || pool.idleConnections() === 7);
           }, 2000);
 
-          setTimeout(() => {
+          setTimeout(async () => {
             //minimumIdle-1 is possible after reaching idleTimeout and connection
             // is still not recreated
             assert.isTrue(pool.totalConnections() === 8 || pool.totalConnections() === 7);
             assert.isTrue(pool.idleConnections() === 8 || pool.idleConnections() === 7);
-            pool.end();
+            await pool.end();
             done();
           }, 3000);
         })
@@ -1174,7 +1079,6 @@ describe('Pool', () => {
     const waitServerConnections = (max) => {
       if (max > 0) {
         setTimeout(() => {
-          console.log(pool.totalConnections());
           if (pool.totalConnections() < 8) {
             waitServerConnections(max - 1);
           } else test();
@@ -1209,22 +1113,23 @@ describe('Pool', () => {
 
   it('pool immediate error', function (done) {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    const pool = base.createPool({});
+    const pool = base.createPool({ connectionLimit: 1 });
     pool
       .getConnection()
       .then(() => {
         done(new Error('must have thrown an Exception'));
       })
       .catch((err) => {
-        assert(err.message.includes('Cannot create new connection to pool, pool closed'));
-        assert.equal(err.sqlState, '08S01');
-        assert.equal(err.errno, 45035);
-        done();
+        assert(err.message.includes('Cannot add request to pool, pool is closed'));
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.errno, 45027);
+        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
+        setTimeout(done, 200);
       });
     pool.end();
   });
 
-  it('pool server defect timeout', function (done) {
+  it('pool server defect timeout', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const proxy = new Proxy({
@@ -1237,40 +1142,35 @@ describe('Pool', () => {
       port: proxy.port(),
       acquireTimeout: 1000,
       minDelayValidation: 0,
-      connectionLimit: 1,
-      noControlAfterUse: true
+      connectionLimit: 1
     });
 
     // test use proxy that stop answer for 1.5s,
     // with pool.getConnection with 1s timeout.
     // (minDelayValidation is set to 0, to ensure ping is done each time for existing connection)
-    pool
-      .getConnection()
-      .then((conn) => {
-        proxy.suspendRemote();
-        setTimeout(() => {
-          proxy.resumeRemote();
-        }, 1500);
-        conn.release();
+    const conn = await pool.getConnection();
+    proxy.suspendRemote();
+    await conn.release();
+    try {
+      await pool.getConnection();
+      throw new Error('must have thrown error !' + (Date.now() - initTime));
+    } catch (err) {
+      assert(err.message.includes('retrieve connection from pool timeout after'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45028);
+      assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
 
-        pool
-          .getConnection()
-          .then(() => {
-            done(new Error('must have thrown error !' + (Date.now() - initTime)));
-          })
-          .catch((err) => {
-            assert.isTrue(Date.now() - initTime > 995, 'expected > 1000, but was ' + (Date.now() - initTime));
-            pool
-              .getConnection()
-              .then((conn2) => {
-                conn2.release();
-                pool.end();
-                proxy.close();
-                done();
-              })
-              .catch(done);
-          });
-      })
-      .catch(done);
+      assert.isTrue(Date.now() - initTime > 995, 'expected > 1000, but was ' + (Date.now() - initTime));
+      try {
+        proxy.resumeRemote();
+        const conn2 = await pool.getConnection();
+        await conn2.release();
+      } catch (e2) {
+        console.log(e2);
+      } finally {
+        await pool.end();
+        proxy.close();
+      }
+    }
   });
 });

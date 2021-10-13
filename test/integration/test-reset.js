@@ -98,7 +98,6 @@ describe('reset connection', () => {
               return conn.reset();
             })
             .then(() => {
-              conn.end();
               if (
                 (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 4)) ||
                 (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 3))
@@ -107,6 +106,7 @@ describe('reset connection', () => {
                 conn.end();
                 done();
               } else {
+                conn.end();
                 done(new Error('must have thrown an error'));
               }
             })
