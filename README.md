@@ -145,7 +145,7 @@ To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/
 
 
 [travis-image]:https://travis-ci.com/mariadb-corporation/mariadb-connector-nodejs.svg?branch=master
-[travis-url]:https://travis-ci.com/mariadb-corporation/mariadb-connector-nodejs
+[travis-url]:https://app.travis-ci.com/github/mariadb-corporation/mariadb-connector-nodejs
 [npm-image]:https://img.shields.io/npm/v/mariadb.svg
 [npm-url]:http://npmjs.org/package/mariadb
 [licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square

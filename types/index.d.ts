@@ -377,6 +377,15 @@ export interface PoolConfig extends ConnectionConfig {
    * Default: false
    */
   noControlAfterUse?: boolean;
+
+  /**
+   * Permit to indicate a timeout to log connection borrowed from pool.
+   * When a connection is borrowed from pool and this timeout is reached,
+   * a message will be logged to console indicating a possible connection leak.
+   * Another message will tell if the possible logged leak has been released.
+   * A value of 0 (default) meaning Leak detection is disable
+   */
+  leakDetectionTimeout?: number;
 }
 
 export interface PoolClusterConfig {
