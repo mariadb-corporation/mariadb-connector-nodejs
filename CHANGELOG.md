@@ -1,7 +1,7 @@
 # Change Log
 
-## [3.0.1-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1-rc) (???)
-[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-beta...3.0.1-rc)
+## [3.0.0-rc](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-rc) (19 Oct 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-beta...3.0.0-rc)
 
 Notable change:
 * [CONJS-168] stream backpressure not handled well
@@ -9,7 +9,10 @@ Notable change:
 * [CONJS-168] correct stream backpressure
 * [CONJS-176] Change Pool cluster default option removeNodeErrorCount value to Infinity
 * [CONJS-175] Missing leakDetectionTimeout option in Typescript description
-
+* [CONJS-178] Update code to recent Ecma version
+* [CONJS-179] better pool option `resetAfterUse` default value
+* [CONJS-180] compatibility: support mysql2 `stream` option
+* 
 * Corrections:
 * [CONJS-125] permit using batch with returning clause
 * [CONJS-170] Pool.query(undefined) never release connection

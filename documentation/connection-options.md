@@ -392,6 +392,44 @@ mariadb.createConnection({
 | **restrictedAuth** | if set, restrict authentication plugin to secure list. Default provided plugins are mysql_native_password, mysql_clear_password, client_ed25519, dialog, sha256_password and caching_sha2_password |*Array|String* | |
 | **supportBigNumbers** | (deprecated) DECIMAL/BIGINT data type will be returned as number if in safe integer range, as string if not.|*boolean* | false |
 | **bigNumberStrings** | (deprecated) if set with `supportBigNumbers` DECIMAL/BIGINT data type will be returned as string |*boolean* | false |
+| **stream** | permits to set a function with parameter to set stream (since 3.0)|*function*| |
+
+### SSH tunnel
+
+In some cases, server is only available through an SSH tunnel.
+(This is of course not a recommended solution for production)
+
+
+The option `stream` permit defined a tunnel. stream function has callback (optional parameters : error, stream).
+
+Example using `tunnel-ssh`:
+
+```
+const conn = await mariadb.createConnection({
+        user: 'myUser',
+        password: 'mYpwd',
+        port: 27000,
+        stream: (cb) => {
+          const tunnel = require('tunnel-ssh');
+          tunnel(
+            {
+              // remote connection ssh info
+              username: 'root',
+              host: '157.230.123.7',
+              port: 22,
+              privateKey: fs.readFileSync('./pop_key.ppk'),
+              // database (here on ssh server)
+              dstHost: '127.0.0.1',
+              dstPort: 3306,
+              // local interface
+              localHost: '127.0.0.1',
+              localPort: 27000
+            },
+            cb
+          );
+        }
+      });
+```
 
 
 ## F.A.Q.

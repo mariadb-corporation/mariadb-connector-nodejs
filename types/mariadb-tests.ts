@@ -14,6 +14,10 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
       network: (msg) => console.log(msg),
       query: (msg) => console.log(msg),
       error: (err) => console.log(err)
+    },
+    stream: (callback) => {
+      console.log('test');
+      callback(null, null);
     }
   });
 }

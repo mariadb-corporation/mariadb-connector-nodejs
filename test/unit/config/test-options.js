@@ -61,6 +61,7 @@ describe('test options', () => {
       insertIdAsNumber: false,
       skipSetTimezone: false,
       typeCast: undefined,
+      stream: undefined,
       bigIntAsNumber: false,
       bulk: true,
       permitLocalInfile: false,

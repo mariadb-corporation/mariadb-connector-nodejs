@@ -25,6 +25,8 @@ export interface LoggerConfig {
   error?: (err: Error) => void;
 }
 
+export function StreamCallback(err?: Error, stream?: stream.Duplex): void;
+
 export interface QueryConfig {
   /**
    * Presents result-sets by table to avoid results with colliding fields.
@@ -344,6 +346,14 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * default to 256.
    */
   prepareCacheLength?: number;
+
+  /**
+   * Permit to set stream.
+   *
+   * @param err error is any error occurs during stream creation
+   * @param stream if wanting to set a special stream (Standard socket will be created if not set)
+   */
+  stream?: (callback?: typeof StreamCallback) => void;
 }
 
 export interface PoolConfig extends ConnectionConfig {

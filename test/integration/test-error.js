@@ -47,6 +47,18 @@ describe('Error', () => {
       .catch(done);
   });
 
+  it('stream type error', async function () {
+    try {
+      await base.createConnection({ stream: 'wrong' });
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('stream option is not a function'));
+      assert.equal(err.errno, 45043);
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.code, 'ER_BAD_PARAMETER_VALUE');
+    }
+  });
+
   it('query callback error with trace', function (done) {
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err1) => {

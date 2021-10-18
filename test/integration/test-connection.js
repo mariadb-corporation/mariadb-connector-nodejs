@@ -6,6 +6,7 @@ const Collations = require('../../lib/const/collations.js');
 const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
+const Net = require('net');
 
 describe('connection', () => {
   it('with no connection attributes', function (done) {
@@ -432,6 +433,29 @@ describe('connection', () => {
       assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
       done();
     });
+  });
+
+  it('stream basic test', async function () {
+    const conn = await base.createConnection({
+      stream: (cb) => {
+        cb(null, new Net.connect(Conf.baseConfig.port, Conf.baseConfig.host));
+      }
+    });
+    conn.end();
+
+    const conn2 = await base.createConnection({
+      stream: () => {
+        return new Net.connect(Conf.baseConfig.port, Conf.baseConfig.host);
+      }
+    });
+    conn2.end();
+
+    const conn3 = await base.createConnection({
+      stream: (cb) => {
+        cb();
+      }
+    });
+    conn3.end();
   });
 
   it('connection error', function (done) {
