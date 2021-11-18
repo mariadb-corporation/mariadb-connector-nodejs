@@ -41,15 +41,16 @@ jobs:
     - env: srv=mariadb v=10.3 local=1
     - env: srv=mariadb v=10.4 local=1
     - env: srv=mariadb v=10.5 local=1
-    - env: srv=mariadb v=10.5 local=1
+    - env: srv=mariadb v=10.7 local=1
+    - env: srv=mariadb v=10.6 local=1
       node_js: 14
-    - env: srv=mariadb v=10.5 local=1
+    - env: srv=mariadb v=10.6 local=1
       node_js: 12
     - env: srv=mariadb v=10.6 BENCH=1 local=1
     - if: type = push AND fork = false
       env: srv=maxscale
     - if: type = push AND fork = false
-      env: srv=mariadb-es v=10.5
+      env: srv=mariadb-es v=10.6
     - if: type = push AND fork = false
       env: srv=skysql RUN_LONG_TEST=0
     - if: type = push AND fork = false
