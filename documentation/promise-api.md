@@ -15,25 +15,28 @@ Install the mariadb Connector using npm
 $ npm install mariadb
 ```
 
-You can then uses the Connector in your application code with the Promise API.  For instance,
+You can then use the Connector in your application code with the Promise API.  For instance,
 
 ```js
-  const mariadb = require('mariadb');
+const mariadb = require('mariadb');
 
-  mariadb.createConnection({host: 'mydb.com', user: 'myUser', password: 'myPwd'})
-    .then(conn => {
-      conn.query("select 1", [2])
-        .then(rows => {
-          console.log(rows); // [{ "1": 1 }]
-          conn.end();
-        })
-        .catch(err => { 
-          //handle query error
-        });
-    })
-    .catch(err => {
-      //handle connection error
-    });
+async function asyncFunction() {
+ const conn = await mariadb.createConnection({
+  host: 'mydb.com',
+  user: 'myUser',
+  password: 'myPwd'
+ });
+
+ try {
+  const res = await conn.query('select 1', [2]);
+  console.log(res); // [{ "1": 1 }]
+  return res;
+ } finally {
+  conn.end();
+ }
+}
+
+asyncFunction();
 ```
 
 # Installation
@@ -100,12 +103,11 @@ const conn = mariadb.createConnection({
 Connection details such as URL, username, and password are better hidden into environment variables.
 using code like : 
 ```js
-  const mariadb = require('mariadb');
-
-  mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD})
-    .then(conn => {
-       ...
-     });
+const conn = await mariadb.createConnection({
+ host: process.env.DB_HOST,
+ user: process.env.DB_USER,
+ password: process.env.DB_PWD
+});
 ```
 Then for example, run node.js setting those environment variable :
 ```
@@ -120,12 +122,13 @@ $ npm install dotenv
 then configure dotenv to load all .env files
  
 ```js
-  const mariadb = require('mariadb');
-  require('dotenv').config()
-  mariadb.createConnection({host: process.env.DB_HOST, user: process.env.DB_USER, password: process.env.DB_PWD})
-    .then(conn => {
-       ...
-     });
+require('dotenv').config();
+
+const conn = await mariadb.createConnection({
+ host: process.env.DB_HOST,
+ user: process.env.DB_USER,
+ password: process.env.DB_PWD
+});
 ```
 
 with a .env file containing
@@ -231,18 +234,16 @@ Creates a new [Connection](#connection-api) object.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-mariadb.createConnection({
-      host: 'mydb.com', 
-      user:'myUser',
-      password: 'myPwd'
-    })
-    .then(conn => {
-      console.log("connected ! connection id is " + conn.threadId);
-    })
-    .catch(err => {
-      console.log("not connected due to error: " + err);
-    });
+try {
+  const conn = await mariadb.createConnection({
+    host: 'mydb.com',
+    user: 'myUser',
+    password: 'myPwd'
+  });
+  console.log("connected ! connection id is " + conn.threadId);
+} catch (err) {
+  console.log("not connected due to error: " + err);
+}
 ```
 
 ### Connection options
@@ -284,19 +285,19 @@ It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on W
 For instance, on Unix a connection might look like this:
 
 ```javascript
-const mariadb = require('mariadb');
-mariadb.createConnection({ socketPath: '/tmp/mysql.sock', user: 'root' })
-    .then(conn => { ... })
-    .catch(err => { ... });
+const conn = await mariadb.createConnection({ 
+ socketPath: '/tmp/mysql.sock', 
+ user: 'root' 
+});
 ```
 
 It has a similar syntax on Windows: 
 
 ```javascript
-const mariadb = require('mariadb');
-mariadb.createConnection({ socketPath: '\\\\.\\pipe\\MySQL', user: 'root' })
-    .then(conn => { ... })
-    .catch(err => { ... });
+const conn = await mariadb.createConnection({ 
+ socketPath: '\\\\.\\pipe\\MySQL', 
+ user: 'root' 
+});
 ```
 
 ## `createPool(options) → Pool`
@@ -310,16 +311,19 @@ Creates a new pool.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-const pool = mariadb.createPool({ host: 'mydb.com', user: 'myUser', connectionLimit: 5 });
-pool.getConnection()
-    .then(conn => {
-      console.log("connected ! connection id is " + conn.threadId);
-      conn.release(); //release to pool
-    })
-    .catch(err => {
-      console.log("not connected due to error: " + err);
-    });
+const pool = mariadb.createPool({ 
+  host: 'mydb.com', 
+  user: 'myUser', 
+  connectionLimit: 5 
+});
+
+try {
+  const conn = await pool.getConnection();
+  console.log("connected ! connection id is " + conn.threadId);
+} catch (err) {
+  console.log("not connected due to error: " + err);
+}
+
 ```
 
 ### Pool options
@@ -351,25 +355,19 @@ Creates a new pool cluster. Cluster handle multiple pools, giving high availabil
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-
 const cluster = mariadb.createPoolCluster();
 cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
 cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
 cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 
 //getting a connection from slave1 or slave2 using round-robin
-cluster.getConnection(/^slave*$, "RR")
-  .then(conn => {
-    return conn.query("SELECT 1")
-       .then(row => {
-           conn.end();
-           return row[0]["@node"];
-       })
-       .finally(() => {
-           conn.end();
-       });
-  });
+const conn = await cluster.getConnection(/slave*/, "RR");
+try {
+  const rows = await conn.query("SELECT 1");
+  return rows[0]["1"];
+} finally {
+  conn.end();
+}
 ```
 
  
@@ -432,25 +430,18 @@ Sends a query to database and return result as a Promise.
 For instance, when using an SQL string:
 
 ```js
-connection
-  .query("SELECT NOW()")
-  .then(rows => {
-	console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
-  })
-  .catch(err => {
-	//handle error
-  });
+const rows = await connection.query("SELECT NOW()");
+console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
 ```
 
 Alternatively, you could use the JSON object:
 
 ```js
-connection
-   .query({dateStrings:true, sql:'SELECT NOW()'})
-   .then(rows => {
-	  console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
-	})
-	.catch(...)
+const rows = await connection.query({
+  dateStrings:true, 
+  sql:'SELECT NOW()'
+});
+console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
 ```
 
 ### Placeholder
@@ -465,14 +456,12 @@ When streaming, objects that implement Readable are streamed automatically.  But
 For instance,
 
 ```js
-connection
-  .query(
-	 "INSERT INTO someTable VALUES (?, ?, ?)", 
-	 [1,Buffer.from("c327a97374", "hex"),"mariadb"]
-  )
-  .then(...)
-  .catch(...);
-  //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
+const res = await connection.query("INSERT INTO someTable VALUES (?, ?, ?)", [
+  1,
+  Buffer.from("c327a97374", "hex"),
+  "mariadb",
+]);
+//will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
 ```
 
 
@@ -483,11 +472,7 @@ const https = require("https");
 //3Mb page
 https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
   readableStream => {
-    connection.query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream]);
-      .then(res => {
-        //inserted
-      })
-      .catch(console.log);
+     connection.query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream]);        
   }
 )
 ```
@@ -501,16 +486,13 @@ Queries return two different kinds of results, depending on the type of query yo
 * `warningStatus`: An integer indicating whether the query ended with a warning.
 
 ```js
-connection.query('CREATE TABLE animals (' +
+await connection.query('CREATE TABLE animals (' +
                        'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
                        'name VARCHAR(30) NOT NULL,' +
                        'PRIMARY KEY (id))');
-connection.query('INSERT INTO animals(name) value (?)', ['sea lions'])
-    .then(res => {
-      console.log(res); 
-      //log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
-    })
-    .catch(...);
+const res = await connection.query('INSERT INTO animals(name) value (?)', ['sea lions']);
+console.log(res);
+//log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
 ```
 
 ### Array Result-sets 
@@ -520,15 +502,13 @@ When the query executes a `SELECT` statement, the method returns the result-set 
 The rows default to JSON objects, but two other formats are also possible with the `nestTables` and `rowsAsArray` options.
 
 ```javascript
-connection.query('select * from animals')
-    .then(res => {
-      console.log(res); 
-      // [ 
-      //    { id: 1, name: 'sea lions' }, 
-      //    { id: 2, name: 'bird' }, 
-      //    meta: [ ... ]
-      // ]
-    });
+const res = await connection.query('select * from animals');
+console.log(res); 
+// [ 
+//    { id: 1, name: 'sea lions' }, 
+//    { id: 2, name: 'bird' }, 
+//    meta: [ ... ]
+// ]
 ```
 
 ### Query options
@@ -593,13 +573,13 @@ connection
 While the recommended method is to use the question mark [placeholder](#placeholder), you can alternatively allow named placeholders by setting this query option.  Values given in the query must contain keys corresponding  to the placeholder names. 
 
 ```javascript
-connection
-  .query(
-	{ namedPlaceholders: true, sql: "INSERT INTO someTable VALUES (:id, :img, :db)" },
-	{ id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
-  )
-  .then(...)
-  .catch(...);
+await connection.query(
+  {
+    namedPlaceholders: true,
+    sql: "INSERT INTO someTable VALUES (:id, :img, :db)",
+  },
+  { id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
+);
 ```
 
 #### `rowsAsArray`
@@ -612,15 +592,13 @@ Default format : `{ id: 1, name: 'sea lions' }`
 with option `rowsAsArray` : `[ 1, 'sea lions' ]`
 
 ```javascript
-connection.query({ rowsAsArray: true, sql: 'select * from animals' })
-    .then(res => {
-      console.log(res); 
-      // [ 
-      //    [ 1, 'sea lions' ], 
-      //    [ 2, 'bird' ],
-      //    meta: [...]
-      // ]
-    });
+const res = await connection.query({ rowsAsArray: true, sql: 'select * from animals' });
+console.log(res); 
+// [ 
+//    [ 1, 'sea lions' ], 
+//    [ 2, 'bird' ],
+//    meta: [...]
+// ]
 ```
 
 #### `nestTables`
@@ -632,37 +610,37 @@ Occasionally, you may have issue with queries that return columns with the **sam
 For instance, when using a boolean value:
 
 ```javascript
-connection.query({nestTables:true, 
-                sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'})
-    .then(res => {
-      console.log(res); 
-      //[ 
-      //  { 
-      //     a: { name: 'sea lions', id: 1 }, 
-      //     b: { name: 'sea lions' } 
-      //  },
-      //  { 
-      //     a: { name: 'bird', id: 2 }, 
-      //     b: { name: 'sea lions' } 
-      //  },
-      //  meta: [...]
-      //]
-    });
+const res = await connection.query({
+  nestTables:true, 
+  sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
+});
+console.log(res); 
+//[ 
+//  { 
+//     a: { name: 'sea lions', id: 1 }, 
+//     b: { name: 'sea lions' } 
+//  },
+//  { 
+//     a: { name: 'bird', id: 2 }, 
+//     b: { name: 'sea lions' } 
+//  },
+//  meta: [...]
+//]
 ```
 
 Alternatively, using a string value:
 
 ```javascript
-connection.query({nestTables: '_', 
-                sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'})
-    .then(res => {
-      console.log(res); 
-      //[ 
-      //  { a_name: 'sea lions', a_id: 1, b_name: 'sea lions' }, 
-      //  { a_name: 'bird', a_id: 2, b_name: 'sea lions' },
-      //  meta: [...]
-      //]
-    });
+const res = await connection.query({
+  nestTables: '_', 
+  sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
+});
+console.log(res); 
+//[ 
+//  { a_name: 'sea lions', a_id: 1, b_name: 'sea lions' }, 
+//  { a_name: 'bird', a_id: 2, b_name: 'sea lions' },
+//  meta: [...]
+//]
 ```
 
 #### `dateStrings`
@@ -743,45 +721,42 @@ Shows the column type as an integer value.  For more information on the relevant
 * `orgName()`: Real column name.
 
 ```js
-connection
-  .query("SELECT 1, 'a'")
-  .then(rows => {
-	console.log(rows);
-	// [ 
-	//   { '1': 1, a: 'a' },
-	//   meta: [ 
-	//     { 
-	//       collation: [Object],
-	//       columnLength: 1,
-	//       columnType: 8,
-	//       scale: 0,
-	//       type: 'LONGLONG',
-	//       flags: 129,
-	//       db: [Function],
-	//       schema: [Function],
-	//       table: [Function],
-	//       orgTable: [Function],
-	//       name: [Function],
-	//       orgName: [Function] 
-	//     },
-	//     { 
-	//       collation: [Object],
-	//       columnLength: 4,
-	//       columnType: 253,
-	//       scale: 39,
-	//       type: 'VAR_STRING',
-	//       flags: 1,
-	//       db: [Function],
-	//       schema: [Function],
-	//       table: [Function],
-	//       orgTable: [Function],
-	//       name: [Function],
-	//       orgName: [Function] 
-	//     } 
-	//   ] 
-	// ]
-	assert.equal(rows.length, 1);
-  })
+const rows = await connection.query("SELECT 1, 'a'");
+console.log(rows);
+// [ 
+//   { '1': 1, a: 'a' },
+//   meta: [ 
+//     { 
+//       collation: [Object],
+//       columnLength: 1,
+//       columnType: 8,
+//       scale: 0,
+//       type: 'LONGLONG',
+//       flags: 129,
+//       db: [Function],
+//       schema: [Function],
+//       table: [Function],
+//       orgTable: [Function],
+//       name: [Function],
+//       orgName: [Function] 
+//     },
+//     { 
+//       collation: [Object],
+//       columnLength: 4,
+//       columnType: 253,
+//       scale: 39,
+//       type: 'VAR_STRING',
+//       flags: 1,
+//       db: [Function],
+//       schema: [Function],
+//       table: [Function],
+//       orgTable: [Function],
+//       name: [Function],
+//       orgName: [Function] 
+//     } 
+//   ] 
+// ]
+assert.equal(rows.length, 1);
 ```
 
 
@@ -909,17 +884,16 @@ Commits the current transaction, if there is one active.  The Connector tracks t
 Rolls back the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `rollback()` method when there's no active transaction, it ignores the method and sends no commands to MariaDB. 
 
 ```javascript
-conn.beginTransaction()
-  .then(() => {
-    conn.query("INSERT INTO testTransaction values ('test')");
-    return conn.query("INSERT INTO testTransaction values ('test2')");
-  })
-  .then(() => {
-    conn.commit();
-  })
-  .catch((err) => {
-    conn.rollback();
-  })
+try {
+    
+  await conn.beginTransaction();
+  await conn.query("INSERT INTO testTransaction values ('test')");
+  await conn.query("INSERT INTO testTransaction values ('test2')");
+  await conn.commit();
+  
+} catch(err) {
+  await conn.rollback();
+}
 ```
  
 ## `connection.changeUser(options) → Promise`
@@ -1077,9 +1051,7 @@ const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn
 // cmd value will be:
 // "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
 // using template literals:
-con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar])
-  .then(res => { ... })
-  .catch(err=> { ... }); 
+const res = await con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar]);
 ```
 
 
@@ -1137,9 +1109,14 @@ For more information on error numbers and SQL state signification, see the [Mari
 Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html).  Emits an error event when the connection closes unexpectedly.
 
 ```javascript
-const mariadb = require('mariadb');
-mariadb.createConnection({user: 'root', password: 'myPwd', host: 'localhost', socketTimeout: 100})
-.then(conn => {
+
+const conn = await mariadb.createConnection({
+  user: 'root', 
+  password: 'myPwd', 
+  host: 'localhost', 
+  socketTimeout: 100
+});
+
 conn.on('error', err => {
   //will be executed after 100ms due to inactivity, socket has closed. 
   console.log(err);
@@ -1156,8 +1133,6 @@ conn.on('error', err => {
   //  sqlState: '08S01',
   //  code: 'ER_SOCKET_TIMEOUT' }
 });
-})
-.catch(done);
 ```
 
 
@@ -1241,26 +1216,21 @@ const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.query(
   "CREATE TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
 );
-pool
-  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
-    [[1, "john"], [2, "jack"]])
-  .then(res => {
-    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+let res = await pool.batch(
+    "INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]]
+);
+//res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
 
-    assert.equal(res.affectedRows, 2);
-    pool
-      .query("select * from `parse`")
-      .then(res => {
-        /*
-        res = [ 
-            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
-            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
-            meta: ...
-          }
-        */ 
-      })
-      .catch(done);
-  });
+assert.equal(res.affectedRows, 2);
+res = await pool.query("select * from `parse`");
+/*
+res = [ 
+    { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+    { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+    meta: ...
+  }
+*/ 
 ```
 
 ## `pool.end() → Promise`
@@ -1276,7 +1246,7 @@ pool.end()
   .then(() => {
     //connections have been ended properly
   })
-  .catch(err => {});
+  .catch(err => console.log);
 ```
 
 ## `pool.escape(value) → String`
@@ -1342,7 +1312,7 @@ poolCluster.end()
   .then(() => {
     //pools have been ended properly
   })
-  .catch(err => {});
+  .catch(err => console.log);
 ```
 
 
@@ -1414,10 +1384,10 @@ cluster.add("slave1-south", { host: 'mydb5.com', user: 'myUser', connectionLimit
 
 const masterCluster = cluster.of('master*');
 const northSlaves = cluster.of(/^slave?-north/, 'RANDOM');
-northSlaves.getConnection()
-  .then(conn => {
-    //use that connection
-  })
+
+const conn = await northSlaves.getConnection();
+// use that connection
+
 ```
 
 ### `filtered pool cluster`
