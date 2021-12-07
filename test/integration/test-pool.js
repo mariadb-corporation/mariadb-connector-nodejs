@@ -148,7 +148,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -163,7 +163,7 @@ describe('Pool', () => {
       assert(err.message.includes('sql parameter is mandatory'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45049);
-      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+      assert.equal(err.code, 'ER_UNDEFINED_SQL');
     } finally {
       await pool.end();
     }
@@ -242,12 +242,7 @@ describe('Pool', () => {
   });
 
   it('pool with wrong authentication connection', async function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     let err;
     let pool;
@@ -289,12 +284,7 @@ describe('Pool', () => {
   });
 
   it('create pool', async function () {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
     const initTime = Date.now();

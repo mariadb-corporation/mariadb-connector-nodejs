@@ -744,7 +744,7 @@ export interface PoolCluster {
   remove(pattern: string): void;
   getConnection(pattern?: string, selector?: string): Promise<PoolConnection>;
 
-  on(ev: 'remove', callback: (nodekey: string) => void): PoolCluster
+  on(ev: 'remove', callback: (nodekey: string) => void): PoolCluster;
 }
 
 export interface UpsertResult {
