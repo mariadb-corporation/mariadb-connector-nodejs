@@ -743,6 +743,8 @@ export interface PoolCluster {
   of(pattern: undefined | null | false, selector: string): FilteredPoolCluster;
   remove(pattern: string): void;
   getConnection(pattern?: string, selector?: string): Promise<PoolConnection>;
+
+  on(ev: 'remove', callback: (nodekey: string) => void): PoolCluster
 }
 
 export interface UpsertResult {

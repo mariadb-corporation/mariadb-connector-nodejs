@@ -139,6 +139,36 @@ describe('Pool', () => {
     }
   });
 
+  it('undefined query', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    try {
+      await pool.query(undefined);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert(err.message.includes('sql parameter is mandatory'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45049);
+      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('undefined batch', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    try {
+      await pool.batch(undefined);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert(err.message.includes('sql parameter is mandatory'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45049);
+      assert.equal(err.code, 'ER_POOL_UNDEFINED_SQL');
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('query with null placeholder', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
     let rows = await pool.query('select ? as a', [null]);
@@ -212,8 +242,14 @@ describe('Pool', () => {
   });
 
   it('pool with wrong authentication connection', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
+      this.skip();
     this.timeout(10000);
+    let err;
     let pool;
     try {
       pool = base.createPool({
@@ -252,29 +288,26 @@ describe('Pool', () => {
     }
   });
 
-  it('create pool', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+  it('create pool', async function () {
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    )
+      this.skip();
     this.timeout(5000);
     const pool = base.createPool({ connectionLimit: 1 });
     const initTime = Date.now();
-    pool.getConnection().then((conn) => {
-      conn.query('SELECT SLEEP(1)').then(() => {
-        conn.release();
-      });
-    });
-    pool.getConnection().then((conn) => {
-      conn
-        .query('SELECT SLEEP(1)')
-        .then(() => {
-          const time = Date.now() - initTime;
-          assert(time >= 1980, 'expected > 2s, but was ' + time);
-          conn.release();
-          return pool.end();
-        })
-        .then(() => {
-          done();
-        });
-    });
+    let conn = await pool.getConnection();
+    await conn.query('SELECT SLEEP(1)');
+    conn.release();
+
+    await pool.getConnection();
+    await conn.query('SELECT SLEEP(1)');
+    const time = Date.now() - initTime;
+    assert(time >= 1980, 'expected > 2s, but was ' + time);
+    conn.release();
+    await pool.end();
   });
 
   it('pool execute', async function () {

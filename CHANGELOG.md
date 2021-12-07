@@ -46,7 +46,14 @@ This methods are compatible with mysql2 with some differences:
 * permit streaming parameters
 * execute use by default a prepared cache that hasn't infinite length.
 * implement mariadb 10.6 skipping metadata when possible for better performance
-* Doesn't have a unprepare methods. 
+* Doesn't have a unprepare methods.
+
+## [2.5.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.5) (19 Oct 2021)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...2.5.5)
+
+* [CONJS-170] Pool.query(undefined) never release connection
+* [CONJS-173] not permitting providing null as a value without an array
+* [CONJS-175] Missing leakDetectionTimeout option in Typescript description
 
 ## [2.5.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.4) (08 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.3...2.5.4)

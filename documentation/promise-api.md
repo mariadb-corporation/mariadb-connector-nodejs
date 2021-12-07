@@ -15,23 +15,28 @@ Install the mariadb Connector using npm
 $ npm install mariadb
 ```
 
-You can then uses the Connector in your application code with the Promise API.  For instance,
+You can then use the Connector in your application code with the Promise API.  For instance,
 
 ```js
 const mariadb = require('mariadb');
 
-async function main() {
-    let conn;
-    try {
-        conn = await mariadb.createConnection({ host: 'mydb.com', user: 'myUser', password: 'myPwd' });
-        const rows = await conn.query('select 1', [2]);
-        console.log(rows); // [{ "1": 1 }]
-    } catch (e) {
-        // handle errors
-    } finally {
-        if (conn) conn.end();
-    }
+async function asyncFunction() {
+ const conn = await mariadb.createConnection({
+  host: 'mydb.com',
+  user: 'myUser',
+  password: 'myPwd'
+ });
+
+ try {
+  const res = await conn.query('select 1', [2]);
+  console.log(res); // [{ "1": 1 }]
+  return res;
+ } finally {
+  conn.end();
+ }
 }
+
+asyncFunction();
 ```
 
 # Installation
@@ -151,13 +156,13 @@ $ npm install dotenv
 then configure dotenv to load all .env files
  
 ```js
-  const mariadb = require('mariadb');
-  require('dotenv').config()
-  const conn = await mariadb.createConnection({
-      host: process.env.DB_HOST, 
-      user: process.env.DB_USER, 
-      password: process.env.DB_PWD
-  });
+require('dotenv').config();
+
+const conn = await mariadb.createConnection({
+ host: process.env.DB_HOST,
+ user: process.env.DB_USER,
+ password: process.env.DB_PWD
+});
 ```
 
 with a .env file containing
@@ -167,6 +172,15 @@ DB_USER=test
 DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
+
+
+### Default options consideration
+
+For new project, enabling option `supportBigInt` is recommended (It will be in a future 3.x version).
+
+This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
+BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
+
 
 # Promise API
 
@@ -241,16 +255,15 @@ Creates a new [Connection](#connection-api) object.
 **Example:**
 
 ```javascript
-let conn;
 try {
-    conn = await mariadb.createConnection({
-        host: 'mydb.com',
-        user: 'myUser',
-        password: 'myPwd'
-    });
-    console.log('connected ! connection id is ' + conn.threadId);
+  const conn = await mariadb.createConnection({
+    host: 'mydb.com',
+    user: 'myUser',
+    password: 'myPwd'
+  });
+  console.log("connected ! connection id is " + conn.threadId);
 } catch (err) {
-    console.log('not connected due to error: ' + err);
+  console.log("not connected due to error: " + err);
 }
 ```
 
@@ -294,8 +307,7 @@ It defaults to `/tmp/mysql.sock` on Unix-like operating systems and `MySQL` on W
 For instance, on Unix a connection might look like this:
 
 ```javascript
-
-const conn = await mariadb.createConnection({
+const conn = await mariadb.createConnection({ 
     socketPath: '/tmp/mysql.sock', 
     user: 'root' 
 });
@@ -366,24 +378,18 @@ Creates a new pool cluster. Cluster handle multiple pools, giving high availabil
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-
 const cluster = mariadb.createPoolCluster();
 cluster.add('master', { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
 cluster.add('slave1', { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
 cluster.add('slave2', { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 
 //getting a connection from slave1 or slave2 using round-robin
-async function get() {
-    let conn;
-    try {
-        conn = await cluster.getConnection(/^slave*$, "RR");
-        const row = await conn.query('SELECT 1');
-        conn.end();
-        return row[0]['@node'];
-    } finally {
-        if (conn) conn.end();
-    }
+const conn = await cluster.getConnection(/slave*/, "RR");
+try {
+  const rows = await conn.query("SELECT 1");
+  return rows[0]["1"];
+} finally {
+  conn.end();
 }
 ```
 
@@ -462,7 +468,7 @@ console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
 
 ### Placeholder
 
-To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringfy`).
+To prevent SQL Injection attacks, queries permit the use of question marks as placeholders.  The Connection escapes values according to their type.  Values can be of native JavaScript types, Buffers, Readables, objects with `toSQLString` methods, or objects that can be stringified (that is, `JSON.stringify`).
 
 When streaming, objects that implement Readable are streamed automatically.  But, there are two server system variables that may interfere:
 
@@ -472,10 +478,11 @@ When streaming, objects that implement Readable are streamed automatically.  But
 For instance,
 
 ```js
-await connection.query(
-  'INSERT INTO someTable VALUES (?, ?, ?)', 
-  [1, Buffer.from('c327a97374', 'hex'), 'mariadb']
-);
+const res = await connection.query("INSERT INTO someTable VALUES (?, ?, ?)", [
+  1,
+  Buffer.from("c327a97374", "hex"),
+  "mariadb",
+]);
 //will send INSERT INTO someTable VALUES (1, _BINARY '.\'.st', 'mariadb')
 ```
 
@@ -500,7 +507,7 @@ Queries return two different kinds of results, depending on the type of query yo
 * `warningStatus`: An integer indicating whether the query ended with a warning.
 
 ```js
-connection.query('CREATE TABLE animals (' +
+await connection.query('CREATE TABLE animals (' +
                        'id MEDIUMINT NOT NULL AUTO_INCREMENT,' +
                        'name VARCHAR(30) NOT NULL,' +
                        'PRIMARY KEY (id))');
@@ -954,13 +961,14 @@ Rolls back the current transaction, if there is one active.  The Connector track
 
 ```javascript
 try {
-    conn.beginTransaction();
-    conn.query('INSERT INTO testTransaction values (?)', ['test1']);
-    conn.query('INSERT INTO testTransaction values (?)', ['test2']);
-    conn.commit();
-} catch (e) {
-    console.log(e);
-    conn.rollback();
+    
+  await conn.beginTransaction();
+  await conn.query("INSERT INTO testTransaction values ('test')");
+  await conn.query("INSERT INTO testTransaction values ('test2')");
+  await conn.commit();
+  
+} catch(err) {
+  await conn.rollback();
 }
 ```
  
@@ -1288,26 +1296,21 @@ const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool.query(
   "CREATE TABLE parse(autoId int not null primary key auto_increment, c1 int, c2 int, c3 int, c4 varchar(128), c5 int)"
 );
-pool
-  .batch("INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
-    [[1, "john"], [2, "jack"]])
-  .then(res => {
-    //res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
+let res = await pool.batch(
+    "INSERT INTO `parse`(c1,c2,c3,c4,c5) values (1, ?, 2, ?, 3)", 
+    [[1, "john"], [2, "jack"]]
+);
+//res = { affectedRows: 2, insertId: 1, warningStatus: 0 }
 
-    assert.equal(res.affectedRows, 2);
-    pool
-      .query("select * from `parse`")
-      .then(res => {
-        /*
-        res = [ 
-            { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
-            { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
-            meta: ...
-          }
-        */ 
-      })
-      .catch(done);
-  });
+assert.equal(res.affectedRows, 2);
+res = await pool.query("select * from `parse`");
+/*
+res = [ 
+    { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
+    { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
+    meta: ...
+  }
+*/ 
 ```
 
 ## `pool.end() → Promise`
@@ -1323,7 +1326,7 @@ pool.end()
   .then(() => {
     //connections have been ended properly
   })
-  .catch(err => {});
+  .catch(err => console.log);
 ```
 
 ## `pool.escape(value) → String`
@@ -1389,7 +1392,7 @@ poolCluster.end()
   .then(() => {
     //pools have been ended properly
   })
-  .catch(err => {});
+  .catch(err => console.log);
 ```
 
 
@@ -1461,10 +1464,10 @@ cluster.add("slave1-south", { host: 'mydb5.com', user: 'myUser', connectionLimit
 
 const masterCluster = cluster.of('master*');
 const northSlaves = cluster.of(/^slave?-north/, 'RANDOM');
-northSlaves.getConnection()
-  .then(conn => {
-    //use that connection
-  })
+
+const conn = await northSlaves.getConnection();
+// use that connection
+
 ```
 
 ### `filtered pool cluster`

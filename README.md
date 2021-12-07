@@ -99,33 +99,7 @@ The MariaDB Connector is available through the Node.js repositories.  You can in
 ```
 $ npm install mariadb
 ```
-
-Using ECMAScript < 2017:
-
-```js
-const mariadb = require('mariadb');
-const pool = mariadb.createPool({host: process.env.DB_HOST, user: process.env.DB_USER, connectionLimit: 5});
-pool.getConnection()
-    .then(conn => {
-    
-      conn.query("SELECT 1 as val")
-        .then(rows => { // rows: [ {val: 1}, meta: ... ]
-          return conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-        })
-        .then(res => { // res: { affectedRows: 1, insertId: 1, warningStatus: 0 }
-          conn.release(); // release to pool
-        })
-        .catch(err => {
-          conn.release(); // release to pool
-        })
-        
-    }).catch(err => {
-      //not connected
-    });
-```
-
-Using ECMAScript 2017:
-
+example:
 ```js
 const mariadb = require('mariadb');
 const pool = mariadb.createPool({host: process.env.DB_HOST, user: process.env.DB_USER, connectionLimit: 5});
@@ -141,8 +115,6 @@ async function asyncFunction() {
 	const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
 	// res: { affectedRows: 1, insertId: 1, warningStatus: 0 }
 
-  } catch (err) {
-	throw err;
   } finally {
 	if (conn) conn.release(); //release to pool
   }
