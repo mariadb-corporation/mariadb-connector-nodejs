@@ -530,14 +530,20 @@ describe('batch', function () {
       assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       conn.end();
+      stream1.close();
+      stream2.close();
     }
   };
 
   const bigBatchErrorWithStreams = async (useCompression, useBulk) => {
+    const streams = [];
     const values = [];
     for (let i = 0; i < 1000000; i++) {
-      if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, str, i * 2]);
+      if (i % 100000 === 0) {
+        const st = fs.createReadStream(fileName);
+        streams.push(st);
+        values.push([i, st, i * 2]);
+      } else values.push([i, str, i * 2]);
     }
 
     const conn = await base.createConnection({
@@ -551,6 +557,9 @@ describe('batch', function () {
       const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
       assert.deepEqual(rows, [{ 1: 1 }]);
       conn.end();
+      for (const element of streams) {
+        element.close();
+      }
     }
   };
 
@@ -701,6 +710,8 @@ describe('batch', function () {
       assert.equal(err.code, 'ER_PARAMETER_UNDEFINED');
       await conn.query('DROP TABLE IF EXISTS blabla');
       conn.end();
+      stream1.close();
+      stream2.close();
     }
   };
 
