@@ -178,11 +178,51 @@ describe('local-infile', () => {
     await conn.beginTransaction();
     await conn.query(
       "LOAD DATA LOCAL INFILE '" +
-        smallFileName.replace(/\\/g, '/') +
+        smallFileName.replace(/\\/g, '\\\\') +
         "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
     );
     const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
     assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' }
+    ]);
+    conn.end();
+  });
+
+  it('small local infile with parameter', async function () {
+    const self = this;
+    const rows = await shareConn.query('select @@local_infile');
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      return self.skip();
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({ permitLocalInfile: true });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    await conn.query(
+      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
+      smallFileName
+    );
+    await conn.query(
+      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
+      [smallFileName]
+    );
+
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' },
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' }
     ]);
