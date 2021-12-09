@@ -645,6 +645,8 @@ describe('batch', () => {
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       clearTimeout(timeout);
       conn.end();
+      stream1.close();
+      stream2.close();
     }
   };
 
@@ -703,10 +705,14 @@ describe('batch', () => {
   };
 
   const bigBatchErrorWithStreams = async (useCompression, useBulk) => {
+    const streams = [];
     const values = [];
     for (let i = 0; i < 1000000; i++) {
-      if (i % 100000 === 0) values.push([i, fs.createReadStream(fileName), i * 2]);
-      else values.push([i, str, i * 2]);
+      if (i % 100000 === 0) {
+        const st = fs.createReadStream(fileName);
+        streams.push(st);
+        values.push([i, st, i * 2]);
+      } else values.push([i, str, i * 2]);
     }
 
     const conn = await base.createConnection({
@@ -725,6 +731,9 @@ describe('batch', () => {
       assert.deepEqual(rows, [{ 1: 1 }]);
       conn.end();
       clearTimeout(timeout);
+      for (const element of streams) {
+        element.close();
+      }
     }
   };
 
@@ -1001,6 +1010,8 @@ describe('batch', () => {
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       clearTimeout(timeout);
       conn.end();
+      stream1.close();
+      stream2.close();
     }
   };
 
