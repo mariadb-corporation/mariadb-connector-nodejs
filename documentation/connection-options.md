@@ -21,7 +21,7 @@
 | **database** | Default database to use when establishing the connection | *string* | 
 | **socketPath** | Permit connecting to the database via Unix domain socket or named pipe, if the server allows it|  *string* |  
 | **compress** | Compress exchanges with database using gzip.  This can give you better performance when accessing a database in a different location.  |*boolean*| false|  
-| **connectTimeout** | Connection timeout in milliseconds |*integer* | 10 000|
+| **connectTimeout** | Connection timeout in milliseconds (default changed from 10000 to 1000 in 2.5.6) |*integer* | 1000|
 | **socketTimeout** | Socket timeout in milliseconds after the connection is established |*integer* | 0|
 | **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations.|*boolean* | false|
 | **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)|*integer* | 4196304|

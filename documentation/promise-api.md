@@ -334,7 +334,7 @@ Specific options for pools are :
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
+| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. In order to have connection error information, must be higher than connectTimeout |*integer* | 10000 |
 | **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
 | **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds (0 means never release) |*integer* | 1800 |
 | **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |

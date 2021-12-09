@@ -17,7 +17,7 @@ describe('test options', () => {
       database: undefined,
       collation: Collations.fromName('UTF8MB4_UNICODE_CI'),
       initSql: undefined,
-      connectTimeout: 10000,
+      connectTimeout: 1000,
       connectAttributes: false,
       compress: false,
       rsaPublicKey: undefined,

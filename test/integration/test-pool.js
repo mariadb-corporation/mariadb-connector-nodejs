@@ -238,7 +238,6 @@ describe('Pool', () => {
         err.errno === 1524 ||
           err.errno === 1045 ||
           err.errno === 1698 ||
-          err.errno === 45028 ||
           err.errno === 45025 ||
           err.errno === 45044,
         err.message
@@ -252,7 +251,6 @@ describe('Pool', () => {
         err.errno === 1524 ||
           err.errno === 1045 ||
           err.errno === 1698 ||
-          err.errno === 45028 ||
           err.errno === 45025 ||
           err.errno === 45044,
         err.message
