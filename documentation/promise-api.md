@@ -1158,6 +1158,8 @@ When a connection is given back to the pool, any remaining transactions will be 
 Creates a new [Connection](#connection-api) object with an additional release method. 
 Calling connection.release() will give back connection to pool.  
 
+connection.release() is an async method returning an empty promise success  
+
 Connection must be given back to pool using this connection.release() method.
 
 **Example:**
@@ -1165,14 +1167,14 @@ Connection must be given back to pool using this connection.release() method.
 ```javascript
 const mariadb = require('mariadb');
 const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
-pool.getConnection()
-    .then(conn => {
-      console.log("connected ! connection id is " + conn.threadId);
-      conn.release(); //release to pool
-    })
-    .catch(err => {
-      console.log("not connected due to error: " + err);
-    });
+
+try {
+  const conn = await pool.getConnection()
+  console.log("connected ! connection id is " + conn.threadId);
+  await conn.release(); //release to pool
+} catch (err) {
+  console.log("not connected due to error: " + err);
+};
 ```
 
 ## `pool.query(sql[, values])` -> `Promise`
