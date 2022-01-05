@@ -288,7 +288,7 @@ describe('Pool callback', () => {
           }
         });
       }
-      setImmediate(() => {
+      setTimeout(() => {
         if (pool.activeConnections() < 10) {
           // for very slow env
           setTimeout(() => {
@@ -316,7 +316,7 @@ describe('Pool callback', () => {
             if (!doneSend) done();
           });
         }, 5000);
-      });
+      }, 1);
     }, 8000);
   });
 
