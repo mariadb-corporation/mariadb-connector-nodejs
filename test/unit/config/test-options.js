@@ -30,6 +30,7 @@ describe('test options', () => {
       permitConnectionWhenExpired: false,
       pipelining: true,
       timezone: '+00:00',
+      bitOneIsBoolean: true,
       socketPath: undefined,
       sessionVariables: undefined,
       ssl: undefined,

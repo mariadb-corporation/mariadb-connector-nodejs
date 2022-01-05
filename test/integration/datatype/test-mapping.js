@@ -9,7 +9,7 @@ describe('mapping', () => {
   dateMillis.setUTCMilliseconds(556);
 
   const initValue = [
-    Buffer.from([0x01]), //bit1
+    true, //bit1
     Buffer.from([0x03]), //bit2
     -10, //TINYINT
     150, //TINYINT UNSIGNED
@@ -43,7 +43,7 @@ describe('mapping', () => {
   ];
 
   const initValue2 = [
-    Buffer.from([0x01]), //bit1
+    true, //bit1
     Buffer.from([0x03]), //bit2
     -10, //TINYINT
     150, //TINYINT UNSIGNED
