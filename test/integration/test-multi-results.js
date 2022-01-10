@@ -324,6 +324,7 @@ describe('multi-results', () => {
   });
 
   it('multiple result type with multiple rows', async function () {
+    if (shareConn.serverVersion().includes('maxScale-6.2.0')) this.skip();
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //using sequence engine
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1)) this.skip();

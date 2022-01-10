@@ -66,7 +66,8 @@ describe('string', () => {
     assert.equal(res[4].tt, '😎🌶🎤🥂');
   };
 
-  it('connection encoding', async () => {
+  it('connection encoding', async function () {
+    this.timeout(10000);
     const value = '©°';
     const encodings = ['KOI8R_GENERAL_CI', 'UTF8_GENERAL_CI', 'CP850_BIN', 'CP1251_GENERAL_CI'];
     for (let i = 0; i < encodings.length; i++) {

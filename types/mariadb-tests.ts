@@ -68,6 +68,10 @@ async function testMisc(): Promise<void> {
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
 
+  rows = await connection.query('INSERT INTO myTable VALUE (1)');
+  console.log(rows.insertId === 1);
+  console.log(rows.affectedRows === 1);
+
   rows = await connection.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
 

@@ -211,11 +211,16 @@ describe('authentication plugin', () => {
     await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam");
     await shareConn.query('FLUSH PRIVILEGES');
 
+    let testPort = Conf.baseConfig.port;
+    if (process.env.TEST_PAM_PORT != null) {
+      testPort = parseInt(process.env.TEST_PAM_PORT);
+    }
     //password is unix password "myPwd"
     try {
       const conn = await base.createConnection({
         user: process.env.TEST_PAM_USER,
-        password: process.env.TEST_PAM_PWD
+        password: process.env.TEST_PAM_PWD,
+        port: testPort
       });
       await conn.end();
     } catch (err) {
@@ -241,12 +246,16 @@ describe('authentication plugin', () => {
     await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam");
     await shareConn.query('FLUSH PRIVILEGES');
 
-    //password is unix password "myPwd"
+    let testPort = Conf.baseConfig.port;
+    if (process.env.TEST_PAM_PORT != null) {
+      testPort = parseInt(process.env.TEST_PAM_PORT);
+    }
     //password is unix password "myPwd"
     try {
       const conn = await base.createConnection({
         user: process.env.TEST_PAM_USER,
-        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD]
+        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD],
+        port: testPort
       });
       await conn.end();
     } catch (err) {

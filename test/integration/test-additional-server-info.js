@@ -5,6 +5,7 @@ const { assert } = require('chai');
 
 describe('server additional information API', () => {
   it('server version', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     shareConn
       .query('SELECT VERSION() a')
       .then((res) => {

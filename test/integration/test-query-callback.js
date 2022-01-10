@@ -360,6 +360,7 @@ describe('basic query callback', () => {
   });
 
   it('permitSetMultiParamEntries escape ', function (done) {
+    this.timeout(5000);
     const fctStr = new Object();
     fctStr.toSqlString = () => {
       return "bla'bla";

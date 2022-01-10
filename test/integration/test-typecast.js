@@ -31,6 +31,7 @@ describe('TypeCast', () => {
   });
 
   it('connection level typecast function', async function () {
+    this.timeout(5000);
     const conn = await base.createConnection({ typeCast: changeCaseCast });
     const rows = await conn.query("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r");
     assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
@@ -38,6 +39,7 @@ describe('TypeCast', () => {
   });
 
   it('connection level typecast function execute', async function () {
+    this.timeout(5000);
     const conn = await base.createConnection({ typeCast: changeCaseCast });
     const rows = await conn.execute("SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r");
     assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
@@ -45,6 +47,7 @@ describe('TypeCast', () => {
   });
 
   it('compatibility automatic cast', async function () {
+    this.timeout(5000);
     const conn = await base.createConnection({ typeCast: true });
     const rows = await conn.query("SELECT '1' as r");
     assert.deepEqual(rows, [{ r: '1' }]);
@@ -52,6 +55,7 @@ describe('TypeCast', () => {
   });
 
   it('compatibility automatic cast execute', async function () {
+    this.timeout(5000);
     const conn = await base.createConnection({ typeCast: true });
     const rows = await conn.execute("SELECT '1' as r");
     assert.deepEqual(rows, [{ r: '1' }]);
@@ -123,6 +127,7 @@ describe('TypeCast', () => {
   });
 
   it('long cast', async function () {
+    this.timeout(5000);
     const longCast = (column, next) => {
       if (column.type == 'TINY' && column.columnLength === 1) {
         const val = column.tiny();
@@ -153,6 +158,7 @@ describe('TypeCast', () => {
   });
 
   it('date cast', async function () {
+    this.timeout(5000);
     const longCast = (column, next) => {
       if (column.type == 'TIMESTAMP' || column.type == 'DATETIME') {
         let da = column.datetime();
@@ -187,6 +193,7 @@ describe('TypeCast', () => {
   });
 
   it('geometry cast', async function () {
+    this.timeout(5000);
     const longCast = (column, next) => {
       if (column.type == 'BINARY') {
         return column.geometry();
