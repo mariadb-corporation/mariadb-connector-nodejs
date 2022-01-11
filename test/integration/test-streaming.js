@@ -107,7 +107,7 @@ describe('streaming', () => {
   });
 
   it('Streaming multiple parameter ensure max callstack', async function () {
-    if (maxAllowedSize <= size) this.skip();
+    if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);
 

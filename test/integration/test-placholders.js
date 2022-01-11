@@ -4,56 +4,37 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('Placeholder', () => {
-  it('query placeholder basic test', function (done) {
-    base
-      .createConnection({ namedPlaceholders: true })
-      .then((conn) => {
-        conn
-          .query('select :param1 as val1, :param3 as val3, :param2 as val2', {
-            param3: '30',
-            param1: '10',
-            param2: '20'
-          })
-          .then((rows) => {
-            assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch(done);
+  it('query placeholder basic test', async function () {
+    const conn = await base.createConnection({ namedPlaceholders: true });
+    const rows = await conn.query('select :param1 as val1, :param3 as val3, :param2 as val2', {
+      param3: '30',
+      param1: '10',
+      param2: '20'
+    });
+    assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
+    conn.end();
   });
 
-  it('query placeholder using option', function (done) {
-    shareConn
-      .query(
-        {
-          namedPlaceholders: true,
-          sql: 'select :param1 as val1, :param3 as val3, :param2 as val2'
-        },
-        { param3: '30', param1: '10', param2: '20' }
-      )
-      .then((rows) => {
-        assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
-        done();
-      })
-      .catch(done);
+  it('query placeholder using option', async function () {
+    const rows = await shareConn.query(
+      {
+        namedPlaceholders: true,
+        sql: 'select :param1 as val1, :param3 as val3, :param2 as val2'
+      },
+      { param3: '30', param1: '10', param2: '20' }
+    );
+    assert.deepEqual(rows, [{ val1: '10', val3: '30', val2: '20' }]);
   });
 
-  it('query ending by placeholder', function (done) {
-    shareConn
-      .query(
-        {
-          namedPlaceholders: true,
-          sql: 'select :param-1 as val1, :param-3 as val3, :param-2'
-        },
-        { 'param-3': '30', 'param-1': '10', 'param-2': '20' }
-      )
-      .then((rows) => {
-        assert.deepEqual(rows, [{ val1: '10', val3: '30', 20: '20' }]);
-        done();
-      })
-      .catch(done);
+  it('query ending by placeholder', async function () {
+    const rows = await shareConn.query(
+      {
+        namedPlaceholders: true,
+        sql: 'select :param-1 as val1, :param-3 as val3, :param-2'
+      },
+      { 'param-3': '30', 'param-1': '10', 'param-2': '20' }
+    );
+    assert.deepEqual(rows, [{ val1: '10', val3: '30', 20: '20' }]);
   });
 
   it('query named parameters logged in error', function (done) {
