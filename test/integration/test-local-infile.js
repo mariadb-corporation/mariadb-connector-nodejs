@@ -328,7 +328,7 @@ describe('local-infile', () => {
 
     rows = await shareConn.query('SELECT @@max_allowed_packet as t');
     const maxAllowedSize = Number(rows[0].t);
-    size = Math.round((maxAllowedSize - 100) / 16);
+    size = Math.round((maxAllowedSize - 300) / 16);
     const header = '"a","b"\n';
     const headerLen = header.length;
     const buf = Buffer.allocUnsafe(size * 16 + headerLen);
@@ -346,14 +346,16 @@ describe('local-infile', () => {
     await conn.query('DROP TABLE IF EXISTS bigLocalInfile');
     await conn.query('CREATE TABLE bigLocalInfile(t1 varchar(10), t2 varchar(2))');
     await conn.beginTransaction();
-    await conn.query(
+
+    const sql =
       "LOAD DATA LOCAL INFILE '" +
-        bigFileName.replace(/\\/g, '/') +
-        "' INTO TABLE bigLocalInfile " +
-        "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
-        "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
-        '(t1, t2)'
-    );
+      bigFileName.replace(/\\/g, '/') +
+      "' INTO TABLE bigLocalInfile " +
+      "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
+      "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
+      '(t1, t2)';
+    console.log('maxAllowedSize:' + maxAllowedSize + ' len:' + sql.length + ' buf:' + buf.length);
+    await conn.query(sql);
     rows = await conn.query('SELECT * FROM bigLocalInfile');
     assert.equal(rows.length, size);
     for (let i = 0; i < size; i++) {
