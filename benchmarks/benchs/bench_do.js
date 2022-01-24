@@ -1,7 +1,7 @@
 const assert = require('assert');
 
 module.exports.title = 'do ? using callback';
-module.exports.displaySql = 'do ?';
+module.exports.displaySql = 'do ? using callback';
 module.exports.promise = false;
 module.exports.benchFct = function (conn, deferred) {
   conn.query('do ?', ['' + Math.floor(Math.random() * 50000000)], (err, res) => {
