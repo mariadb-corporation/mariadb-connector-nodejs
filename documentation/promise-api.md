@@ -776,7 +776,20 @@ When using the `query()` method, documented above, the Connector returns the ent
 Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults to 30 seconds.
 
 
-There is 2 differents methods to implement streaming:
+There is different methods to implement streaming:
+
+* for-await-of
+
+simple use with for-await-of only available since Node.js 10 (note that this must be use within async function) :
+
+```javascript
+async function streamingFunction() {
+ const queryStream = connection.queryStream('SELECT * FROM mysql.user');
+ for await (const row of queryStream) {
+  console.log(row);
+ }
+}
+```
 
 * Events
 
