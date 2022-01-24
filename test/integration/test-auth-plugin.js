@@ -72,15 +72,18 @@ describe('authentication plugin', () => {
       await shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
       if (shareConn.info.hasMinVersion(10, 4, 0)) {
         await shareConn.query(
-            "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " + "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+            "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
         );
       } else {
         await shareConn.query(
-            "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
             "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
         );
       }
-      await shareConn.query('GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'");
+      await shareConn.query(
+        'GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'"
+      );
     } catch (e) {
       this.skip();
     }
@@ -108,7 +111,7 @@ describe('authentication plugin', () => {
       }
     } catch (err) {
       const expectedMsg = err.message.includes(
-          "Client does not support authentication protocol 'client_ed25519' requested by server."
+        "Client does not support authentication protocol 'client_ed25519' requested by server."
       );
       if (!expectedMsg) console.log(err);
       assert(expectedMsg);

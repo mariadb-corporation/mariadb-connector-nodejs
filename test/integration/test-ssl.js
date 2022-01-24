@@ -151,7 +151,11 @@ describe('ssl', function () {
       conn.end();
       throw new Error('Must have thrown an exception !');
     } catch (err) {
-      assert(err.message.includes('self signed certificate'), err.message);
+      assert(
+        err.message.includes('self signed certificate') ||
+          err.message.includes('unable to get local issuer certificate'),
+        err.message
+      );
     }
   });
 

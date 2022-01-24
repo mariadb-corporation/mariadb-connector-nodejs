@@ -59,7 +59,7 @@ describe('datetime', () => {
 
   it('date text', async function () {
     const date = new Date('1999-01-31 12:13:14');
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     let res = await shareConn.query('select CAST(? as datetime) d', [date]);
     assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');
@@ -78,7 +78,7 @@ describe('datetime', () => {
 
   it('date text Z timezone', async function () {
     const date = new Date('1999-01-31 12:13:14');
-    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
     const conn = await base.createConnection({ timezone: 'Z' });
     let res = await conn.query({ sql: 'select CAST(? as datetime) d' }, [date]);
     assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');

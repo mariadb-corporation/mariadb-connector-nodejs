@@ -16,15 +16,9 @@ describe('stored procedure', () => {
     await shareConn.query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end');
     await shareConn.query('CREATE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end');
     await shareConn.query(
-      'CREATE FUNCTION stmtSimpleFunct ' + '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
+      'CREATE FUNCTION stmtSimpleFunct (p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
     );
-    await shareConn.query(
-      'CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end'
-    );
-    await shareConn.query(
-      'CREATE FUNCTION stmtSimpleFunct ' +
-        '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
-    );
+    await shareConn.query('CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end');
   });
 
   after(async () => {
@@ -69,7 +63,7 @@ describe('stored procedure', () => {
       .catch(done);
   });
 
-   it('call with out parameter query', async () => {
+  it('call with out parameter query', async () => {
     try {
       await shareConn.query('call stmtOutParam(?,?)', [2, 3]);
       throw new Error('must not be possible since output parameter is not a variable');

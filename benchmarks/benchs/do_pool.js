@@ -1,7 +1,7 @@
 const assert = require('assert');
 
-module.exports.title = 'do <random number>';
-module.exports.displaySql = 'do ?';
+module.exports.title = 'do <random number> with pool';
+module.exports.displaySql = 'do ? with pool';
 module.exports.pool = true;
 module.exports.benchFct = function (pool, deferred) {
   pool
