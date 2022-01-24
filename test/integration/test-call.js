@@ -7,8 +7,18 @@ const { assert } = require('chai');
 describe('stored procedure', () => {
   before(async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
+    await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
+    await shareConn.query('DROP FUNCTION IF EXISTS stmtSimpleFunct');
     await shareConn.query(
       'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
+    );
+    await shareConn.query(
+      'CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end'
+    );
+    await shareConn.query(
+      'CREATE FUNCTION stmtSimpleFunct ' +
+        '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
     );
   });
 
@@ -34,19 +44,12 @@ describe('stored procedure', () => {
   });
 
   it('simple function', async function () {
-    await shareConn.query(
-      'CREATE FUNCTION stmtSimpleFunct ' +
-        '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
-    );
     const rows = await shareConn.query('SELECT stmtSimpleFunct(?,?) t', [2, 2]);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].t, 4);
   });
 
   it('call with out parameter query', async () => {
-    await shareConn.query(
-      'CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end'
-    );
     try {
       await shareConn.query('call stmtOutParam(?,?)', [2, 3]);
       throw new Error('must not be possible since output parameter is not a variable');

@@ -4,14 +4,17 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('server additional information API', () => {
-  it('server version', function (done) {
-    shareConn
-      .query('SELECT VERSION() a')
-      .then((res) => {
+  it('server version', async function () {
+    if (process.env.srv) {
+      if (
+        process.env.srv !== 'skysql' &&
+        process.env.srv !== 'skysql-ha' &&
+        process.env.srv !== 'maxscale'
+      ) {
+        const res = await shareConn.query('SELECT VERSION() a');
         assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
-        done();
-      })
-      .catch(done);
+      }
+    }
   });
 
   it('server type', function () {

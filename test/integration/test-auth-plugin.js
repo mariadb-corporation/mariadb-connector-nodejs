@@ -63,69 +63,38 @@ describe('authentication plugin', () => {
     }
   });
 
-  it('ed25519 authentication plugin', function (done) {
+  it('ed25519 authentication plugin', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
-    shareConn
-      .query('SELECT @@strict_password_validation as a')
-      .then((res) => {
-        if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
-        shareConn
-          .query("INSTALL SONAME 'auth_ed25519'")
-          .then(
-            () => {
-              shareConn
-                .query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'")
-                .then(() => {
-                  if (shareConn.info.hasMinVersion(10, 4, 0)) {
-                    return shareConn.query(
-                      "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                        "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
-                    );
-                  }
-                  return shareConn.query(
-                    "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-                      "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
-                  );
-                })
-                .then(() => {
-                  return shareConn.query(
-                    'GRANT SELECT on  `' +
-                      Conf.baseConfig.database +
-                      "`.* to verificationEd25519AuthPlugin@'%'"
-                  );
-                })
-                .then(() => {
-                  base
-                    .createConnection({
-                      user: 'verificationEd25519AuthPlugin',
-                      password: 'MySup8%rPassw@ord'
-                    })
-                    .then((conn) => {
-                      conn.end();
-                      done();
-                    })
-                    .catch(done);
-                })
-                .catch((err) => {
-                  const expectedMsg = err.message.includes(
-                    "Client does not support authentication protocol 'client_ed25519' requested by server."
-                  );
-                  if (!expectedMsg) console.log(err);
-                  assert(expectedMsg);
-                  done();
-                });
-            },
-            (err) => {
-              //server wasn't build with this plugin, cancelling test
-              self.skip();
-            }
-          )
-          .catch(done);
-      })
-      .catch(done);
+    const res = await shareConn.query('SELECT @@strict_password_validation as a');
+    if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
+    try {
+      await shareConn.query("INSTALL SONAME 'auth_ed25519'");
+      await shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
+      if (shareConn.info.hasMinVersion(10, 4, 0)) {
+        await shareConn.query(
+          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+            "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+        );
+      } else {
+        await shareConn.query(
+          "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+            "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
+        );
+      }
+      await shareConn.query(
+        'GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'"
+      );
+    } catch (e) {
+      this.skip();
+    }
+    const conn = await base.createConnection({
+      user: 'verificationEd25519AuthPlugin',
+      password: 'MySup8%rPassw@ord'
+    });
+    conn.end();
   });
 
   it('name pipe authentication plugin', function (done) {
@@ -223,6 +192,11 @@ describe('authentication plugin', () => {
     //pam is set using .travis/sql/pam.sh
     if (!process.env.TEST_PAM_USER) this.skip();
 
+    let testPort = Conf.baseConfig.port;
+    if (process.env.TEST_PAM_PORT != null) {
+      testPort = parseInt(process.env.TEST_PAM_PORT);
+    }
+
     if (!shareConn.info.isMariaDB()) this.skip();
     this.timeout(10000);
     try {
@@ -244,7 +218,8 @@ describe('authentication plugin', () => {
     try {
       const conn = await base.createConnection({
         user: process.env.TEST_PAM_USER,
-        password: process.env.TEST_PAM_PWD
+        password: process.env.TEST_PAM_PWD,
+        port: testPort
       });
       await conn.end();
     } catch (err) {
@@ -274,12 +249,16 @@ describe('authentication plugin', () => {
     );
     await shareConn.query('FLUSH PRIVILEGES');
 
-    //password is unix password "myPwd"
+    let testPort = Conf.baseConfig.port;
+    if (process.env.TEST_PAM_PORT != null) {
+      testPort = parseInt(process.env.TEST_PAM_PORT);
+    }
     //password is unix password "myPwd"
     try {
       const conn = await base.createConnection({
         user: process.env.TEST_PAM_USER,
-        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD]
+        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD],
+        port: testPort
       });
       await conn.end();
     } catch (err) {
