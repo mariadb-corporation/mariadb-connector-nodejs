@@ -139,23 +139,20 @@ describe('ssl', function () {
       .catch(done);
   });
 
-  it('signed certificate error ', function (done) {
+  it('signed certificate error', async function () {
     if (!sslEnable) this.skip();
-    base
-      .createConnection({
+    try {
+      const conn = await base.createConnection({
         user: 'sslTestUser',
         password: 'ytoKS@ç%ùed5',
         ssl: true,
         port: sslPort
-      })
-      .then((conn) => {
-        conn.end();
-        done(new Error('Must have thrown an exception !'));
-      })
-      .catch((err) => {
-        assert(err.message.includes('self signed certificate'));
-        done();
       });
+      conn.end();
+      throw new Error('Must have thrown an exception !');
+    } catch (err) {
+      assert(err.message.includes('self signed certificate'), err.message);
+    }
   });
 
   it('signed certificate forcing', function (done) {

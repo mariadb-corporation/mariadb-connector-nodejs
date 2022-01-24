@@ -34,7 +34,7 @@ jobs:
   allow_failures:
     - env: srv=build v=10.6
   include:
-    - env: srv=mariadb v=10.5
+    - env: srv=mariadb v=10.6
       os: windows
       language: shell
     - env: srv=mariadb v=10.2 local=1

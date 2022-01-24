@@ -67,20 +67,24 @@ describe('authentication plugin', () => {
 
     const res = await shareConn.query('SELECT @@strict_password_validation as a');
     if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) self.skip();
-    await shareConn.query("INSTALL SONAME 'auth_ed25519'");
-    await shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
-    if (shareConn.info.hasMinVersion(10, 4, 0)) {
-      await shareConn.query(
-        "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " + "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
-      );
-    } else {
-      await shareConn.query(
-        "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
-          "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
-      );
+    try {
+      await shareConn.query("INSTALL SONAME 'auth_ed25519'");
+      await shareConn.query("drop user IF EXISTS verificationEd25519AuthPlugin@'%'");
+      if (shareConn.info.hasMinVersion(10, 4, 0)) {
+        await shareConn.query(
+            "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " + "VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+        );
+      } else {
+        await shareConn.query(
+            "CREATE USER verificationEd25519AuthPlugin@'%' IDENTIFIED " +
+            "VIA ed25519 USING '6aW9C7ENlasUfymtfMvMZZtnkCVlcb1ssxOLJ0kj/AA'"
+        );
+      }
+      await shareConn.query('GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'");
+    } catch (e) {
+      this.skip();
     }
 
-    await shareConn.query('GRANT SELECT on  `' + Conf.baseConfig.database + "`.* to verificationEd25519AuthPlugin@'%'");
     try {
       let conn = await base.createConnection({
         user: 'verificationEd25519AuthPlugin',
@@ -104,13 +108,12 @@ describe('authentication plugin', () => {
       }
     } catch (err) {
       const expectedMsg = err.message.includes(
-        "Client does not support authentication protocol 'client_ed25519' requested by server."
+          "Client does not support authentication protocol 'client_ed25519' requested by server."
       );
       if (!expectedMsg) console.log(err);
       assert(expectedMsg);
     }
   });
-
   it('name pipe authentication plugin', function (done) {
     if (process.platform !== 'win32') this.skip();
     if (process.env.srv === 'maxscale') this.skip();
