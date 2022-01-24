@@ -357,7 +357,7 @@ Specific options for pools are :
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
-| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. |*integer* | 10000 |
+| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. In order to have connection error information, must be higher than connectTimeout |*integer* | 10000 |
 | **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
 | **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds (0 means never release) |*integer* | 1800 |
 | **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
@@ -792,7 +792,20 @@ When using pipeline, if data handling throws an error, user must explicilty clos
 
 
 
-There is 2 differents methods to implement streaming:
+There is different methods to implement streaming:
+
+* for-await-of
+
+simple use with for-await-of only available since Node.js 10 (note that this must be use within async function) :
+
+```javascript
+async function streamingFunction() {
+ const queryStream = connection.queryStream('SELECT * FROM mysql.user');
+ for await (const row of queryStream) {
+  console.log(row);
+ }
+}
+```
 
 * Events
 
@@ -1234,6 +1247,8 @@ When a connection is given back to the pool, any remaining transactions will be 
 
 Creates a new [Connection](#connection-api) object with an additional release method. 
 Calling connection.release() will give back connection to pool.  
+
+connection.release() is an async method returning an empty promise success  
 
 Connection must be given back to pool using this connection.release() method.
 

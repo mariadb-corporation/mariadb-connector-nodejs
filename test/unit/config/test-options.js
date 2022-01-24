@@ -18,7 +18,7 @@ describe('test options', () => {
       prepareCacheLength: 256,
       collation: undefined,
       initSql: undefined,
-      connectTimeout: 10000,
+      connectTimeout: 1000,
       connectAttributes: false,
       compress: false,
       rsaPublicKey: undefined,

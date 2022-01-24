@@ -33,6 +33,15 @@ describe('results-set streaming', () => {
       .catch(done);
   });
 
+  it('Streaming result-set for-await-of', async function () {
+    let currRow = 0;
+    const stream = shareConn.queryStream('SELECT * FROM testStreamResult');
+    for await (const row of stream) {
+      assert.equal(currRow++, row.v);
+    }
+    assert.equal(10000, currRow);
+  });
+
   it('Streaming result-set with promise implementation', function (done) {
     let currRow = 0;
     let metaReceived = false;
