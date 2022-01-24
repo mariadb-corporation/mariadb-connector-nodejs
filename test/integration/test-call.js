@@ -74,6 +74,7 @@ describe('stored procedure', () => {
         done();
       });
   });
+});
 
 const testRes = async function (res) {
   assert.equal(res.length, 2);

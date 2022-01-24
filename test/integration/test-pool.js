@@ -256,11 +256,7 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert.isTrue(
-        err.errno === 1524 ||
-          err.errno === 1045 ||
-          err.errno === 1698 ||
-          err.errno === 45025 ||
-          err.errno === 45044,
+        err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45025 || err.errno === 45044,
         err.message
       );
     }
@@ -269,11 +265,7 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert.isTrue(
-        err.errno === 1524 ||
-          err.errno === 1045 ||
-          err.errno === 1698 ||
-          err.errno === 45025 ||
-          err.errno === 45044,
+        err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45025 || err.errno === 45044,
         err.message
       );
     } finally {

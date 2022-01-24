@@ -205,10 +205,9 @@ describe('local-infile', () => {
       "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
       smallFileName
     );
-    await conn.query(
-      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
-      [smallFileName]
-    );
+    await conn.query("LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)", [
+      smallFileName
+    ]);
 
     const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
     assert.deepEqual(rows2, [
