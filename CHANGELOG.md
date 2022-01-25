@@ -1,5 +1,14 @@
 # Change Log
 
+## [3.0.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0) (Jan 2022)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-rc...3.0.0)
+
+* merged correction from 2.5.6
+* [CONJS-185] considering BIT(1) as boolean (option bitOneIsBoolean permit to disable that behavior for compatibility)
+* reliability: pool ensuring multi-request process order
+* performance: set parser function once per result-set 
+* documentation improvement
+
 ## [2.5.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.6) (Jan 2022)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.5...2.5.6)
 
