@@ -801,8 +801,12 @@ simple use with for-await-of only available since Node.js 10 (note that this mus
 ```javascript
 async function streamingFunction() {
  const queryStream = connection.queryStream('SELECT * FROM mysql.user');
- for await (const row of queryStream) {
-  console.log(row);
+ try {
+   for await (const row of queryStream) {
+     console.log(row);
+   }
+ } catch (e) {
+   queryStream.close();
  }
 }
 ```
