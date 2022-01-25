@@ -172,9 +172,7 @@ describe('batch geometry type', () => {
         },
         {
           g:
-            shareConn.info.hasMinVersion(10, 5, 2) &&
-            process.env.srv !== 'maxscale' &&
-            process.env.srv !== 'skysql-ha'
+            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
               ? { type: 'LineString' }
               : null
         }
@@ -314,9 +312,7 @@ describe('batch geometry type', () => {
         },
         {
           g:
-            shareConn.info.hasMinVersion(10, 5, 2) &&
-            process.env.srv !== 'maxscale' &&
-            process.env.srv !== 'skysql-ha'
+            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
               ? { type: 'Polygon' }
               : null
         },
@@ -334,9 +330,7 @@ describe('batch geometry type', () => {
         },
         {
           g:
-            shareConn.info.hasMinVersion(10, 5, 2) &&
-            process.env.srv !== 'maxscale' &&
-            process.env.srv !== 'skysql-ha'
+            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
               ? { type: 'Polygon' }
               : null
         }

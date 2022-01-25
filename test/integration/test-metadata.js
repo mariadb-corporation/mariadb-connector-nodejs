@@ -4,6 +4,7 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const Collations = require('../../lib/const/collations.js');
 const FieldType = require('../../lib/const/field-type');
+const Conf = require('../conf');
 
 describe('metadata', () => {
   it('result metadata values', async function () {
@@ -23,30 +24,30 @@ describe('metadata', () => {
     );
     assert.equal(rows.meta.length, 6);
 
-    assert.equal(rows.meta[0].db(), 'testn');
-    assert.equal(rows.meta[0].schema(), 'testn');
+    assert.equal(rows.meta[0].db(), Conf.baseConfig.database);
+    assert.equal(rows.meta[0].schema(), Conf.baseConfig.database);
     assert.equal(rows.meta[0].table(), 'tm');
     assert.equal(rows.meta[0].orgTable(), 'metadatatable');
     assert.equal(rows.meta[0].name(), 'id1');
     assert.equal(rows.meta[0].orgName(), 'id');
     assert.equal(rows.meta[0].collation, Collations.fromName('BINARY'));
     assert.equal(rows.meta[0].columnLength, 20);
-    assert.equal(rows.meta[0].columnType, FieldType.LONGLONG);
+    assert.equal(rows.meta[0].columnType, FieldType.BIGINT);
 
-    assert.equal(rows.meta[1].db(), 'testn');
-    assert.equal(rows.meta[1].schema(), 'testn');
+    assert.equal(rows.meta[1].db(), Conf.baseConfig.database);
+    assert.equal(rows.meta[1].schema(), Conf.baseConfig.database);
     assert.equal(rows.meta[1].table(), 'tm');
     assert.equal(rows.meta[1].orgTable(), 'metadatatable');
     assert.equal(rows.meta[1].name(), 't1');
     assert.equal(rows.meta[1].orgName(), 't');
     if (base.utf8Collation()) {
-      assert.equal(rows.meta[1].collation, Collations.fromName('UTF8MB4_UNICODE_CI'));
+      assert.equal(rows.meta[1].collation, shareConn.__tests.getCollation());
       assert.equal(rows.meta[1].columnLength, 128);
     }
     assert.equal(rows.meta[1].columnType, FieldType.VAR_STRING);
 
-    assert.equal(rows.meta[2].db(), 'testn');
-    assert.equal(rows.meta[2].schema(), 'testn');
+    assert.equal(rows.meta[2].db(), Conf.baseConfig.database);
+    assert.equal(rows.meta[2].schema(), Conf.baseConfig.database);
     assert.equal(rows.meta[2].table(), 'tm');
     assert.equal(rows.meta[2].orgTable(), 'metadatatable');
     assert.equal(rows.meta[2].name(), 'd1');
@@ -55,8 +56,8 @@ describe('metadata', () => {
     assert.equal(rows.meta[2].columnLength, 11);
     assert.equal(rows.meta[2].columnType, FieldType.NEWDECIMAL);
 
-    assert.equal(rows.meta[3].db(), 'testn');
-    assert.equal(rows.meta[3].schema(), 'testn');
+    assert.equal(rows.meta[3].db(), Conf.baseConfig.database);
+    assert.equal(rows.meta[3].schema(), Conf.baseConfig.database);
     assert.equal(rows.meta[3].table(), 'tm');
     assert.equal(rows.meta[3].orgTable(), 'metadatatable');
     assert.equal(rows.meta[3].name(), 'd2');

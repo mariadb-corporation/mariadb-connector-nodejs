@@ -7,24 +7,24 @@ const { assert } = require('chai');
 describe('stored procedure', () => {
   before(async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (shareConn.serverVersion().includes('maxScale-6.2.0')) this.skip();
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
+    await shareConn.query('DROP PROCEDURE IF EXISTS someProc');
     await shareConn.query('DROP FUNCTION IF EXISTS stmtSimpleFunct');
+
+    await shareConn.query('CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end');
+    await shareConn.query('CREATE PROCEDURE someProc (IN p1 INT, OUT p2 INT) begin set p2 = p1 * 2; end');
     await shareConn.query(
-      'CREATE PROCEDURE stmtSimple (IN p1 INT, IN p2 INT) begin SELECT p1 + p2 t; end'
+      'CREATE FUNCTION stmtSimpleFunct (p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
     );
-    await shareConn.query(
-      'CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end'
-    );
-    await shareConn.query(
-      'CREATE FUNCTION stmtSimpleFunct ' +
-        '(p1 INT, p2 INT) RETURNS INT NO SQL\nBEGIN\nRETURN p1 + p2;\n end'
-    );
+    await shareConn.query('CREATE PROCEDURE stmtOutParam (IN p1 INT, INOUT p2 INT) begin SELECT p1; end');
   });
 
   after(async () => {
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
+    await shareConn.query('DROP PROCEDURE IF EXISTS someProc');
     await shareConn.query('DROP FUNCTION IF EXISTS stmtSimpleFunct');
   });
 
@@ -43,10 +43,24 @@ describe('stored procedure', () => {
     }
   });
 
-  it('simple function', async function () {
-    const rows = await shareConn.query('SELECT stmtSimpleFunct(?,?) t', [2, 2]);
-    assert.equal(rows.length, 1);
-    assert.equal(rows[0].t, 4);
+  it('output call query', async function () {
+    await shareConn.query('call someProc(?,@myOutputValue)', [2]);
+    const res = await shareConn.query('SELECT @myOutputValue');
+    assert.equal(res[0]['@myOutputValue'], 4);
+
+    const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
+    assert.equal(res2[0][0]['p2'], 4);
+  });
+
+  it('simple function', function (done) {
+    shareConn
+      .query('SELECT stmtSimpleFunct(?,?) t', [2, 2])
+      .then((rows) => {
+        assert.equal(rows.length, 1);
+        assert.equal(rows[0].t, 4);
+        done();
+      })
+      .catch(done);
   });
 
   it('call with out parameter query', async () => {

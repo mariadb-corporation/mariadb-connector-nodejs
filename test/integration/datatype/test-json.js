@@ -4,20 +4,15 @@ const base = require('../../base.js');
 const { assert } = require('chai');
 
 describe('json', () => {
-  it('json escape', function (done) {
+  it('json escape', async function () {
     const buf = { id: 2, val: "t'est" };
     assert.equal(shareConn.escape(buf), '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\'');
 
-    shareConn
-      .query(' SELECT ' + shareConn.escape(buf) + ' t')
-      .then((rows) => {
-        assert.deepEqual(rows, [{ t: '{"id":2,"val":"t\'est"}' }]);
-        done();
-      })
-      .catch(done);
+    const rows = await shareConn.query(' SELECT ' + shareConn.escape(buf) + ' t');
+    assert.deepEqual(rows, [{ t: '{"id":2,"val":"t\'est"}' }]);
   });
 
-  it('insert json format', function (done) {
+  it('insert json format', async function () {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
@@ -27,58 +22,56 @@ describe('json', () => {
     }
 
     const obj = { id: 2, val: 'test' };
-    shareConn
-      .query('DROP TABLE IF EXISTS `test-json-insert-type`')
-      .then(() => {
-        return shareConn.query('CREATE TABLE `test-json-insert-type` (val1 JSON)');
-      })
-      .then(() => {
-        return shareConn.query(
-          {
-            stringifyObjects: true,
-            sql: 'INSERT INTO `test-json-insert-type` values (?)'
-          },
-          [obj]
-        );
-      })
-      .then(() => {
-        return shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [
-          JSON.stringify(obj)
-        ]);
-      })
-      .then(() => {
-        validateJSON('test-json-insert-type', done);
-      })
-      .catch(done);
+    const obj2 = { id: 3, val: 'test3' };
+    await shareConn.query('DROP TABLE IF EXISTS `test-json-insert-type`');
+    await shareConn.query('CREATE TABLE `test-json-insert-type` (val1 JSON)');
+    await shareConn.query(
+      {
+        stringifyObjects: true,
+        sql: 'INSERT INTO `test-json-insert-type` values (?)'
+      },
+      [obj]
+    );
+    await shareConn.execute(
+      {
+        stringifyObjects: true,
+        sql: 'INSERT INTO `test-json-insert-type` values (?)'
+      },
+      [obj]
+    );
+    await shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
+    await shareConn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
+    const rows = await shareConn.query('SELECT * FROM `test-json-insert-type`');
+    if (
+      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      const val1 = JSON.parse(rows[0].val1);
+      const val2 = JSON.parse(rows[1].val1);
+      const val3 = JSON.parse(rows[2].val1);
+      const val4 = JSON.parse(rows[3].val1);
+      assert.equal(val1.id, 2);
+      assert.equal(val1.val, 'test');
+      assert.equal(val2.id, 2);
+      assert.equal(val2.val, 'test');
+      assert.equal(val3.id, 3);
+      assert.equal(val3.val, 'test3');
+      assert.equal(val4.id, 3);
+      assert.equal(val4.val, 'test3');
+    } else {
+      assert.equal(rows[0]['val1'].id, 2);
+      assert.equal(rows[0].val1.val, 'test');
+      assert.equal(rows[1].val1.id, 2);
+      assert.equal(rows[1].val1.val, 'test');
+      assert.equal(rows[2].val1.id, 3);
+      assert.equal(rows[2].val1.val, 'test3');
+      assert.equal(rows[3].val1.id, 3);
+      assert.equal(rows[3].val1.val, 'test3');
+    }
   });
 
-  function validateJSON(tableName, done) {
-    shareConn
-      .query('SELECT * FROM `' + tableName + '`')
-      .then((rows) => {
-        if (
-          (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
-          process.env.srv === 'maxscale' ||
-          process.env.srv === 'skysql-ha'
-        ) {
-          const val1 = JSON.parse(rows[0].val1);
-          const val2 = JSON.parse(rows[1].val1);
-          assert.equal(val1.id, 2);
-          assert.equal(val1.val, 'test');
-          assert.equal(val2.id, 2);
-          assert.equal(val2.val, 'test');
-        } else {
-          assert.equal(rows[0]['val1'].id, 2);
-          assert.equal(rows[0].val1.val, 'test');
-          assert.equal(rows[1].val1.id, 2);
-          assert.equal(rows[1].val1.val, 'test');
-        }
-        done();
-      })
-      .catch(done);
-  }
-
-  it('select json format', function (done) {
+  it('select json format', async function () {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 7)) ||
@@ -90,51 +83,51 @@ describe('json', () => {
     const obj = { id: 2, val: 'test' };
     const jsonString = JSON.stringify(obj);
 
-    shareConn
-      .query('DROP TABLE IF EXISTS `test-json-return-type`')
-      .then(() => {
-        return shareConn.query(
-          'CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)'
-        );
-      })
-      .then(() => {
-        return shareConn.query(
-          "INSERT INTO `test-json-return-type` values ('" +
-            jsonString +
-            "','" +
-            jsonString +
-            "','" +
-            jsonString +
-            "')"
-        );
-      })
-      .then(() => {
-        return shareConn.query('SELECT * FROM `test-json-return-type`');
-      })
-      .then((rows) => {
-        if (shareConn.info.isMariaDB()) {
-          if (
-            shareConn.info.isMariaDB() &&
-            shareConn.info.hasMinVersion(10, 5, 2) &&
-            process.env.srv !== 'maxscale' &&
-            process.env.srv !== 'skysql-ha'
-          ) {
-            assert.deepEqual(rows[0].val1, obj);
-          } else {
-            assert.equal(rows[0].val1, jsonString);
-          }
-        } else {
-          assert.equal(rows[0].val1.id, 2);
-          assert.equal(rows[0].val1.val, 'test');
-        }
-        assert.equal(rows[0].val2, jsonString);
-        assert.equal(rows[0].val3, jsonString);
-        done();
-      })
-      .catch(done);
+    await shareConn.query('DROP TABLE IF EXISTS `test-json-return-type`');
+    await shareConn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
+    await shareConn.query(
+      "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
+    );
+    let rows = await shareConn.query('SELECT * FROM `test-json-return-type`');
+    if (shareConn.info.isMariaDB()) {
+      if (
+        shareConn.info.isMariaDB() &&
+        shareConn.info.hasMinVersion(10, 5, 2) &&
+        process.env.srv !== 'maxscale' &&
+        process.env.srv !== 'skysql-ha'
+      ) {
+        assert.deepEqual(rows[0].val1, obj);
+      } else {
+        assert.equal(rows[0].val1, jsonString);
+      }
+    } else {
+      assert.equal(rows[0].val1.id, 2);
+      assert.equal(rows[0].val1.val, 'test');
+    }
+    assert.equal(rows[0].val2, jsonString);
+    assert.equal(rows[0].val3, jsonString);
+
+    rows = await shareConn.execute('SELECT * FROM `test-json-return-type`');
+    if (shareConn.info.isMariaDB()) {
+      if (
+        shareConn.info.isMariaDB() &&
+        shareConn.info.hasMinVersion(10, 5, 2) &&
+        process.env.srv !== 'maxscale' &&
+        process.env.srv !== 'skysql-ha'
+      ) {
+        assert.deepEqual(rows[0].val1, obj);
+      } else {
+        assert.equal(rows[0].val1, jsonString);
+      }
+    } else {
+      assert.equal(rows[0].val1.id, 2);
+      assert.equal(rows[0].val1.val, 'test');
+    }
+    assert.equal(rows[0].val2, jsonString);
+    assert.equal(rows[0].val3, jsonString);
   });
 
-  it('disable json format', function (done) {
+  it('disable json format', async function () {
     //server permit JSON format
     if (
       (shareConn.info.isMariaDB() &&
@@ -145,38 +138,25 @@ describe('json', () => {
     ) {
       this.skip();
     }
-    base.createConnection({ autoJsonMap: false }).then((conn) => {
-      const obj = { id: 2, val: 'test' };
-      const jsonString = JSON.stringify(obj);
-      conn
-        .query('DROP TABLE IF EXISTS `test-json-return-type`')
-        .then(() => {
-          return conn.query(
-            'CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)'
-          );
-        })
-        .then(() => {
-          return conn.query(
-            "INSERT INTO `test-json-return-type` values ('" +
-              jsonString +
-              "','" +
-              jsonString +
-              "','" +
-              jsonString +
-              "')"
-          );
-        })
-        .then(() => {
-          return conn.query('SELECT * FROM `test-json-return-type`');
-        })
-        .then((rows) => {
-          assert.equal(rows[0].val1, jsonString);
-          assert.equal(rows[0].val2, jsonString);
-          assert.equal(rows[0].val3, jsonString);
-          conn.close();
-          done();
-        })
-        .catch(done);
-    });
+    const conn = await base.createConnection({ autoJsonMap: false });
+    const obj = { id: 2, val: 'test' };
+    const jsonString = JSON.stringify(obj);
+    await conn.query('DROP TABLE IF EXISTS `test-json-return-type`');
+    await conn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
+    await conn.query(
+      "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
+    );
+
+    let rows = await conn.query('SELECT * FROM `test-json-return-type`');
+    assert.equal(rows[0].val1, jsonString);
+    assert.equal(rows[0].val2, jsonString);
+    assert.equal(rows[0].val3, jsonString);
+
+    rows = await conn.execute('SELECT * FROM `test-json-return-type`');
+    assert.equal(rows[0].val1, jsonString);
+    assert.equal(rows[0].val2, jsonString);
+    assert.equal(rows[0].val3, jsonString);
+
+    conn.close();
   });
 });

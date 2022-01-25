@@ -5,16 +5,10 @@ const { assert } = require('chai');
 
 describe('server additional information API', () => {
   it('server version', async function () {
-    if (process.env.srv) {
-      if (
-        process.env.srv !== 'skysql' &&
-        process.env.srv !== 'skysql-ha' &&
-        process.env.srv !== 'maxscale'
-      ) {
-        const res = await shareConn.query('SELECT VERSION() a');
-        assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
-      }
-    }
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || process.env.srv === 'maxscale') this.skip();
+
+    const res = await shareConn.query('SELECT VERSION() a');
+    assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);
   });
 
   it('server type', function () {

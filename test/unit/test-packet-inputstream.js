@@ -14,7 +14,7 @@ const base = require('../base.js');
 describe('test PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
-  const info = new ConnectionInformation();
+  const info = new ConnectionInformation({});
   const unexpectedPacket = (packet) => {
     throw new Error('unexpected packet');
   };
@@ -192,9 +192,7 @@ describe('test PacketInputStream data', () => {
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
     pis.onData(buf.slice(1000000, 2000000));
     pis.onData(buf.slice(2000000, 16777215));
-    pis.onData(
-      Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215, 17777215)])
-    );
+    pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215, 17777215)]));
     pis.onData(buf.slice(17777215));
     assert.ok(beenDispatch);
   }).timeout(300000);

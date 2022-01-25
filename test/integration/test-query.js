@@ -9,9 +9,9 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select 1', [2])
+          .query("select '1'", [2])
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -151,11 +151,11 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 -- test comment\n , ?', ['val'])
+          .query("select /* blabla */ '1' -- test comment\n , ?", ['val'])
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);
@@ -172,11 +172,11 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('select /* blabla */ 1 # test comment\n , ?', ['val'])
+          .query("select /* blabla */ '1' # test comment\n , ?", ['val'])
           .then((rows) => {
             assert.deepEqual(rows, [
               {
-                1: 1,
+                1: '1',
                 val: 'val'
               }
             ]);
@@ -195,9 +195,7 @@ describe('basic query', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query(
-            "set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'"
-          )
+          .query("set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'")
           .then(() => {
             return conn.query('DROP TABLE IF EXISTS h');
           })
@@ -270,10 +268,7 @@ describe('basic query', () => {
     };
 
     base.createConnection({ permitSetMultiParamEntries: true }).then((conn) => {
-      assert.equal(
-        conn.escape(arr),
-        "`stg`='let\\'g\\'o😊',`bool`=false,`nullVal`=NULL,`fctSt`='bla\\'bla'"
-      );
+      assert.equal(conn.escape(arr), "`stg`='let\\'g\\'o😊',`bool`=false,`nullVal`=NULL,`fctSt`='bla\\'bla'");
       conn.end();
       base.createConnection({ permitSetMultiParamEntries: false }).then((conn2) => {
         assert.equal(
@@ -318,19 +313,13 @@ describe('basic query', () => {
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       const elapse = Date.now() - initTime;
       assert.isOk(elapse < 10000, 'elapse time was ' + elapse + ' but must be less around 100');
-      assert.isTrue(
-        err.message.includes('Query execution was interrupted (max_statement_time exceeded)')
-      );
+      assert.isTrue(err.message.includes('Query execution was interrupted (max_statement_time exceeded)'));
       assert.equal(err.errno, 1969);
       assert.equal(err.sqlState, 70100);
       assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
     } else {
       if (shareConn.info.isMariaDB()) {
-        assert.isTrue(
-          err.message.includes(
-            'Cannot use timeout for MariaDB server before 10.1.2. timeout value:'
-          )
-        );
+        assert.isTrue(err.message.includes('Cannot use timeout for MariaDB server before 10.1.2. timeout value:'));
       } else {
         assert.isTrue(err.message.includes('Cannot use timeout for MySQL server. timeout value:'));
       }

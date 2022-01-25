@@ -43,8 +43,44 @@ const mariadb = require('mariadb/callback');
 
 This initializes the constant `mariadb`, which is set to use the Callback API rather than the default Promise API.
 
+## Migrating from 2.x or mysql/mysql2 to 3.x
 
-## Timezone consideration
+Default behaviour for decoding [BIGINT](https://mariadb.com/kb/en/bigint/) / [DECIMAL](https://mariadb.com/kb/en/decimal/) datatype for 2.x version and mysql/mysql2 drivers return a javascript [Number](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Number) object.
+BIGINT/DECIMAL values might not be in the safe range, resulting in approximate results.
+
+Since 3.x version, driver has reliable default, returning:
+* DECIMAL => javascript String
+* BIGINT => javascript [BigInt](https://mariadb.com/kb/en/bigint/) object
+
+For compatibility with previous version or mysql/mysql driver, 3 options have been added to return BIGINT/DECIMAL as number, as previous defaults.
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values. |*boolean* | false |
+
+Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.
+
+#### Other considerations
+
+mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
+This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise).
+
+example:
+```js
+  conn.query('call ??(?)', [myProc, 'myVal'], (err, res) => {});
+```
+has to use explicit escapeId:
+```js
+  conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal'], (err, res) => {});
+```
+
+Cluster configuration `removeNodeErrorCount` default to `Infinity` when mysql/mysql2 default to value `5`. This avoids removing nodes without explicitly saying so.
+
+## Recommendation
+
+### Timezone consideration
 
 Client and database can have a different timezone.
 
@@ -85,7 +121,7 @@ const conn = mariadb.createConnection({
 });
 ```
 
-## Security consideration
+### Security consideration
 
 Connection details such as URL, username, and password are better hidden into environment variables.
 using code like : 
@@ -354,7 +390,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed|*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed. Default to Infinity since 3.0, was 5 before|*integer* | Infinity |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 1000|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 

@@ -6,6 +6,7 @@ const Collations = require('../../lib/const/collations.js');
 const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
+const Net = require('net');
 
 describe('connection', () => {
   it('with no connection attributes', function (done) {
@@ -34,9 +35,9 @@ describe('connection', () => {
       .createConnection({ connectAttributes: attr, charset: charset })
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -54,9 +55,9 @@ describe('connection', () => {
       })
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -87,11 +88,11 @@ describe('connection', () => {
 
   it('callback without connect', function (done) {
     const conn = base.createCallbackConnection();
-    conn.query('select 1', (err, rows) => {
+    conn.query("select '1'", (err, rows) => {
       if (err) {
         done(err);
       } else {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         conn.end();
         done();
       }
@@ -108,9 +109,7 @@ describe('connection', () => {
       assert.isTrue(err.message.includes('close forced'));
       done();
     });
-    process.nextTick(
-      conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
-    );
+    process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced')));
   });
 
   it('callback with socket failing without error', function (done) {
@@ -148,7 +147,7 @@ describe('connection', () => {
     try {
       conn.connect();
     } catch (err) {
-      assert.isTrue(err.message.includes('missing callback parameter'));
+      assert.isTrue(err.message.includes('missing mandatory callback parameter'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45016);
       assert.equal(err.code, 'ER_MISSING_PARAMETER');
@@ -182,12 +181,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -197,8 +191,7 @@ describe('connection', () => {
         });
         conn.query('KILL ' + conn.threadId).catch((err) => {
           assert.isTrue(
-            err.message.includes('Connection was killed') ||
-              err.message.includes('Query execution was interrupted')
+            err.message.includes('Connection was killed') || err.message.includes('Query execution was interrupted')
           );
           assert.equal(err.sqlState, '70100');
           assert.isTrue(err.errno === 1927 || err.errno === 1317);
@@ -224,30 +217,23 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('multiple connection.connect() with promise', function (done) {
+  it('multiple connection end with promise', function (done) {
     let conn;
     base
-      .createConnection()
-      .then((newConn) => {
-        conn = newConn;
-        return newConn.connect();
+      .createConnection({
+        logger: {
+          error: (msg) => {}
+        }
       })
-      .then((newConn) => {
-        return newConn.end();
+      .then((con) => {
+        conn = con;
+        return conn.end();
       })
       .then(() => {
         return conn.end();
       })
       .then(() => {
-        conn
-          .connect()
-          .then(() => {
-            done(new Error('must have thrown error'));
-          })
-          .catch((err) => {
-            assert.isTrue(err.message.includes('Connection closed'));
-            done();
-          });
+        done();
       })
       .catch(done);
   });
@@ -257,9 +243,9 @@ describe('connection', () => {
       .createConnection()
       .then((conn) => {
         conn
-          .query('SELECT 1')
+          .query("SELECT '1'")
           .then((rows) => {
-            assert.deepEqual(rows, [{ 1: 1 }]);
+            assert.deepEqual(rows, [{ 1: '1' }]);
             conn.end();
             done();
           })
@@ -274,7 +260,7 @@ describe('connection', () => {
     conn
       .connect()
       .then(() => {
-        return conn.end();
+        return new Promise(conn.end.bind(conn));
       })
       .catch(() => {});
 
@@ -284,55 +270,38 @@ describe('connection', () => {
         done(new Error('must have thrown error'));
       })
       .catch((err) => {
-        assert.equal(
-          err.message,
-          '(conn=-1, no: 45002, SQLState: 08S01) Connection is already connecting'
-        );
+        assert.equal(err.message, '(conn=-1, no: 45002, SQLState: 08S01) Connection is already connecting');
         done();
       })
       .catch(done);
   });
 
-  it('connection.ping()', function (done) {
-    const conn = new Connection(new ConnOptions(Conf.baseConfig));
-    conn.connect().then(() => {
-      conn.ping();
-      conn
-        .ping()
-        .then(() => {
-          conn
-            .ping(-2)
-            .then(() => {
-              done(new Error('must have thrown error'));
-            })
-            .catch((err) => {
-              assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
-              conn
-                .ping(200)
-                .then(() => {
-                  conn.query('SELECT SLEEP(1)');
-                  const initTime = Date.now();
-                  conn
-                    .ping(200)
-                    .then(() => {
-                      done(new Error('must have thrown error after ' + (Date.now() - initTime)));
-                    })
-                    .catch((err) => {
-                      assert.isTrue(
-                        Date.now() - initTime > 195,
-                        'expected > 195, without waiting for SLEEP to finish, but was ' +
-                          (Date.now() - initTime)
-                      );
-                      assert.isTrue(err.message.includes('Ping timeout'));
-                      assert.isFalse(conn.isValid());
-                      done();
-                    });
-                })
-                .catch(done);
-            });
-        })
-        .catch(done);
-    });
+  it('connection.ping()', async () => {
+    const conn = await base.createConnection();
+    conn.ping();
+    await conn.ping();
+    try {
+      await conn.ping(-2);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
+    }
+    await conn.ping(200);
+
+    conn.query('SELECT SLEEP(1)');
+    const initTime = Date.now();
+
+    try {
+      await conn.ping(200);
+      throw new Error('must have thrown error after ' + (Date.now() - initTime));
+    } catch (err) {
+      assert.isTrue(
+        Date.now() - initTime > 195,
+        'expected > 195, without waiting for SLEEP to finish, but was ' + (Date.now() - initTime)
+      );
+      assert.isTrue(err.message.includes('Ping timeout'));
+      assert.isFalse(conn.isValid());
+    }
   });
 
   it('connection.ping() with callback', function (done) {
@@ -360,8 +329,7 @@ describe('connection', () => {
                     } else {
                       assert.isTrue(
                         Date.now() - initTime > 195,
-                        'expected > 195, without waiting for SLEEP to finish, but was ' +
-                          (Date.now() - initTime)
+                        'expected > 195, without waiting for SLEEP to finish, but was ' + (Date.now() - initTime)
                       );
                       assert.isTrue(err.message.includes('Ping timeout'));
                       assert.isFalse(conn.isValid());
@@ -430,12 +398,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    )
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
 
     this.timeout(10000);
 
@@ -465,21 +428,34 @@ describe('connection', () => {
       connectTimeout: 1000
     });
     conn.connect((err) => {
-      assert.isTrue(
-        err.message.includes(
-          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-        )
-      );
-      assert.isTrue(
-        Date.now() - initTime >= 990,
-        'expected > 990, but was ' + (Date.now() - initTime)
-      );
-      assert.isTrue(
-        Date.now() - initTime < 2000,
-        'expected < 2000, but was ' + (Date.now() - initTime)
-      );
+      assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
+      assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+      assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
       done();
     });
+  });
+
+  it('stream basic test', async function () {
+    const conn = await base.createConnection({
+      stream: (cb) => {
+        cb(null, new Net.connect(Conf.baseConfig.port, Conf.baseConfig.host));
+      }
+    });
+    conn.end();
+
+    const conn2 = await base.createConnection({
+      stream: () => {
+        return new Net.connect(Conf.baseConfig.port, Conf.baseConfig.host);
+      }
+    });
+    conn2.end();
+
+    const conn3 = await base.createConnection({
+      stream: (cb) => {
+        cb();
+      }
+    });
+    conn3.end();
   });
 
   it('connection error', function (done) {
@@ -504,7 +480,6 @@ describe('connection', () => {
         done();
       });
   });
-
   it('connection timeout', function (done) {
     base
       .createConnection({
@@ -534,7 +509,6 @@ describe('connection', () => {
     conn.end();
     done();
   });
-
   it('connection without database', (done) => {
     base
       .createConnection({
@@ -566,14 +540,8 @@ describe('connection', () => {
             '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
           )
         );
-        assert.isTrue(
-          Date.now() - initTime >= 990,
-          'expected > 990, but was ' + (Date.now() - initTime)
-        );
-        assert.isTrue(
-          Date.now() - initTime < 2000,
-          'expected < 2000, but was ' + (Date.now() - initTime)
-        );
+        assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+        assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
         done();
       });
   });
@@ -582,18 +550,10 @@ describe('connection', () => {
     const initTime = Date.now();
     base.createConnection({ host: 'www.google.fr', connectTimeout: 1000 }).catch((err) => {
       assert.isTrue(
-        err.message.includes(
-          '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-        )
+        err.message.includes('(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after')
       );
-      assert.isTrue(
-        Date.now() - initTime >= 990,
-        'expected > 990, but was ' + (Date.now() - initTime)
-      );
-      assert.isTrue(
-        Date.now() - initTime < 2000,
-        'expected < 2000, but was ' + (Date.now() - initTime)
-      );
+      assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+      assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
       done();
     });
   });
@@ -624,7 +584,7 @@ describe('connection', () => {
               "'autocommit, character_set_client, character_set_connection, character_set_results, time_zone'"
           );
         }
-        assert.equal(conn.__tests.getCollation(), Collations.fromName('UTF8MB4_UNICODE_CI'));
+        // assert.equal(conn.__tests.getCollation(), Collations.fromName('UTF8MB4_UNICODE_CI'));
         conn
           .query("SET time_zone = '+00:00', character_set_client = cp850")
           .then(() => {
@@ -657,42 +617,46 @@ describe('connection', () => {
       password: 'myPwd',
       allowPublicKeyRetrieval: true
     });
+    conn.on('error', (err) => {});
     conn.connect((err) => {
-      if (!err) done(new Error('must have thrown error'));
-      switch (err.errno) {
-        case 45025:
-          //Client does not support authentication protocol
-          assert.equal(err.sqlState, '08004');
-          break;
+      if (!err) {
+        done(new Error('must have thrown error'));
+      } else {
+        switch (err.errno) {
+          case 45025:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08004');
+            break;
 
-        case 1251:
-          //authentication method unavailable
-          assert.equal(err.sqlState, '08004');
-          break;
+          case 1251:
+            //authentication method unavailable
+            assert.equal(err.sqlState, '08004');
+            break;
 
-        case 1524:
-          //GSSAPI plugin not loaded
-          assert.equal(err.sqlState, 'HY000');
-          break;
+          case 1524:
+            //GSSAPI plugin not loaded
+            assert.equal(err.sqlState, 'HY000');
+            break;
 
-        case 1045:
-          assert.equal(err.sqlState, '28000');
-          break;
+          case 1045:
+            assert.equal(err.sqlState, '28000');
+            break;
 
-        case 1044:
-          //mysql
-          assert.equal(err.sqlState, '42000');
-          break;
+          case 1044:
+            //mysql
+            assert.equal(err.sqlState, '42000');
+            break;
 
-        case 1698:
-          assert.equal(err.sqlState, '28000');
-          break;
+          case 1698:
+            assert.equal(err.sqlState, '28000');
+            break;
 
-        default:
-          done(err);
-          return;
+          default:
+            done(err);
+            return;
+        }
+        done();
       }
-      done();
     });
   });
 
@@ -742,10 +706,13 @@ describe('connection', () => {
 
   it('connection error connect event', function (done) {
     const conn = base.createCallbackConnection({ user: 'fooUser' });
+    conn.on('error', (err) => {});
     conn.connect((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
-      } else done();
+      } else {
+        done();
+      }
     });
   });
 
@@ -769,7 +736,7 @@ describe('connection', () => {
       .connect()
       .then(() => {
         assert.isTrue(conn.isValid());
-        return conn.end();
+        return new Promise(conn.end.bind(conn));
       })
       .then(() => {
         assert.isTrue(!conn.isValid());
@@ -811,15 +778,12 @@ describe('connection', () => {
     }, 500);
 
     shareConn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         const diff = process.hrtime(startTime);
         //query has take more than 500ms
-        assert.isTrue(
-          diff[1] > 499000000,
-          ' diff[1]:' + diff[1] + ' expected to be more than 500000000'
-        );
+        assert.isTrue(diff[1] > 499000000, ' diff[1]:' + diff[1] + ' expected to be more than 500000000');
         done();
       })
       .catch(done);
@@ -875,9 +839,7 @@ describe('connection', () => {
     if (!base.utf8Collation()) this.skip();
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query(
-      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
-    );
+    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
     shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(
@@ -917,9 +879,7 @@ describe('connection', () => {
     if (!base.utf8Collation()) this.skip();
     shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query(
-      "CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
-    );
+    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
     shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(

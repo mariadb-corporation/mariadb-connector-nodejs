@@ -172,11 +172,7 @@ describe('transaction', () => {
           return conn.query("INSERT INTO testTransaction1 values ('test')");
         })
         .then(() => {
-          process.nextTick(
-            conn.__tests
-              .getSocket()
-              .destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
-          );
+          process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced')));
           conn
             .commit()
             .then(() => {
@@ -209,9 +205,7 @@ describe('transaction', () => {
                 } else {
                   conn.query("INSERT INTO testTransaction2 values ('test')", (err) => {
                     process.nextTick(
-                      conn.__tests
-                        .getSocket()
-                        .destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
+                      conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
                     );
                     conn.commit();
                     done();
