@@ -2,8 +2,8 @@
 
 const Benchmark = require('benchmark');
 const conf = require('../test/conf');
+const chalk = require('chalk');
 
-const colors = require('colors');
 const mariadb = require('../promise');
 const callbackMariadb = require('../callback');
 
@@ -287,10 +287,11 @@ Bench.prototype.displayReport = function () {
 
   console.log('');
   console.log('');
-  console.log('--- BENCHMARK RESULTS ---'.yellow);
+  console.log(chalk.yellow('--- BENCHMARK RESULTS ---'));
   console.log(
-    '/* travis bench are not to take as is, because VM might run some other testing script that can change results */'
-      .gray
+    chalk.gray(
+      '/* travis bench are not to take as is, because VM might run some other testing script that can change results */'
+    )
   );
 
   const keys = Object.keys(this.reportData);
@@ -328,9 +329,9 @@ Bench.prototype.displayReport = function () {
           : ' ( ' + this.fill((val > 0 ? '+' : '') + perc, 6, false) + '% )');
       if (o.drvType.includes('mariadb')) {
         if (o.iteration < best) {
-          console.log(tt.red);
+          console.log(chalk.red(tt));
         } else {
-          console.log(tt.green);
+          console.log(chalk.green(tt));
         }
       } else {
         console.log(tt);

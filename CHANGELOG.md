@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.5.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.6) (Jan 2022)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.5...2.5.6)
+
+* [CONJS-181] Local infile file validation doesn't take in account escaped value
+* [CONJS-183] change default connection timeout value 1 second to permit pools to send correct error
+* update documentation with for-await-of use #189
+* correct character_set_client unexpect error parsing OK_Packet #177
+
 ## [2.5.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/2.5.5) (19 Oct 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...2.5.5)
 
