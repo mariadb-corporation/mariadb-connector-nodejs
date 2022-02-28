@@ -6,7 +6,7 @@ const ConnOptions = require('../../../lib/config/connection-options');
 describe('test connection options', () => {
   it('charset option', () => {
     let opt = new ConnOptions();
-    assert.equal(opt.collation.name, 'UTF8MB4_UNICODE_CI');
+    assert.equal(opt.collation, null);
 
     opt = new ConnOptions({ collation: 'utf8mb4_esperanto_ci' });
     assert.equal(opt.collation.name, 'UTF8MB4_ESPERANTO_CI');
@@ -46,8 +46,7 @@ describe('test connection options', () => {
     } catch (e) {
       assert.isTrue(
         e.message.includes(
-          'enabling options `permitLocalInfile` ' +
-            'and `pipelining` is not possible, options are incompatible.'
+          'enabling options `permitLocalInfile` ' + 'and `pipelining` is not possible, options are incompatible.'
         )
       );
     }
@@ -67,19 +66,13 @@ describe('test connection options', () => {
       new ConnOptions({ timezone: '+02:20' });
       throw new Error('Must have thrown error');
     } catch (e) {
-      assert.isTrue(
-        e.message.includes(
-          "timezone format incompatible with IANA standard timezone format was '+02:20'"
-        )
-      );
+      assert.isTrue(e.message.includes("timezone format incompatible with IANA standard timezone format was '+02:20'"));
     }
   });
 
   it('wrong format', () => {
     try {
-      new ConnOptions(
-        'mariasdb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true'
-      );
+      new ConnOptions('mariasdb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true');
     } catch (e) {
       e.message.includes('error parsing connection string');
     }

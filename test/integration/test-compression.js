@@ -14,7 +14,7 @@ describe('Compression', function () {
       .then((con) => {
         conn = con;
         conn.query('SELECT @@max_allowed_packet as t').then((row) => {
-          maxAllowedSize = row[0].t;
+          maxAllowedSize = Number(row[0].t);
           if (testSize < maxAllowedSize) {
             buf = Buffer.alloc(testSize);
             randomBuf = Buffer.alloc(testSize);
@@ -47,23 +47,16 @@ describe('Compression', function () {
   };
 
   it('test compression multiple packet', function (done) {
-    this.timeout(30000);
+    this.timeout(60000);
     if (maxAllowedSize < 35000000) this.skip();
 
-    conn.query(
-      'CREATE TEMPORARY TABLE compressTab (t1 LONGTEXT, t2 LONGTEXT, t3 LONGTEXT, t4 LONGTEXT)'
-    );
+    conn.query('CREATE TEMPORARY TABLE compressTab (t1 LONGTEXT, t2 LONGTEXT, t3 LONGTEXT, t4 LONGTEXT)');
 
     const longText = generateLongText(20000000);
     const mediumText = generateLongText(10000000);
     const smallIntText = generateLongText(60000);
     conn
-      .query('INSERT INTO compressTab values (?,?,?,?)', [
-        longText,
-        mediumText,
-        smallIntText,
-        'expected'
-      ])
+      .query('INSERT INTO compressTab values (?,?,?,?)', [longText, mediumText, smallIntText, 'expected'])
       .then(() => {
         done();
       })
@@ -72,9 +65,9 @@ describe('Compression', function () {
 
   it('simple select 1', function (done) {
     conn
-      .query('SELECT 1')
+      .query("SELECT '1'")
       .then((rows) => {
-        assert.deepEqual(rows, [{ 1: 1 }]);
+        assert.deepEqual(rows, [{ 1: '1' }]);
         done();
       })
       .catch(done);
@@ -85,23 +78,23 @@ describe('Compression', function () {
     //using sequence engine
     if (!conn.info.isMariaDB() || !conn.info.hasMinVersion(10, 1)) this.skip();
     conn
-      .query('select 1; DO 1;select 2')
+      .query("select '1'; DO 1;select '2'")
       .then((rows) => {
         assert.equal(rows.length, 3);
-        assert.deepEqual(rows[0], [{ 1: 1 }]);
+        assert.deepEqual(rows[0], [{ 1: '1' }]);
         assert.deepEqual(rows[1], {
           affectedRows: 0,
-          insertId: 0,
+          insertId: 0n,
           warningStatus: 0
         });
-        assert.deepEqual(rows[2], [{ 2: 2 }]);
+        assert.deepEqual(rows[2], [{ 2: '2' }]);
         done();
       })
       .catch(done);
   });
 
   it('parameter bigger than 16M packet size', async function () {
-    if (maxAllowedSize <= testSize) this.skip();
+    if (maxAllowedSize <= testSize) return this.skip();
     this.timeout(20000); //can take some time
     conn.query('DROP TABLE IF EXISTS bigParameter');
     conn.query('CREATE TABLE bigParameter (b longblob)');

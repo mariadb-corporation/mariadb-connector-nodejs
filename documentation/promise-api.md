@@ -53,6 +53,41 @@ To use the Connector, you need to import the package into your application code.
 const mariadb = require('mariadb');
 ```
 
+## Migrating from 2.x or mysql/mysql2 to 3.x
+
+Default behaviour for decoding [BIGINT](https://mariadb.com/kb/en/bigint/) / [DECIMAL](https://mariadb.com/kb/en/decimal/) datatype for 2.x version and mysql/mysql2 drivers return a javascript [Number](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Number) object.
+BIGINT/DECIMAL values might not be in the safe range, resulting in approximate results. 
+
+Since 3.x version, driver has reliable default, returning:
+* DECIMAL => javascript String
+* BIGINT => javascript [BigInt](https://mariadb.com/kb/en/bigint/) object
+
+For compatibility with previous version or mysql/mysql driver, 3 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
+
+|option|description|type|default| 
+|---:|---|:---:|:---:| 
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values. |*boolean* | false |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values. |*boolean* | false |
+
+Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.   
+
+#### Other considerations
+
+mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
+This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise).
+
+example:
+```js
+  const res = await conn.query('call ??(?)', [myProc, 'myVal']);
+```
+has to use explicit escapeId:
+```js
+  const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
+```
+
+Cluster configuration `removeNodeErrorCount` default to `Infinity` when mysql/mysql2 default to value `5`. This avoids removing nodes without explicitly saying so.
+
 ## Recommendation
 
 ### Timezone consideration
@@ -87,13 +122,12 @@ IANA timezone correspondence must be found :   (see [IANA timezone List](https:/
 This will ensure DST (automatic date saving time change will be handled) 
 
 ```js
-const mariadb = require('mariadb');
-const conn = mariadb.createConnection({
-            host: process.env.DB_HOST, 
-            user: process.env.DB_USER, 
-            password: process.env.DB_PWD,
-            timezone: 'America/Los_Angeles',
-            skipSetTimezone: true
+const conn = await mariadb.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PWD,
+    timezone: 'America/Los_Angeles',
+    skipSetTimezone: true
 });
 ```
 
@@ -104,9 +138,9 @@ Connection details such as URL, username, and password are better hidden into en
 using code like : 
 ```js
 const conn = await mariadb.createConnection({
- host: process.env.DB_HOST,
- user: process.env.DB_USER,
- password: process.env.DB_PWD
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PWD
 });
 ```
 Then for example, run node.js setting those environment variable :
@@ -147,21 +181,6 @@ For new project, enabling option `supportBigInt` is recommended (It will be in a
 This option permits to avoid exact value for big integer (value > 2^53) (see [javascript ES2020 
 BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) ) 
 
-## Consideration for migration from mysql/mysql2
-
-### Experimental `??` syntax 
-mysql has an experimental syntax permitting the use of `??` characters as placeholder to escape id.
-This isn't implemented in mariadb driver, permitting same query syntax for [Connection.query](#connectionquerysql-values---promise) and [Connection.execute](#connectionexecutesql-values--promise) (3.x version).
-
-example:
-```js
-  const res = await conn.query('call ??(?)', [myProc, 'myVal']);
-```
-has to use explicit escapeId:
-```js
-  const res = await conn.query(`call ${conn.escapeId(myProc)}(?)`, ['myVal']);
-```
-
 
 # Promise API
 
@@ -178,6 +197,8 @@ has to use explicit escapeId:
 
 * [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise): Executes a query.
 * [`connection.queryStream(sql[, values]) → Emitter`](#connectionquerystreamsql-values--emitter): Executes a query, returning an emitter object to stream rows.
+* [`connection.prepare(sql) → Promise`](#connectionpreparesql--promise): Prepares a query.
+* [`connection.execute(sql[, values]) → Promise`](#connectionexecutesql-values--promise): Prepare and Executes a query.
 * [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values--promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
@@ -264,6 +285,7 @@ Essential options list:
 | **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
 | **`queryTimeout`** | Set maximum query time in ms (an error will be thrown if limit is reached). 0 or undefined meaning no timeout. This can be superseded for a query using [`timeout`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#timeout) option|*int* |0| 
 | **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
+| **`logger`** | Configure logger. For more information, see the [`logger` option](/documentation/connection-options.md#logger) documentation. |*mixed*|
 
 For more information, see the [Connection Options](/documentation/connection-options.md) documentation. 
 
@@ -286,8 +308,8 @@ For instance, on Unix a connection might look like this:
 
 ```javascript
 const conn = await mariadb.createConnection({ 
- socketPath: '/tmp/mysql.sock', 
- user: 'root' 
+    socketPath: '/tmp/mysql.sock', 
+    user: 'root' 
 });
 ```
 
@@ -295,8 +317,8 @@ It has a similar syntax on Windows:
 
 ```javascript
 const conn = await mariadb.createConnection({ 
- socketPath: '\\\\.\\pipe\\MySQL', 
- user: 'root' 
+    socketPath: '\\\\.\\pipe\\MySQL', 
+    user: 'root' 
 });
 ```
 
@@ -312,18 +334,19 @@ Creates a new pool.
 
 ```javascript
 const pool = mariadb.createPool({ 
-  host: 'mydb.com', 
-  user: 'myUser', 
-  connectionLimit: 5 
+    host: 'mydb.com', 
+    user: 'myUser', 
+    connectionLimit: 5 
 });
 
+let conn;
 try {
-  const conn = await pool.getConnection();
-  console.log("connected ! connection id is " + conn.threadId);
+    conn = await pool.getConnection();
+    console.log('connected ! connection id is ' + conn.threadId);
+    conn.release(); //release to pool
 } catch (err) {
-  console.log("not connected due to error: " + err);
+    console.log('not connected due to error: ' + err);
 }
-
 ```
 
 ### Pool options
@@ -340,9 +363,9 @@ Specific options for pools are :
 | **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
-| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (only for MariaDB version >= 10.2.22 /10.3.13). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true|
+| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (only for MariaDB version >= 10.2.22 /10.3.13). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true before version 3, false since|
 | **`leakDetectionTimeout`** |Permit to indicate a timeout to log connection borrowed from pool. When a connection is borrowed from pool and this timeout is reached, a message will be logged to console indicating a possible connection leak. Another message will tell if the possible logged leak has been released. A value of 0 (default) meaning Leak detection is disable |*integer*| 0|
-
+| **`pingTimeout`** | validation timeout (ping) for checking an connection not used recently from pool in ms. |*integer* | 500 |
 
 ## `createPoolCluster(options) → PoolCluster`
 
@@ -356,9 +379,9 @@ Creates a new pool cluster. Cluster handle multiple pools, giving high availabil
 
 ```javascript
 const cluster = mariadb.createPoolCluster();
-cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+cluster.add('master', { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
+cluster.add('slave1', { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
+cluster.add('slave2', { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
 
 //getting a connection from slave1 or slave2 using round-robin
 const conn = await cluster.getConnection(/slave*/, "RR");
@@ -380,7 +403,7 @@ Specific options for pool cluster are :
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed|*integer* | 5 |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed. Default to Infinity since 3.0, was 5 before|*integer* | Infinity |
 | **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 1000|
 | **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
 
@@ -397,7 +420,6 @@ Specific options for pool cluster are :
 permit listing default option that will be used. 
 
 ```js
-const mariadb = require('mariadb');
 console.log(mariadb.defaultOptions({ timezone: '+00:00' }));
 /*
 {
@@ -430,16 +452,16 @@ Sends a query to database and return result as a Promise.
 For instance, when using an SQL string:
 
 ```js
-const rows = await connection.query("SELECT NOW()");
+const rows = await conn.query('SELECT NOW()');
 console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
 ```
 
 Alternatively, you could use the JSON object:
 
 ```js
-const rows = await connection.query({
-  dateStrings:true, 
-  sql:'SELECT NOW()'
+const rows = await conn.query({
+    dateStrings: true, 
+    sql: 'SELECT NOW()'
 });
 console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
 ```
@@ -468,12 +490,11 @@ const res = await connection.query("INSERT INTO someTable VALUES (?, ?, ?)", [
 In the case of streaming, 
 
 ```js
-const https = require("https");
+const https = require('https');
 //3Mb page
-https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-support",
-  readableStream => {
-     connection.query("INSERT INTO StreamingContent (b) VALUE (?)", [readableStream]);        
-  }
+https.get(
+    'https://node.green/#ES2018-features-Promise-prototype-finally-basic-support',
+    readableStream => conn.query('INSERT INTO StreamingContent (b) VALUE (?)', [readableStream]);
 )
 ```
 
@@ -491,8 +512,7 @@ await connection.query('CREATE TABLE animals (' +
                        'name VARCHAR(30) NOT NULL,' +
                        'PRIMARY KEY (id))');
 const res = await connection.query('INSERT INTO animals(name) value (?)', ['sea lions']);
-console.log(res);
-//log : { affectedRows: 1, insertId: 1, warningStatus: 0 }
+//res : { affectedRows: 1, insertId: 1, warningStatus: 0 }
 ```
 
 ### Array Result-sets 
@@ -503,8 +523,7 @@ The rows default to JSON objects, but two other formats are also possible with t
 
 ```javascript
 const res = await connection.query('select * from animals');
-console.log(res); 
-// [ 
+// res : [
 //    { id: 1, name: 'sea lions' }, 
 //    { id: 2, name: 'bird' }, 
 //    meta: [ ... ]
@@ -519,9 +538,8 @@ console.log(res);
 * [`rowsAsArray`](#rowsAsArray)
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
-* [`supportBigNumbers`](#supportBigNumbers)
-* [`supportBigint`](#supportBigint)
-* [`bigNumberStrings`](#bigNumberStrings)
+* [`bigIntAsNumber`](#bigIntAsNumber)
+* [`decimalAsNumber`](#decimalAsNumber)
 
 Those options can be set on the query level, but are usually set at the connection level, and will then apply to all queries. 
 
@@ -541,29 +559,33 @@ Implementation of max_statement_time is engine dependent, so there might be some
 
 
 ```javascript
-//query that takes more than 20s
-connection
-  .query({sql: 'information_schema.tables, information_schema.tables as t2', timeout: 100 })
-  .then(...)
-  .catch(err => {
-          // SqlError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
-          // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
-          // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
-          // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)
-          // at Query.readResponsePacket (C:\projets\mariadb-connector-nodejs.git\lib\cmd\resultset.js:46:28)
-          // at PacketInputStream.receivePacketBasic (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:104:9)
-          // at PacketInputStream.onData (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:160:20)
-          // at Socket.emit (events.js:210:5)
-          // at addChunk (_stream_readable.js:309:12)
-          // at readableAddChunk (_stream_readable.js:290:11)
-          // at Socket.Readable.push (_stream_readable.js:224:10)
-          // at TCP.onStreamRead (internal/stream_base_commons.js:182:23) {
-          //     fatal: true,
-          //         errno: 1969,
-          //         sqlState: '70100',
-          //         code: 'ER_STATEMENT_TIMEOUT'
-          // }
-  });
+
+try {
+    //query that takes more than 20s
+    await connection.query({
+        sql: 'information_schema.tables, information_schema.tables as t2', 
+        timeout: 100 
+    });
+} catch (err) {
+  // error is:
+  // SqlError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
+  // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
+  // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
+  // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)
+  // at Query.readResponsePacket (C:\projets\mariadb-connector-nodejs.git\lib\cmd\parser.js:46:28)
+  // at PacketInputStream.receivePacketBasic (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:104:9)
+  // at PacketInputStream.onData (C:\projets\mariadb-connector-nodejs.git\lib\io\packet-input-stream.js:160:20)
+  // at Socket.emit (events.js:210:5)
+  // at addChunk (_stream_readable.js:309:12)
+  // at readableAddChunk (_stream_readable.js:290:11)
+  // at Socket.Readable.push (_stream_readable.js:224:10)
+  // at TCP.onStreamRead (internal/stream_base_commons.js:182:23) {
+  //     fatal: true,
+  //         errno: 1969,
+  //         sqlState: '70100',
+  //         code: 'ER_STATEMENT_TIMEOUT'
+  // }
+}
 ```
 
 #### `namedPlaceholders`
@@ -574,11 +596,8 @@ While the recommended method is to use the question mark [placeholder](#placehol
 
 ```javascript
 await connection.query(
-  {
-    namedPlaceholders: true,
-    sql: "INSERT INTO someTable VALUES (:id, :img, :db)",
-  },
-  { id: 1, img: Buffer.from("c327a97374", "hex"), db: "mariadb" }
+	{ namedPlaceholders: true, sql: 'INSERT INTO someTable VALUES (:id, :img, :db)' },
+	{ id: 1, img: Buffer.from('c327a97374', 'hex'), db: 'mariadb' }
 );
 ```
 
@@ -593,8 +612,7 @@ with option `rowsAsArray` : `[ 1, 'sea lions' ]`
 
 ```javascript
 const res = await connection.query({ rowsAsArray: true, sql: 'select * from animals' });
-console.log(res); 
-// [ 
+// res = [ 
 //    [ 1, 'sea lions' ], 
 //    [ 2, 'bird' ],
 //    meta: [...]
@@ -611,11 +629,10 @@ For instance, when using a boolean value:
 
 ```javascript
 const res = await connection.query({
-  nestTables:true, 
-  sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
+    nestTables:true, 
+    sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
 });
-console.log(res); 
-//[ 
+// res = [ 
 //  { 
 //     a: { name: 'sea lions', id: 1 }, 
 //     b: { name: 'sea lions' } 
@@ -632,11 +649,10 @@ Alternatively, using a string value:
 
 ```javascript
 const res = await connection.query({
-  nestTables: '_', 
-  sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
+    nestTables: '_', 
+    sql:'select a.name, a.id, b.name from animals a, animals b where b.id=1'
 });
-console.log(res); 
-//[ 
+// res = [ 
 //  { a_name: 'sea lions', a_id: 1, b_name: 'sea lions' }, 
 //  { a_name: 'bird', a_id: 2, b_name: 'sea lions' },
 //  meta: [...]
@@ -650,38 +666,33 @@ console.log(res);
 Whether you want the Connector to retrieve date values as strings, rather than `Date` objects.
 
 
-#### `supportBigNumbers`
+#### `bigIntAsNumber`
 
-*boolean, default: false*
-
-Whether the query should return integers as [`Long`](https://www.npmjs.com/package/long) objects when they are not in
- the [safe](/documentation/connection-options.md#big-integer-support) range.
-
-
-#### `supportBigInt`
-
-*boolean, default: false*
+*boolean, default: true*
 
 Whether the query should return javascript ES2020 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) 
 for [BIGINT](https://mariadb.com/kb/en/bigint/) data type. 
 This ensures having expected value even for value > 2^53 (see [safe](/documentation/connection-options.md#big-integer-support) range).
 This option can be set to query level, supplanting connection option `supportBigInt` value. 
 
+this option is for compatibility for driver version < 3
+
 ```javascript
 await shareConn.query('CREATE TEMPORARY TABLE bigIntTable(id BIGINT)');
 await shareConn.query("INSERT INTO bigIntTable value ('9007199254740993')");
 const res = await shareConn.query('select * from bigIntTable');
-// res :  [{ id: 9007199254740992 }] (not exact value)
-const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBigInt: true});
 // res :  [{ id: 9007199254740993n }] (exact value)
+const res2 = await shareConn.query({sql: 'select * from bigIntTable', supportBigInt: false});
+// res :  [{ id: 9007199254740992 }] (not exact value)
 ```
 
 
-#### `bigNumberStrings`
+#### `decimalAsNumber`
 
 *boolean, default: false*
 
-Whether the query should return integers as strings when they are not in the [safe](documentation/connection-options.md#big-integer-support) range.
+Whether the query should return decimal as Number. 
+If enable, this might return approximate values. 
 
 
 #### `typeCast`
@@ -702,7 +713,7 @@ const tinyToBoolean = (column, next) => {
   }
   return next();
 };
-connection.query({typeCast: tinyToBoolean, sql:"..."});
+connection.query({ typeCast: tinyToBoolean, sql: '...' });
 ```
 
 ### Column Metadata
@@ -722,8 +733,7 @@ Shows the column type as an integer value.  For more information on the relevant
 
 ```js
 const rows = await connection.query("SELECT 1, 'a'");
-console.log(rows);
-// [ 
+// rows = [ 
 //   { '1': 1, a: 'a' },
 //   meta: [ 
 //     { 
@@ -756,7 +766,6 @@ console.log(rows);
 //     } 
 //   ] 
 // ]
-assert.equal(rows.length, 1);
 ```
 
 
@@ -770,10 +779,17 @@ assert.equal(rows.length, 1);
 > * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
 > * data : Emits each time a row is received (parameter is a row). 
 > * end : Emits when the query ends (no parameter). 
-
+> a method: close() : permits to close stream (since 3.0)
+> 
 When using the `query()` method, documented above, the Connector returns the entire result-set with all its data in a single call.  While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets.  Instead of retrieving all of the data into memory, you can use the `queryStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
 
 Query times and result handlers take the same amount of time, but you may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable.  The query must be totally received before this timeout, which defaults to 30 seconds.
+
+!! Warning !!
+Querystream handle backpressure, meaning that if data handling takes some amount of time, socket is pause to avoid having node socket buffer growing indefinitely.
+When using pipeline, if data handling throws an error, user must explicilty close queryStream to ensure not having connection hangs. 
+
+
 
 
 There is different methods to implement streaming:
@@ -785,8 +801,12 @@ simple use with for-await-of only available since Node.js 10 (note that this mus
 ```javascript
 async function streamingFunction() {
  const queryStream = connection.queryStream('SELECT * FROM mysql.user');
- for await (const row of queryStream) {
-  console.log(row);
+ try {
+   for await (const row of queryStream) {
+     console.log(row);
+   }
+ } catch (e) {
+   queryStream.close();
  }
 }
 ```
@@ -794,7 +814,7 @@ async function streamingFunction() {
 * Events
 
 ```javascript
-connection.queryStream("SELECT * FROM mysql.user")
+connection.queryStream('SELECT * FROM mysql.user')
       .on("error", err => {
         console.log(err); //if error
       })
@@ -815,12 +835,12 @@ Note that queryStream produced Object data, so Transform/Writable implementation
 (example use [`stream.pipeline`](https://nodejs.org/api/stream.html#stream_stream_pipeline_streams_callback) only available since Node.js 10)
 
 ```javascript
-const stream = require("stream");
-const fs = require("fs");
+const stream = require('stream');
+const fs = require('fs');
 
 //...create connection...
 
-const someWriterStream = fs.createWriteStream("./someFile.txt");
+const someWriterStream = fs.createWriteStream('./someFile.txt');
 
 const transformStream = new stream.Transform({
   objectMode: true,
@@ -829,10 +849,71 @@ const transformStream = new stream.Transform({
   }
 });
 
-const queryStream = connection.queryStream("SELECT * FROM mysql.user");
+const queryStream = connection.queryStream('SELECT * FROM mysql.user');
 
-stream.pipeline(queryStream, transformStream, someWriterStream);
+stream.pipeline(queryStream, transformStream, someWriterStream, (err) => { queryStream.close(); });
 
+```
+## `connection.prepare(sql) → Promise`
+> * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+>
+> Returns a promise that :
+> * resolves with a [Prepare](#prepareobject) object.
+> * rejects with an [Error](#error).
+
+This permit to [PREPARE](https://mariadb.com/kb/en/prepare-statement/) a command that permits to be executed many times. 
+After use, prepare.close() method MUST be call, in order to properly close object. 
+
+
+### Prepare object
+
+Public variables : 
+* `id`: Prepare statement Identifier
+* `query`: sql command
+* `database`: database it applies to. 
+* `parameters`: parameter array information.
+* `columns`: columns array information. 
+
+Public methods :
+#### `execute(values) → Promise`
+> * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string.
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
+
+#### `close() → void`
+This close the prepared statement. 
+Each time a Prepared object is used, it must be closed. 
+
+In case prepare cache is enabled (having option `prepareCacheLength` > 0 (default)), 
+Driver will either really close Prepare or keep it in cache. 
+
+
+```javascript
+const prepare = await conn.prepare('INSERT INTO mytable(id,val) VALUES (?,?)');
+await prepare.execute([1, 'val1'])
+prepare.close();
+```
+
+## `connection.execute(sql[, values]) → Promise`
+> * `sql`: *string | JSON* SQL string or JSON object to supersede default connection options.  When using JSON object, object must have a "sql" key. For instance, `{ dateStrings: true, sql: 'SELECT now()' }`
+> * `values`: *array | object* Placeholder values. Usually an array, but in cases of only one placeholder, it can be given as is.
+>
+> Returns a promise that :
+> * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
+> * rejects with an [Error](#error).
+
+This is quite similar to [`connection.query(sql[, values]) → Promise`](#connectionquerysql-values---promise) method, with a few differences : 
+Execute will in fact [PREPARE](https://mariadb.com/kb/en/prepare-statement/) + [EXECUTE](https://mariadb.com/kb/en/execute-statement/) + [CLOSE](https://mariadb.com/kb/en/deallocate-drop-prepare/) command.
+
+It makes sense to use this only if the command will often be used and if prepare cache is enabled (default).
+If PREPARE result is already in cache, only [EXECUTE](https://mariadb.com/kb/en/execute-statement/) command is executed.
+MariaDB server 10.6 even avoid resending result-set metadata if not changed since, permitting even faster results.
+
+ 
+```javascript
+const res = await conn.execute('SELECT * FROM mytable WHERE someVal = ? and otherVal = ?', [1, 'val1']);
 ```
 
 
@@ -860,15 +941,14 @@ result difference compared to execute multiple single query insert is that only 
 For instance,
 
 ```javascript
-  connection.query(
-    "CREATE TEMPORARY TABLE batchExample(id int, id2 int, id3 int, t varchar(128), id4 int)"
-  );
-  connection
-    .batch("INSERT INTO `batchExample` values (1, ?, 2, ?, 3)", [[1, "john"], [2, "jack"]])
-    .then(res => {
-      console.log(res.affectedRows); // 2
-    });
-
+connection.query(
+    'CREATE TEMPORARY TABLE batchExample(id int, id2 int, id3 int, t varchar(128), id4 int)'
+);
+const res = await connection.batch('INSERT INTO `batchExample` values (1, ?, 2, ?, 3)', [
+    [1, 'john'],
+    [2, 'jack']
+]);
+console.log(res.affectedRows); // 2
 ```
 
 ## `connection.beginTransaction() → Promise`
@@ -920,13 +1000,15 @@ try {
 Resets the connection and re-authorizes it using the given credentials.  It is the equivalent of creating a new connection with a new user, reusing the open socket.
 
 ```javascript
-conn.changeUser({user: 'changeUser', password: 'mypassword'})
-   .then(() => {
-      //connection user is now changed. 
-   })
-   .catch(err => {
-      //error
-   });
+try {
+    await conn.changeUser({
+        user: 'changeUser', 
+        password: 'mypassword'
+    });
+    //connection user is now changed. 
+} catch (e) {
+  // ...  
+}
 ```
 
 ## `connection.ping() → Promise`
@@ -997,24 +1079,20 @@ conn.end()
 Closes the connection without waiting for any currently executing queries.  These queries are interrupted.  MariaDB logs the event as an unexpected socket close.
 
 ```javascript
-conn.query(
-  "select * from information_schema.columns as c1, " +
-   "information_schema.tables, information_schema.tables as t2"
-)
-.then(rows => {
-  //won't occur
-})
-.catch(err => {
-  console.log(err);
-  //Error: Connection destroyed, command was killed
-  //    ...
-  //  fatal: true,
-  //  errno: 45004,
-  //  sqlState: '08S01',
-  //  code: 'ER_CMD_NOT_EXECUTED_DESTROYED' 
-  done();
-});
-conn.destroy(); //will immediately close the connection, even if query above would have take a minute
+try {
+    // long query > 20s
+    conn.query(
+        'select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+    );
+    conn.destroy(); //will immediately close the connection, before previous command end (no `await` in previous command)
+} catch (err) {
+    //Error: Connection destroyed, command was killed
+    //    ...
+    //  fatal: true,
+    //  errno: 45004,
+    //  sqlState: '08S01',
+    //  code: 'ER_CMD_NOT_EXECUTED_DESTROYED'
+}
 ```
 
 ## `connection.escape(value) → String`
@@ -1042,10 +1120,11 @@ Escaping API are meant to prevent [SQL injection](https://en.wikipedia.org/wiki/
 
 ```javascript
 const myColVar = "let'go";
-const myTable = "table:a"
+const myTable = 'table:a'
 const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
-// cmd value will be:
-// "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+//or using template literals
+const cmd2 = `SELECT * FROM ${conn.escapeId(myTable)} where myCol = ${conn.escape(myColVar)}`;
+// cmd = cmd2 = "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
 ```
 
 ## `connection.escapeId(value) → String`
@@ -1063,8 +1142,9 @@ const myTable = "table:a"
 const cmd = 'SELECT * FROM ' + conn.escapeId(myTable) + ' where myCol = ' + conn.escape(myColVar);
 // cmd value will be:
 // "SELECT * FROM `table:a` where myCol = 'let\\'s go'"
+
 // using template literals:
-const res = await con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar]);
+const res = await con.query(`SELECT * FROM ${con.escapeId(myTable)} where myCol = ?`, [myColVar]); 
 ```
 
 
@@ -1124,10 +1204,10 @@ Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs
 ```javascript
 
 const conn = await mariadb.createConnection({
-  user: 'root', 
-  password: 'myPwd', 
-  host: 'localhost', 
-  socketTimeout: 100
+    user: 'root', 
+    password: 'myPwd', 
+    host: 'localhost', 
+    socketTimeout: 100
 });
 
 conn.on('error', err => {
@@ -1146,6 +1226,7 @@ conn.on('error', err => {
   //  sqlState: '08S01',
   //  code: 'ER_SOCKET_TIMEOUT' }
 });
+
 ```
 
 
@@ -1178,16 +1259,19 @@ Connection must be given back to pool using this connection.release() method.
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
+const pool = mariadb.createPool({ 
+    host: 'mydb.com', 
+    user:'myUser' 
+});
 
+let conn;
 try {
-  const conn = await pool.getConnection()
-  console.log("connected ! connection id is " + conn.threadId);
-  await conn.release(); //release to pool
+    conn = await pool.getConnection();
+    console.log("connected ! connection id is " + conn.threadId);
+    conn.release(); //release to pool
 } catch (err) {
-  console.log("not connected due to error: " + err);
-};
+    console.log("not connected due to error: " + err);
+}
 ```
 
 ## `pool.query(sql[, values])` -> `Promise`
@@ -1410,3 +1494,32 @@ const conn = await northSlaves.getConnection();
 * `filteredPoolCluster.getConnection() → Promise` : Creates a new connection from pools that corresponds to pattern .
 * `filteredPoolCluster.query(sql[, values]) → Promise` : this is a shortcut to get a connection from pools that corresponds to pattern, execute a query and release connection.
 
+## Stored procedure with output parameter
+
+Output parameters can be retrieved with 2 differents ways:
+
+### Using simple query
+solution is to define output parameters as user-defined variables and retrieving them afterwhile.
+
+```javascript
+//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
+// begin set p2 = p1 * 2; end
+await shareConn.query('call multiplyBy2(?,@myOutputValue)', [2]);
+const res = await shareConn.query('SELECT @myOutputValue');
+// res = [{ '@myOutputValue': 4n }]
+```
+
+### Using execute
+(only when using 3.x version or the driver)
+execute use another protocol that permits to return output parameters directly.
+(OUT parameters must have null value) 
+
+```javascript
+//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
+// begin set p2 = p1 * 2; end
+const res = await shareConn.execute('call multiplyBy2(?, ?)', [2, null]);
+// res = [
+//   [ { p2: 4 }],
+//   OkPacket { affectedRows: 0, insertId: 0n, warningStatus: 0 }
+// ]
+```

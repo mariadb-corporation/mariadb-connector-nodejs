@@ -9,7 +9,16 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
   return mariadb.createConnection({
     host: baseConfig.host,
     user: option.user,
-    password: baseConfig.password
+    password: baseConfig.password,
+    logger: {
+      network: (msg) => console.log(msg),
+      query: (msg) => console.log(msg),
+      error: (err) => console.log(err)
+    },
+    stream: (callback) => {
+      console.log('test');
+      callback(null, null);
+    }
   });
 }
 
@@ -19,7 +28,7 @@ function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
       host: baseConfig.host,
       user: baseConfig.user,
       password: baseConfig.password,
-      leakDetectionTimeout: 10
+      leakDetectionTimeout: 100
     },
     options
   );
@@ -58,6 +67,10 @@ async function testMisc(): Promise<void> {
   console.log(defaultOptions);
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
+
+  rows = await connection.query('INSERT INTO myTable VALUE (1)');
+  console.log(rows.insertId === 1);
+  console.log(rows.affectedRows === 1);
 
   rows = await connection.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
@@ -118,12 +131,7 @@ async function testMisc(): Promise<void> {
   const writable = new Stream.Writable({
     objectMode: true,
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    write(
-      this: any,
-      _chunk: any,
-      _encoding: string,
-      callback: (error?: Error | null) => void
-    ): void {
+    write(this: any, _chunk: any, _encoding: string, callback: (error?: Error | null) => void): void {
       callback(null);
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -159,10 +167,7 @@ async function testChangeUser(): Promise<void> {
 }
 
 async function testTypeCast(): Promise<void> {
-  const changeCaseCast = (
-    column: FieldInfo,
-    next: mariadb.TypeCastNextFunction
-  ): mariadb.TypeCastResult => {
+  const changeCaseCast = (column: FieldInfo, next: mariadb.TypeCastNextFunction): mariadb.TypeCastResult => {
     const name = column.name();
 
     if (name.startsWith('upp')) {
@@ -191,6 +196,7 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  pool.taskQueueSize();
   function displayConn(conn: Connection): void {
     console.log(conn);
   }

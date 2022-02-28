@@ -10,8 +10,7 @@ const os = require('os');
 
 describe('Pool callback event', () => {
   before(function () {
-    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null)
-      this.skip();
+    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null) this.skip();
   });
 
   it('pool connection creation', function (done) {
@@ -36,7 +35,7 @@ describe('Pool callback event', () => {
       acquireNumber++;
     });
 
-    pool.query('SELECT 1', (err, res) => {
+    pool.query("SELECT '1'", (err, res) => {
       assert.equal(acquireNumber, 1);
       pool.getConnection((err, conn) => {
         assert.equal(acquireNumber, 2);

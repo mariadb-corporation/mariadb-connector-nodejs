@@ -18,9 +18,7 @@ describe('ssl', function () {
     if (process.env.TEST_MAXSCALE_TLS_PORT) sslPort = parseInt(process.env.TEST_MAXSCALE_TLS_PORT);
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
-      ((process.platform === 'win32' &&
-        shareConn.info.isMariaDB() &&
-        !shareConn.info.hasMinVersion(10, 4, 0)) ||
+      ((process.platform === 'win32' && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
     ) {
       //TLSv1.2 is supported on windows only since MariaDB 10.4
@@ -34,16 +32,12 @@ describe('ssl', function () {
       }
     }
 
-    let serverCaFile =
-      Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : process.env.TEST_DB_SERVER_CERT;
+    let serverCaFile = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : process.env.TEST_DB_SERVER_CERT;
     let clientKeyFileName = process.env.TEST_DB_CLIENT_KEY;
     let clientCertFileName = process.env.TEST_DB_CLIENT_CERT;
     let clientKeystoreFileName = process.env.TEST_DB_CLIENT_PKCS;
 
-    if (
-      !serverCaFile &&
-      (Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')
-    ) {
+    if (!serverCaFile && (Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')) {
       try {
         if (fs.existsSync('../../ssl')) {
           serverCaFile = '../../ssl/server.crt';
@@ -364,9 +358,7 @@ describe('ssl', function () {
         done(new Error('Must have thrown an exception !'));
       })
       .catch((err) => {
-        assert(
-          err.message.includes('no ciphers available') || err.message.includes('no cipher match')
-        );
+        assert(err.message.includes('no ciphers available') || err.message.includes('no cipher match'));
         done();
       });
   });
@@ -459,18 +451,14 @@ describe('ssl', function () {
             err.message.includes("Hostname/IP does not match certificate's altnames"),
           'error was : ' + err.message
         );
-        assert(
-          err.message.includes("IP: 127.0.0.1 is not in the cert's list"),
-          'error was : ' + err.message
-        );
+        assert(err.message.includes("IP: 127.0.0.1 is not in the cert's list"), 'error was : ' + err.message);
 
         done();
       });
   });
 
   it('CA provided with matching cn', function (done) {
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
-      this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
