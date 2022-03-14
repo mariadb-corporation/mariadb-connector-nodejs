@@ -211,7 +211,7 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   socketPath?: string;
 
   /**
-   * The milliseconds before a timeout occurs during the initial connection to the MySQL server. (Default: 10 seconds)
+   * The milliseconds before a timeout occurs during the initial connection to the MySQL server. (Default: 1000)
    */
   connectTimeout?: number;
 
