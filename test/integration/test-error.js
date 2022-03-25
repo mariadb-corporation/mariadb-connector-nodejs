@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('Error', () => {
   after((done) => {
@@ -34,11 +35,13 @@ describe('Error', () => {
               );
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
               assert.equal(err.errno, 1064);
-              assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
+              if (!isXpand()) {
+                assert.equal(err.sqlState, 42000);
+                assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+                assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+              }
             }
             conn.end();
             done();
@@ -77,10 +80,12 @@ describe('Error', () => {
             );
             assert.equal(err.sqlState, 'HY000');
           } else {
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+            if (!isXpand()) {
+              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+              assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+              assert.equal(err.sqlState, 42000);
+            }
             assert.equal(err.errno, 1064);
-            assert.equal(err.sqlState, 42000);
             assert.equal(err.code, 'ER_PARSE_ERROR');
           }
           conn.end();
@@ -109,10 +114,12 @@ describe('Error', () => {
               );
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(err.message.includes('sql: wrong quer...'));
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+                assert.isTrue(err.message.includes('sql: wrong quer...'));
+                assert.equal(err.sqlState, 42000);
+              }
               assert.equal(err.errno, 1064);
-              assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             conn.end();
@@ -141,11 +148,13 @@ describe('Error', () => {
               );
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"));
-              assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+                assert.isTrue(err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"));
+                assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
+                assert.equal(err.sqlState, 42000);
+              }
               assert.equal(err.errno, 1064);
-              assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             conn.end();
@@ -194,9 +203,11 @@ describe('Error', () => {
           assert.equal(err.sqlState, 'HY000');
         } else {
           assert.equal(err.errno, 1064);
-          assert.equal(err.sqlState, 42000);
           assert.equal(err.code, 'ER_PARSE_ERROR');
-          assert.isTrue(err.message.includes('You have an error in your SQL syntax'), err.message);
+          if (!isXpand()) {
+            assert.equal(err.sqlState, 42000);
+            assert.isTrue(err.message.includes('You have an error in your SQL syntax'), err.message);
+          }
         }
         assert.isTrue(
           err.message.includes(
@@ -234,10 +245,12 @@ describe('Error', () => {
               );
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(err.text.includes('You have an error in your SQL syntax'));
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+                assert.isTrue(err.text.includes('You have an error in your SQL syntax'));
+                assert.equal(err.sqlState, 42000);
+              }
               assert.equal(err.errno, 1064);
-              assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             assert.isTrue(err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"));
@@ -271,10 +284,12 @@ describe('Error', () => {
               );
               assert.equal(err.sqlState, 'HY000');
             } else {
-              assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-              assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+                assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+                assert.equal(err.sqlState, 42000);
+              }
               assert.equal(err.errno, 1064);
-              assert.equal(err.sqlState, 42000);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
             conn.end();
@@ -350,7 +365,7 @@ describe('Error', () => {
 
   it('server close connection without warning', function (done) {
     //removed for maxscale, since wait_timeout will be set to other connections
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
@@ -377,7 +392,9 @@ describe('Error', () => {
               done(new Error('must have thrown error !'));
             })
             .catch((err) => {
-              assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
+              }
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
               assert.isTrue(connectionErr);
@@ -390,7 +407,8 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
+      this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -421,7 +439,9 @@ describe('Error', () => {
               done(new Error('must have thrown error !'));
             })
             .catch((err) => {
-              assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
+              if (!isXpand()) {
+                assert.isTrue(err.message.includes('Cannot execute new commands: connection closed'));
+              }
               assert.equal(err.sqlState, '08S01');
               assert.equal(err.code, 'ER_CMD_CONNECTION_CLOSED');
             });

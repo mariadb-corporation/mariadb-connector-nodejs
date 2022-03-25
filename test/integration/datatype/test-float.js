@@ -2,6 +2,7 @@
 
 const base = require('../../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../../base');
 
 describe('float', () => {
   before((done) => {
@@ -36,7 +37,7 @@ describe('float', () => {
     assert.equal(rows[0].a, -127.1);
     assert.equal(rows[0].b, -128.2);
     assert.equal(rows[1].a, 19925.1);
-    assert.equal(rows[1].b, 900719925.4740991);
+    assert.equal(rows[1].b, isXpand() ? 900719925.4741 : 900719925.4740991);
     assert.equal(rows[2].a, null);
     assert.equal(rows[2].b, null);
   });

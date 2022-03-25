@@ -2,11 +2,13 @@
 
 const base = require('../../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../../base');
 
 describe('geometry data type', () => {
   it('Point format', async function () {
     //MySQL 5.5 doesn't have ST_PointFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+    if (isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_point');
     await shareConn.query('CREATE TABLE gis_point (g POINT)');
     await shareConn.query(
@@ -165,6 +167,7 @@ describe('geometry data type', () => {
   });
 
   it('Point Insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_point_insert');
@@ -212,6 +215,7 @@ describe('geometry data type', () => {
   });
 
   it('LineString format', async function () {
+    if (isXpand()) this.skip();
     //MySQL 5.5 doesn't have ST_LineFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_line');
@@ -318,6 +322,7 @@ describe('geometry data type', () => {
   });
 
   it('LineString insert', async function () {
+    if (isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_line_insert');
     await shareConn.query('CREATE TABLE gis_line_insert (g LINESTRING)');
@@ -387,6 +392,7 @@ describe('geometry data type', () => {
   });
 
   it('Polygon format', async function () {
+    if (isXpand()) this.skip();
     //MySQL 5.5 doesn't have ST_PolygonFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon');
@@ -525,6 +531,7 @@ describe('geometry data type', () => {
   });
 
   it('Polygon insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon_insert');
@@ -700,6 +707,7 @@ describe('geometry data type', () => {
   });
 
   it('MultiPoint insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -831,6 +839,7 @@ describe('geometry data type', () => {
   });
 
   it('Multi-line insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -1038,6 +1047,7 @@ describe('geometry data type', () => {
   });
 
   it('Multi-polygon insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
 
@@ -1330,6 +1340,7 @@ describe('geometry data type', () => {
   });
 
   it('Geometry collection insert', async function () {
+    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 

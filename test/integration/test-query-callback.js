@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('basic query callback', () => {
   it('query with value without placeholder', function (done) {
@@ -275,6 +276,7 @@ describe('basic query callback', () => {
   });
 
   it('query warning', function (done) {
+    if (isXpand()) this.skip();
     //mysql 8 force truncation as error, even with SQL_MODE disable it.
     if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
     const conn = base.createCallbackConnection();
@@ -298,7 +300,9 @@ describe('basic query callback', () => {
     });
   });
 
-  it('255 columns', (done) => {
+  it('255 columns', function (done) {
+    // skip for Xpand, limited by max_columns
+    if (isXpand()) this.skip();
     let table = 'CREATE TABLE myTable(';
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};

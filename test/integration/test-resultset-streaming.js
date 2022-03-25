@@ -3,6 +3,7 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 const { Writable } = require('stream');
+const { isXpand } = require('../base');
 
 describe('results-set streaming', () => {
   before(function (done) {
@@ -148,7 +149,7 @@ describe('results-set streaming', () => {
   it('Streaming error handling', function (done) {
     shareConn.queryStream('SELECT * FROM UnknownTable').on('error', (err) => {
       assert.equal(err.errno, 1146);
-      assert.equal(err.sqlState, '42S02');
+      if (!isXpand()) assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       done();
     });

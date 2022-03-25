@@ -55,20 +55,16 @@ describe('ssl', function () {
     if (clientCertFileName) clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
     if (clientKeystoreFileName) clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
 
+    shareConn.query("DROP USER 'sslTestUser'@'%'").catch((e) => {});
+    shareConn.query("DROP USER 'X509testUser'@'%'").catch((e) => {});
     shareConn
-      .query("DROP USER IF EXISTS 'sslTestUser'@'%'")
-      .then(() => {
-        return shareConn.query("DROP USER IF EXISTS 'X509testUser'@'%'");
-      })
-      .then(() => {
-        return shareConn.query(
-          "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
-            ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE SSL'
-              : '')
-        );
-      })
+      .query(
+        "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
+          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
+          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
+            ? ' REQUIRE SSL'
+            : '')
+      )
       .then(() => {
         return shareConn.query(
           "GRANT SELECT ON *.* TO 'sslTestUser'@'%' " +
@@ -119,7 +115,7 @@ describe('ssl', function () {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then((rows) => {
-        if (rows[0].Value === 'YES') {
+        if (rows.length > 0 && rows[0].Value === 'YES') {
           sslEnable = true;
           done();
         } else {
@@ -570,7 +566,7 @@ describe('ssl', function () {
       })
       .then((con) => {
         conn = con;
-        conn.query("DROP USER IF EXISTS ChangeUser@'%'").catch((err) => {});
+        conn.query("DROP USER ChangeUser@'%'").catch((err) => {});
         conn.query('FLUSH PRIVILEGES');
         conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mySupPassw@rd2'");
         conn.query("GRANT SELECT ON *.* TO ChangeUser@'%' with grant option");

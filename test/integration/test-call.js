@@ -3,6 +3,7 @@
 require('../base.js');
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('stored procedure', () => {
   before(async function () {
@@ -47,9 +48,11 @@ describe('stored procedure', () => {
     await shareConn.query('call someProc(?,@myOutputValue)', [2]);
     const res = await shareConn.query('SELECT @myOutputValue');
     assert.equal(res[0]['@myOutputValue'], 4);
-
-    const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
-    assert.equal(res2[0][0]['p2'], 4);
+    //https://jira.mariadb.org/browse/XPT-268
+    if (!isXpand()) {
+      const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
+      assert.equal(res2[0][0]['p2'], 4);
+    }
   });
 
   it('simple function', function (done) {
@@ -68,7 +71,10 @@ describe('stored procedure', () => {
       await shareConn.query('call stmtOutParam(?,?)', [2, 3]);
       throw new Error('must not be possible since output parameter is not a variable');
     } catch (err) {
-      assert.ok(err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger'));
+      //https://jira.mariadb.org/browse/XPT-268
+      if (!isXpand()) {
+        assert.ok(err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger'));
+      }
     }
   });
 });
@@ -78,8 +84,10 @@ const testRes = async function (res) {
   //results
   assert.equal(res[0][0].t, 4);
   //execution result
-  assert.equal(res[1].affectedRows, 0);
-  assert.equal(res[1].insertId, 0);
+  if (!isXpand()) {
+    assert.equal(res[1].affectedRows, 0);
+    assert.equal(res[1].insertId, 0);
+  }
   assert.equal(res[1].warningStatus, 0);
   const rows = await shareConn.query('SELECT 9 t');
   assert.equal(rows[0].t, 9);

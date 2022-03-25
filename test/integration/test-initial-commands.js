@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('initial connection commands', () => {
   describe('session variables', () => {
@@ -24,7 +25,7 @@ describe('initial connection commands', () => {
     it('with one session variables', async function () {
       const conn = await base.createConnection({ sessionVariables: { wait_timeout: 10000 } });
       const rows = await conn.query('SELECT @@wait_timeout');
-      assert.deepEqual(rows, [{ '@@wait_timeout': BigInt(10000) }]);
+      assert.deepEqual(rows, [{ '@@wait_timeout': isXpand() ? 10000 : BigInt(10000) }]);
       conn.end();
     });
 
@@ -33,7 +34,12 @@ describe('initial connection commands', () => {
         sessionVariables: { wait_timeout: 10000, interactive_timeout: 2540 }
       });
       const rows = await conn.query('SELECT @@wait_timeout, @@interactive_timeout');
-      assert.deepEqual(rows, [{ '@@wait_timeout': BigInt(10000), '@@interactive_timeout': BigInt(2540) }]);
+      assert.deepEqual(rows, [
+        {
+          '@@wait_timeout': isXpand() ? 10000 : BigInt(10000),
+          '@@interactive_timeout': isXpand() ? 2540 : BigInt(2540)
+        }
+      ]);
       conn.end();
     });
 

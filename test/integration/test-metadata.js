@@ -5,6 +5,7 @@ const { assert } = require('chai');
 const Collations = require('../../lib/const/collations.js');
 const FieldType = require('../../lib/const/field-type');
 const Conf = require('../conf');
+const { isXpand } = require('../base');
 
 describe('metadata', () => {
   it('result metadata values', async function () {
@@ -16,7 +17,7 @@ describe('metadata', () => {
         'ds DECIMAL(10,4) SIGNED, ' +
         'd2 DECIMAL(10,0) UNSIGNED, ' +
         'ds2 DECIMAL(10,0) SIGNED ' +
-        ") COLLATE='utf8mb4_unicode_ci'"
+        ") COLLATE='utf8_unicode_ci'"
     );
     await shareConn.query('FLUSH TABLES');
     const rows = await shareConn.query(
@@ -40,7 +41,7 @@ describe('metadata', () => {
     assert.equal(rows.meta[1].orgTable(), 'metadatatable');
     assert.equal(rows.meta[1].name(), 't1');
     assert.equal(rows.meta[1].orgName(), 't');
-    if (base.utf8Collation()) {
+    if (base.utf8Collation() && !isXpand()) {
       assert.equal(rows.meta[1].collation, shareConn.__tests.getCollation());
       assert.equal(rows.meta[1].columnLength, 128);
     }
@@ -53,7 +54,7 @@ describe('metadata', () => {
     assert.equal(rows.meta[2].name(), 'd1');
     assert.equal(rows.meta[2].orgName(), 'd');
     assert.equal(rows.meta[2].collation, Collations.fromName('BINARY'));
-    assert.equal(rows.meta[2].columnLength, 11);
+    if (!isXpand()) assert.equal(rows.meta[2].columnLength, 11);
     assert.equal(rows.meta[2].columnType, FieldType.NEWDECIMAL);
 
     assert.equal(rows.meta[3].db(), Conf.baseConfig.database);

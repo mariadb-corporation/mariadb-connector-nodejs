@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Conf = require('../conf');
+const { isXpand } = require('../base');
 const str = base.utf8Collation() ? "abcdefghijkflmn'opqrtuvwx🤘💪" : 'abcdefghijkflmn\'opqrtuvwxyz"';
 
 describe('batch', function () {
@@ -263,11 +264,13 @@ describe('batch', function () {
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
-      assert.isTrue(err.message.includes(" doesn't exist"));
-      assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
       assert.equal(err.errno, 1146);
-      assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+      if (!isXpand()) {
+        assert.isTrue(err.message.includes(" doesn't exist"));
+        assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
+        assert.equal(err.sqlState, '42S02');
+      }
       conn.end();
     }
   };
@@ -385,6 +388,10 @@ describe('batch', function () {
       maxAllowedPacket: 16 * 1024 * 1024,
       bulk: useBulk
     });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -420,6 +427,10 @@ describe('batch', function () {
       bulk: useBulk,
       maxAllowedPacket: 4 * 1024 * 1024
     });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -454,6 +465,10 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
@@ -524,11 +539,13 @@ describe('batch', function () {
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
-      assert.isTrue(err.message.includes(" doesn't exist"));
-      assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
       assert.equal(err.errno, 1146);
-      assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+      if (!isXpand()) {
+        assert.isTrue(err.message.includes(" doesn't exist"));
+        assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
+        assert.equal(err.sqlState, '42S02');
+      }
       conn.end();
       stream1.close();
       stream2.close();
@@ -550,6 +567,10 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     try {
       await conn.batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
       throw new Error('must have thrown error !');
@@ -565,6 +586,10 @@ describe('batch', function () {
 
   const simpleNamedPlaceHolders = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     conn.query('DROP TABLE IF EXISTS simpleNamedPlaceHolders');
     conn.query(
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -600,6 +625,11 @@ describe('batch', function () {
 
   const simpleNamedPlaceHoldersErr = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
+
     try {
       await conn.batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
         { param_1: 1, param_2: 'john' },
@@ -608,17 +638,24 @@ describe('batch', function () {
       throw new Error('must have thrown error !');
     } catch (err) {
       assert.isTrue(err != null);
-      assert.isTrue(err.message.includes(" doesn't exist"));
-      assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
       assert.equal(err.errno, 1146);
-      assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+      if (!isXpand()) {
+        assert.isTrue(err.message.includes(" doesn't exist"));
+        assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
+        assert.equal(err.sqlState, '42S02');
+      }
       conn.end();
     }
   };
 
   const more16MNamedPlaceHolders = async function (useBulk) {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
+
     conn.query('DROP TABLE IF EXISTS more16MNamedPlaceHolders');
     conn.query(
       'CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -689,6 +726,11 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
+
     await conn.query('DROP TABLE IF EXISTS blabla');
     await conn.query('CREATE TABLE blabla(i int, i2 int, i3 int, s1 TEXT, s2 TEXT, i4 int)');
     try {
@@ -726,7 +768,7 @@ describe('batch', function () {
 
     const useCompression = false;
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation()) {
+      if (!base.utf8Collation() || isXpand()) {
         this.skip();
         return;
       }
@@ -795,7 +837,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation()) {
+      if (!base.utf8Collation() || isXpand()) {
         this.skip();
         return;
       }
@@ -805,7 +847,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date Z ', async function () {
-      if (!base.utf8Collation()) {
+      if (!base.utf8Collation() || isXpand()) {
         this.skip();
         return;
       }
@@ -815,6 +857,10 @@ describe('batch', function () {
     });
 
     it('simple batch encoding CP1251', async function () {
+      if (isXpand()) {
+        this.skip();
+        return;
+      }
       this.timeout(30000);
       await simpleBatchEncodingCP1251(useCompression, true, 'local');
     });
@@ -830,6 +876,11 @@ describe('batch', function () {
     });
 
     it('simple batch error message packet split', async function () {
+      //xpand doesn't support geometry
+      if (isXpand()) {
+        this.skip();
+        return;
+      }
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatchErrorSplit(useCompression, true, 'local');
@@ -857,7 +908,7 @@ describe('batch', function () {
         this.skip();
         return;
       }
-      this.timeout(180000);
+      this.timeout(360000);
       await bigBatchWith4mMaxAllowedPacket(useCompression, true);
     });
 
@@ -896,14 +947,14 @@ describe('batch', function () {
     const useCompression = true;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation()) this.skip();
+      if (!base.utf8Collation() || isXpand()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, true, 'local');
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation()) this.skip();
+      if (!base.utf8Collation() || isXpand()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, true, timezoneParam);
@@ -974,7 +1025,7 @@ describe('batch', function () {
     const useCompression = false;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation()) this.skip();
+      if (!base.utf8Collation() || isXpand()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, false, 'local');
@@ -995,6 +1046,11 @@ describe('batch', function () {
     it('rewrite split for maxAllowedPacket', async function () {
       const t = makeid(100);
       const conn = await base.createConnection({ bulk: false, maxAllowedPacket: 150 });
+
+      // https://jira.mariadb.org/browse/XPT-266
+      if (isXpand()) {
+        await conn.query('SET NAMES UTF8');
+      }
       await conn.query('DROP TABLE IF EXISTS my_table');
       await conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
       await conn.query('FLUSH TABLES');
@@ -1052,7 +1108,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation()) this.skip();
+      if (!base.utf8Collation() || isXpand()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, false, timezoneParam);
@@ -1083,15 +1139,17 @@ describe('batch', function () {
         throw new Error('must have thrown error !');
       } catch (err) {
         assert.isTrue(err != null);
-        assert.isTrue(err.message.includes(" doesn't exist"));
         const expectedMsg =
           debugLen === 80
             ? 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'
             : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
-        assert.isTrue(err.message.includes(expectedMsg));
         assert.equal(err.errno, 1146);
-        assert.equal(err.sqlState, '42S02');
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+        if (!isXpand()) {
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.equal(err.sqlState, '42S02');
+          assert.isTrue(err.message.includes(expectedMsg));
+        }
         conn.end();
       }
     };
@@ -1143,7 +1201,7 @@ describe('batch', function () {
     const useCompression = true;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation()) {
+      if (!base.utf8Collation() || isXpand()) {
         this.skip();
         return;
       }
@@ -1153,7 +1211,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation()) {
+      if (!base.utf8Collation() || isXpand()) {
         this.skip();
         return;
       }
@@ -1191,15 +1249,17 @@ describe('batch', function () {
         throw new Error('must have thrown error !');
       } catch (err) {
         assert.isTrue(err != null);
-        assert.isTrue(err.message.includes(" doesn't exist"));
         const expectedMsg =
           debugLen === 80
             ? 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'
             : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
-        assert.isTrue(err.message.includes(expectedMsg));
         assert.equal(err.errno, 1146);
-        assert.equal(err.sqlState, '42S02');
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+        if (!isXpand()) {
+          assert.isTrue(err.message.includes(expectedMsg));
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.equal(err.sqlState, '42S02');
+        }
         conn.end();
       }
     };

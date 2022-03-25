@@ -2,6 +2,7 @@
 
 const base = require('../../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../../base');
 
 describe('mapping', () => {
   const dateNoMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));
@@ -182,7 +183,7 @@ describe('mapping', () => {
     await shareConn.query('INSERT INTO nullMappingTable values ()');
     if (shareConn.info.isMariaDB() || shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.6 delete YEAR(2) type
-      if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)) {
+      if (isXpand() || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6))) {
         initValue[23] = 2018;
         nullValue[23] = 1999;
         initValue2[23] = 2018;
@@ -213,7 +214,7 @@ describe('mapping', () => {
           "t21 TIMESTAMP(0) null default  '2001-01-01 00:00:00'," +
           't22 TIMESTAMP  null, ' +
           "t23 TIME(6) default '22:11:00.560001'," +
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)
+          (isXpand() || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6))
             ? 't24 YEAR(4) default 99,'
             : 't24 YEAR(2) default 99,') +
           't25 YEAR(4) default 2011,' +
@@ -234,6 +235,9 @@ describe('mapping', () => {
   });
 
   it('query mapping field', async function () {
+    //https://jira.mariadb.org/browse/XPT-269
+    if (isXpand()) this.skip();
+
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.5 doesn't permit DATETIME/TIMESTAMP with microseconds
       this.skip();

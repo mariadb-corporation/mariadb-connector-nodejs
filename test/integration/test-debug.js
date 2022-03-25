@@ -7,6 +7,7 @@ const os = require('os');
 const path = require('path');
 const util = require('util');
 const winston = require('winston');
+const { isXpand } = require('../base');
 
 describe('debug', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfileDebug.txt');
@@ -15,7 +16,8 @@ describe('debug', () => {
   let tmpLogFile = path.join(os.tmpdir(), 'combined.txt');
   let logger;
 
-  before((done) => {
+  before(function (done) {
+    if (isXpand()) this.skip();
     try {
       fs.unlinkSync(tmpLogFile);
     } catch (e) {}
@@ -56,8 +58,10 @@ describe('debug', () => {
   });
 
   after(async function () {
-    fs.unlinkSync(smallFileName);
-    await shareConn.query('DROP TABLE IF EXISTS debugVoid');
+    if (!isXpand()) {
+      fs.unlinkSync(smallFileName);
+      await shareConn.query('DROP TABLE IF EXISTS debugVoid');
+    }
   });
 
   it('select request debug', function (done) {
@@ -65,6 +69,7 @@ describe('debug', () => {
   });
 
   it('select request debug compress', function (done) {
+    if (isXpand()) this.skip();
     testQueryDebug(true, done);
   });
 
@@ -187,7 +192,8 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
+      this.skip();
 
     const buf = Buffer.alloc(5000, 'z');
     base
@@ -230,11 +236,13 @@ describe('debug', () => {
 
   it('load local infile debug', function (done) {
     if (!permitLocalInfile) this.skip();
+    if (isXpand()) this.skip();
     testLocalInfileDebug(false, done);
   });
 
   it('load local infile debug compress', function (done) {
     if (!permitLocalInfile) this.skip();
+    if (isXpand()) this.skip();
     testLocalInfileDebug(true, done);
   });
 

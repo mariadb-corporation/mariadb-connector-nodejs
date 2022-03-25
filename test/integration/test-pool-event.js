@@ -7,10 +7,11 @@ const stream = require('stream');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { isXpand } = require('../base');
 
 describe('Pool event', () => {
   before(function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
   });
 
   it('pool connection creation', function (done) {

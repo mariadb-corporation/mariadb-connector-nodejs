@@ -5,6 +5,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isXpand } = require('../base');
 
 describe('prepare and execute callback', () => {
   let bigVal;
@@ -41,10 +42,12 @@ describe('prepare and execute callback', () => {
       if (err) return done(err);
       conn.prepare('wrong query', (err, prepare) => {
         if (!err) return done(new Error('Expect error'));
-        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-        assert.isTrue(err.message.includes('sql: wrong query'));
+        if (!isXpand()) {
+          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+          assert.isTrue(err.message.includes('sql: wrong query'));
+          assert.equal(err.sqlState, 42000);
+        }
         assert.equal(err.errno, 1064);
-        assert.equal(err.sqlState, 42000);
         assert.equal(err.code, 'ER_PARSE_ERROR');
         conn.end();
         done();
@@ -127,10 +130,16 @@ describe('prepare and execute callback', () => {
     });
   });
 
-  it('basic prepare and execute', (done) => {
+  it('basic prepare and execute', function (done) {
+    this.timeout(5000);
     const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
     conn.connect((err) => {
       if (err) return done(err);
+
+      // https://jira.mariadb.org/browse/XPT-266
+      if (isXpand()) {
+        conn.query('SET NAMES UTF8');
+      }
       conn.prepare('select ? as a', (err, prepare) => {
         if (err) return done(err);
         assert.equal(prepare.parameters.length, 1);
@@ -164,6 +173,10 @@ describe('prepare and execute callback', () => {
     const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
     conn.connect((err) => {
       if (err) return done(err);
+      // https://jira.mariadb.org/browse/XPT-266
+      if (isXpand()) {
+        conn.query('SET NAMES UTF8');
+      }
       conn.execute('select ? as a', [2], (err, res, meta) => {
         if (err) return done(err);
         assert.isTrue(res[0].a === 2 || res[0].a === 2n);

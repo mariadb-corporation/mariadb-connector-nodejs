@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('pipelining', () => {
   let conn1, conn2;
@@ -30,6 +31,7 @@ describe('pipelining', () => {
   });
 
   it('simple query chain no pipelining', function (done) {
+    if (isXpand()) this.skip();
     conn1
       .query('DO 1')
       .then((rows) => {

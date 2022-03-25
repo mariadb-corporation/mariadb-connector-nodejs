@@ -5,6 +5,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isXpand } = require('../base');
 
 describe('local-infile', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfile.txt');
@@ -35,12 +36,21 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
-              assert.equal(err.errno, 4166);
-              assert.equal(err.sqlState, 'HY000');
-            } else {
-              assert.isTrue(err.errno == 1148 || err.errno == 3948);
-              assert.equal(err.sqlState, '42000');
+            switch (err.code) {
+              case 'ER_LOAD_INFILE_CAPABILITY_DISABLED':
+                assert.equal(err.errno, 4166);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              case 'ER_NO_SUCH_TABLE':
+                assert.equal(err.errno, 1146);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              default:
+                if (!isXpand()) {
+                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.equal(err.sqlState, '42000');
+                }
+                break;
             }
             assert(!err.fatal);
             conn.end();
@@ -60,12 +70,21 @@ describe('local-infile', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
-              assert.equal(err.errno, 4166);
-              assert.equal(err.sqlState, 'HY000');
-            } else {
-              assert.isTrue(err.errno == 1148 || err.errno == 3948);
-              assert.equal(err.sqlState, '42000');
+            switch (err.code) {
+              case 'ER_LOAD_INFILE_CAPABILITY_DISABLED':
+                assert.equal(err.errno, 4166);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              case 'ER_NO_SUCH_TABLE':
+                assert.equal(err.errno, 1146);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              default:
+                if (!isXpand()) {
+                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.equal(err.sqlState, '42000');
+                }
+                break;
             }
             assert(!err.fatal);
             conn.end();
@@ -102,12 +121,21 @@ describe('local-infile', () => {
           })
           .catch((err) => {
             assert(err != null);
-            if (err.code === 'ER_LOAD_INFILE_CAPABILITY_DISABLED') {
-              assert.equal(err.errno, 4166);
-              assert.equal(err.sqlState, 'HY000');
-            } else {
-              assert.isTrue(err.errno == 1148 || err.errno == 3948);
-              assert.equal(err.sqlState, '42000');
+            switch (err.code) {
+              case 'ER_LOAD_INFILE_CAPABILITY_DISABLED':
+                assert.equal(err.errno, 4166);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              case 'ER_NO_SUCH_TABLE':
+                assert.equal(err.errno, 1146);
+                assert.equal(err.sqlState, 'HY000');
+                break;
+              default:
+                if (!isXpand()) {
+                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.equal(err.sqlState, '42000');
+                }
+                break;
             }
             assert(!err.fatal);
             conn.end();
@@ -118,6 +146,7 @@ describe('local-infile', () => {
   });
 
   it('file error missing', async function () {
+    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -147,6 +176,7 @@ describe('local-infile', () => {
   });
 
   it('small local infile', async function () {
+    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -181,45 +211,7 @@ describe('local-infile', () => {
   });
 
   it('small local infile with parameter', async function () {
-    const self = this;
-    const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
-      return self.skip();
-    }
-    await new Promise(function (resolve, reject) {
-      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-    const conn = await base.createConnection({ permitLocalInfile: true });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
-    await conn.beginTransaction();
-    await conn.query(
-      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
-      smallFileName
-    );
-    await conn.query("LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)", [
-      smallFileName
-    ]);
-
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
-    assert.deepEqual(rows2, [
-      { id: 1, test: 'hello' },
-      { id: 2, test: 'world' },
-      { id: 1, test: 'hello' },
-      { id: 2, test: 'world' }
-    ]);
-    conn.end();
-  });
-
-  it('small local infile with parameter', async function () {
+    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -259,6 +251,7 @@ describe('local-infile', () => {
   });
 
   it('small local infile with non supported node.js encoding', async function () {
+    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -295,7 +288,7 @@ describe('local-infile', () => {
 
   it('non readable local infile', function (done) {
     //on windows, fs.chmodSync doesn't remove read access.
-    if (process.platform === 'win32') this.skip();
+    if (process.platform === 'win32' || isXpand()) this.skip();
 
     const self = this;
     shareConn
@@ -352,6 +345,7 @@ describe('local-infile', () => {
   });
 
   it('big local infile', async function () {
+    if (isXpand()) this.skip();
     this.timeout(180000);
     let size;
     const self = this;

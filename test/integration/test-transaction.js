@@ -261,7 +261,8 @@ describe('transaction', () => {
       });
   });
 
-  it('transaction commit with callback', (done) => {
+  it('transaction commit with callback', function (done) {
+    this.timeout(5000);
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
       if (err) return done(err);

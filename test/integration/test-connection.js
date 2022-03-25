@@ -7,6 +7,7 @@ const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
+const { isXpand } = require('../base');
 
 describe('connection', () => {
   it('with no connection attributes', function (done) {
@@ -18,6 +19,7 @@ describe('connection', () => {
   });
 
   it('with basic connection attributes non node.js encoding', function (done) {
+    if (isXpand()) this.skip();
     connectWithAttributes(true, done, 'big5');
   });
 
@@ -47,6 +49,7 @@ describe('connection', () => {
   }
 
   it('connection attributes with encoding not supported by node.js', function (done) {
+    if (isXpand()) this.skip();
     const mediumAttribute = Buffer.alloc(500, 'a').toString();
     base
       .createConnection({
@@ -201,7 +204,7 @@ describe('connection', () => {
   });
 
   it('connection error event socket failed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     base
       .createConnection({ socketTimeout: 100 })
       .then((conn) => {
@@ -639,7 +642,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, '28000');
+            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
             break;
 
           case 1044:
@@ -684,7 +687,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, '28000');
+            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
             break;
 
           case 1044:

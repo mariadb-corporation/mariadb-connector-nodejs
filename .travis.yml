@@ -33,6 +33,7 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: srv=build v=10.6
+    - env: srv=xpand RUN_LONG_TEST=0
   include:
     - env: srv=mariadb v=10.6
       os: windows
@@ -61,6 +62,8 @@ jobs:
       env: srv=mysql v=5.7
     - if: type = push AND fork = false
       env: srv=mysql v=8.0
+    - if: type = push AND fork = false
+      env: srv=xpand RUN_LONG_TEST=0
 
 script:
   - npm install

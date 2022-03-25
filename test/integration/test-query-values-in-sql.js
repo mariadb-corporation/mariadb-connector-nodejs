@@ -2,6 +2,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('sql template strings', () => {
   const value = "'`\\";
@@ -25,6 +26,10 @@ describe('sql template strings', () => {
 
   it('batch with parameters', async () => {
     const conn = await base.createConnection();
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) {
+      await conn.query('SET NAMES UTF8');
+    }
     await conn.query('DROP TABLE IF EXISTS batch_with_parameters');
     await conn.query('CREATE TABLE batch_with_parameters(t varchar(128))');
     await conn.beginTransaction();
@@ -97,6 +102,10 @@ describe('sql template strings', () => {
       if (err) {
         done(err);
       } else {
+        // https://jira.mariadb.org/browse/XPT-266
+        if (isXpand()) {
+          conn.query('SET NAMES UTF8');
+        }
         conn.query('DROP TABLE IF EXISTS callback_batch_with_parameters', (err) => {
           if (err) {
             conn.end();
@@ -176,7 +185,11 @@ describe('sql template strings', () => {
   });
 
   it('pool batch with parameters', (done) => {
-    const pool = base.createPool();
+    let params = {};
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
+
+    const pool = base.createPool(params);
     pool
       .query('DROP TABLE IF EXISTS pool_parse_batch')
       .then(() => {
@@ -224,7 +237,11 @@ describe('sql template strings', () => {
   });
 
   it('pool callback batch with parameters', (done) => {
-    const pool = base.createPoolCallback();
+    let params = {};
+    // https://jira.mariadb.org/browse/XPT-266
+    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
+
+    const pool = base.createPoolCallback(params);
     pool.query('drop table pool_batch_call', (err) => {
       pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {
         pool.batch({ sql: 'INSERT INTO pool_batch_call value (?)', values: [value] }, (err, res) => {

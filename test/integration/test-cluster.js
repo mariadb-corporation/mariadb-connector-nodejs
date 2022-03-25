@@ -8,6 +8,7 @@ const Proxy = require('../tools/proxy');
 const base = require('../base.js');
 
 const { assert } = require('chai');
+const { isXpand } = require('../base');
 
 describe('cluster', function () {
   before(async function () {
@@ -209,6 +210,7 @@ describe('cluster', function () {
     });
 
     it('remove/add nodes during use', async function () {
+      this.timeout(10000);
       const cluster = get3NodeCluster();
       try {
         let nodes = await testTimes(cluster);
@@ -220,7 +222,7 @@ describe('cluster', function () {
         cluster.add(
           'node4',
           Object.assign({}, Conf.baseConfig, {
-            initSql: "set @node='node4'",
+            initSql: isXpand() ? ['set NAMES utf8', "set @node='node4'"] : "set @node='node4'",
             connectionLimit: 1,
             resetAfterUse: false
           })
@@ -236,6 +238,7 @@ describe('cluster', function () {
     });
 
     it('select ordered pools', async function () {
+      this.timeout(10000);
       const cluster = get3NodeCluster({ defaultSelector: 'ORDER' });
       try {
         const nodes = await testTimes(cluster);
@@ -248,6 +251,7 @@ describe('cluster', function () {
     });
 
     it('select random pools', async function () {
+      this.timeout(10000);
       const cluster = get3NodeCluster({ defaultSelector: 'RANDOM' });
       try {
         const nodes = await testTimes(cluster, /^node*/, 60);
@@ -263,6 +267,7 @@ describe('cluster', function () {
     });
 
     it('ensure selector filter', async function () {
+      this.timeout(10000);
       const cluster = get3NodeCluster();
       try {
         const nodes = await testTimes(cluster, /^node[12]/, 60);
@@ -275,23 +280,24 @@ describe('cluster', function () {
     });
 
     it("won't use bad host pools", function (done) {
+      this.timeout(10000);
       const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
       cluster.on('remove', (node) => {
         removedNode.push(node);
       });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node1'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node1'"] : "set @node='node1'",
         connectionLimit: 1,
         resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node2'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
         connectionLimit: 1,
         resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node3'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node3'"] : "set @node='node3'",
         user: 'wrong_user',
         connectTimeout: 100,
         acquireTimeout: 200,
@@ -338,17 +344,17 @@ describe('cluster', function () {
       });
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node1'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node1'"] : "set @node='node1'",
         connectionLimit: 1,
         resetAfterUse: false
       });
       const connOption2 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node2'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
         connectionLimit: 1,
         resetAfterUse: false
       });
       const connOption3 = Object.assign({}, Conf.baseConfig, {
-        initSql: "set @node='node3'",
+        initSql: isXpand() ? ['set NAMES utf8', "set @node='node3'"] : "set @node='node3'",
         user: 'wrong_user',
         connectTimeout: 100,
         acquireTimeout: 200,
@@ -379,7 +385,7 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', function (done) {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
       this.timeout(30000);
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
@@ -427,9 +433,14 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+      if (
+        process.env.srv === 'maxscale' ||
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha' ||
+        isXpand()
+      )
         this.skip();
-      this.timeout(10000);
+      this.timeout(20000);
       const cluster = basePromise.createPoolCluster({});
 
       const connOption1 = Object.assign({}, Conf.baseConfig, {
@@ -669,7 +680,9 @@ describe('cluster', function () {
           });
         })
         .catch((err) => {
-          expect(err.message).to.have.string("notexistingtable' doesn't exist");
+          if (isXpand()) {
+            expect(err.message).to.have.string('Relation not found:');
+          } else expect(err.message).to.have.string("notexistingtable' doesn't exist");
           cluster.end().then(() => {
             done();
           });
@@ -861,6 +874,7 @@ describe('cluster', function () {
     });
 
     it('select random pools', function (done) {
+      this.timeout(10000);
       const cluster = get3NodeCallbackCluster({
         defaultSelector: 'RANDOM'
       });
@@ -884,6 +898,7 @@ describe('cluster', function () {
     });
 
     it('ensure selector filter', function (done) {
+      this.timeout(10000);
       const cluster = get3NodeCallbackCluster();
       const cb = (err, nodes) => {
         cluster.end(() => {
@@ -901,6 +916,7 @@ describe('cluster', function () {
     });
 
     it("won't use bad host pools", function (done) {
+      this.timeout(10000);
       const cluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
       cluster.on('remove', (node) => {
@@ -1011,7 +1027,7 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', function (done) {
-      this.timeout(20000);
+      if (isXpand()) this.skip();
       const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
       const cluster = cl.cluster;
       const proxy = cl.proxy;
@@ -1094,6 +1110,7 @@ describe('cluster', function () {
     });
 
     it('query on filtered', function (done) {
+      this.timeout(10000);
       const cluster = get3NodeCluster();
       const filteredCluster = cluster.of(/^node[12]/);
 
@@ -1127,6 +1144,7 @@ describe('cluster', function () {
     });
 
     it('query on filtered ORDER', function (done) {
+      this.timeout(10000);
       const cluster = get3NodeCluster();
       const filteredCluster = cluster.of(/^node[12]/, 'ORDER');
 
@@ -1192,19 +1210,19 @@ describe('cluster', function () {
     const cluster = basePromise.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node1'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node1'"] : "set @node='node1'",
       connectionLimit: 1,
       resetAfterUse: false,
       trace: true
     });
     const connOption2 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node2'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
       connectionLimit: 1,
       resetAfterUse: false,
       trace: true
     });
     const connOption3 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node3'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node3'"] : "set @node='node3'",
       connectionLimit: 1,
       resetAfterUse: false,
       trace: true
@@ -1220,7 +1238,7 @@ describe('cluster', function () {
     const cluster = base.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node1'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node1'"] : "set @node='node1'",
       connectionLimit: 1,
       resetAfterUse: false
     });
@@ -1232,7 +1250,7 @@ describe('cluster', function () {
     });
 
     const connOption2 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node2'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
       connectionLimit: 1,
       host: 'localhost',
       connectTimeout: 200,
@@ -1244,7 +1262,7 @@ describe('cluster', function () {
     });
 
     const connOption3 = Object.assign({}, Conf.baseConfig, {
-      initSql: "set @node='node3'",
+      initSql: isXpand() ? ['set NAMES utf8', "set @node='node3'"] : "set @node='node3'",
       connectionLimit: 1,
       resetAfterUse: false,
       trace: true

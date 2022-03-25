@@ -5,6 +5,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isXpand } = require('../base');
 
 describe('streaming', () => {
   const fileName = path.join(os.tmpdir(), 'tempBigFile.txt');
@@ -107,6 +108,8 @@ describe('streaming', () => {
   });
 
   it('Streaming multiple parameter ensure max callstack', async function () {
+    //xpand limite columns by max_columns
+    if (isXpand()) this.skip();
     if (maxAllowedSize < size) this.skip();
     this.timeout(20000);
     const r = fs.createReadStream(halfFileName);

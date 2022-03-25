@@ -3,6 +3,7 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 const moment = require('moment-timezone');
+const { isXpand } = require('../base');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
@@ -62,7 +63,7 @@ describe('connection option', () => {
     conn.query("SET SESSION time_zone = '+01:00'");
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')]);
     // = 1999-12-31T23:00:00.000Z
-    assert.deepEqual(res[0].tt, '946681200.000');
+    assert.deepEqual(res[0].tt, isXpand() ? '946681200.000000' : '946681200.000');
     res = await conn.query("SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2", [
       new Date('2000-01-01T00:00:00Z')
     ]);
@@ -87,7 +88,7 @@ describe('connection option', () => {
     const conn = await base.createConnection({ timezone: '+02' });
     conn.query("SET SESSION time_zone = '+01:00'");
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')]);
-    assert.deepEqual(res[0].tt, 946688400n);
+    assert.deepEqual(res[0].tt, isXpand() ? '946688400.000000' : 946688400n);
     res = await conn.query("SELECT TIMESTAMP('2003-12-31 12:00:00') tt1, FROM_UNIXTIME(UNIX_TIMESTAMP(?)) tt2", [
       new Date('2000-01-01T00:00:00Z')
     ]);
@@ -101,7 +102,7 @@ describe('connection option', () => {
     conn.query("SET SESSION time_zone = '+01:00'");
     let res = await conn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00Z')]);
     //946688400 => 2000-01-01T01:00:00.000Z
-    assert.deepEqual(res[0].tt, 946688400n);
+    assert.deepEqual(res[0].tt, isXpand() ? '946688400.000000' : 946688400n);
     conn.end();
   });
 
@@ -113,7 +114,8 @@ describe('connection option', () => {
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
           .then((res) => {
-            assert.deepEqual(res[0].tt, 946681200n);
+            //https://jira.mariadb.org/browse/XPT-293
+            assert.deepEqual(res[0].tt, isXpand() ? '946681200.000000' : 946681200n);
             return conn.end();
           })
           .then(() => {
@@ -132,7 +134,7 @@ describe('connection option', () => {
         conn
           .query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01T00:00:00+0100')])
           .then((res) => {
-            assert.deepEqual(res[0].tt, 946681200n);
+            assert.deepEqual(res[0].tt, isXpand() ? '946681200.000000' : 946681200n);
             return conn.end();
           })
           .then(() => {

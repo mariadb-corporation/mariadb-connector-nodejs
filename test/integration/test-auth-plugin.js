@@ -29,10 +29,10 @@ describe('authentication plugin', () => {
       }
     }
 
-    await shareConn.query("DROP USER IF EXISTS 'sha256User'@'%'");
-    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User'@'%'");
-    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User2'@'%'");
-    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User3'@'%'");
+    await shareConn.query("DROP USER 'sha256User'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER 'cachingSha256User'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER 'cachingSha256User2'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER 'cachingSha256User3'@'%'").catch((e) => {});
 
     if (!shareConn.info.isMariaDB()) {
       if (shareConn.info.hasMinVersion(8, 0, 0)) {

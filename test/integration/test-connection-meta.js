@@ -7,7 +7,12 @@ describe('Connection meta', function () {
   it('server version', () => {
     const serverVersion = shareConn.serverVersion();
     if (process.env.srv) {
-      if (process.env.srv !== 'skysql' && process.env.srv !== 'skysql-ha' && process.env.srv !== 'maxscale') {
+      if (
+        process.env.srv !== 'skysql' &&
+        process.env.srv !== 'skysql-ha' &&
+        process.env.srv !== 'maxscale' &&
+        process.env.srv !== 'xpand'
+      ) {
         const version = process.env.v;
         assert(serverVersion.startsWith(version), serverVersion + '/' + version);
       }
