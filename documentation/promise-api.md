@@ -60,7 +60,7 @@ BIGINT/DECIMAL values might not be in the safe range, resulting in approximate r
 
 Since 3.x version, driver has reliable default, returning:
 * DECIMAL => javascript String
-* BIGINT => javascript [BigInt](https://mariadb.com/kb/en/bigint/) object
+* BIGINT => javascript [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) object
 
 For compatibility with previous version or mysql/mysql driver, 3 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
 
