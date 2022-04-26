@@ -898,6 +898,21 @@ describe('Pool', () => {
     });
   });
 
+  it('pool charset change', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    try {
+      const query = "SET NAMES 'utf8'";
+
+      const result1 = await pool.query(query);
+      assert.equal(result1.constructor.name, 'OkPacket');
+
+      const result2 = await pool.query({ sql: query });
+      assert.equal(result2.constructor.name, 'OkPacket');
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('pool batch', function (done) {
     let params = { connectionLimit: 1, resetAfterUse: false };
     if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
