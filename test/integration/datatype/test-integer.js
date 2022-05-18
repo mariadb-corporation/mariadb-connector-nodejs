@@ -185,8 +185,10 @@ describe('integer with big value', () => {
     assert.strictEqual(rows.insertId, BigInt('9007199254741997'));
     rows = await shareConn.query('INSERT INTO testBigint values ()');
     assert.strictEqual(rows.insertId, BigInt('9007199254741998'));
-    rows = await shareConn.query('SELECT * FROM testBigint');
+    rows = await shareConn.query('INSERT INTO testBigint values (?)', [-9007199254741998n]);
+    rows = await shareConn.query('SELECT * FROM testBigint order by v');
     const expected = [
+      { v: -9007199254741998n },
       { v: 127n },
       { v: 128n },
       { v: 129n },
@@ -206,10 +208,11 @@ describe('integer with big value', () => {
     ];
     assert.deepEqual(rows, expected);
 
-    rows = await shareConn.execute('SELECT * FROM testBigint');
+    rows = await shareConn.execute('SELECT * FROM testBigint order by v ');
     assert.deepEqual(rows, expected);
 
     const expectedNumber = [
+      { v: -9007199254741998 },
       { v: 127 },
       { v: 128 },
       { v: 129 },
@@ -229,17 +232,18 @@ describe('integer with big value', () => {
     ];
     rows = await shareConn.query({
       bigIntAsNumber: true,
-      sql: 'SELECT * FROM testBigint'
+      sql: 'SELECT * FROM testBigint order by v'
     });
     assert.deepEqual(rows, expectedNumber);
 
     rows = await shareConn.execute({
       bigIntAsNumber: true,
-      sql: 'SELECT * FROM testBigint'
+      sql: 'SELECT * FROM testBigint order by v'
     });
     assert.deepEqual(rows, expectedNumber);
 
     const expectedNumberSupportBig = [
+      { v: '-9007199254741998' },
       { v: 127 },
       { v: 128 },
       { v: 129 },
@@ -259,17 +263,18 @@ describe('integer with big value', () => {
     ];
     rows = await shareConn.query({
       supportBigNumbers: true,
-      sql: 'SELECT * FROM testBigint'
+      sql: 'SELECT * FROM testBigint order by v'
     });
     assert.deepEqual(rows, expectedNumberSupportBig);
 
     rows = await shareConn.execute({
       supportBigNumbers: true,
-      sql: 'SELECT * FROM testBigint'
+      sql: 'SELECT * FROM testBigint order by v'
     });
     assert.deepEqual(rows, expectedNumberSupportBig);
 
     const expectedNumberSupportBigString = [
+      { v: '-9007199254741998' },
       { v: '127' },
       { v: '128' },
       { v: '129' },
