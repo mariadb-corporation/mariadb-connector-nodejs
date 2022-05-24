@@ -46,7 +46,9 @@ jobs:
     - env: srv=mariadb v=10.6 local=1
       node_js: 14
     - env: srv=mariadb v=10.6 local=1
-      node_js: 12
+      node_js: 16
+    - env: srv=mariadb v=10.6 local=1
+      node_js: 18
     - env: srv=mariadb v=10.6 BENCH=1 local=1
     - if: type = push AND fork = false
       env: srv=maxscale
