@@ -360,6 +360,7 @@ Specific options for pools are :
 | **`acquireTimeout`** | Timeout to get a new connection from pool in ms. In order to have connection error information, must be higher than connectTimeout |*integer* | 10000 |
 | **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
 | **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds (0 means never release) |*integer* | 1800 |
+| **`initializationTimeout`** | Pool will retry creating connection in loop, emitting 'error' event when reaching this timeout. In milliseconds |*integer* | 30000 |
 | **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
 | **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
 | **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
@@ -1362,6 +1363,7 @@ This is an alias for [`connection.escapeId(value) → String`](#connectionescape
 | **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
 | **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
 | **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
+| **`error`** | When pool fails to create new connection after reaching `initializationTimeout` timeout |
 
 **Example:**
 

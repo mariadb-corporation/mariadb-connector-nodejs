@@ -12,6 +12,7 @@ describe('Pool callback', () => {
 
   it('pool with wrong authentication', function (done) {
     this.timeout(10000);
+    const initTime = Date.now();
     const pool = base.createPoolCallback({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
@@ -21,6 +22,7 @@ describe('Pool callback', () => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
+        assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
         pool.query('SELECT 3', (err) => {
           if (!err) {
             done(new Error('must have thrown error'));
@@ -44,6 +46,54 @@ describe('Pool callback', () => {
       if (!err) {
         done(new Error('must have thrown error'));
       }
+      assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
+    });
+  });
+
+  it('pool error event', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPoolCallback({
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
+      user: 'wrongAuthentication'
+    });
+
+    await new Promise(function (resolver, rejecter) {
+      pool.on('error', (err) => {
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue(
+          err.errno === 1524 ||
+            err.errno === 1045 ||
+            err.errno === 1698 ||
+            err.errno === 45028 ||
+            err.errno === 45025 ||
+            err.errno === 45044,
+          err.message
+        );
+        pool.end();
+        resolver();
+      });
+    });
+  });
+
+  it('pool error fail connection', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const initTime = Date.now();
+    const pool = base.createPoolCallback({
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
+      host: 'wronghost'
+    });
+
+    await new Promise(function (resolver, rejecter) {
+      pool.on('error', (err) => {
+        assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        pool.end();
+        resolver();
+      });
     });
   });
 

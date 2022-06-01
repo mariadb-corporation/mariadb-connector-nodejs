@@ -187,17 +187,21 @@ describe('Pool', () => {
   it('pool with wrong authentication', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
+    const initTime = Date.now();
     const pool = base.createPool({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
       user: 'wrongAuthentication'
     });
+
     setTimeout(async () => {
       try {
         await pool.query('SELECT 2');
         pool.end();
         throw new Error('must have thrown error');
       } catch (err) {
+        assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -214,6 +218,8 @@ describe('Pool', () => {
       await pool.end();
       throw new Error('must have thrown error');
     } catch (err) {
+      assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
+      assert.isTrue(err.message.includes('Error during pool initialization:'));
       assert.isTrue(
         err.errno === 1524 ||
           err.errno === 1045 ||
@@ -227,6 +233,8 @@ describe('Pool', () => {
         await pool.query('SELECT 3');
         throw new Error('must have thrown error');
       } catch (err) {
+        assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -240,6 +248,53 @@ describe('Pool', () => {
         await pool.end();
       }
     }
+  });
+
+  it('pool error event', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPool({
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
+      user: 'wrongAuthentication'
+    });
+
+    await new Promise(function (resolver, rejecter) {
+      pool.on('error', (err) => {
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue(
+          err.errno === 1524 ||
+            err.errno === 1045 ||
+            err.errno === 1698 ||
+            err.errno === 45028 ||
+            err.errno === 45025 ||
+            err.errno === 45044,
+          err.message
+        );
+        pool.end();
+        resolver();
+      });
+    });
+  });
+
+  it('pool error fail connection', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const initTime = Date.now();
+    const pool = base.createPool({
+      acquireTimeout: 4000,
+      initializationTimeout: 2000,
+      host: 'wronghost'
+    });
+
+    await new Promise(function (resolver, rejecter) {
+      pool.on('error', (err) => {
+        assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
+        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        pool.end();
+        resolver();
+      });
+    });
   });
 
   it('pool with wrong authentication connection', async function () {
