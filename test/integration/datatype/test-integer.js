@@ -67,6 +67,20 @@ describe('integer with big value', () => {
     rows = await shareConn.execute({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true });
     assert.deepEqual(rows, expectedNumber);
 
+    try {
+      await shareConn.query({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true, checkNumberRange: true });
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("value 9999237060546875 can't safely be converted to number"));
+    }
+
+    try {
+      await shareConn.execute({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true, checkNumberRange: true });
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("value 9999237060546875 can't safely be converted to number"));
+    }
+
     const expectedBigNumber = [
       {
         t: -0.1,
@@ -137,54 +151,100 @@ describe('integer with big value', () => {
 
     rows = await shareConn.query({
       sql: 'INSERT INTO testBigint values ()',
+      insertIdAsNumber: true,
+      checkNumberRange: true
+    });
+    assert.strictEqual(rows.insertId, 133);
+
+    rows = await shareConn.execute({
+      sql: 'INSERT INTO testBigint values ()',
+      insertIdAsNumber: true,
+      checkNumberRange: true
+    });
+    assert.strictEqual(rows.insertId, 134);
+
+    rows = await shareConn.query({
+      sql: 'INSERT INTO testBigint values ()',
       supportBigNumbers: true,
       bigNumberStrings: true
     });
-    assert.strictEqual(rows.insertId, '133');
+    assert.strictEqual(rows.insertId, '135');
 
     rows = await shareConn.execute({
       sql: 'INSERT INTO testBigint values ()',
       supportBigNumbers: true,
       bigNumberStrings: true
     });
-    assert.strictEqual(rows.insertId, '134');
+    assert.strictEqual(rows.insertId, '136');
 
     rows = await shareConn.query({ sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true }, [
+      '9007199254741990'
+    ]);
+    assert.strictEqual(rows.insertId, 9007199254741990);
+
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true }, [
       '9007199254741991'
     ]);
     assert.strictEqual(rows.insertId, 9007199254741991);
 
-    rows = await shareConn.query({ sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true }, [
-      '9007199254741992'
-    ]);
-    assert.strictEqual(rows.insertId, '9007199254741992');
+    rows = await shareConn.query({ sql: 'INSERT INTO testBigint values ()', insertIdAsNumber: true });
+    assert.strictEqual(rows.insertId, 9007199254741992);
 
-    rows = await shareConn.query(
-      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true, bigNumberStrings: true },
-      ['9007199254741993']
-    );
-    assert.strictEqual(rows.insertId, '9007199254741993');
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values ()', insertIdAsNumber: true });
+    assert.strictEqual(rows.insertId, 9007199254741993);
 
-    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values (?)', insertIdAsNumber: true }, [
-      '9007199254741994'
-    ]);
-    assert.strictEqual(rows.insertId, 9007199254741994);
+    try {
+      await shareConn.query({
+        sql: 'INSERT INTO testBigint values ()',
+        insertIdAsNumber: true,
+        checkNumberRange: true
+      });
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("last insert id value 9007199254741994 can't safely be converted to number"));
+    }
 
-    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true }, [
-      '9007199254741995'
-    ]);
-    assert.strictEqual(rows.insertId, '9007199254741995');
+    try {
+      await shareConn.execute({
+        sql: 'INSERT INTO testBigint values ()',
+        insertIdAsNumber: true,
+        checkNumberRange: true
+      });
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("last insert id value 9007199254741995 can't safely be converted to number"));
+    }
 
-    rows = await shareConn.execute(
-      { sql: 'INSERT INTO testBigint values (?)', supportBigNumbers: true, bigNumberStrings: true },
-      ['9007199254741996']
-    );
+    rows = await shareConn.query({ sql: 'INSERT INTO testBigint values ()', supportBigNumbers: true });
     assert.strictEqual(rows.insertId, '9007199254741996');
 
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values ()', supportBigNumbers: true });
+    assert.strictEqual(rows.insertId, '9007199254741997');
+
+    rows = await shareConn.query({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.strictEqual(rows.insertId, '9007199254741998');
+
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values ()', insertIdAsNumber: true });
+    assert.strictEqual(rows.insertId, 9007199254741999);
+
+    rows = await shareConn.execute({ sql: 'INSERT INTO testBigint values ()', supportBigNumbers: true });
+    assert.strictEqual(rows.insertId, '9007199254742000');
+
+    rows = await shareConn.execute({
+      sql: 'INSERT INTO testBigint values ()',
+      supportBigNumbers: true,
+      bigNumberStrings: true
+    });
+    assert.strictEqual(rows.insertId, '9007199254742001');
+
     rows = await shareConn.execute('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, BigInt('9007199254741997'));
+    assert.strictEqual(rows.insertId, BigInt('9007199254742002'));
     rows = await shareConn.query('INSERT INTO testBigint values ()');
-    assert.strictEqual(rows.insertId, BigInt('9007199254741998'));
+    assert.strictEqual(rows.insertId, BigInt('9007199254742003'));
     rows = await shareConn.query('INSERT INTO testBigint values (?)', [-9007199254741998n]);
     rows = await shareConn.query('SELECT * FROM testBigint order by v');
     const expected = [
@@ -197,6 +257,9 @@ describe('integer with big value', () => {
       { v: 132n },
       { v: 133n },
       { v: 134n },
+      { v: 135n },
+      { v: 136n },
+      { v: 9007199254741990n },
       { v: 9007199254741991n },
       { v: 9007199254741992n },
       { v: 9007199254741993n },
@@ -204,7 +267,12 @@ describe('integer with big value', () => {
       { v: 9007199254741995n },
       { v: 9007199254741996n },
       { v: 9007199254741997n },
-      { v: 9007199254741998n }
+      { v: 9007199254741998n },
+      { v: 9007199254741999n },
+      { v: 9007199254742000n },
+      { v: 9007199254742001n },
+      { v: 9007199254742002n },
+      { v: 9007199254742003n }
     ];
     assert.deepEqual(rows, expected);
 
@@ -221,6 +289,9 @@ describe('integer with big value', () => {
       { v: 132 },
       { v: 133 },
       { v: 134 },
+      { v: 135 },
+      { v: 136 },
+      { v: 9007199254741990 },
       { v: 9007199254741991 },
       { v: 9007199254741992 },
       { v: 9007199254741993 },
@@ -228,7 +299,12 @@ describe('integer with big value', () => {
       { v: 9007199254741995 },
       { v: 9007199254741996 },
       { v: 9007199254741997 },
-      { v: 9007199254741998 }
+      { v: 9007199254741998 },
+      { v: 9007199254741999 },
+      { v: 9007199254742000 },
+      { v: 9007199254742001 },
+      { v: 9007199254742002 },
+      { v: 9007199254742003 }
     ];
     rows = await shareConn.query({
       bigIntAsNumber: true,
@@ -242,6 +318,26 @@ describe('integer with big value', () => {
     });
     assert.deepEqual(rows, expectedNumber);
 
+    try {
+      await shareConn.query({
+        bigIntAsNumber: true,
+        checkNumberRange: true,
+        sql: 'SELECT * FROM testBigint order by v'
+      });
+    } catch (e) {
+      assert.isTrue(e.message.includes("value -9007199254741998 can't safely be converted to number"));
+    }
+
+    try {
+      await shareConn.execute({
+        bigIntAsNumber: true,
+        checkNumberRange: true,
+        sql: 'SELECT * FROM testBigint order by v'
+      });
+    } catch (e) {
+      assert.isTrue(e.message.includes("value -9007199254741998 can't safely be converted to number"));
+    }
+
     const expectedNumberSupportBig = [
       { v: '-9007199254741998' },
       { v: 127 },
@@ -252,6 +348,9 @@ describe('integer with big value', () => {
       { v: 132 },
       { v: 133 },
       { v: 134 },
+      { v: 135 },
+      { v: 136 },
+      { v: '9007199254741990' },
       { v: '9007199254741991' },
       { v: '9007199254741992' },
       { v: '9007199254741993' },
@@ -259,7 +358,12 @@ describe('integer with big value', () => {
       { v: '9007199254741995' },
       { v: '9007199254741996' },
       { v: '9007199254741997' },
-      { v: '9007199254741998' }
+      { v: '9007199254741998' },
+      { v: '9007199254741999' },
+      { v: '9007199254742000' },
+      { v: '9007199254742001' },
+      { v: '9007199254742002' },
+      { v: '9007199254742003' }
     ];
     rows = await shareConn.query({
       supportBigNumbers: true,
@@ -283,6 +387,9 @@ describe('integer with big value', () => {
       { v: '132' },
       { v: '133' },
       { v: '134' },
+      { v: '135' },
+      { v: '136' },
+      { v: '9007199254741990' },
       { v: '9007199254741991' },
       { v: '9007199254741992' },
       { v: '9007199254741993' },
@@ -290,7 +397,12 @@ describe('integer with big value', () => {
       { v: '9007199254741995' },
       { v: '9007199254741996' },
       { v: '9007199254741997' },
-      { v: '9007199254741998' }
+      { v: '9007199254741998' },
+      { v: '9007199254741999' },
+      { v: '9007199254742000' },
+      { v: '9007199254742001' },
+      { v: '9007199254742002' },
+      { v: '9007199254742003' }
     ];
     rows = await shareConn.query({
       supportBigNumbers: true,
@@ -329,6 +441,13 @@ describe('integer with big value', () => {
     assert.strictEqual(rows[2].v, 129);
     assert.strictEqual(rows[3].v, null);
 
+    rows = await shareConn.query({ bigIntAsNumber: true, checkNumberRange: true, sql: 'SELECT * FROM testBigintNull' });
+    assert.strictEqual(rows.length, 4);
+    assert.strictEqual(rows[0].v, 127);
+    assert.strictEqual(rows[1].v, null);
+    assert.strictEqual(rows[2].v, 129);
+    assert.strictEqual(rows[3].v, null);
+
     rows = await shareConn.execute('SELECT * FROM testBigintNull');
     assert.strictEqual(rows.length, 4);
     assert.strictEqual(rows[0].v, BigInt(127));
@@ -337,6 +456,17 @@ describe('integer with big value', () => {
     assert.strictEqual(rows[3].v, null);
 
     rows = await shareConn.execute({ bigIntAsNumber: true, sql: 'SELECT * FROM testBigintNull' });
+    assert.strictEqual(rows.length, 4);
+    assert.strictEqual(rows[0].v, 127);
+    assert.strictEqual(rows[1].v, null);
+    assert.strictEqual(rows[2].v, 129);
+    assert.strictEqual(rows[3].v, null);
+
+    rows = await shareConn.execute({
+      bigIntAsNumber: true,
+      checkNumberRange: true,
+      sql: 'SELECT * FROM testBigintNull'
+    });
     assert.strictEqual(rows.length, 4);
     assert.strictEqual(rows[0].v, 127);
     assert.strictEqual(rows[1].v, null);
@@ -395,12 +525,44 @@ describe('integer with big value', () => {
     await conn.query('INSERT INTO BIG_NUMBER values (?)', [maxValue]);
     await conn.execute('INSERT INTO BIG_NUMBER values (?)', [maxValue]);
 
-    let res = await conn.query('SELECT * FROM BIG_NUMBER WHERE val = ?', [maxValue]);
     const expected = [{ val: maxValue }, { val: maxValue }];
+
+    let res = await conn.query('SELECT * FROM BIG_NUMBER WHERE val = ?', [maxValue]);
     assert.deepEqual(res, expected);
 
     res = await conn.execute('SELECT * FROM BIG_NUMBER WHERE val = ?', [maxValue]);
     assert.deepEqual(res, expected);
+
+    try {
+      await conn.query(
+        {
+          sql: 'SELECT * FROM BIG_NUMBER WHERE val = ?',
+          decimalAsNumber: true,
+          bigIntAsNumber: true,
+          checkNumberRange: true
+        },
+        [maxValue]
+      );
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("value 18446744073709551615 can't safely be converted to number"));
+    }
+
+    try {
+      await conn.execute(
+        {
+          sql: 'SELECT * FROM BIG_NUMBER WHERE val = ?',
+          decimalAsNumber: true,
+          bigIntAsNumber: true,
+          checkNumberRange: true
+        },
+        [maxValue]
+      );
+      throw new Error('Expected to have failed');
+    } catch (e) {
+      assert.isTrue(e.message.includes("value 18446744073709551615 can't safely be converted to number"));
+    }
+
     conn.end();
   });
 });

@@ -387,7 +387,7 @@ describe('local-infile', () => {
       "COLUMNS TERMINATED BY ',' ENCLOSED BY '\\\"' ESCAPED BY '\\\\' " +
       "LINES TERMINATED BY '\\n' IGNORE 1 LINES " +
       '(t1, t2)';
-    console.log('maxAllowedSize:' + maxAllowedSize + ' len:' + sql.length + ' buf:' + buf.length);
+
     await conn.query(sql);
     rows = await conn.query('SELECT * FROM bigLocalInfile');
     assert.equal(rows.length, size);

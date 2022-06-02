@@ -394,6 +394,7 @@ mariadb.createConnection({
 | **bigNumberStrings** | (deprecated) if set with `supportBigNumbers` DECIMAL/BIGINT data type will be returned as string |*boolean* | false |
 | **stream** | permits to set a function with parameter to set stream (since 3.0)|*function*| |
 | **bitOneIsBoolean** | return BIT(1) values as boolean |*boolean* | true |
+| **checkNumberRange** | when used in conjunction of decimalAsNumber, insertIdAsNumber or bigIntAsNumber, if BigInt conversion to number is not exact, connector will throw an error (since 3.0.1)|*function*| |
 
 
 ### SSH tunnel

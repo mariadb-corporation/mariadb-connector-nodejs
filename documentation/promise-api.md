@@ -62,13 +62,14 @@ Since 3.x version, driver has reliable default, returning:
 * DECIMAL => javascript String
 * BIGINT => javascript [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) object
 
-For compatibility with previous version or mysql/mysql driver, 3 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
+For compatibility with previous version or mysql/mysql driver, 4 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
 | **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
 | **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values. |*boolean* | false |
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values. |*boolean* | false |
+| **checkNumberRange** | when used in conjunction of decimalAsNumber, insertIdAsNumber or bigIntAsNumber, if conversion to number is not exact, connector will throw an error (since 3.0.1) |*function*| |
 
 Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.   
 

@@ -42,6 +42,7 @@ describe('test options', () => {
       debugLen: 256,
       trace: false,
       checkDuplicate: true,
+      checkNumberRange: false,
       dateStrings: false,
       foundRows: true,
       logger: {
