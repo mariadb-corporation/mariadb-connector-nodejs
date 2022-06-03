@@ -107,21 +107,26 @@ describe('prepare and execute callback', () => {
             if (err) return done(err);
             conn.prepare('select ? + 3', (err, prepare4) => {
               if (err) return done(err);
-              conn.prepare('select ?', (err, prepare) => {
+              conn.prepare({ sql: 'select ? + 4' }, (err, prepare5) => {
                 if (err) return done(err);
-                assert.notEqual(prepare.id, initialPrepareId);
-                const secondPrepareId = prepare.id;
-                for (let i = 0; i < 10; i++) {
-                  conn.prepare('select ?', (err, prepare2) => {
-                    if (err) return done(err);
-                    assert.equal(prepare2.id, secondPrepareId);
-                    prepare2.close();
-                    if (i == 9) {
-                      conn.end();
-                      done();
-                    }
-                  });
-                }
+                conn.prepare('select ?', (err, prepare) => {
+                  if (err) return done(err);
+                  assert.notEqual(prepare.id, initialPrepareId);
+                  const secondPrepareId = prepare.id;
+                  for (let i = 0; i < 10; i++) {
+                    conn.prepare('select ?', (err, prepare2) => {
+                      if (err) return done(err);
+                      assert.equal(prepare2.id, secondPrepareId);
+                      prepare2.close();
+                      if (i == 9) {
+                        conn.reset((err) => {
+                          conn.end();
+                          done();
+                        });
+                      }
+                    });
+                  }
+                });
               });
             });
           });
@@ -181,16 +186,21 @@ describe('prepare and execute callback', () => {
         if (err) return done(err);
         assert.isTrue(res[0].a === 2 || res[0].a === 2n);
         assert.isTrue(meta.length === 1);
-        conn.execute('select ? as a', [3], (err, res, meta) => {
+        conn.execute({ sql: 'select ? as a', bigIntAsNumber: true }, [3], (err, res, meta) => {
           if (err) return done(err);
-          assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+          assert.isTrue(res[0].a === 3);
           conn.execute('select ? as a', ['a'], (err, res, meta) => {
             if (err) return done(err);
             if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) {
               assert.isTrue(res[0].a === 'a');
             }
-            conn.end();
-            done();
+            conn.execute({ sql: 'select 4 as a', bigIntAsNumber: true }, (err, res, meta) => {
+              if (err) return done(err);
+              assert.isTrue(res[0].a === 4);
+
+              conn.end();
+              done();
+            });
           });
         });
       });
@@ -216,6 +226,16 @@ describe('prepare and execute callback', () => {
           conn.end();
         });
       });
+    });
+  });
+
+  it('close alias', function (done) {
+    this.timeout(5000);
+    const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
+    conn.connect((err) => {
+      if (err) return done(err);
+      conn.close();
+      done();
     });
   });
 });

@@ -82,6 +82,8 @@ describe('prepare and execute', () => {
     await conn.prepare('select ? + 1', [1]);
     await conn.prepare('select ? + 2', [1]);
     await conn.prepare('select ? + 3', [1]);
+    await conn.prepare({ sql: 'select ? + 3' }, [1]);
+    await conn.prepare({ sql: 'select 4' });
 
     prepare = await conn.prepare('select ?', [1]);
     assert.notEqual(prepare.id, initialPrepareId);

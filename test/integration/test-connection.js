@@ -71,8 +71,11 @@ describe('connection', () => {
 
   it('multiple connection.connect() with callback', function (done) {
     const conn = base.createCallbackConnection();
+    assert.equal(-1, conn.threadId);
+
     conn.connect((err) => {
       if (err) done(err);
+      assert.notEqual(-1, conn.threadId);
       //ensure double connect execute callback immediately
       conn.connect((err) => {
         if (err) done(err);
@@ -274,7 +277,17 @@ describe('connection', () => {
       })
       .catch((err) => {
         assert.equal(err.message, '(conn=-1, no: 45002, SQLState: 08S01) Connection is already connecting');
-        done();
+        return new Promise(conn.end.bind(conn)).then(() => {
+          conn
+            .connect()
+            .then(() => {
+              done(new Error('must have thrown error'));
+            })
+            .catch((err) => {
+              assert.equal(err.message, '(conn=-1, no: 45001, SQLState: 08S01) Connection closed');
+              done();
+            });
+        });
       })
       .catch(done);
   });
@@ -812,9 +825,24 @@ describe('connection', () => {
   });
 
   it('API escapeId', function () {
+    const conn = base.createCallbackConnection();
     assert.equal(shareConn.escapeId('good_$one'), '`good_$one`');
+    assert.equal(conn.escapeId('good_$one'), '`good_$one`');
     assert.equal(shareConn.escapeId('f:a'), '`f:a`');
+    assert.equal(conn.escapeId('f:a'), '`f:a`');
     assert.equal(shareConn.escapeId('good_`è`one'), '`good_``è``one`');
+    assert.equal(conn.escapeId('good_`è`one'), '`good_``è``one`');
+    conn.end();
+  });
+
+  it('debug', function (done) {
+    const conn = base.createCallbackConnection();
+    conn.debug(true);
+    conn.debug(false);
+    conn.debugCompress(true);
+    conn.debugCompress(false);
+    conn.end();
+    done();
   });
 
   it('API format error', function (done) {
@@ -824,8 +852,17 @@ describe('connection', () => {
     } catch (err) {
       assert.equal(err.sqlState, '0A000');
       assert.equal(err.code, 'ER_NOT_IMPLEMENTED_FORMAT');
-      done();
     }
+    const conn = base.createCallbackConnection();
+    try {
+      conn.format('fff');
+      done(new Error('should have thrown error!'));
+    } catch (err) {
+      assert.equal(err.sqlState, '0A000');
+      assert.equal(err.code, 'ER_NOT_IMPLEMENTED_FORMAT');
+      conn.end();
+    }
+    done();
   });
 
   it('connection error if user expired', function (done) {

@@ -758,6 +758,14 @@ describe('batch', function () {
   };
 
   describe('standard question mark using bulk', () => {
+    it('batch with one value', async function () {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      await shareConn.query('DROP TABLE IF EXISTS bufLength');
+      await shareConn.query('create table bufLength (val varchar(10))');
+      await shareConn.query('FLUSH TABLES');
+      await shareConn.batch('update bufLength set val=?', 'abc');
+    });
+
     it('ensure bulk param length encoded size #137', async function () {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await shareConn.query('DROP TABLE IF EXISTS bufLength');
