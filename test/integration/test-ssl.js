@@ -149,6 +149,7 @@ describe('ssl', function () {
     } catch (err) {
       assert(
         err.message.includes('self signed certificate') ||
+          err.message.includes('self-signed certificate') ||
           err.message.includes('unable to get local issuer certificate'),
         err.message
       );
@@ -533,6 +534,10 @@ describe('ssl', function () {
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
+
+    const ver = process.version.substring(1).split('.');
+    //on node.js 17+ client keystore won't be supported until installing openssl 3.0
+    if (parseInt(ver[0]) >= 17) this.skip();
 
     base
       .createConnection({

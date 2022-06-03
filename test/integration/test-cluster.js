@@ -784,7 +784,7 @@ describe('cluster', function () {
 
     it('test wrong selector', function (done) {
       const cluster = get3NodeCallbackCluster({ defaultSelector: 'WRONG' });
-
+      const filteredCluster = cluster.of(/^node[12]/);
       cluster.getConnection(/^node*/, (err, conn) => {
         cluster.end(() => {
           if (err) {
