@@ -219,6 +219,7 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
     pool.end(() => {
       pool.getConnection((err) => {
+        assert.isTrue(pool.closed);
         assert(err.message.includes('pool is closed'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45027);
@@ -226,6 +227,55 @@ describe('Pool callback', () => {
         done();
       });
     });
+  });
+
+  it('pool escape', function (done) {
+    if (!base.utf8Collation()) this.skip();
+    const pool = base.createPoolCallback({ connectionLimit: 1 });
+    const pool2 = base.createPoolCallback({ connectionLimit: 1, arrayParenthesis: true });
+
+    pool.on('connection', (conn) => {
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+      assert.equal(pool.escape(Buffer.from("let's rocks\n😊 🤘")), "_binary'let\\'s rocks\\n😊 🤘'");
+      assert.equal(pool.escape(19925.1), '19925.1');
+      let prefix =
+        (conn.info.isMariaDB() && conn.info.hasMinVersion(10, 1, 4)) ||
+        (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 6))
+          ? 'ST_'
+          : '';
+      assert.equal(pool.escape({ type: 'Point', coordinates: [20, 10] }), prefix + "PointFromText('POINT(20 10)')");
+      assert.equal(pool.escape({ id: 2, val: "t'est" }), '\'{\\"id\\":2,\\"val\\":\\"t\\\'est\\"}\'');
+      const fctStr = new Object();
+      fctStr.toSqlString = () => {
+        return "bla'bla";
+      };
+      assert.equal(pool.escape(fctStr), "'bla\\'bla'");
+      assert.equal(pool.escape(null), 'NULL');
+      assert.equal(pool.escape("let'g'o😊"), "'let\\'g\\'o😊'");
+      assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
+      const arr = ["let'g'o😊", false, null, fctStr];
+      assert.equal(pool.escape(arr), "'let\\'g\\'o😊',false,NULL,'bla\\'bla'");
+      assert.equal(pool2.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
+
+      assert.equal(pool.escapeId('good_$one'), '`good_$one`');
+      assert.equal(pool.escape(''), "''");
+      assert.equal(pool.escapeId('f:a'), '`f:a`');
+      assert.equal(pool.escapeId('`f:a`'), '`f:a`');
+      assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+      pool.end();
+      pool2.end();
+      done();
+    });
+  });
+
+  it('pool escape on init', function () {
+    const pool = base.createPoolCallback({ connectionLimit: 1 });
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+    assert.equal(pool.escapeId('good_$one'), '`good_$one`');
+    assert.equal(pool.escapeId('f:a'), '`f:a`');
+    assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+
+    pool.end();
   });
 
   it('pool query after close', function (done) {
@@ -248,6 +298,11 @@ describe('Pool callback', () => {
       acquireTimeout: 200
     });
     let errorThrown = false;
+
+    pool.getConnection((err, conn) => {
+      conn.release();
+    });
+
     pool.query('SELECT SLEEP(1)', (err) => {
       if (err) {
         done(err);
@@ -258,6 +313,17 @@ describe('Pool callback', () => {
         });
       }
     });
+
+    try {
+      pool.getConnection();
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert(err.message.includes('missing mandatory callback parameter'));
+      assert.equal(err.sqlState, 'HY000');
+      assert.equal(err.errno, 45016);
+      assert.equal(err.code, 'ER_MISSING_PARAMETER');
+    }
+
     pool.getConnection((err) => {
       assert(err.message.includes('retrieve connection from pool timeout'));
       assert.equal(err.sqlState, 'HY000');
@@ -320,8 +386,18 @@ describe('Pool callback', () => {
       if (err) return done(err);
       assert.isTrue(res[0].a === 2 || res[0].a === 2n);
       assert.isTrue(meta.length === 1);
-      pool.end(() => {
-        done();
+      pool.execute({sql:'SELECT ? as a'}, [2], (err, res, meta) => {
+        if (err) return done(err);
+        assert.isTrue(res[0].a === 2 || res[0].a === 2n);
+        assert.isTrue(meta.length === 1);
+        pool.execute('SELECT 2 as a', (err, res, meta) => {
+          if (err) return done(err);
+          assert.isTrue(res[0].a === 2 || res[0].a === 2n);
+          assert.isTrue(meta.length === 1);
+          pool.end(() => {
+            done();
+          });
+        });
       });
     });
   });

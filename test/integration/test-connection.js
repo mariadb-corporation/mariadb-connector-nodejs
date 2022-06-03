@@ -805,6 +805,30 @@ describe('connection', () => {
       .catch(done);
   });
 
+  it('pause socket callback', function (done) {
+    const conn = base.createCallbackConnection();
+    conn.connect((err) => {
+      conn.pause();
+      const startTime = process.hrtime();
+      setTimeout(() => {
+        conn.resume();
+      }, 500);
+
+      conn
+        .query("SELECT '1'", (err, rows) => {
+          if (err) {
+            done(err);
+          } else {
+            assert.deepEqual(rows, [{ 1: '1' }]);
+            const diff = process.hrtime(startTime);
+            //query has take more than 500ms
+            assert.isTrue(diff[1] > 499000000, ' diff[1]:' + diff[1] + ' expected to be more than 500000000');
+            done();
+          }
+        });
+    });
+  });
+
   it('API escapeId error', function (done) {
     try {
       shareConn.escapeId('');

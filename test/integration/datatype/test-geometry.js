@@ -18,8 +18,8 @@ describe('geometry data type', () => {
         "    (ST_PointFromText('POINT(20 20)')),\n" +
         "    (ST_PointFromText('POINT(10 20)'))"
     );
-    const rows = await shareConn.query('SELECT * FROM gis_point');
-    assert.deepEqual(rows, [
+    const expected =
+    [
       {
         g: {
           type: 'Point',
@@ -44,7 +44,18 @@ describe('geometry data type', () => {
           coordinates: [10, 20]
         }
       }
-    ]);
+    ];
+    let rows = await shareConn.query('SELECT * FROM gis_point');
+    assert.deepEqual(rows,expected);
+
+    rows = await shareConn.query({sql:'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry()});
+    assert.deepEqual(rows,expected);
+
+    rows = await shareConn.execute('SELECT * FROM gis_point');
+    assert.deepEqual(rows,expected);
+
+    rows = await shareConn.execute({sql:'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry()});
+    assert.deepEqual(rows,expected);
   });
 
   it('geometry escape', async function () {
