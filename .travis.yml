@@ -38,7 +38,6 @@ jobs:
     - env: srv=mariadb v=10.6
       os: windows
       language: shell
-    - env: srv=mariadb v=10.2 local=1
     - env: srv=mariadb v=10.3 local=1
     - env: srv=mariadb v=10.4 local=1
     - env: srv=mariadb v=10.5 local=1
