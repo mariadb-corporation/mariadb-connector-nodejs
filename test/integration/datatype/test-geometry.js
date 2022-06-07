@@ -13,13 +13,22 @@ describe('geometry data type', () => {
     await shareConn.query('CREATE TABLE gis_point (g POINT)');
     await shareConn.query(
       'INSERT INTO gis_point VALUES\n' +
+        '    (null),\n' +
         "    (ST_PointFromText('POINT(10 10)')),\n" +
         "    (ST_PointFromText('POINT(20 10)')),\n" +
         "    (ST_PointFromText('POINT(20 20)')),\n" +
         "    (ST_PointFromText('POINT(10 20)'))"
     );
-    const expected =
-    [
+    const expected = [
+      {
+        g:
+          shareConn.info.isMariaDB() &&
+          shareConn.info.hasMinVersion(10, 5, 2) &&
+          process.env.srv !== 'maxscale' &&
+          process.env.srv !== 'skysql-ha'
+            ? { type: 'Point' }
+            : null
+      },
       {
         g: {
           type: 'Point',
@@ -46,16 +55,16 @@ describe('geometry data type', () => {
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_point');
-    assert.deepEqual(rows,expected);
+    assert.deepEqual(rows, expected);
 
-    rows = await shareConn.query({sql:'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry()});
-    assert.deepEqual(rows,expected);
+    rows = await shareConn.query({ sql: 'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry() });
+    assert.deepEqual(rows, expected);
 
     rows = await shareConn.execute('SELECT * FROM gis_point');
-    assert.deepEqual(rows,expected);
+    assert.deepEqual(rows, expected);
 
-    rows = await shareConn.execute({sql:'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry()});
-    assert.deepEqual(rows,expected);
+    rows = await shareConn.execute({ sql: 'SELECT * FROM gis_point', typeCast: (column, next) => column.geometry() });
+    assert.deepEqual(rows, expected);
   });
 
   it('geometry escape', async function () {
@@ -400,6 +409,17 @@ describe('geometry data type', () => {
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * FROM gis_line_insert');
     assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_line_insert',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_line_insert',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
   });
 
   it('Polygon format', async function () {
@@ -534,10 +554,15 @@ describe('geometry data type', () => {
         }
       }
     ];
+
     let rows = await shareConn.query('SELECT * FROM gis_polygon');
     assert.deepEqual(rows, expected);
-
     rows = await shareConn.execute('SELECT * FROM gis_polygon');
+    assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({ sql: 'SELECT * FROM gis_polygon', typeCast: (column, next) => column.geometry() });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({ sql: 'SELECT * FROM gis_polygon', typeCast: (column, next) => column.geometry() });
     assert.deepEqual(rows, expected);
   });
 
@@ -715,6 +740,17 @@ describe('geometry data type', () => {
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * FROM gis_multi_point');
     assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_multi_point',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_multi_point',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
   });
 
   it('MultiPoint insert', async function () {
@@ -846,6 +882,17 @@ describe('geometry data type', () => {
     let rows = await shareConn.query('SELECT * FROM gis_multi_line');
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * FROM gis_multi_line');
+    assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_multi_line',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_multi_line',
+      typeCast: (column, next) => column.geometry()
+    });
     assert.deepEqual(rows, expected);
   });
 
@@ -1055,6 +1102,17 @@ describe('geometry data type', () => {
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * FROM gis_multi_polygon');
     assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_multi_polygon',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_multi_polygon',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
   });
 
   it('Multi-polygon insert', async function () {
@@ -1235,6 +1293,17 @@ describe('geometry data type', () => {
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * FROM gis_multi_polygon_insert');
     assert.deepEqual(rows, expected);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_multi_polygon_insert',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_multi_polygon_insert',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
   });
 
   it('Geometry collection format', async function () {
@@ -1346,6 +1415,17 @@ describe('geometry data type', () => {
     let rows = await conn.query('SELECT * FROM gis_geometrycollection');
     assert.deepEqual(rows, expectedValue);
     rows = await conn.execute('SELECT * FROM gis_geometrycollection');
+    assert.deepEqual(rows, expectedValue);
+
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_geometrycollection',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expectedValue);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_geometrycollection',
+      typeCast: (column, next) => column.geometry()
+    });
     assert.deepEqual(rows, expectedValue);
     conn.end();
   });
@@ -1555,6 +1635,16 @@ describe('geometry data type', () => {
     let rows = await conn.query('SELECT * FROM gis_geometrycollection_ins');
     assert.deepEqual(rows, expected);
     rows = await conn.execute('SELECT * FROM gis_geometrycollection_ins');
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.query({
+      sql: 'SELECT * FROM gis_geometrycollection_ins',
+      typeCast: (column, next) => column.geometry()
+    });
+    assert.deepEqual(rows, expected);
+    rows = await shareConn.execute({
+      sql: 'SELECT * FROM gis_geometrycollection_ins',
+      typeCast: (column, next) => column.geometry()
+    });
     assert.deepEqual(rows, expected);
     conn.end();
   });

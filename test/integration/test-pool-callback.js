@@ -386,7 +386,7 @@ describe('Pool callback', () => {
       if (err) return done(err);
       assert.isTrue(res[0].a === 2 || res[0].a === 2n);
       assert.isTrue(meta.length === 1);
-      pool.execute({sql:'SELECT ? as a'}, [2], (err, res, meta) => {
+      pool.execute({ sql: 'SELECT ? as a' }, [2], (err, res, meta) => {
         if (err) return done(err);
         assert.isTrue(res[0].a === 2 || res[0].a === 2n);
         assert.isTrue(meta.length === 1);
