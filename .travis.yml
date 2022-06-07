@@ -22,13 +22,14 @@ install:
         connector-test-machine/launch.bat -t "$srv" -v "$v" -d testn
         ;;
       linux)
-        source connector-test-machine/launch.sh -t "$srv" -v "$v" -d testn -l "$local"
+        source connector-test-machine/launch.sh -t "$srv" -v "$v" -d testn -l "$local"  -c "$CLEAR_TEXT"
         ;;
     esac
 
 env:
   global:
     - RUN_LONG_TEST=1
+    - CLEAR_TEXT=0
 jobs:
   fast_finish: true
   allow_failures:
@@ -44,7 +45,7 @@ jobs:
     - env: srv=mariadb v=10.7 local=1
     - env: srv=mariadb v=10.6 local=1
       node_js: 14
-    - env: srv=mariadb v=10.6 local=1
+    - env: srv=mariadb v=10.6 local=1 CLEAR_TEXT=1
       node_js: 16
     - env: srv=mariadb v=10.6 local=1
       node_js: 18

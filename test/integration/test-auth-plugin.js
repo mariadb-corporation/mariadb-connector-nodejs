@@ -93,6 +93,10 @@ describe('authentication plugin', () => {
         user: 'verificationEd25519AuthPlugin',
         password: 'MySup8%rPassw@ord'
       });
+      await conn.changeUser({
+        user: 'verificationEd25519AuthPlugin',
+        password: 'MySup8%rPassw@ord'
+      });
       conn.end();
       try {
         conn = await base.createConnection({
