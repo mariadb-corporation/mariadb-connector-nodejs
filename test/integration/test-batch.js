@@ -171,27 +171,43 @@ describe('batch', function () {
   const batchWithReturning = async (useBulk) => {
     const conn = await base.createConnection({ bulk: useBulk });
     await conn.query('drop table if exists bar');
-    await conn.query('create table bar (id bigint not null primary key)');
-    let res = await conn.batch('insert into bar (id) values (?) returning id', [[1], [2], [3], [4]]);
-    assert.deepEqual(res, [{ id: 1n }, { id: 2n }, { id: 3n }, { id: 4n }]);
+    await conn.query('create table bar (id DECIMAL(30,0) UNSIGNED not null primary key)');
+    let res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', decimalAsNumber: true }, [
+      [1],
+      [2],
+      [3],
+      [4],
+      [5n],
+      [6.1]
+    ]);
+    assert.deepEqual(res, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }]);
 
     res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', rowsAsArray: true }, [
-      [5],
-      [6],
       [7],
-      [8]
+      [8],
+      [9],
+      [10]
     ]);
-    assert.deepEqual(res, [[5n], [6n], [7n], [8n]]);
+    assert.deepEqual(res, [['7'], ['8'], ['9'], ['10']]);
 
-    res = await conn.batch('insert into bar (id) values (?) returning id', [[9], ['10'], [11], [12]]);
-    assert.deepEqual(res, [{ id: 9n }, { id: 10n }, { id: 11n }, { id: 12n }]);
+    res = await conn.batch(
+      { sql: 'insert into bar (id) values (?) returning id', supportBigNumbers: true, bigNumberStrings: true },
+      [[11], ['12'], [13], [2147483650], [9223372036854775818n]]
+    );
+    assert.deepEqual(res, [
+      { id: '11' },
+      { id: '12' },
+      { id: '13' },
+      { id: '2147483650' },
+      { id: '9223372036854775818' }
+    ]);
     conn.end();
   };
 
   const simpleBatchWithOptions = async (useCompression, useBulk) => {
     const conn = await base.createConnection({ compress: useCompression, bulk: useBulk });
     conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
-    conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
+    conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime, b blob)');
     await shareConn.query('FLUSH TABLES');
     await conn.query('START TRANSACTION');
 
@@ -201,24 +217,62 @@ describe('batch', function () {
     };
     let res = await conn.batch(
       {
-        sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
+        sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?, ?)',
         maxAllowedPacket: 1048576
       },
       [
-        [1, new Date('2001-12-31 23:59:58')],
-        [2, new Date('2001-12-31 23:59:58')]
+        [1, new Date('2001-12-31 23:59:58'), 9223372036854775818n],
+        [2, new Date('2001-12-31 23:59:58'), 6.1],
+        [3, new Date('2001-12-31 23:59:58'), Buffer.from('test')],
+        [4, new Date('2001-12-31 23:59:58'), f],
+        [5, new Date('2001-12-31 23:59:58'), Buffer.from('test2')],
+        [6, new Date('2001-12-31 23:59:58'), f],
+        [7, new Date('2001-12-31 23:59:58'), 9223372036854775818n],
+        [8, new Date('2001-12-31 23:59:58'), 6.1]
       ]
     );
-    assert.equal(res.affectedRows, 2);
+    assert.equal(res.affectedRows, 8);
     res = await conn.query('select * from `simpleBatchWithOptions`');
     assert.deepEqual(res, [
       {
-        id: 1,
-        d: new Date('2001-12-31 23:59:58')
+        b: Buffer.from('9223372036854775818'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 1
       },
       {
-        id: 2,
-        d: new Date('2001-12-31 23:59:58')
+        b: Buffer.from('6.1'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 2
+      },
+      {
+        b: Buffer.from('test'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 3
+      },
+      {
+        b: Buffer.from('blabla'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 4
+      },
+      {
+        b: Buffer.from('test2'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 5
+      },
+      {
+        b: Buffer.from('blabla'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 6
+      },
+      {
+        b: Buffer.from('9223372036854775818'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 7
+      },
+      {
+        b: Buffer.from('6.1'),
+        d: new Date('2001-12-31 23:59:58'),
+        id: 8
       }
     ]);
     await conn.query('ROLLBACK');
@@ -764,6 +818,21 @@ describe('batch', function () {
       await shareConn.query('create table bufLength (val varchar(10))');
       await shareConn.query('FLUSH TABLES');
       await shareConn.batch('update bufLength set val=?', 'abc');
+    });
+
+    it('batch timeout error', async function () {
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 2, 0)) this.skip();
+      await shareConn.query('DROP TABLE IF EXISTS bufLength');
+      await shareConn.query('create table bufLength (val varchar(10))');
+      await shareConn.query('FLUSH TABLES');
+      try {
+        await shareConn.batch({ sql: 'update bufLength set val=?', timeout: 100 }, 'abc');
+        throw Error('must have throw error');
+      } catch (err) {
+        assert.equal(err.errno, 45038);
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');
+      }
     });
 
     it('ensure bulk param length encoded size #137', async function () {
