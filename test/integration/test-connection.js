@@ -830,6 +830,32 @@ describe('connection', () => {
     });
   });
 
+  it('error reaching max connection', async function () {
+    // error occurs on handshake packet, with old error format
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+
+    const res = await shareConn.query('select @@max_connections as a');
+    const limit = res[0].a;
+    if ( limit < 600) {
+      const conns = [];
+      try {
+         for (let i = 0; i < limit + 10n; i++) {
+           const con = await base.createConnection();
+           conns.push(con);
+         }
+      } catch (err) {
+        console.log(err);
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.errno, 1040);
+        assert.equal(err.code, 'ER_CON_COUNT_ERROR');
+        for (let i = 0; i < conns.length; i++) {
+          conns[i].end();
+        }
+      }
+
+    }
+  })
+
   it('API escapeId error', function (done) {
     try {
       shareConn.escapeId('');
