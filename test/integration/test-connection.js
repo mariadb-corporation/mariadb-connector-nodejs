@@ -823,6 +823,7 @@ describe('connection', () => {
             const diff = process.hrtime(startTime);
             //query has take more than 500ms
             assert.isTrue(diff[1] > 499000000, ' diff[1]:' + diff[1] + ' expected to be more than 500000000');
+            conn.end();
             done();
           }
         });
