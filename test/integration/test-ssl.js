@@ -115,6 +115,7 @@ describe('ssl', function () {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then((rows) => {
+        console.log(rows);
         if (rows.length > 0 && rows[0].Value === 'YES') {
           sslEnable = true;
           done();
@@ -123,16 +124,30 @@ describe('ssl', function () {
           shareConn
             .query("SHOW VARIABLES LIKE '%ssl%'")
             .then((rows) => {
-              // console.log("ssl is not enable on database, skipping test :");
-              // for (let i = 0; i < rows.length; i++) {
-              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
-              // }
+              console.log('ssl is not enable on database, skipping test :');
+              for (let i = 0; i < rows.length; i++) {
+                console.log(rows[0]['Variable_name'] + ' = ' + rows[0]['Value']);
+              }
               done();
             })
             .catch(done);
         }
       })
       .catch(done);
+  });
+
+  it('error when server ssl is disable', async function () {
+    if (sslEnable) this.skip();
+    try {
+      await base.createConnection({
+        ssl: { rejectUnauthorized: false },
+        port: sslPort
+      });
+      throw new Error('Must have thrown an exception !');
+    } catch (err) {
+      assert.equal(err.errno, 45023);
+      assert.equal(err.code, 'ER_SERVER_SSL_DISABLED');
+    }
   });
 
   it('signed certificate error', async function () {

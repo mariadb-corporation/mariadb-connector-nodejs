@@ -22,7 +22,7 @@ install:
         connector-test-machine/launch.bat -t "$srv" -v "$v" -d testn
         ;;
       linux)
-        source connector-test-machine/launch.sh -t "$srv" -v "$v" -d testn -l "$local"  -c "$CLEAR_TEXT"
+        source connector-test-machine/launch.sh -t "$srv" -v "$v" -d testn -l "$local"  -c "$CLEAR_TEXT" -s "$DISABLE_SSL"
         ;;
     esac
 
@@ -41,7 +41,7 @@ jobs:
       language: shell
     - env: srv=mariadb v=10.3 local=1
     - env: srv=mariadb v=10.4 local=1
-    - env: srv=mariadb v=10.5 local=1
+    - env: srv=mariadb v=10.5 local=1 DISABLE_SSL=1
     - env: srv=mariadb v=10.7 local=1
     - env: srv=mariadb v=10.6 local=1
       node_js: 14

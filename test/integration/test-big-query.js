@@ -51,10 +51,14 @@ describe('Big query', function () {
       await shareConn.batch('insert into bigParameterBigParam(b) values(?)', [['test'], [buf], ['test2']]);
       throw Error('must have thrown error');
     } catch (e) {
+      console.log(e);
       assert.isTrue(
         e.sql.includes(
           "insert into bigParameterBigParam(b) values(?) - parameters:[['test'],[0x6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162...]"
-        )
+        ) ||
+          e.sql.includes(
+            'insert into bigParameterBigParam(b) values(?) - parameters:[0x6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a61626364656667...]'
+          )
       );
     }
 
