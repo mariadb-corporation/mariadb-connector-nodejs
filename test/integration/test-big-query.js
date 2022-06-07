@@ -27,11 +27,49 @@ describe('Big query', function () {
     shareConn.query('DROP TABLE IF EXISTS bigParameterBigParam');
     shareConn.query('CREATE TABLE bigParameterBigParam (b longblob)');
     await shareConn.query('FLUSH TABLES');
+
     shareConn.beginTransaction();
     shareConn.query('insert into bigParameterBigParam(b) values(?)', [buf]);
     const rows = await shareConn.query('SELECT * from bigParameterBigParam');
     assert.deepEqual(rows[0].b, buf);
-    shareConn.commit();
+    shareConn.rollback();
+
+    shareConn.beginTransaction();
+    await shareConn.batch('insert into bigParameterBigParam(b) values(?)', [['test'], [buf], ['test2']]);
+    const rows2 = await shareConn.query('SELECT * from bigParameterBigParam');
+    assert.deepEqual(rows2[0].b, Buffer.from('test'));
+    assert.deepEqual(rows2[1].b, buf);
+    assert.deepEqual(rows2[2].b, Buffer.from('test2'));
+    shareConn.rollback();
+
+    await shareConn.query('DROP TABLE IF EXISTS bigParameterBigParam');
+    await shareConn.query('CREATE TABLE bigParameterBigParam (b tinyblob)');
+    await shareConn.query('FLUSH TABLES');
+
+    await shareConn.beginTransaction();
+    try {
+      await shareConn.batch('insert into bigParameterBigParam(b) values(?)', [['test'], [buf], ['test2']]);
+      throw Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(
+        e.sql.includes(
+          "insert into bigParameterBigParam(b) values(?) - parameters:[['test'],[0x6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a6162...]"
+        )
+      );
+    }
+
+    try {
+      await shareConn.batch({ sql: 'insert into bigParameterBigParam(b) values(?)', debugLen: 12 }, [
+        ['test'],
+        [buf],
+        ['test2']
+      ]);
+      throw Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.sql.includes('insert into ...'));
+    }
+
+    shareConn.rollback();
   });
 
   it('int8 buffer overflow', async function () {
