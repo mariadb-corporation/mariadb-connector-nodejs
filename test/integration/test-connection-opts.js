@@ -370,27 +370,53 @@ describe('connection option', () => {
   it('connection timeout superseded', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
-    base
-      .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
-      .then((conn) => {
-        conn
-          .query({
-            timeout: 1000,
-            sql: 'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
-          })
-          .then(() => {
-            conn.end();
-            done(new Error('must have thrown error'));
-          })
-          .catch((err) => {
-            assert.equal(err.errno, 1969);
-            assert.equal(err.sqlState, '70100');
-            assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
-            conn.end();
-            done();
-          });
-      })
-      .catch(done);
+
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) {
+      // not supported
+      base
+        .createConnection({ multipleStatements: true })
+        .then((conn) => {
+          conn
+            .query({
+              timeout: 1000,
+              sql: 'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+            })
+            .then(() => {
+              conn.end();
+              done(new Error('must have thrown error'));
+            })
+            .catch((err) => {
+              assert.isTrue(err.message.includes('Cannot use timeout for MySQL server'));
+              assert.equal(err.errno, 45038);
+              assert.equal(err.sqlState, 'HY000');
+              assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');
+              conn.end();
+              done();
+            });
+        })
+        .catch(done);
+    } else {
+      base
+        .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
+        .then((conn) => {
+          conn
+            .query({
+              timeout: 1000,
+              sql: 'SELECT 1;select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+            })
+            .then(() => {
+              conn.end();
+              done(new Error('must have thrown error'));
+            })
+            .catch((err) => {
+              assert.equal(err.errno, 1969);
+              assert.equal(err.sqlState, '70100');
+              assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
+              conn.end();
+              done();
+            });
+        })
+        .catch(done);
+    }
   });
 });

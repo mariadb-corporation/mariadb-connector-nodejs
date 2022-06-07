@@ -781,7 +781,7 @@ const rows = await connection.query("SELECT 1, 'a'");
 > * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
 > * data : Emits each time a row is received (parameter is a row). 
 > * end : Emits when the query ends (no parameter). 
-> a method: close() : permits to close stream (since 3.0)
+> a method: close() : permits closing stream (since 3.0)
 > 
 When using the `query()` method, documented above, the Connector returns the entire result-set with all its data in a single call.  While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets.  Instead of retrieving all of the data into memory, you can use the `queryStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
 

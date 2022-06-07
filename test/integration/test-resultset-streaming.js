@@ -43,6 +43,29 @@ describe('results-set streaming', () => {
     assert.equal(10000, currRow);
   });
 
+  it('Streaming result-set close', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    const stream = shareConn.queryStream('SELECT * FROM testStreamResult');
+    stream
+      .on('error', (err) => {
+        done(new Error('must not have thrown any error !'));
+      })
+      .on('fields', (meta) => {
+        assert.equal(meta.length, 1);
+        metaReceived = true;
+      })
+      .on('data', (row) => {
+        assert.equal(currRow++, row.v);
+      })
+      .on('end', () => {
+        assert.equal(0, currRow);
+        assert.isOk(metaReceived);
+        done();
+      });
+    stream.close();
+  });
+
   it('Streaming result-set with promise implementation', function (done) {
     let currRow = 0;
     let metaReceived = false;
@@ -63,6 +86,19 @@ describe('results-set streaming', () => {
         assert.isOk(metaReceived);
         done();
       });
+  });
+
+  it('Streaming error', function (done) {
+    shareConn.queryStream('wrong query').on('error', (err) => {
+      if (!isXpand()) {
+        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+        assert.equal(err.sqlState, 42000);
+      } else {
+        assert.equal(err.errno, 1064);
+        assert.equal(err.code, 'ER_PARSE_ERROR');
+      }
+      done();
+    });
   });
 
   it('Streaming result-set with callback implementation', function (done) {
