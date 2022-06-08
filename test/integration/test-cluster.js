@@ -647,6 +647,50 @@ describe('cluster', function () {
         });
     });
 
+    it('fail execute on filtered', async function () {
+      this.timeout(10000);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[12]/, 'ORDER');
+
+      try {
+        await filteredCluster.execute('wrong query');
+        throw Error('error must have be thrown');
+      } catch (err) {
+        cluster.end();
+        if (err.errno === 1141) {
+          // SKYSQL ERROR
+          assert.isTrue(
+            err.message.includes(
+              'Query could not be tokenized and will hence be rejected. Please ensure that the SQL syntax is correct.'
+            )
+          );
+          assert.equal(err.sqlState, 'HY000');
+        } else {
+          assert.equal(err.errno, 1064);
+          assert.equal(err.code, 'ER_PARSE_ERROR');
+          if (!isXpand()) {
+            assert.equal(err.sqlState, 42000);
+            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+            assert.isTrue(err.message.includes('wrong query'));
+          }
+        }
+      }
+    });
+
+    it('fail execute on filtered without pool', async function () {
+      this.timeout(10000);
+      const cluster = get3NodeCluster();
+      const filteredCluster = cluster.of(/^node[56]/, 'ORDER');
+
+      try {
+        await filteredCluster.execute('wrong query');
+        throw Error('error must have be thrown');
+      } catch (err) {
+        cluster.end();
+        assert.isTrue(err.message.includes("No node found for pattern '/^node[56]/'"));
+      }
+    });
+
     it('batch on filtered', async function () {
       this.timeout(10000);
       const cluster = get3NodeCluster();

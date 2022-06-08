@@ -661,12 +661,12 @@ describe('Pool', () => {
         done(new Error('must have thrown error 3 !'));
       } catch (err) {
         try {
-          assert(err.message.includes('retrieve connection from pool timeout'));
+          assert.isTrue(err.message.includes('retrieve connection from pool timeout'), err.message);
           assert.equal(err.sqlState, 'HY000');
           assert.equal(err.errno, 45028);
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
           const elapse = Date.now() - initTime;
-          assert.isOk(elapse >= 670 && elapse < 800, 'elapse time was ' + elapse + ' but must be just after 700');
+          assert.isTrue(elapse >= 670 && elapse < 800, 'elapse time was ' + elapse + ' but must be just after 700');
           done();
         } catch (e) {
           console.log(e);

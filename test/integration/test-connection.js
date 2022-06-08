@@ -260,38 +260,6 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('multiple simultaneous connection.connect()', function (done) {
-    let connOptionTemp = Conf.baseConfig;
-    const conn = new Connection(new ConnOptions(connOptionTemp));
-    conn
-      .connect()
-      .then(() => {
-        return new Promise(conn.end.bind(conn));
-      })
-      .catch(() => {});
-
-    conn
-      .connect()
-      .then(() => {
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
-        assert.equal(err.message, '(conn=-1, no: 45002, SQLState: 08S01) Connection is already connecting');
-        return new Promise(conn.end.bind(conn)).then(() => {
-          conn
-            .connect()
-            .then(() => {
-              done(new Error('must have thrown error'));
-            })
-            .catch((err) => {
-              assert.equal(err.message, '(conn=-1, no: 45001, SQLState: 08S01) Connection closed');
-              done();
-            });
-        });
-      })
-      .catch(done);
-  });
-
   it('connection.ping()', async () => {
     const conn = await base.createConnection();
     conn.ping();
@@ -832,6 +800,7 @@ describe('connection', () => {
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(10000);
 
     const res = await shareConn.query('select @@max_connections as a');
     const limit = res[0].a;
@@ -843,13 +812,27 @@ describe('connection', () => {
           conns.push(con);
         }
       } catch (err) {
-        console.log(err);
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 1040);
         assert.equal(err.code, 'ER_CON_COUNT_ERROR');
-        for (let i = 0; i < conns.length; i++) {
-          conns[i].end();
-        }
+
+        // now that all connection are use, destroy a query without creating a killing new connection
+        conns[0].query(
+          'select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+        );
+        conns[0].destroy();
+        await new Promise(function (resolve, reject) {
+          setTimeout(async function () {
+            for (let i = 0; i < conns.length; i++) {
+              try {
+                await conns[i].end();
+              } catch (e) {
+                //eat
+              }
+            }
+            resolve();
+          }, 2000);
+        });
       }
     }
   });
