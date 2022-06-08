@@ -115,7 +115,6 @@ describe('ssl', function () {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then((rows) => {
-        console.log(rows);
         if (rows.length > 0 && rows[0].Value === 'YES') {
           sslEnable = true;
           done();
@@ -124,10 +123,10 @@ describe('ssl', function () {
           shareConn
             .query("SHOW VARIABLES LIKE '%ssl%'")
             .then((rows) => {
-              console.log('ssl is not enable on database, skipping test :');
-              for (let i = 0; i < rows.length; i++) {
-                console.log(rows[0]['Variable_name'] + ' = ' + rows[0]['Value']);
-              }
+              // console.log("ssl is not enable on database, skipping test :");
+              // for (let i = 0; i < rows.length; i++) {
+              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
+              // }
               done();
             })
             .catch(done);
@@ -137,7 +136,10 @@ describe('ssl', function () {
   });
 
   it('error when server ssl is disable', async function () {
-    if (sslEnable) this.skip();
+    if (sslEnable || process.env.srv === 'skysql-ha') {
+      this.skip();
+      return;
+    }
     try {
       await base.createConnection({
         ssl: { rejectUnauthorized: false },
