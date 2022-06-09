@@ -20,30 +20,36 @@ describe('json', () => {
     ) {
       this.skip();
     }
+    await testJsonInsertFormat(shareConn);
+    const con = await base.createConnection({ charset: 'latin7' });
+    await testJsonInsertFormat(con);
+    await con.end();
+  });
 
-    const obj = { id: 2, val: 'test' };
+  const testJsonInsertFormat = async function (conn) {
+    const obj = { id: 2, val: 'tes\\t' };
     const obj2 = { id: 3, val: 'test3' };
-    await shareConn.query('DROP TABLE IF EXISTS `test-json-insert-type`');
-    await shareConn.query('CREATE TABLE `test-json-insert-type` (val1 JSON)');
-    await shareConn.query(
+    await conn.query('DROP TABLE IF EXISTS `test-json-insert-type`');
+    await conn.query('CREATE TABLE `test-json-insert-type` (val1 JSON)');
+    await conn.query(
       {
         stringifyObjects: true,
         sql: 'INSERT INTO `test-json-insert-type` values (?)'
       },
       [obj]
     );
-    await shareConn.execute(
+    await conn.execute(
       {
         stringifyObjects: true,
         sql: 'INSERT INTO `test-json-insert-type` values (?)'
       },
       [obj]
     );
-    await shareConn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
-    await shareConn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
-    const rows = await shareConn.query('SELECT * FROM `test-json-insert-type`');
+    await conn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
+    await conn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
+    const rows = await conn.query('SELECT * FROM `test-json-insert-type`');
     if (
-      (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 5, 2)) ||
+      (conn.info.isMariaDB() && !conn.info.hasMinVersion(10, 5, 2)) ||
       process.env.srv === 'maxscale' ||
       process.env.srv === 'skysql-ha'
     ) {
@@ -52,24 +58,24 @@ describe('json', () => {
       const val3 = JSON.parse(rows[2].val1);
       const val4 = JSON.parse(rows[3].val1);
       assert.equal(val1.id, 2);
-      assert.equal(val1.val, 'test');
+      assert.equal(val1.val, 'tes\\t');
       assert.equal(val2.id, 2);
-      assert.equal(val2.val, 'test');
+      assert.equal(val2.val, 'tes\\t');
       assert.equal(val3.id, 3);
       assert.equal(val3.val, 'test3');
       assert.equal(val4.id, 3);
       assert.equal(val4.val, 'test3');
     } else {
       assert.equal(rows[0]['val1'].id, 2);
-      assert.equal(rows[0].val1.val, 'test');
+      assert.equal(rows[0].val1.val, 'tes\\t');
       assert.equal(rows[1].val1.id, 2);
-      assert.equal(rows[1].val1.val, 'test');
+      assert.equal(rows[1].val1.val, 'tes\\t');
       assert.equal(rows[2].val1.id, 3);
       assert.equal(rows[2].val1.val, 'test3');
       assert.equal(rows[3].val1.id, 3);
       assert.equal(rows[3].val1.val, 'test3');
     }
-  });
+  };
 
   it('select json format', async function () {
     //server permit JSON format

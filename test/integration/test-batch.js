@@ -165,7 +165,7 @@ describe('batch', function () {
     conn.query('DROP TABLE simpleBatch');
     const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
     assert.deepEqual(rows, [{ 1: 1 }]);
-    conn.end();
+    await conn.end();
   };
 
   const batchWithReturning = async (useBulk) => {
@@ -201,7 +201,7 @@ describe('batch', function () {
       { id: '2147483650' },
       { id: '9223372036854775818' }
     ]);
-    conn.end();
+    await conn.end();
   };
 
   const simpleBatchWithOptions = async (useCompression, useBulk) => {
@@ -277,8 +277,8 @@ describe('batch', function () {
     ]);
     await conn.query('ROLLBACK');
 
-    conn.query('DROP TABLE simpleBatchWithOptions');
-    conn.end();
+    await conn.query('DROP TABLE simpleBatchWithOptions');
+    await conn.end();
   };
 
   const simpleBatchEncodingCP1251 = async (useCompression, useBulk, timezone) => {
@@ -304,8 +304,8 @@ describe('batch', function () {
     ]);
     await conn.query('ROLLBACK');
 
-    conn.query('DROP TABLE simpleBatchCP1251');
-    conn.end();
+    await conn.query('DROP TABLE simpleBatchCP1251');
+    await conn.end();
   };
 
   const simpleBatchErrorMsg = async (compression, useBulk) => {
@@ -325,7 +325,8 @@ describe('batch', function () {
         assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
         assert.equal(err.sqlState, '42S02');
       }
-      conn.end();
+    } finally {
+      await conn.end();
     }
   };
 
@@ -339,7 +340,7 @@ describe('batch', function () {
     await conn.batch('INSERT INTO noValueBatch values ()', [[], []]);
     const res = await conn.query('SELECT COUNT(*) as nb FROM noValueBatch');
     assert.equal(res[0].nb, 2);
-    conn.end();
+    await conn.end();
   };
 
   const simpleBatchErrorSplit = async (useCompression, useBulk, timezone) => {
@@ -397,8 +398,8 @@ describe('batch', function () {
     } catch (err) {
       assert.isTrue(err.message.includes("Data too long for column 't' at row"), err.message);
     }
-    conn.query('DROP TABLE simpleBatch');
-    conn.end();
+    await conn.query('DROP TABLE simpleBatch');
+    await conn.end();
   };
 
   const nonRewritableBatch = async (useCompression, useBulk) => {
@@ -433,7 +434,7 @@ describe('batch', function () {
         );
       }
     }
-    conn.end();
+    await conn.end();
   };
 
   const bigBatchWith16mMaxAllowedPacket = async (useCompression, useBulk) => {
@@ -472,7 +473,7 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-    conn.end();
+    await conn.end();
   };
 
   const bigBatchWith4mMaxAllowedPacket = async (useCompression, useBulk) => {
@@ -511,7 +512,7 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-    conn.end();
+    await conn.end();
   };
 
   const bigBatchError = async (useCompression, useBulk) => {
@@ -535,7 +536,8 @@ describe('batch', function () {
     } catch (err) {
       const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
       assert.deepEqual(rows, [{ 1: 1 }]);
-      conn.end();
+    } finally {
+      await conn.end();
     }
   };
 
@@ -577,8 +579,8 @@ describe('batch', function () {
         id5: 3
       }
     ]);
-    conn.query('DROP TABLE batchWithStream');
-    conn.end();
+    await conn.query('DROP TABLE batchWithStream');
+    await conn.end();
   };
 
   const batchErrorWithStream = async (useCompression, useBulk) => {
@@ -600,7 +602,7 @@ describe('batch', function () {
         assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
         assert.equal(err.sqlState, '42S02');
       }
-      conn.end();
+      await conn.end();
       stream1.close();
       stream2.close();
     }
@@ -631,6 +633,7 @@ describe('batch', function () {
     } catch (err) {
       const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
       assert.deepEqual(rows, [{ 1: 1 }]);
+    } finally {
       conn.end();
       for (const element of streams) {
         element.close();
@@ -673,8 +676,8 @@ describe('batch', function () {
         id4: 3
       }
     ]);
-    conn.query('DROP TABLE simpleNamedPlaceHolders');
-    conn.end();
+    await conn.query('DROP TABLE simpleNamedPlaceHolders');
+    await conn.end();
   };
 
   const simpleNamedPlaceHoldersErr = async (useBulk) => {
@@ -699,7 +702,8 @@ describe('batch', function () {
         assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
         assert.equal(err.sqlState, '42S02');
       }
-      conn.end();
+    } finally {
+      await conn.end();
     }
   };
 
@@ -734,7 +738,7 @@ describe('batch', function () {
     assert.equal(res[0].a, 1000000);
 
     await conn.query('ROLLBACK');
-    conn.end();
+    await conn.end();
   };
 
   const streamNamedPlaceHolders = async (useBulk) => {
@@ -773,7 +777,7 @@ describe('batch', function () {
       }
     ]);
     conn.query('DROP TABLE streamNamedPlaceHolders');
-    conn.end();
+    await conn.end();
   };
 
   const streamErrorNamedPlaceHolders = async (useBulk) => {
@@ -805,7 +809,8 @@ describe('batch', function () {
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.code, 'ER_PARAMETER_UNDEFINED');
       await conn.query('DROP TABLE IF EXISTS blabla');
-      conn.end();
+    } finally {
+      await conn.end();
       stream1.close();
       stream2.close();
     }
@@ -818,6 +823,35 @@ describe('batch', function () {
       await shareConn.query('create table bufLength (val varchar(10))');
       await shareConn.query('FLUSH TABLES');
       await shareConn.batch('update bufLength set val=?', 'abc');
+    });
+
+    it('technical option fullResult', async function () {
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      await shareConn.query('DROP TABLE IF EXISTS bufLength');
+      await shareConn.query('create table bufLength (val varchar(32))');
+      await shareConn.query('FLUSH TABLES');
+
+      const conn = await base.createConnection({ bulk: false });
+      let res = await conn.batch({ sql: 'INSERT INTO bufLength VALUES (?)', fullResult: true }, [
+        ['abc'],
+        ['cde'],
+        [1],
+        [new Date('2001-12-31 23:59:58')]
+      ]);
+      assert.deepEqual(res, [
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+      ]);
+      res = await conn.batch({ sql: 'INSERT INTO bufLength VALUES (?)', fullResult: false }, [
+        ['abc'],
+        ['cde'],
+        [1],
+        [new Date('2001-12-31 23:59:58')]
+      ]);
+      assert.deepEqual(res, { affectedRows: 4, insertId: 0n, warningStatus: 0 });
+      await conn.end();
     });
 
     it('batch timeout error', async function () {
@@ -1175,12 +1209,12 @@ describe('batch', function () {
           [1, 2],
           [1, undefined]
         ]);
-        conn.end();
         throw new Error('expect an error !');
       } catch (err) {
         assert.isTrue(err.message.includes('Parameter at position 1 is undefined'), err.message);
         await conn.query('DROP TABLE IF EXISTS blabla');
-        conn.end();
+      } finally {
+        await conn.end();
       }
     });
 
@@ -1227,7 +1261,8 @@ describe('batch', function () {
           assert.equal(err.sqlState, '42S02');
           assert.isTrue(err.message.includes(expectedMsg));
         }
-        conn.end();
+      } finally {
+        await conn.end();
       }
     };
 
@@ -1337,7 +1372,8 @@ describe('batch', function () {
           assert.isTrue(err.message.includes(" doesn't exist"));
           assert.equal(err.sqlState, '42S02');
         }
-        conn.end();
+      } finally {
+        await conn.end();
       }
     };
 

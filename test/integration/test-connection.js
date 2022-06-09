@@ -797,6 +797,17 @@ describe('connection', () => {
     });
   });
 
+  it('charset change', async function () {
+    if (!shareConn.info.isMariaDB() || isXpand()) {
+      //session tracking not implemented
+      this.skip();
+    }
+    const con = await base.createConnection({ charset: 'latin7' });
+    await con.query('set names utf8mb3');
+    assert.isTrue(con.info.collation.charset.includes('utf8'), con.info.collation.charset);
+    await con.end();
+  });
+
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();

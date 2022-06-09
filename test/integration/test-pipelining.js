@@ -54,11 +54,26 @@ describe('pipelining', () => {
   });
 
   it('pipelining without waiting for connect', function (done) {
-    const conn = base.createCallbackConnection();
+    const conn = base.createCallbackConnection({ pipelining: true });
     conn.connect((err) => {});
-    conn.query('DO 1');
     conn.query("SELECT '1'", (err, rows) => {
       assert.deepEqual(rows, [{ 1: '1' }]);
+    });
+    conn.query("SELECT '2'", (err, rows) => {
+      assert.deepEqual(rows, [{ 2: '2' }]);
+      conn.end();
+      done();
+    });
+  });
+
+  it('no pipelining without waiting for connect', function (done) {
+    const conn = base.createCallbackConnection({ pipelining: false });
+    conn.connect((err) => {});
+    conn.query("SELECT '1'", (err, rows) => {
+      assert.deepEqual(rows, [{ 1: '1' }]);
+    });
+    conn.query("SELECT '2'", (err, rows) => {
+      assert.deepEqual(rows, [{ 2: '2' }]);
       conn.end();
       done();
     });

@@ -1102,66 +1102,64 @@ describe('batch callback', function () {
 
     it('batch without parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: false }).then((conn) => {
-        conn
-          .batch('INSERT INTO `blabla` values (?)')
-          .then((res) => {
-            conn.end();
-            done(new Error('expect an error !'));
-          })
-          .catch((err) => {
-            assert.isTrue(err.message.includes('Batch must have values set'), err.message);
-            conn.end();
-            done();
-          });
+      const conn = base.createCallbackConnection({ compress: useCompression, bulk: false });
+      conn.batch('INSERT INTO `blabla` values (?)', (err, rows) => {
+        conn.end();
+        if (err) {
+          assert.isTrue(err.message.includes('Batch must have values set'), err.message);
+          done();
+        } else {
+          done('must have thrown an exception');
+        }
       });
     });
 
     it('batch with erroneous parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
-        conn.query('DROP TABLE IF EXISTS blabla');
-        conn.query('CREATE TABLE blabla(i int, i2 int)');
-        conn
-          .batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]])
-          .then((res) => {
-            conn.end();
-            done(new Error('expect an error !'));
-          })
-          .catch((err) => {
-            assert.isTrue(err.message.includes('Parameter at position 1 is not set'), err.message);
-            conn.query('DROP TABLE IF EXISTS blabla');
+      const conn = base.createCallbackConnection({ compress: useCompression, bulk: true });
+      conn.query('DROP TABLE IF EXISTS blabla');
+      conn.query('CREATE TABLE blabla(i int, i2 int)');
+      conn.batch('INSERT INTO `blabla` values (?,?)', [[1, 2], [1]], (err, rows) => {
+        if (err) {
+          assert.isTrue(err.message.includes('Parameter at position 1 is not set'), err.message);
+          conn.query('DROP TABLE IF EXISTS blabla', (err) => {
             conn.end();
             done();
           });
+        } else {
+          done('must have thrown error');
+        }
       });
     });
 
     it('batch with undefined parameter', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
-        conn.query('DROP TABLE IF EXISTS blabla');
-        conn.query('CREATE TABLE blabla(i int, i2 int)');
-        conn
-          .batch('INSERT INTO `blabla` values (?,?)', [
-            [1, 2],
-            [1, undefined]
-          ])
-          .then((res) => {
-            conn.end();
-            done(new Error('expect an error !'));
-          })
-          .catch((err) => {
-            conn.query('DROP TABLE IF EXISTS blabla');
+
+      const conn = base.createCallbackConnection({ compress: useCompression, bulk: true });
+      conn.query('DROP TABLE IF EXISTS blabla');
+      conn.query('CREATE TABLE blabla(i int, i2 int)');
+      conn.batch(
+        'INSERT INTO `blabla` values (?,?)',
+        [
+          [1, 2],
+          [1, undefined]
+        ],
+        (err, rows) => {
+          if (err) {
             assert.isTrue(
               err.message.includes('Parameter at position 1 is not set for values 1') ||
                 err.message.includes('Parameter at position 1 is undefined'),
               err.message
             );
-            conn.end();
-            done();
-          });
-      });
+            conn.query('DROP TABLE IF EXISTS blabla', (err) => {
+              conn.end();
+              done();
+            });
+          } else {
+            done('must have thrown error');
+          }
+        }
+      );
     });
 
     it('simple batch offset date', function (done) {
