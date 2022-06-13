@@ -494,6 +494,12 @@ export interface ConnectionInfo {
    */
   serverVersion: ServerVersion;
 
+
+  /**
+   * connection collation
+   */
+  collation: null;
+
   /**
    * Server capabilities
    * see https://mariadb.com/kb/en/library/connection/#capabilities
