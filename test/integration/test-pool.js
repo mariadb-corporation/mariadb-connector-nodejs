@@ -550,6 +550,33 @@ describe('Pool', () => {
     });
   });
 
+  it('pool getConnection timeout with leak', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
+      this.skip();
+    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200, leakDetectionTimeout: 10 });
+    let errorThrown = false;
+    pool
+      .query('SELECT SLEEP(1)')
+      .then(() => {
+        return pool.end();
+      })
+      .then(() => {
+        assert.isOk(errorThrown);
+        done();
+      })
+      .catch(done);
+    setTimeout(() => {
+      pool.getConnection().catch((err) => {
+        assert(err.message.includes('retrieve connection from pool timeout'));
+        assert(err.message.includes('(pool connections: active=1 idle=0 leak=1 limit=1)'));
+        assert.equal(err.sqlState, 'HY000');
+        assert.equal(err.errno, 45028);
+        assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+        errorThrown = true;
+      });
+    }, 50);
+  });
+
   it('pool leakDetectionTimeout timeout', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
       this.skip();
