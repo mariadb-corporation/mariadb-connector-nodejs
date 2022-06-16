@@ -410,7 +410,7 @@ describe('cluster', function () {
       });
 
       const connOption2 = Object.assign({}, Conf.baseConfig, {
-        connectionLimit: 1,
+        connectionLimit: 5,
         host: 'localhost',
         minDelayValidation: 0,
         socketTimeout: 200,
