@@ -494,7 +494,6 @@ export interface ConnectionInfo {
    */
   serverVersion: ServerVersion;
 
-
   /**
    * connection collation
    */

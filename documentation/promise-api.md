@@ -344,7 +344,7 @@ let conn;
 try {
     conn = await pool.getConnection();
     console.log('connected ! connection id is ' + conn.threadId);
-    conn.release(); //release to pool
+    await conn.release(); //release to pool
 } catch (err) {
     console.log('not connected due to error: ' + err);
 }
@@ -1270,7 +1270,7 @@ let conn;
 try {
     conn = await pool.getConnection();
     console.log("connected ! connection id is " + conn.threadId);
-    conn.release(); //release to pool
+    await conn.release(); //release to pool
 } catch (err) {
     console.log("not connected due to error: " + err);
 }

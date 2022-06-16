@@ -84,7 +84,7 @@ describe('cluster', function () {
 
     it('pool full', function (done) {
       this.timeout(30000);
-      const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
+      const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 1 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
         connectionLimit: 1,
@@ -99,17 +99,21 @@ describe('cluster', function () {
         .then((conn) => {
           cluster
             .getConnection('PoolNode-0')
-            .then(() => {
+            .then((conn2) => {
+              conn.release();
+              conn2.release();
               cluster.end();
               done(new Error('must have thrown an error !'));
             })
             .catch((err) => {
-              expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
-              );
+              expect(err.message).to.have.string('retrieve connection from pool timeout after ');
+              expect(err.message).to.have.string('(pool connections: active=1 idle=0 limit=1)');
+
               cluster
                 .getConnection('PoolNode-0')
-                .then(() => {
+                .then((conn2) => {
+                  conn.release();
+                  conn2.release();
                   cluster.end();
                   done(new Error('must have thrown an error !'));
                 })
@@ -119,7 +123,9 @@ describe('cluster', function () {
                   );
                   cluster
                     .getConnection('PoolNode-0')
-                    .then(() => {
+                    .then((conn2) => {
+                      conn.release();
+                      conn2.release();
                       cluster.end();
                       done(new Error('must have thrown an error !'));
                     })
@@ -128,9 +134,10 @@ describe('cluster', function () {
                         'No node have been added to cluster or nodes have been removed due' +
                           ' to too much connection error'
                       );
-                      conn.end();
-                      cluster.end().then(() => {
-                        done();
+                      conn.release().finally(() => {
+                        cluster.end().then(() => {
+                          done();
+                        });
                       });
                     });
                 });
@@ -380,6 +387,176 @@ describe('cluster', function () {
               done();
             })
             .catch(done);
+        }, 100);
+      });
+    });
+
+    it('one node failing', async function () {
+      if (
+        process.env.srv === 'maxscale' ||
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha' ||
+        isXpand()
+      )
+        this.skip();
+
+      this.timeout(30000);
+      const cluster = basePromise.createPoolCluster({});
+
+      const proxy = new Proxy({
+        port: Conf.baseConfig.port,
+        host: Conf.baseConfig.host,
+        resetAfterUse: false
+      });
+
+      const connOption2 = Object.assign({}, Conf.baseConfig, {
+        connectionLimit: 1,
+        host: 'localhost',
+        minDelayValidation: 0,
+        socketTimeout: 200,
+        acquireTimeout: 250,
+        port: proxy.port(),
+        resetAfterUse: false,
+        trace: true
+      });
+
+      cluster.add('node2', connOption2);
+      // wait for 100s so pool are loaded
+      await new Promise(function (resolve, reject) {
+        setTimeout(async () => {
+          let conn;
+          try {
+            // first pass to make node1 blacklisted
+            conn = await cluster.getConnection('node*', 'ORDER');
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            let initTime = Date.now();
+            conn = await cluster.getConnection('node*', 'ORDER');
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            assert(Date.now() - initTime <= 50, 'expected < 50ms, but was ' + (Date.now() - initTime));
+            await proxy.stop();
+            try {
+              conn = await cluster.getConnection('node*', 'ORDER');
+              await conn.query("SELECT '1'");
+              throw Error('must have thrown error');
+            } catch (e) {
+              if (conn) await conn.release();
+              conn = null;
+            }
+            proxy.resume();
+
+            conn = await cluster.getConnection('node*', 'ORDER');
+            initTime = Date.now();
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            assert(Date.now() - initTime <= 50, 'expected < 50ms, but was ' + (Date.now() - initTime));
+            await cluster.end();
+            proxy.close();
+            resolve();
+          } catch (e) {
+            console.log(e);
+            if (conn) await conn.release();
+            await cluster.end();
+            proxy.close();
+            reject(e);
+          }
+        }, 100);
+      });
+    });
+
+    it('one node failing with blacklisted host', async function () {
+      if (
+        process.env.srv === 'maxscale' ||
+        process.env.srv === 'skysql' ||
+        process.env.srv === 'skysql-ha' ||
+        isXpand()
+      )
+        this.skip();
+
+      this.timeout(30000);
+      const cluster = basePromise.createPoolCluster({});
+
+      const proxy = new Proxy({
+        port: Conf.baseConfig.port,
+        host: Conf.baseConfig.host,
+        resetAfterUse: false
+      });
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        connectionLimit: 1,
+        host: 'wrong host',
+        connectTimeout: 200,
+        socketTimeout: 200,
+        acquireTimeout: 250,
+        resetAfterUse: false,
+        trace: true
+      });
+
+      const connOption2 = Object.assign({}, Conf.baseConfig, {
+        connectionLimit: 1,
+        host: 'localhost',
+        minDelayValidation: 0,
+        socketTimeout: 200,
+        acquireTimeout: 250,
+        port: proxy.port(),
+        resetAfterUse: false,
+        trace: true
+      });
+
+      cluster.add('node1', connOption1);
+      cluster.add('node2', connOption2);
+      // wait for 100s so pool are loaded
+      await new Promise(function (resolve, reject) {
+        setTimeout(async () => {
+          let conn;
+          try {
+            // first pass to make node1 blacklisted
+            conn = await cluster.getConnection('node*', 'ORDER');
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            let initTime = Date.now();
+            conn = await cluster.getConnection('node*', 'ORDER');
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            assert(Date.now() - initTime <= 50, 'expected < 50ms, but was ' + (Date.now() - initTime));
+            await proxy.stop();
+            try {
+              conn = await cluster.getConnection('node*', 'ORDER');
+              await conn.query("SELECT '1'");
+              throw Error('must have thrown error');
+            } catch (e) {
+              if (conn) await conn.release();
+              conn = null;
+            }
+            proxy.resume();
+
+            conn = await cluster.getConnection('node*', 'ORDER');
+            initTime = Date.now();
+            await conn.query("SELECT '1'");
+            await conn.release();
+            conn = null;
+
+            assert(Date.now() - initTime <= 50, 'expected < 50ms, but was ' + (Date.now() - initTime));
+            await cluster.end();
+            proxy.close();
+            resolve();
+          } catch (e) {
+            console.log(e);
+            if (conn) await conn.release();
+            await cluster.end();
+            proxy.close();
+            reject(e);
+          }
         }, 100);
       });
     });
@@ -735,13 +912,8 @@ describe('cluster', function () {
   });
 
   describe('callback', () => {
-    beforeEach(function (done) {
-      shareConn
-        .query('TRUNCATE TABLE clusterInsert')
-        .then(() => {
-          done();
-        })
-        .catch(done);
+    beforeEach(async function () {
+      await shareConn.query('TRUNCATE TABLE clusterInsert');
     });
 
     it('no node', function (done) {

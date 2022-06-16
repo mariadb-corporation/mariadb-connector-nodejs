@@ -18,8 +18,12 @@ function Proxy(args) {
   };
 
   this.stop = () => {
-    server.close();
-    stop = true;
+    return new Promise(function (resolver, rejecter) {
+      server.close(() => {
+        stop = true;
+        resolver();
+      });
+    });
   };
 
   this.suspendRemote = () => {
@@ -32,7 +36,13 @@ function Proxy(args) {
 
   this.resume = () => {
     stop = false;
-    server.listen(localPort);
+    try {
+      server.listen(localPort);
+    } catch (e) {
+      if (e.code !== 'ERR_SERVER_ALREADY_LISTEN') {
+        throw e;
+      }
+    }
   };
 
   this.start = () => {
@@ -40,7 +50,7 @@ function Proxy(args) {
     const remoteSockets = [];
     let stopRemote = false;
 
-    server = net.createServer((socket) => {
+    server = net.createServer({}, (socket) => {
       let ended = false;
       sockets.push(socket);
       if (stop) {
@@ -89,6 +99,7 @@ function Proxy(args) {
         });
       }
     });
+
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         console.log('Address in use, retrying...');
@@ -106,8 +117,9 @@ function Proxy(args) {
     server.on('close', () => {
       if (log) console.log('closing proxy server');
       sockets.forEach((socket) => {
-        if (socket) socket.destroy();
+        socket.destroy();
       });
+      sockets.length = 0;
     });
 
     server.on('suspendRemote', () => {

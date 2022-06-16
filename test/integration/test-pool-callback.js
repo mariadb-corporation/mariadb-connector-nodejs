@@ -335,20 +335,21 @@ describe('Pool callback', () => {
 
   it('pool query timeout', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
-    this.timeout(5000);
+    this.timeout(6000);
     let errorNo = 0;
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       acquireTimeout: 500
     });
     const initTime = Date.now();
-    pool.query('SELECT SLEEP(?)', 4, () => {
-      pool.end();
-      if (errorNo === 3) {
-        done();
-      } else {
-        done(new Error(`error expeced 3, but was ${errorNo}`));
-      }
+    pool.query('SELECT SLEEP(?)', 5, () => {
+      pool.end(() => {
+        if (errorNo === 3) {
+          done();
+        } else {
+          done(new Error(`error expected 3, but was ${errorNo}`));
+        }
+      });
     });
     pool.query('SELECT 1', (err, res) => {
       assert(err.message.includes('retrieve connection from pool timeout'));

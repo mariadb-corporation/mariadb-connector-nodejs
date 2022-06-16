@@ -1,7 +1,7 @@
 'use strict';
 
 const base = require('../base.js');
-const { assert } = require('chai');
+const { assert, expect } = require('chai');
 const Conf = require('../conf');
 const stream = require('stream');
 const fs = require('fs');
@@ -299,7 +299,7 @@ describe('Pool', () => {
 
   it('pool with wrong authentication connection', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    this.timeout(10000);
+    this.timeout(15000);
     let err;
     let pool;
     try {
@@ -311,19 +311,17 @@ describe('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(
-        err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45025 || err.errno === 45044,
-        err.message
-      );
+      assert.equal(err.errno, 45028);
+      expect(err.message).to.have.string('retrieve connection from pool timeout after');
+      expect(err.message).to.have.string('Error during pool initialization');
     }
     try {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(
-        err.errno === 1524 || err.errno === 1045 || err.errno === 1698 || err.errno === 45025 || err.errno === 45044,
-        err.message
-      );
+      assert.equal(err.errno, 45028);
+      expect(err.message).to.have.string('retrieve connection from pool timeout after');
+      expect(err.message).to.have.string('Error during pool initialization');
     } finally {
       pool.end();
     }
@@ -557,10 +555,8 @@ describe('Pool', () => {
     let errorThrown = false;
     pool
       .query('SELECT SLEEP(1)')
-      .then(() => {
-        return pool.end();
-      })
-      .then(() => {
+      .then(async () => {
+        await pool.end();
         assert.isOk(errorThrown);
         done();
       })
