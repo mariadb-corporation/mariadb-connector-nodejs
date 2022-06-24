@@ -1256,7 +1256,7 @@ describe('Pool', () => {
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host
     });
-
+    await proxy.start();
     const initTime = Date.now();
     const pool = base.createPool({
       port: proxy.port(),

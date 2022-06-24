@@ -408,13 +408,14 @@ describe('cluster', function () {
         host: Conf.baseConfig.host,
         resetAfterUse: false
       });
+      await proxy.start();
 
       const connOption2 = Object.assign({}, Conf.baseConfig, {
         connectionLimit: 5,
         host: 'localhost',
-        minDelayValidation: 0,
         socketTimeout: 200,
         acquireTimeout: 250,
+        minDelayValidation: 0,
         port: proxy.port(),
         resetAfterUse: false,
         trace: true
@@ -439,7 +440,7 @@ describe('cluster', function () {
             conn = null;
 
             assert(Date.now() - initTime <= 50, 'expected < 50ms, but was ' + (Date.now() - initTime));
-            await proxy.stop();
+            await proxy.close();
             try {
               conn = await cluster.getConnection('node*', 'ORDER');
               await conn.query("SELECT '1'");
@@ -448,7 +449,7 @@ describe('cluster', function () {
               if (conn) await conn.release();
               conn = null;
             }
-            proxy.resume();
+            await proxy.resume();
 
             conn = await cluster.getConnection('node*', 'ORDER');
             initTime = Date.now();
@@ -488,6 +489,7 @@ describe('cluster', function () {
         host: Conf.baseConfig.host,
         resetAfterUse: false
       });
+      await proxy.start();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         connectionLimit: 1,
         host: 'wrong host',
@@ -561,10 +563,10 @@ describe('cluster', function () {
       });
     });
 
-    it('reusing node after timeout', function (done) {
+    it('reusing node after timeout', async function () {
       if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
       this.timeout(30000);
-      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
+      const cl = await get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
       const proxy = cl.proxy;
       let removedNode = [];
@@ -572,41 +574,30 @@ describe('cluster', function () {
         removedNode.push(node);
       });
 
-      testTimesWithError(cluster, /^node*/, 10).then((nodes) => {
-        expect(nodes['node1']).to.equal(4);
-        expect(nodes['node2']).to.equal(3);
-        expect(nodes['node3']).to.equal(3);
+      let nodes = await testTimesWithError(cluster, /^node*/, 10);
+      expect(nodes['node1']).to.equal(4);
+      expect(nodes['node2']).to.equal(3);
+      expect(nodes['node3']).to.equal(3);
 
-        proxy.close();
+      await proxy.close();
         //wait for socket to end.
-        setTimeout(() => {
-          testTimesWithError(cluster, /^node*/, 10).then((nodes) => {
-            proxy.resume();
-            expect(nodes['node1']).to.equal(5);
-            expect(nodes['node2']).to.be.undefined;
-            expect(nodes['node3']).to.equal(5);
-            setTimeout(() => {
-              expect(removedNode).to.have.length(0);
-              setTimeout(() => {
-                testTimesWithError(cluster, /^node*/, 10)
-                  .then((node2s) => {
-                    cluster.end().then(() => {
-                      proxy.close();
-                    });
-                    expect([3, 4]).to.contain.members([node2s['node1']]);
-                    expect([1, 2, 3, 4]).to.contain.members([node2s['node2']]);
-                    expect([3, 4]).to.contain.members([node2s['node3']]);
-                    done();
-                  })
-                  .catch((err) => {
-                    proxy.close();
-                    done(err);
-                  });
-              }, 2000);
-            }, 100);
-          });
-        }, 500);
-      });
+      await new Promise((resolve, reject) => {new setTimeout(resolve, 500);});
+
+      nodes = await testTimesWithError(cluster, /^node*/, 10);
+      await proxy.resume();
+      expect(nodes['node1']).to.equal(5);
+      expect(nodes['node2']).to.be.undefined;
+      expect(nodes['node3']).to.equal(5);
+
+      await new Promise((resolve, reject) => {new setTimeout(resolve, 100);});
+      expect(removedNode).to.have.length(0);
+      await new Promise((resolve, reject) => {new setTimeout(resolve, 2000);});
+      let node2s = await testTimesWithError(cluster, /^node*/, 10);
+      await cluster.end()
+      await proxy.close();
+      expect([3, 4]).to.contain.members([node2s['node1']]);
+      expect([1, 2, 3, 4]).to.contain.members([node2s['node2']]);
+      expect([3, 4]).to.contain.members([node2s['node3']]);
     });
 
     it('server close connection during query', function (done) {
@@ -1244,59 +1235,60 @@ describe('cluster', function () {
 
     it('reusing node after timeout', function (done) {
       if (isXpand()) this.skip();
-      const cl = get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback);
-      const cluster = cl.cluster;
-      const proxy = cl.proxy;
-      let removedNode = [];
-      cluster.on('remove', (node) => {
-        removedNode.push(node);
-      });
+      get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then(cl => {
+        const cluster = cl.cluster;
+        const proxy = cl.proxy;
+        let removedNode = [];
+        cluster.on('remove', (node) => {
+          removedNode.push(node);
+        });
 
-      testTimesCallback(
-        cluster,
-        (err, nodes) => {
-          expect(nodes['node1']).to.equal(4);
-          expect(nodes['node2']).to.equal(3);
-          expect(nodes['node3']).to.equal(3);
+        testTimesCallback(
+          cluster,
+          (err, nodes) => {
+            expect(nodes['node1']).to.equal(4);
+            expect(nodes['node2']).to.equal(3);
+            expect(nodes['node3']).to.equal(3);
 
-          proxy.close();
-          //wait for socket to end.
-          setTimeout(() => {
-            testTimesCallback(
-              cluster,
-              (err, nodes) => {
-                expect(nodes['node1']).to.equal(5);
-                expect(nodes['node2']).to.be.undefined;
-                expect(nodes['node3']).to.equal(5);
+            proxy.close();
+            //wait for socket to end.
+            setTimeout(() => {
+              testTimesCallback(
+                cluster,
+                (err, nodes) => {
+                  expect(nodes['node1']).to.equal(5);
+                  expect(nodes['node2']).to.be.undefined;
+                  expect(nodes['node3']).to.equal(5);
 
-                expect(removedNode).to.have.length(0);
+                  expect(removedNode).to.have.length(0);
 
-                proxy.resume();
-                setTimeout(() => {
-                  testTimesCallback(
-                    cluster,
-                    (err, nodes) => {
-                      cluster.end(() => {
-                        proxy.close();
-                      });
-                      expect([3, 4]).to.contain.members([nodes['node1']]);
-                      expect([3, 4]).to.contain.members([nodes['node2']]);
-                      expect([3, 4]).to.contain.members([nodes['node3']]);
-                      done();
-                    },
-                    /^node*/,
-                    10
-                  );
-                }, 550);
-              },
-              /^node*/,
-              10
-            );
-          }, 500);
-        },
-        /^node*/,
-        10
-      );
+                  proxy.resume();
+                  setTimeout(() => {
+                    testTimesCallback(
+                      cluster,
+                      (err, nodes) => {
+                        cluster.end(() => {
+                          proxy.close();
+                        });
+                        expect([3, 4]).to.contain.members([nodes['node1']]);
+                        expect([3, 4]).to.contain.members([nodes['node2']]);
+                        expect([3, 4]).to.contain.members([nodes['node3']]);
+                        done();
+                      },
+                      /^node*/,
+                      10
+                    );
+                  }, 550);
+                },
+                /^node*/,
+                10
+              );
+            }, 500);
+          },
+          /^node*/,
+          10
+        );
+      })
     });
 
     it('get filtered', async function () {
@@ -1450,7 +1442,7 @@ describe('cluster', function () {
     return cluster;
   };
 
-  const get3NodeClusterWithProxy = (opts, base) => {
+  const get3NodeClusterWithProxy = async (opts, base) => {
     const cluster = base.createPoolCluster(opts);
 
     const connOption1 = Object.assign({}, Conf.baseConfig, {
@@ -1464,7 +1456,7 @@ describe('cluster', function () {
       resetAfterUse: false,
       trace: true
     });
-
+    await proxy.start();
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
       connectionLimit: 1,
