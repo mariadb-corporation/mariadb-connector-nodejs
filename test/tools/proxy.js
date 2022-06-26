@@ -107,7 +107,7 @@ function Proxy(args) {
 
       server.on('suspendRemote', () => {
         if (log) console.log('suspend proxy server');
-        to.forEach((socket) => {
+        remoteSockets.forEach((socket) => {
           if (socket) socket.pause();
         });
         stopRemote = true;
@@ -115,7 +115,7 @@ function Proxy(args) {
 
       server.on('resumeRemote', () => {
         if (log) console.log('resume proxy server');
-        to.forEach((socket) => {
+        remoteSockets.forEach((socket) => {
           if (socket) socket.resume();
         });
         stopRemote = false;

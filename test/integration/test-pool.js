@@ -1275,7 +1275,7 @@ describe('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error !' + (Date.now() - initTime));
     } catch (err) {
-      assert(err.message.includes('retrieve connection from pool timeout after'));
+      assert(err.message.includes('retrieve connection from pool timeout after'), err.message);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
