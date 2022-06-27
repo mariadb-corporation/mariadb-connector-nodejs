@@ -63,9 +63,13 @@ function Proxy(args) {
           host: REMOTE_ADDR,
           port: REMOTE_PORT
         });
+        remoteSockets.push(to);
+        if (stopRemote) to.pause();
         from.pipe(to);
         to.pipe(from);
-
+        to.on('connect', () => {
+          if (stopRemote) to.pause();
+        });
         to.on('end', function () {
           if (log) console.log('<< remote end (' + ended + ')');
           if (!ended) from.end();
@@ -107,17 +111,13 @@ function Proxy(args) {
 
       server.on('suspendRemote', () => {
         if (log) console.log('suspend proxy server');
-        remoteSockets.forEach((socket) => {
-          if (socket) socket.pause();
-        });
+        remoteSockets.forEach((socket) => socket.pause());
         stopRemote = true;
       });
 
       server.on('resumeRemote', () => {
         if (log) console.log('resume proxy server');
-        remoteSockets.forEach((socket) => {
-          if (socket) socket.resume();
-        });
+        remoteSockets.forEach((socket) => socket.resume());
         stopRemote = false;
       });
 
