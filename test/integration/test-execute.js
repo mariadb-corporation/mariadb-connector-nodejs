@@ -194,6 +194,32 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('execute stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.execute('wrong query');
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-execute.js:'), err.stack);
+    } finally {
+      await conn.end();
+    }
+  });
+
+  it('execute wrong param stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.execute('SELECT ?', []);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-execute.js:'), err.stack);
+    } finally {
+      await conn.end();
+    }
+  });
+
   it('prepare buffer overflow writeInt16', async function () {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);

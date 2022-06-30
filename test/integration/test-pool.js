@@ -41,7 +41,101 @@ describe('Pool', () => {
       assert.equal(4, res[0].length);
       assert.equal(4, res[1].length);
       assert.equal('i', res[1][3][0].name());
+    } catch (e) {
+      console.log(e);
     } finally {
+      await pool.end();
+    }
+  });
+
+  it('pool query stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    try {
+      await pool.query('wrong query');
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-pool.js:60:18'), err.stack);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('pool execute stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    try {
+      await pool.execute('wrong query');
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-pool.js:78:18'), err.stack);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('pool execute wrong param stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    try {
+      await pool.execute('SELECT ?', []);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-pool.js:96:7'), err.stack);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('pool batch stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    try {
+      await pool.batch('WRONG COMMAND', [[1], [1]]);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-pool.js:114:18'), err.stack);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('pool batch wrong param stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    try {
+      await pool.query('CREATE TABLE IF NOT EXISTS test_batch(id int)');
+      await pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-pool.js:133:18'), err.stack);
+    } finally {
+      await pool.query('DROP TABLE test_batch');
       await pool.end();
     }
   });
@@ -1251,7 +1345,7 @@ describe('Pool', () => {
 
   it('pool server defect timeout', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    this.timeout(5000);
+    this.timeout(50000);
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host
@@ -1269,8 +1363,8 @@ describe('Pool', () => {
     // with pool.getConnection with 1s timeout.
     // (minDelayValidation is set to 0, to ensure ping is done each time for existing connection)
     const conn = await pool.getConnection();
-    proxy.suspendRemote();
     await conn.release();
+    await proxy.close();
     try {
       await pool.getConnection();
       throw new Error('must have thrown error !' + (Date.now() - initTime));
@@ -1282,7 +1376,7 @@ describe('Pool', () => {
 
       assert.isTrue(Date.now() - initTime > 995, 'expected > 1000, but was ' + (Date.now() - initTime));
       try {
-        proxy.resumeRemote();
+        await proxy.resume();
         const conn2 = await pool.getConnection();
         await conn2.release();
       } catch (e2) {

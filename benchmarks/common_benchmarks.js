@@ -77,7 +77,7 @@ function Bench() {
    ****************************/
   const config = conf.baseConfig;
   config.charsetNumber = 45;
-  config.trace = false;
+  config.trace = true;
   const poolConfig = Object.assign({ connectionLimit: connectionLimit }, config);
 
   console.log(poolConfig);

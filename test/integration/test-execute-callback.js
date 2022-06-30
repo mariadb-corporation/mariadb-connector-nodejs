@@ -55,6 +55,38 @@ describe('prepare and execute callback', () => {
     });
   });
 
+  it('execute callback stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection({ trace: true });
+    conn.connect((err) => {
+      conn.execute('wrong query', (err) => {
+        if (!err) {
+          done(Error('must have thrown error !'));
+        } else {
+          assert.isTrue(err.stack.includes('test-execute-callback.js:'), err.stack);
+          conn.end();
+          done();
+        }
+      });
+    });
+  });
+
+  it('execute callback wrong param stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection({ trace: true });
+    conn.connect((err) => {
+      conn.execute('SELECT ?', [], (err) => {
+        if (!err) {
+          done(Error('must have thrown error !'));
+        } else {
+          assert.isTrue(err.stack.includes('test-execute-callback.js:'), err.stack);
+          conn.end();
+          done();
+        }
+      });
+    });
+  });
+
   it('prepare close, no cache', (done) => {
     const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
     conn.connect((err) => {

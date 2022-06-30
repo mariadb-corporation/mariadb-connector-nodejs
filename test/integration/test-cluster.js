@@ -411,7 +411,7 @@ describe('cluster', function () {
       await proxy.start();
 
       const connOption2 = Object.assign({}, Conf.baseConfig, {
-        connectionLimit: 5,
+        connectionLimit: 1,
         host: 'localhost',
         socketTimeout: 200,
         acquireTimeout: 250,
@@ -435,7 +435,7 @@ describe('cluster', function () {
 
             let initTime = Date.now();
             conn = await cluster.getConnection('node*', 'ORDER');
-            await conn.query("SELECT '1'");
+            await conn.query("SELECT '2'");
             await conn.release();
             conn = null;
 
@@ -443,7 +443,7 @@ describe('cluster', function () {
             await proxy.close();
             try {
               conn = await cluster.getConnection('node*', 'ORDER');
-              await conn.query("SELECT '1'");
+              await conn.query("SELECT '3'");
               throw Error('must have thrown error');
             } catch (e) {
               if (conn) await conn.release();
@@ -453,7 +453,7 @@ describe('cluster', function () {
 
             conn = await cluster.getConnection('node*', 'ORDER');
             initTime = Date.now();
-            await conn.query("SELECT '1'");
+            await conn.query("SELECT '4'");
             await conn.release();
             conn = null;
 
@@ -553,7 +553,6 @@ describe('cluster', function () {
             proxy.close();
             resolve();
           } catch (e) {
-            console.log(e);
             if (conn) await conn.release();
             await cluster.end();
             proxy.close();
@@ -580,8 +579,10 @@ describe('cluster', function () {
       expect(nodes['node3']).to.equal(3);
 
       await proxy.close();
-        //wait for socket to end.
-      await new Promise((resolve, reject) => {new setTimeout(resolve, 500);});
+      //wait for socket to end.
+      await new Promise((resolve, reject) => {
+        new setTimeout(resolve, 500);
+      });
 
       nodes = await testTimesWithError(cluster, /^node*/, 10);
       await proxy.resume();
@@ -589,11 +590,15 @@ describe('cluster', function () {
       expect(nodes['node2']).to.be.undefined;
       expect(nodes['node3']).to.equal(5);
 
-      await new Promise((resolve, reject) => {new setTimeout(resolve, 100);});
+      await new Promise((resolve, reject) => {
+        new setTimeout(resolve, 100);
+      });
       expect(removedNode).to.have.length(0);
-      await new Promise((resolve, reject) => {new setTimeout(resolve, 2000);});
+      await new Promise((resolve, reject) => {
+        new setTimeout(resolve, 2000);
+      });
       let node2s = await testTimesWithError(cluster, /^node*/, 10);
-      await cluster.end()
+      await cluster.end();
       await proxy.close();
       expect([3, 4]).to.contain.members([node2s['node1']]);
       expect([1, 2, 3, 4]).to.contain.members([node2s['node2']]);
@@ -1235,7 +1240,7 @@ describe('cluster', function () {
 
     it('reusing node after timeout', function (done) {
       if (isXpand()) this.skip();
-      get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then(cl => {
+      get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then((cl) => {
         const cluster = cl.cluster;
         const proxy = cl.proxy;
         let removedNode = [];
@@ -1288,7 +1293,7 @@ describe('cluster', function () {
           /^node*/,
           10
         );
-      })
+      });
     });
 
     it('get filtered', async function () {

@@ -50,6 +50,103 @@ describe('Pool callback', () => {
     });
   });
 
+  it('pool query stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    pool.query('wrong query', (err) => {
+      if (!err) {
+        done(Error('must have thrown error !'));
+      } else {
+        assert.isTrue(err.stack.includes('test-pool-callback.js:'), err.stack);
+        pool.end();
+        done();
+      }
+    });
+  });
+
+  it('pool execute stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    pool.execute('wrong query', (err) => {
+      if (!err) {
+        done(Error('must have thrown error !'));
+      } else {
+        assert.isTrue(err.stack.includes('test-pool-callback.js:'), err.stack);
+        pool.end();
+        done();
+      }
+    });
+  });
+
+  it('pool execute wrong param stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    pool.execute('SELECT ?', [], (err) => {
+      if (!err) {
+        done(Error('must have thrown error !'));
+      } else {
+        assert.isTrue(err.stack.includes('test-pool-callback.js:'), err.stack);
+        pool.end();
+        done();
+      }
+    });
+  });
+
+  it('pool batch stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    pool.batch('WRONG COMMAND', [0], (err) => {
+      if (!err) {
+        done(Error('must have thrown error !'));
+      } else {
+        assert.isTrue(err.stack.includes('test-pool-callback.js:'), err.stack);
+        pool.end();
+        done();
+      }
+    });
+  });
+
+  it('pool batch wrong param stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const pool = base.createPoolCallback({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      trace: true
+    });
+    pool.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
+    pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [2]], (err) => {
+      if (!err) {
+        done(Error('must have thrown error !'));
+      } else {
+        pool.query('DROP TABLE test_batch');
+        assert.isTrue(err.stack.includes('test-pool-callback.js:'), err.stack);
+        pool.end();
+        done();
+      }
+    });
+  });
+
   it('pool error event', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);

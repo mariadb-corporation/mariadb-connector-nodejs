@@ -7,7 +7,7 @@ let bench;
 const launchBenchs = function (path) {
   bench = new Bench();
 
-  const test = 'do.js';
+  const test = 'select_one_user.js';
   const m = require(path + '/' + test);
   bench.initFcts.push([m.initFct, m.promise]);
   bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MYSQL);

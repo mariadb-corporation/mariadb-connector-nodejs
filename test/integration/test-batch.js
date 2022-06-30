@@ -816,6 +816,34 @@ describe('batch', function () {
     }
   };
 
+  it('pool batch stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.batch('WRONG COMMAND', [[1], [1]]);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-batch.js:'), err.stack);
+    } finally {
+      await conn.end();
+    }
+  });
+
+  it('pool batch wrong param stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
+      await conn.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-batch.js:'), err.stack);
+    } finally {
+      await conn.query('DROP TABLE test_batch');
+      await conn.end();
+    }
+  });
+
   describe('standard question mark using bulk', () => {
     it('batch with one value', async function () {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();

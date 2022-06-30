@@ -36,6 +36,32 @@ describe('basic query callback', () => {
     });
   });
 
+  it('query stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.query('wrong query');
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-query-callback.js:'), err.stack);
+    } finally {
+      await conn.end();
+    }
+  });
+
+  it('query parameter error stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.query('SELECT', []);
+      throw Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('test-query-callback.js:'), err.stack);
+    } finally {
+      await conn.end();
+    }
+  });
+
   it('query with null placeholder no array', function (done) {
     const conn = base.createCallbackConnection();
     conn.connect((err) => {

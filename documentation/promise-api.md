@@ -91,6 +91,72 @@ Cluster configuration `removeNodeErrorCount` default to `Infinity` when mysql/my
 
 ## Recommendation
 
+### Enable 'trace' option in development
+
+It is recommended to activate the `trace` option in development
+Since driver is asynchronous, enabling this option permits to save initial stack when calling any driver methods.
+This allows to have interesting debugging information: 
+example:
+```js
+const pool = mariadb.createPool({
+  host: 'mydb.com',
+  user: 'myUser',
+  connectionLimit: 5
+});
+await pool.query('wrong query');
+/* will throw an error like : 
+  SqlError: (conn=15868, no: 1064, SQLState: 42000) You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1
+sql: wrong query - parameters:[]
+    at Object.module.exports.createError (C:\temp\mariadb-connector-nodejs2\lib\misc\errors.js:57:10)
+    at ...
+  text: "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1",
+  sql: 'wrong query - parameters:[]',
+  fatal: false,
+  errno: 1064,
+  sqlState: '42000',
+  code: 'ER_PARSE_ERROR'
+}*/
+```
+Same example but with pool trace 
+```js
+const pool = mariadb.createPool({
+  host: 'mydb.com',
+  user: 'myUser',
+  connectionLimit: 5,
+  trace: true
+});
+await pool.query('wrong query');
+/* will throw an error like : 
+  sql: wrong query - parameters:[]
+    at Object.module.exports.createError (C:\temp\mariadb-connector-nodejs2\lib\misc\errors.js:57:10)
+    at ...
+ From event:
+    at Function._PARAM (C:\temp\mariadb-connector-nodejs2\lib\connection-promise.js:104:30)
+    at PoolPromise.query (C:\temp\mariadb-connector-nodejs2\lib\pool-promise.js:102:40)
+    at Context.<anonymous> (C:\temp\mariadb-connector-nodejs2\test\integration\test-pool.js:60:18)
+    at callFn (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runnable.js:366:21)
+    at Test.Runnable.run (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runnable.js:354:5)
+    at Runner.runTest (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:678:10)
+    at C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:801:12
+    at next (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:593:14)
+    at C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:603:7
+    at next (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:486:14)
+    at Immediate.<anonymous> (C:\temp\mariadb-connector-nodejs2\node_modules\mocha\lib\runner.js:571:5)
+    at processImmediate (internal/timers.js:464:21) {
+  text: "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1",
+  sql: 'wrong query - parameters:[]',
+  fatal: false,
+  errno: 1064,
+  sqlState: '42000',
+  code: 'ER_PARSE_ERROR'
+}
+   */
+```
+The caller method and line are now in error stack, permitting error easy debugging.
+
+The problem is this error stack is created using [Error.captureStackTrace](https://nodejs.org/api/errors.html#errorcapturestacktracetargetobject-constructoropt) that is very very slow. 
+To give an idea, this slows down by 10% a query like 'select * from mysql.user LIMIT 1', so not recommended in production.
+
 ### Timezone consideration
 
 Client and database can have a different timezone.

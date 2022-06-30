@@ -1,20 +1,30 @@
 const net = require('net');
 
 function Proxy(args) {
-  let localPort = -1;
   const REMOTE_PORT = args.port;
   const REMOTE_ADDR = args.host;
+  const sockets = [];
+  const remoteSockets = [];
+
+  let localPort = -1;
   let log = args.log || false;
   let server;
-  let remoteSocket;
   let stop = false;
+  let stopRemote = false;
 
   this.close = () => {
-    return new Promise(function (resolver, rejecter) {
-      server.close(() => {
-        resolver();
-      });
+    server.close();
+    sockets.forEach((socket) => {
+      socket.destroy();
     });
+    sockets.length = 0;
+
+    remoteSockets.forEach((socket) => {
+      socket.destroy();
+    });
+    remoteSockets.length = 0;
+
+    stop = true;
   };
 
   this.port = () => {
@@ -22,12 +32,7 @@ function Proxy(args) {
   };
 
   this.stop = () => {
-    return new Promise(function (resolver, rejecter) {
-      server.close(() => {
-        stop = true;
-        resolver();
-      });
-    });
+    stop = true;
   };
 
   this.suspendRemote = () => {
@@ -52,24 +57,35 @@ function Proxy(args) {
   };
 
   this.start = () => {
-    const sockets = [];
-    const remoteSockets = [];
-    let stopRemote = false;
-    let to;
     return new Promise(function (resolver, rejecter) {
       server = net.createServer({ noDelay: true }, (from) => {
+        sockets.push(from);
         let ended = false;
-        to = net.createConnection({
+        let to = net.createConnection({
           host: REMOTE_ADDR,
           port: REMOTE_PORT
         });
         remoteSockets.push(to);
         if (stopRemote) to.pause();
-        from.pipe(to);
-        to.pipe(from);
+
+        from.on('data', function (msg) {
+          if (!stop) {
+            to.write(msg);
+            if (log) console.log('>> ', msg.toString());
+          }
+        });
+
+        to.on('data', function (msg) {
+          if (!stop) {
+            from.write(msg);
+            if (log) console.log('<< ', msg.toString());
+          }
+        });
+
         to.on('connect', () => {
           if (stopRemote) to.pause();
         });
+
         to.on('end', function () {
           if (log) console.log('<< remote end (' + ended + ')');
           if (!ended) from.end();
@@ -81,10 +97,6 @@ function Proxy(args) {
           if (!ended) to.end();
           ended = true;
         });
-      });
-
-      server.on('connection', (sock) => {
-        console.log('new Connection : ' + sock.address().port);
       });
 
       server.on('error', (err) => {
@@ -99,14 +111,6 @@ function Proxy(args) {
           if (log) console.log('proxy server error : ' + err);
           throw err;
         }
-      });
-
-      server.on('close', () => {
-        if (log) console.log('closing proxy server');
-        sockets.forEach((socket) => {
-          socket.destroy();
-        });
-        sockets.length = 0;
       });
 
       server.on('suspendRemote', () => {

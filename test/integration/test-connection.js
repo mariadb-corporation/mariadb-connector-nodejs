@@ -720,7 +720,7 @@ describe('connection', () => {
       .connect()
       .then(() => {
         assert.isTrue(conn.isValid());
-        return new Promise(conn.end.bind(conn));
+        return new Promise(conn.end.bind(conn, null));
       })
       .then(() => {
         assert.isTrue(!conn.isValid());

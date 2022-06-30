@@ -43,6 +43,38 @@ describe('basic query', () => {
     conn.end();
   });
 
+  it('query stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection({ trace: true });
+    conn.connect((err) => {
+      conn.query('wrong query', (err) => {
+        if (!err) {
+          done(Error('must have thrown error !'));
+        } else {
+          assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
+          conn.end();
+          done();
+        }
+      });
+    });
+  });
+
+  it('query parameter error stack trace', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection({ trace: true });
+    conn.connect((err) => {
+      conn.query('SELECT ?', [], (err) => {
+        if (!err) {
+          done(Error('must have thrown error !'));
+        } else {
+          assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
+          conn.end();
+          done();
+        }
+      });
+    });
+  });
+
   it('array parameter', async function () {
     const conn = await base.createConnection();
     await conn.query('DROP TABLE IF EXISTS arrayParam');
