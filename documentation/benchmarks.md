@@ -58,8 +58,8 @@ benchmark: ./benchs/do.js
 benchmark: ./benchs/insert.js
 benchmark: ./benchs/insert_batch.js
 benchmark: ./benchs/insert_pipelining.js
-benchmark: ./benchs/select_collation.js
-benchmark: ./benchs/select_one_user.js
+benchmark: ./benchs/select_1000_rows.js
+benchmark: ./benchs/select_int_varchar.js
 benchmark: ./benchs/select_one_user_execute.js
 benchmark: ./benchs/select_one_user_pool.js
 benchmark: ./benchs/select_one_user_pool_random.js

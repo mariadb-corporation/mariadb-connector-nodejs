@@ -1,7 +1,7 @@
 'use strict';
 
 let baseConfig = {
-  user: 'root',
+  user: 'diego',
   database: 'testn',
   host: 'localhost',
   connectTimeout: 2000,

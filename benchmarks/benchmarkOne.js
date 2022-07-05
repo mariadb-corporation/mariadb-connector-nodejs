@@ -7,12 +7,16 @@ let bench;
 const launchBenchs = function (path) {
   bench = new Bench();
 
-  const test = 'select_one_user.js';
+  const test = 'select_1000_rows.js';
   const m = require(path + '/' + test);
   bench.initFcts.push([m.initFct, m.promise]);
-  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MYSQL);
-
-  bench.suiteReady();
+  bench
+    .initPool()
+    .then(() => bench.initTables())
+    .then(() => {
+      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MYSQL);
+      bench.runSuite();
+    });
 };
 
 fs.access('../benchs', function (err) {

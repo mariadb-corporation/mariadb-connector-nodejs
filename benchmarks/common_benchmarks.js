@@ -22,12 +22,8 @@ function Bench() {
   this.reportData = {};
   this.driverLen = 0;
 
-  this.ready = 0;
-  this.suiteReady = function () {
-    this.ready++;
-    if (this.ready === 2) {
-      this.suite.run();
-    }
+  this.runSuite = function () {
+    this.suite.run();
   };
 
   this.loadDriver = (type, base, poolPromise) => {
@@ -55,21 +51,72 @@ function Bench() {
       connList[type].pool = base.createPool(poolConfig);
     }
 
-    Promise.all(proms)
+    return Promise.all(proms)
       .then(() => {
-        dbReady(type, this.driverLen);
+        bench.dbReady++;
+        console.log('driver for ' + type + ' connected [' + bench.dbReady + '/' + this.driverLen + ']');
+        // dbReady(type, this.driverLen);
+        return Promise.resolve();
       })
       .catch((err) => {
         throw err;
       });
   };
 
-  const dbReady = function (name, driverLen) {
-    bench.dbReady++;
-    console.log('driver for ' + name + ' connected [' + bench.dbReady + '/' + driverLen + ']');
-    if (bench.dbReady === driverLen) {
-      bench.suiteReady();
+  this.initPool = function () {
+    let drivers = [];
+    // load pool/connections for available drivers
+    if (promiseMysql) drivers.push(this.loadDriver('MYSQL', promiseMysql, true));
+    if (promiseMysql2) drivers.push(this.loadDriver('MYSQL2', promiseMysql2, false));
+    drivers.push(this.loadDriver('MARIADB', mariadb, false));
+    return Promise.all(drivers).then(async () => {
+      let finish = false;
+      while (!finish) {
+        finish = bench.CONN.MARIADB.pool.totalConnections() == poolConfig.connectionLimit;
+
+        console.log(
+          ` mariadb pool loaded : ${bench.CONN.MARIADB.pool.totalConnections()}/${poolConfig.connectionLimit}`
+        );
+        // if (promiseMysql) {
+        //   finish = finish && bench.CONN.MYSQL.pool.totalConnections() == poolConfig.connectionLimit;
+        //   console.log(` mysql total : ${bench.CONN.MYSQL.pool.totalConnections()}/${poolConfig.connectionLimit}`);
+        // }
+        // if (promiseMysql2) {
+        //   finish = finish && bench.CONN.MYSQL2.pool.totalConnections() == poolConfig.connectionLimit;
+        //   const p = bench.CONN.MYSQL2.pool;
+        //   console.log(` mysql2 total : ${bench.CONN.MYSQL2.pool.totalConnections()}/${poolConfig.connectionLimit}`);
+        // }
+        if (finish) return Promise.resolve();
+        await new Promise(function (resolve, reject) {
+          setTimeout(() => resolve(), 500);
+        });
+      }
+      // //wait 2s for pools to fill up
+      // return new Promise(function (resolve, reject) {
+      //   setTimeout(() => resolve(), 2000);
+      // });
+    });
+  };
+
+  this.initTables = function () {
+    console.log('start : init test : ' + bench.initFcts.length);
+    let promises = [];
+    for (let i = 0; i < bench.initFcts.length; i++) {
+      console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
+      if (bench.initFcts[i][0]) {
+        promises.push(bench.initFcts[i][0].call(this, bench.CONN.MARIADB.drv[0]));
+      }
     }
+    this.currentNb = 0;
+    return Promise.all(promises)
+      .then(() => {
+        console.log('initializing test data done');
+        console.log('simultaneous call: ' + connectionLimit);
+        return Promise.resolve();
+      })
+      .catch((err) => {
+        return Promise.reject(err);
+      });
   };
 
   /****************************
@@ -87,30 +134,11 @@ function Bench() {
   const bench = this;
   const connList = this.CONN;
 
-  // load pool/connections for available drivers
-  if (promiseMysql) this.loadDriver('MYSQL', promiseMysql, true);
-  if (promiseMysql2) this.loadDriver('MYSQL2', promiseMysql2, false);
-  this.loadDriver('MARIADB', mariadb, false);
-
   //200 is a minimum run to ensure having a maximum variation of 1%
   this.minSamples = 200;
   this.initFcts = [];
 
   this.suite = new Benchmark.Suite('foo', {
-    // called when the suite starts running
-    onStart: function () {
-      console.log('start : init test : ' + bench.initFcts.length);
-      for (let i = 0; i < bench.initFcts.length; i++) {
-        console.log('initializing test data ' + (i + 1) + '/' + bench.initFcts.length);
-        if (bench.initFcts[i][0]) {
-          bench.initFcts[i][0].call(this, bench.CONN.MARIADB.drv[0]);
-        }
-      }
-      this.currentNb = 0;
-      console.log('initializing test data done');
-      console.log('simultaneous call: ' + connectionLimit);
-    },
-
     // called between running benchmarks
     onCycle: function (event) {
       this.currentNb++;
@@ -153,9 +181,8 @@ Bench.prototype.end = function (bench) {
 
 Bench.prototype.endConnection = function (conn) {
   try {
-    //using destroy, because MySQL driver fail when using end() for windows named pipe
     for (let i = 0; i < connectionLimit; i++) {
-      conn.drv[i].destroy();
+      conn.drv[i].end();
     }
   } catch (err) {
     console.log("ending error for connection '" + conn.desc + "'");
@@ -297,7 +324,9 @@ const getAddTest = function (self, suite, fct, minSamples, title, displaySql, on
         }
       },
       onComplete: () => {
-        if (onComplete) onComplete.call(self, usePool ? conn.pool : conn.drv[0]);
+        if (onComplete) {
+          onComplete.call(self, usePool ? conn.pool : conn.drv[0]);
+        }
       },
       minSamples: minSamples,
       defer: true,

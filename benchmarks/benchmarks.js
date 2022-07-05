@@ -9,14 +9,26 @@ const launchBenchs = function (path) {
       return;
     }
     const bench = new Bench();
-    //launch all benchmarks
+
+    //add all init functions
     for (let i = 0; i < list.length; i++) {
-      console.log('benchmark: ./benchs/' + list[i]);
       const m = require('./benchs/' + list[i]);
       bench.initFcts.push([m.initFct, m.promise]);
-      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute);
     }
-    bench.suiteReady();
+
+    bench
+      .initPool()
+      .then(() => bench.initTables())
+      .then(() => {
+        //launch all benchmarks
+        for (let i = 0; i < list.length; i++) {
+          console.log('benchmark: ./benchs/' + list[i]);
+          const m = require('./benchs/' + list[i]);
+          bench.initFcts.push([m.initFct, m.promise]);
+          bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute);
+        }
+        bench.runSuite();
+      });
   });
 };
 fs.access('./benchs', function (err) {
