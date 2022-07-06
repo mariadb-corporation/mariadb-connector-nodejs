@@ -13,8 +13,7 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable =
-  'CREATE TABLE perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
+let sqlTable = 'CREATE TABLE perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
 sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title = '3 * insert 100 characters pipelining';
@@ -48,4 +47,3 @@ module.exports.initFct = async function (conn) {
 module.exports.onComplete = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestTextPipe');
 };
-

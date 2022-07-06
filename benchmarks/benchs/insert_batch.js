@@ -13,8 +13,7 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable =
-  'CREATE TABLE perfTestTextBatch (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
+let sqlTable = 'CREATE TABLE perfTestTextBatch (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
 sqlInsert = 'INSERT INTO perfTestTextBatch(t0) VALUES (?)';
 
 module.exports.title =

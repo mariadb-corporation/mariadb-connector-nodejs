@@ -44,7 +44,6 @@ module.exports.benchFct = function (conn, deferred) {
     });
 };
 
-
 module.exports.initFct = async function (conn) {
   try {
     await Promise.all([
