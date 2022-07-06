@@ -13,7 +13,7 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable = 'CREATE TABLE testn.perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text';
+let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text';
 let sqlParam = '';
 let sqlCol = 't0';
 for (let i = 1; i < 10; i++) {
@@ -21,7 +21,7 @@ for (let i = 1; i < 10; i++) {
   sqlCol += ',t' + i;
   sqlTable += ',t' + i + ' text';
 }
-sqlInsert = 'INSERT INTO testn.perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
+sqlInsert = 'INSERT INTO perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
 sqlTable += ', PRIMARY KEY (id))';
 
 module.exports.title = 'insert 10 parameters of 100 characters';
@@ -44,27 +44,22 @@ module.exports.benchFct = function (conn, deferred) {
     });
 };
 
-module.exports.initFct = function (conn) {
-  return Promise.all([
-    conn.query('DROP TABLE IF EXISTS testn.perfTestText'),
-    conn.query("INSTALL SONAME 'ha_blackhole'"),
-    conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
-  ])
-    .catch((err) => {
-      return Promise.all([
-        conn.query('DROP TABLE IF EXISTS testn.perfTestText'),
-        conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
-      ]);
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+
+module.exports.initFct = async function (conn) {
+  try {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestText'),
+      conn.query("INSTALL SONAME 'ha_blackhole'"),
+      conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  } catch (err) {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestText'),
+      conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  }
 };
 
-module.exports.onComplete = function (conn) {
-  conn.query('TRUNCATE TABLE testn.perfTestText').catch((e) => {
-    console.log(e);
-    throw e;
-  });
+module.exports.onComplete = async function (conn) {
+  await conn.query('TRUNCATE TABLE perfTestText');
 };

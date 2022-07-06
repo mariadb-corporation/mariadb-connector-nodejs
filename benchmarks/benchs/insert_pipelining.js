@@ -14,41 +14,38 @@ function randomString(length) {
 }
 
 let sqlTable =
-  'CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
-sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
+  'CREATE TABLE perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
+sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 
-module.exports.title = 'insert 100 characters pipelining';
-module.exports.displaySql = 'INSERT INTO testn.perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
+module.exports.title = '3 * insert 100 characters pipelining';
+module.exports.displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
 module.exports.benchFct = async function (conn, deferred) {
   const params = [randomString(100)];
   let ended = 0;
+  conn.query(sqlInsert, params);
+  conn.query(sqlInsert, params);
   const rows = await conn.query(sqlInsert, params);
   // let val = Array.isArray(rows) ? rows[0] : rows;
   // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
   deferred();
 };
 
-module.exports.initFct = function (conn) {
-  return Promise.all([
-    conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
-    conn.query("INSTALL SONAME 'ha_blackhole'"),
-    conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
-  ])
-    .catch((err) => {
-      return Promise.all([
-        conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
-        conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
-      ]);
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+module.exports.initFct = async function (conn) {
+  try {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestTextPipe'),
+      conn.query("INSTALL SONAME 'ha_blackhole'"),
+      conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  } catch (err) {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestTextPipe'),
+      conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  }
 };
 
-module.exports.onComplete = function (conn) {
-  conn.query('TRUNCATE TABLE testn.perfTestTextPipe').catch((e) => {
-    console.log(e);
-    throw e;
-  });
+module.exports.onComplete = async function (conn) {
+  await conn.query('TRUNCATE TABLE perfTestTextPipe');
 };
+

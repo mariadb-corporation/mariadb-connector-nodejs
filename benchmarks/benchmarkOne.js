@@ -4,19 +4,17 @@ const fs = require('fs');
 const Bench = require('./common_benchmarks');
 let bench;
 
-const launchBenchs = function (path) {
+const launchBenchs = async function (path) {
   bench = new Bench();
 
   const test = 'select_1000_rows.js';
   const m = require(path + '/' + test);
   bench.initFcts.push([m.initFct, m.promise]);
-  bench
-    .initPool()
-    .then(() => bench.initTables())
-    .then(() => {
-      bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MYSQL);
-      bench.runSuite();
-    });
+  await bench.initPool();
+  await bench.initTables();
+
+  bench.add(m.title, m.displaySql, m.benchFct, m.onComplete, m.pool, m.requireExecute); //, bench.CONN.MARIADB);
+  bench.runSuite();
 };
 
 fs.access('../benchs', function (err) {

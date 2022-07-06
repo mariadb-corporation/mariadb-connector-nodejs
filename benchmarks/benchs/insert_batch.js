@@ -14,12 +14,12 @@ function randomString(length) {
 }
 
 let sqlTable =
-  'CREATE TABLE testn.perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
-sqlInsert = 'INSERT INTO testn.perfTestTextPipe(t0) VALUES (?)';
+  'CREATE TABLE perfTestTextBatch (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
+sqlInsert = 'INSERT INTO perfTestTextBatch(t0) VALUES (?)';
 
 module.exports.title =
   "100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)";
-module.exports.displaySql = 'INSERT INTO perfTestTextPipe VALUES (?)';
+module.exports.displaySql = 'INSERT INTO perfTestTextBatch VALUES (?)';
 const iterations = 100;
 module.exports.benchFct = function (conn, deferred, connType) {
   const params = [randomString(100)];
@@ -58,27 +58,21 @@ module.exports.benchFct = function (conn, deferred, connType) {
   }
 };
 
-module.exports.initFct = function (conn) {
-  return Promise.all([
-    conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
-    conn.query("INSTALL SONAME 'ha_blackhole'"),
-    conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
-  ])
-    .catch((err) => {
-      return Promise.all([
-        conn.query('DROP TABLE IF EXISTS testn.perfTestTextPipe'),
-        conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
-      ]);
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+module.exports.initFct = async function (conn) {
+  try {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestTextBatch'),
+      conn.query("INSTALL SONAME 'ha_blackhole'"),
+      conn.query(sqlTable + " ENGINE = BLACKHOLE COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  } catch (err) {
+    await Promise.all([
+      conn.query('DROP TABLE IF EXISTS perfTestTextBatch'),
+      conn.query(sqlTable + " COLLATE='utf8mb4_unicode_ci'")
+    ]);
+  }
 };
 
-module.exports.onComplete = function (conn) {
-  conn.query('TRUNCATE TABLE testn.perfTestTextPipe').catch((e) => {
-    console.log(e);
-    throw e;
-  });
+module.exports.onComplete = async function (conn) {
+  await conn.query('TRUNCATE TABLE perfTestTextBatch');
 };

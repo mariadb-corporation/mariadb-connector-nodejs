@@ -26,15 +26,12 @@ function generateString(length) {
   return result;
 }
 
-module.exports.initFct = function (conn) {
-  conn.query('DROP TABLE IF EXISTS 1000rows');
-  conn.query('CREATE TABLE 1000rows(id INT not null primary key auto_increment, val VARCHAR(32))');
+module.exports.initFct = async function (conn) {
+  await conn.query('DROP TABLE IF EXISTS 1000rows');
+  await conn.query('CREATE TABLE 1000rows(id INT not null primary key auto_increment, val VARCHAR(32))');
   let inserts = [];
   for (let i = 0; i < 1000; i++) {
-    conn.query('INSERT INTO 1000rows(val) VALUES (?) ', generateString(32));
+    inserts.push([generateString(32)]);
   }
-  return Promise.all(inserts).catch((e) => {
-    console.log(e);
-    throw e;
-  });
+  await conn.batch('INSERT INTO 1000rows(val) VALUES (?)', inserts);
 };

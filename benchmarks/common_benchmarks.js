@@ -98,7 +98,7 @@ function Bench() {
     });
   };
 
-  this.initTables = function () {
+  this.initTables = async function () {
     console.log('start : init test : ' + bench.initFcts.length);
     let promises = [];
     for (let i = 0; i < bench.initFcts.length; i++) {
@@ -108,15 +108,15 @@ function Bench() {
       }
     }
     this.currentNb = 0;
-    return Promise.all(promises)
-      .then(() => {
-        console.log('initializing test data done');
-        console.log('simultaneous call: ' + connectionLimit);
-        return Promise.resolve();
-      })
-      .catch((err) => {
-        return Promise.reject(err);
-      });
+    try {
+      await Promise.all(promises);
+      console.log('initializing test data done');
+      console.log('simultaneous call: ' + connectionLimit);
+      return Promise.resolve();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
 
   /****************************
