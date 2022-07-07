@@ -105,7 +105,7 @@ describe('test compress PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(expectedBuf, packet.buf);
+        assert.deepEqual(expectedBuf, packet.buf.slice(packet.pos, packet.end));
         done();
       })
     );
