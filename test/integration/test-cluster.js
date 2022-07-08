@@ -414,7 +414,7 @@ describe('cluster', function () {
         connectionLimit: 1,
         host: 'localhost',
         socketTimeout: 200,
-        acquireTimeout: 250,
+        acquireTimeout: 500,
         minDelayValidation: 0,
         port: proxy.port(),
         resetAfterUse: false,
