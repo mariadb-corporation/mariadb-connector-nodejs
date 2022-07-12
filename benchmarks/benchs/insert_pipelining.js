@@ -18,15 +18,14 @@ sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 
 module.exports.title = '3 * insert 100 characters pipelining';
 module.exports.displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
-module.exports.benchFct = async function (conn, deferred) {
+module.exports.benchFct = async function (conn, type, deferred) {
   const params = [randomString(100)];
-  let ended = 0;
   conn.query(sqlInsert, params);
   conn.query(sqlInsert, params);
   const rows = await conn.query(sqlInsert, params);
   // let val = Array.isArray(rows) ? rows[0] : rows;
   // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-  deferred();
+  deferred.resolve(rows);
 };
 
 module.exports.initFct = async function (conn) {

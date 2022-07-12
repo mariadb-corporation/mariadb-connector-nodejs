@@ -19,7 +19,7 @@
     "coverage": "npm run coverage:test && npm run coverage:report",
     "coverage:test": "nyc mocha --no-parallel --timeout 5000 \"test/**/*.js\"",
     "coverage:report": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "benchmark": "node ./benchmarks/benchmarks.js",
+    "benchmark": "node benchmarks/benchmarks-all.js",
     "generate": "node ./tools/generate-mariadb.js"
   },
   "repository": {

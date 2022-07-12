@@ -29,6 +29,13 @@ See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-no
 
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
 
+Connector is production grade quality, with multiple features:
+* super fast batching
+* easy debugging, trace pointing to code line on error
+* allows data streaming without high memory consumption
+* pipeling
+
+see some of those features:
 
 ### Insert Streaming 
 
@@ -65,8 +72,8 @@ For more information, see the [Batch](/documentation/batch.md) documentation.
 
 MariaDB provides benchmarks comparing the Connector with popular Node.js MySQL clients, including: 
 
-* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.0.4 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
-* [`mysql2`](https://www.npmjs.com/package/mysql2) version 2.2.5
+* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.2.0 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
+* [`mysql2`](https://www.npmjs.com/package/mysql2) version 2.3.3
 
 
 #### query

@@ -2,17 +2,10 @@ const assert = require('assert');
 
 module.exports.title = 'select 20 * int, 20 * varchar(32) using pool';
 module.exports.displaySql = 'select * FROM simpleTable where id0=?';
-module.exports.pool = true;
-module.exports.benchFct = function (pool, deferred) {
-  pool
-    .query('select * from simpleTable3 where id0=?', [0])
-    .then((rows) => {
-      deferred();
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+module.exports.requiresPool = true;
+module.exports.benchFct = async function (pool, type, deferred) {
+  const rows = await pool.query('select * from simpleTable3 where id0=?', [0]);
+  deferred.resolve(rows);
 };
 
 module.exports.initFct = async function (conn) {

@@ -1,18 +1,11 @@
 const assert = require('assert');
 
 module.exports.title = 'select 20 * int, 20 * varchar(32) using execute';
-module.exports.displaySql = 'select * FROM simpleTable where id0=?';
+module.exports.displaySql = 'select * FROM simpleTableExecute where id0=?';
 module.exports.requireExecute = true;
-module.exports.benchFct = function (conn, deferred) {
-  conn
-    .execute('select * from simpleTable2 where id0=?', [0])
-    .then((rows) => {
-      deferred();
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+module.exports.benchFct = async function (conn, type, deferred) {
+  const rows = await conn.execute('select * from simpleTable2 where id0=?', [0]);
+  deferred.resolve(rows);
 };
 
 module.exports.initFct = async function (conn) {

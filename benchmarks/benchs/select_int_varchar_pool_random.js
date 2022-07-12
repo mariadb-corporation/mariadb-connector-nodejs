@@ -2,18 +2,11 @@ const assert = require('assert');
 
 module.exports.title = 'select 20 * int, 20 * varchar(32) and a random number [no caching client side]';
 module.exports.displaySql = 'select u.*,<random int> FROM simpleTable u where id0=?';
-module.exports.pool = true;
-module.exports.benchFct = function (pool, deferred) {
+module.exports.requiresPool = true;
+module.exports.benchFct = async function (pool, type, deferred) {
   const rand = Math.floor(Math.random() * 50000000);
-  pool
-    .query('select u.*,' + rand + ' from simpleTable4 u where id0=?', [0])
-    .then((rows) => {
-      deferred();
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
-    });
+  const rows = await pool.query('select u.*,' + rand + ' from simpleTable4 u where id0=?', [0]);
+  deferred.resolve(rows);
 };
 
 module.exports.initFct = async function (conn) {

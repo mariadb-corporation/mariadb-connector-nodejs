@@ -26,22 +26,14 @@ sqlTable += ', PRIMARY KEY (id))';
 
 module.exports.title = 'insert 10 parameters of 100 characters';
 module.exports.displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
-module.exports.benchFct = function (conn, deferred) {
+module.exports.benchFct = async function (conn, type, deferred) {
   const params = [];
   for (let i = 0; i < 10; i++) {
     params.push(randomString(100));
   }
 
-  conn
-    .query(sqlInsert, params)
-    .then((rows) => {
-      // let val = Array.isArray(rows) ? rows[0] : rows;
-      // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-      deferred();
-    })
-    .catch((err) => {
-      throw err;
-    });
+  const rows = await conn.query(sqlInsert, params);
+  deferred.resolve(rows);
 };
 
 module.exports.initFct = async function (conn) {
