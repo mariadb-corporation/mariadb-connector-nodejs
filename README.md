@@ -30,10 +30,13 @@ See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-no
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
 
 Connector is production grade quality, with multiple features:
-* super fast batching
+* superfast batching
+* fast pool
 * easy debugging, trace pointing to code line on error
 * allows data streaming without high memory consumption
-* pipeling
+* pipelining
+* metadata skipping (for MariaDB server only) 
+* ...
 
 see some of those features:
 
@@ -70,32 +73,32 @@ For more information, see the [Batch](/documentation/batch.md) documentation.
 
 ## Benchmarks
 
-MariaDB provides benchmarks comparing the Connector with popular Node.js MySQL clients, including: 
+MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including: 
 
 * [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.2.0 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
 * [`mysql2`](https://www.npmjs.com/package/mysql2) version 2.3.3
 
+See the [Benchmarks](./documentation/benchmarks.md) page for multiple results.
 
 #### query
 
 ```
-select * from mysql.user - mysql x 1,442 ops/sec ±0.38%
-select * from mysql.user - mysql2 x 1,484 ops/sec ±0.60%
-select * from mysql.user - mariadb x 1,595 ops/sec ±0.38%
+select 20 * int, 20 * varchar(32)
+            mysql :    3,086 ops/s ± 0.6%
+           mysql2 :  2,799.6 ops/s ± 1.6%  (   -9.3% )
+          mariadb :  4,710.8 ops/s ±   1%  (  +52.7% )
 ```
-
-![select one mysql.user benchmark results](https://quickchart.io/chart/render/zm-e2bd7f00-c7ca-4412-84e5-5284055056b5?data1=1442&data2=1484&data3=1595&title=select%20one%20mysql.user%0A%20%5B%20sql%3A%20select%20*%20from%20mysql.user%20LIMIT%201%20%5D)
+![select 20 * int, 20 * varchar(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3086&data2=2800&data3=4711)
 
 #### execute
 
 ```
-select * from mysql.user using execute - mysql2 x 2,257 ops/sec ±0.84%
-select * from mysql.user using execute - mariadb x 2,651 ops/sec ±0.59%
+select 20 * int, 20 * varchar(32) using execute
+           mysql2 :    2,998 ops/s ± 1.3%
+          mariadb :  4,419.6 ops/s ±   1%  (  +47.4% )
 ```
+![select 20 * int, 20 * varchar(32) using execute benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2998&data2=4420)
 
-![select one mysql.user using execute benchmark results](https://quickchart.io/chart?devicePixelRatio=1.0&h=140&w=520&c=%7B%22type%22%3A%22horizontalBar%22%2C%22data%22%3A%7B%22datasets%22%3A%5B%7B%22label%22%3A%22mysql2%202.2.5%22%2C%22backgroundColor%22%3A%22%234285f4%22%2C%22data%22%3A%5B2257%5D%7D%2C%7B%22label%22%3A%22mariadb%203.0.1%22%2C%22backgroundColor%22%3A%22%23ff9900%22%2C%22data%22%3A%5B2651%5D%7D%5D%7D%2C%22options%22%3A%7B%22plugins%22%3A%7B%22datalabels%22%3A%7B%22anchor%22%3A%22end%22%2C%22align%22%3A%22start%22%2C%22color%22%3A%22%23fff%22%2C%22font%22%3A%7B%22weight%22%3A%22bold%22%7D%7D%7D%2C%22elements%22%3A%7B%22rectangle%22%3A%7B%22borderWidth%22%3A0%7D%7D%2C%22responsive%22%3Atrue%2C%22legend%22%3A%7B%22position%22%3A%22right%22%7D%2C%22title%22%3A%7B%22display%22%3Atrue%2C%22text%22%3A%22select%20one%20mysql.user%20using%20execute%5Cn%20%5B%20sql%3A%20select%20*%20from%20mysql.user%20LIMIT%201%20%5D%22%7D%2C%22scales%22%3A%7B%22xAxes%22%3A%5B%7B%22display%22%3Atrue%2C%22scaleLabel%22%3A%7B%22display%22%3Atrue%2C%22labelString%22%3A%22operations%20per%20second%22%7D%2C%22ticks%22%3A%7B%22beginAtZero%22%3Atrue%7D%7D%5D%7D%7D%7D)
-
-For more information, see the [Benchmarks](./documentation/benchmarks.md) page.
 
 ## Quick Start
 
