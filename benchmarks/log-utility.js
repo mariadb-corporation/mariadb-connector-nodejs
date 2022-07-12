@@ -100,18 +100,16 @@ const getImg = (data) => {
   resJson.data.datasets[2].label = 'mariadb ' + mariadbVersion;
   resJson.data.datasets[2].data = [Math.round(data.mariadb)];
   if (data.mysql2 && data.mysql) {
-    return encodeURI(
-      `https://quickchart.io/chart/render/zm-e2bd7f00-c7ca-4412-84e5-5284055056b5?data1=${Math.round(
-        data.mysql
-      )}&data2=${Math.round(data.mysql2)}&data3=${Math.round(data.mariadb)}&title=${data.title}`
-    );
+    return `https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=${Math.round(
+      data.mysql
+    )}&data2=${Math.round(data.mysql2)}&data3=${Math.round(data.mariadb)}`;
   }
-
-  if (!data.mysql2) resJson.data.datasets.splice(1, 1);
-  if (!data.mysql) resJson.data.datasets.splice(0, 1);
-  resJson.options.title.text = data.title;
-
-  return encodeURI('https://quickchart.io/chart?devicePixelRatio=1.0&h=160&w=520&c=' + JSON.stringify(resJson));
+  if (data.mysql2) {
+    return `https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=${Math.round(
+      data.mysql2
+    )}&data2=${Math.round(data.mariadb)}`;
+  }
+  return '';
 };
 
 //************************************************
@@ -147,11 +145,13 @@ module.exports.displayReport = function (data, title, displaySql) {
   //display results
 
   // log image comparison link
-  const res = { title: title + ' - ' + displaySql };
+  const res = { title: title };
   for (let j = 0; j < data.length; j++) {
     res[data[j].type] = data[j].iteration;
   }
-  console.log('    => ' + getImg(res));
+
+  console.log('```');
+  console.log(title);
 
   for (let j = 0; j < data.length; j++) {
     let o = data[j];
@@ -175,6 +175,8 @@ module.exports.displayReport = function (data, title, displaySql) {
       console.log(tt);
     }
   }
+  console.log('```');
+  console.log(`![${title} benchmark results](${getImg(res)})`);
   console.log('');
 };
 

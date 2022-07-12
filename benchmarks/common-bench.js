@@ -34,7 +34,10 @@ const createBenchSuite = async (bench) => {
     conn.end();
   }
 
-  console.log(chalk.yellow('bench : ' + bench.title.replace('\n', '')));
+  console.log(
+    chalk.yellow('##  ' + bench.title.replace('<', '').replace('>', '').replace('[', ' - ').replace(']', ''))
+  );
+  console.log('');
 
   const suite = new Benchmark.Suite('test');
   suite.add('warmup', {
@@ -54,7 +57,7 @@ const createBenchSuite = async (bench) => {
   }
 
   suite.on('cycle', function (event) {
-    console.log(chalk.grey('    ' + String(event.target)));
+    //console.log(chalk.grey('    ' + String(event.target)));
     const type = event.target.name;
     const iteration = 1 / event.target.times.period;
     const variation = event.target.stats.rme;
@@ -103,6 +106,18 @@ const loadsources = async (requiresPool, requireExecute) => {
     }
     sources['mariadb'] = mariadb.createPool(Object.assign({ connectionLimit: 1 }, config));
   }
+
+  if (mysql2) {
+    // specific to mysql2:
+    // mysql2 use a metadata client parser, filling it like it would be in normal use
+    const mysql2Source = sources['mysql2'];
+    const wait = [];
+    for (let i = 0; i < 15000; i++) {
+      wait.push(mysql2Source.query("SELECT 1, 'b', ?", [i]));
+    }
+    await Promise.all(wait);
+  }
+
   return sources;
 };
 
