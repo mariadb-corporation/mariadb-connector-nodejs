@@ -53,6 +53,7 @@ jobs:
       dist: focal
     - env: srv=mariadb v=10.6 BENCH=1 local=1
       node_js: 18
+      dist: focal
     - if: type = push AND fork = false
       env: srv=maxscale
     - if: type = push AND fork = false
