@@ -33,9 +33,15 @@ env:
 jobs:
   fast_finish: true
   allow_failures:
-    - env: srv=build v=10.9
+    - env: srv=build
     - env: srv=xpand RUN_LONG_TEST=0
   include:
+    - if: type = push AND fork = false
+      env: srv=mariadb-es v=10.4
+    - if: type = push AND fork = false
+      env: srv=mariadb-es v=10.5
+    - if: type = push AND fork = false
+      env: srv=mariadb-es v=10.6
     - env: srv=mariadb v=10.6
       os: windows
       language: shell
@@ -57,13 +63,11 @@ jobs:
     - if: type = push AND fork = false
       env: srv=maxscale
     - if: type = push AND fork = false
-      env: srv=mariadb-es v=10.6
-    - if: type = push AND fork = false
       env: srv=skysql RUN_LONG_TEST=0
     - if: type = push AND fork = false
       env: srv=skysql-ha RUN_LONG_TEST=0
     - if: type = push AND fork = false
-      env: srv=build v=10.9
+      env: srv=build
     - if: type = push AND fork = false
       env: srv=mysql v=5.7
     - if: type = push AND fork = false
