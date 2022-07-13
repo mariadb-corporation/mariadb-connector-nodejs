@@ -39,6 +39,7 @@ describe('cluster', function () {
     });
 
     it('no pattern match', function (done) {
+      if (process.env.srv === 'xpand') this.skip();
       const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
@@ -63,6 +64,7 @@ describe('cluster', function () {
     });
 
     it('default id', function (done) {
+      if (process.env.srv === 'xpand') this.skip();
       const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
@@ -83,6 +85,7 @@ describe('cluster', function () {
     });
 
     it('pool full', function (done) {
+      if (process.env.srv === 'xpand') this.skip();
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 1 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {

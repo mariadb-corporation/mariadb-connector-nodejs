@@ -95,6 +95,7 @@ describe('local-infile', () => {
   });
 
   it('local infile and init functions', function (done) {
+    if (process.env.srv === 'xpand') this.skip();
     base
       .createConnection({ permitLocalInfile: true, initSql: "set time_zone='+00:00'" })
       .then((conn) => {

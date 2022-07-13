@@ -57,7 +57,8 @@ describe('initial connection commands', () => {
         });
     });
   });
-  describe('initial SQL', () => {
+  describe('initial SQL', function () {
+    if (process.env.srv === 'xpand') this.skip();
     it('with empty initial SQL', function (done) {
       base
         .createConnection({ initSql: '' })
@@ -75,6 +76,7 @@ describe('initial connection commands', () => {
     });
 
     it('with one initial SQL', async function () {
+      if (process.env.srv === 'xpand') this.skip();
       const conn = await base.createConnection({ initSql: 'SET @user_var=1' });
       const rows = await conn.query('SELECT @user_var');
       assert.deepEqual(rows, [{ '@user_var': BigInt(1) }]);
@@ -82,6 +84,7 @@ describe('initial connection commands', () => {
     });
 
     it('with multiple initial SQL', async function () {
+      if (process.env.srv === 'xpand') this.skip();
       const conn = await base.createConnection({
         initSql: ['SET @user_var=1', 'SET @user_var2=2']
       });
@@ -91,6 +94,7 @@ describe('initial connection commands', () => {
     });
 
     it('error handling', function (done) {
+      if (process.env.srv === 'xpand') this.skip();
       base
         .createConnection({ initSql: 'WRONG SQL' })
         .then((conn) => {
