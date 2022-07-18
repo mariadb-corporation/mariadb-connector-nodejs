@@ -1,5 +1,5 @@
 import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig } from '..';
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -150,7 +150,11 @@ async function testMisc(): Promise<void> {
   connection.escape(true);
   connection.escape(5);
   connection.escapeId('myColumn');
-
+  const res = (await connection.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
   await createConnection({ multipleStatements: true });
 
   await createConnection({ debug: true });
@@ -221,7 +225,11 @@ async function testPool(): Promise<void> {
   pool.escape(true);
   pool.escape(5);
   pool.escapeId('myColumn');
-
+  const res = (await pool.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
   console.log(connection.threadId != null);
 
   await connection.query('SELECT 1 + 1 AS solution');
@@ -258,8 +266,15 @@ async function testPoolCluster(): Promise<void> {
   connection = await poolCluster.of(null, 'RR').getConnection();
   console.log(connection.threadId != null);
 
-  poolCluster.of('SLAVE.*', 'RANDOM');
+  const filtered = poolCluster.of('SLAVE.*', 'RANDOM');
+  const res = (await filtered.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
 
+  await filtered.query('SELECT 1 + 1 AS solution');
+  connection.release();
   mariadb.createPoolCluster({
     canRetry: true,
     removeNodeErrorCount: 3,
