@@ -58,8 +58,8 @@ describe('initial connection commands', () => {
     });
   });
   describe('initial SQL', function () {
-    if (process.env.srv === 'xpand') this.skip();
     it('with empty initial SQL', function (done) {
+      if (process.env.srv === 'xpand') this.skip();
       base
         .createConnection({ initSql: '' })
         .then((conn) => {

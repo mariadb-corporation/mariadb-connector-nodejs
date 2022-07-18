@@ -14,7 +14,9 @@ describe('Connection meta', function () {
         process.env.srv !== 'xpand'
       ) {
         const version = process.env.v;
-        assert(serverVersion.startsWith(version), serverVersion + '/' + version);
+        if (version) {
+          assert(serverVersion.startsWith(version), serverVersion + '/' + version);
+        }
       }
     }
   });
