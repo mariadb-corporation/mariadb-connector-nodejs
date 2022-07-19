@@ -1,5 +1,27 @@
 # Change Log
 
+## [3.0.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1) (Jul 2022)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0...3.0.1)
+
+* [CONJS-193] Wrong error returned "Cannot read properties of undefined… … (reading 'charset')" when error during handshake
+* [CONJS-194] Charset change using parameterized query fails with "Uncaught TypeError: opts.emit is not a function"
+* [CONJS-195] "cannot mix BigInt and other types" for negative bigint
+* [CONJS-196] Disconnect event not caught
+* [CONJS-197] add node. 18 testing
+* [CONJS-198] Feature request: checkNumberRange: boolean
+* [CONJS-199] return type for batch() is wrong on typescript
+* [CONJS-200] Improve pool error detection
+* [CONJS-201] typecast geometry parsing error
+* [CONJS-202] support pre 4.1 error format for 'too many connection' error
+* [CONJS-208] better pool error identification
+* [CONJS-209] trace option complete implementation
+* [CONJS-210] multi-row result-set performance improvement
+* [CONJS-203] encoding error for connection attributes when using changeUser with connection attributes
+* [CONJS-206] possible race condition on connection destroy when no other connection can be created
+* [CONJS-204] handle password array with server pam_use_cleartext_plugin
+* [CONJS-205] query hanging when using batch with option timeout in place of error thrown
+
+
 ## [3.0.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0) (Jan 2022)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0-rc...3.0.0)
 
