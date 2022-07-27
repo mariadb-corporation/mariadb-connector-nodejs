@@ -1,3 +1,44 @@
+# Benchmark
+
+Benchmarks for the MariaDB Node.js Connector are done using the [benchmark](https://www.npmjs.com/package/benchmark) package. You can find the source code for our benchmarks in the [`benchmarks/`](../benchmarks) folder.
+
+You can run benchmarks using npm.  To run it on the `mariadb` Connector only, use the following command:
+
+```
+$ npm install microtime
+$ npm run benchmark
+```
+
+Npm runs a series on the MariaDB Server then returns the execution times.  
+While this may give you a rough idea of how it performs, it's better to compare to other MySQL connector packages, like [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) packages.
+
+
+The [mysql](https://www.npmjs.com/package/mysql) package doesn't implement Promise, so using use the [promise-mysql](https://www.npmjs.com/package/promise-mysql) package.
+
+run the benchmarks:
+```
+$ npm install microtime
+$ npm install mysql mysql2 promise-mysql
+$ npm run benchmark
+```
+
+## Results
+
+Benchmarks runs on two Digital Ocean hosts with 16GB of memory and 4 CPU's, running Ubuntu 22.04.
+
+* **Server Host**: MariaDB 10.6 under the default configuration, just commenting bind-address to permit access from other server.
+* **Client Host**: Node.js version v16.16.0
+  (change the ./test/conf.js to set connection information)
+
+The MariaDB Node.js Connector was then tested along side the following MySQL connectors:
+
+* [**mysql**](https://www.npmjs.com/package/mysql): version 2.18.1 
+* [**mysql2**](https://www.npmjs.com/package/mysql2): version 2.3.3
+* [**promise-mysql**](https://www.npmjs.com/package/promise-mysql): version 5.2.0
+
+
+
+
 root@ubuntu-g-4vcpu-16gb-fra1-01-client:~/mariadb-connector-nodejs# npm run benchmark
 
 > mariadb@3.0.1 benchmark
