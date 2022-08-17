@@ -682,13 +682,11 @@ describe('Pool', () => {
   });
 
   it('pool reset validation', async function () {
-    const pool = base.createPool({
-      connectionLimit: 5,
-      resetAfterUse: true,
-      timezone: 'Z',
-      initSql: 'set @aa= 1',
-      queryTimeout: 10000
-    });
+    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1' };
+    if (shareConn.info.isMariaDB()) {
+      conf['queryTimeout'] = 10000;
+    }
+    const pool = base.createPool(conf);
     try {
       const cs = [1, 2, 3, 4, 5];
 
@@ -697,16 +695,16 @@ describe('Pool', () => {
           let conn;
           try {
             conn = await pool.getConnection();
-            const res = await conn.query(
-              'SELECT @@time_zone AS tz, @aa AS aa, @@session.max_statement_time as timeout, CONNECTION_ID() AS id'
-            );
+            let sql = 'SELECT @@time_zone AS tz, @aa AS aa, CONNECTION_ID() AS id';
+            if (shareConn.info.isMariaDB()) sql += ', @@session.max_statement_time as timeout';
+            const res = await conn.query(sql);
             assert.equal('+00:00', res[0].tz);
             assert.equal('1', res[0].aa);
             if (shareConn.info.isMariaDB()) {
               assert.equal('10', res[0]['timeout']);
             }
           } finally {
-            if (conn) conn.end();
+            if (conn) conn.release();
           }
         })
       );
