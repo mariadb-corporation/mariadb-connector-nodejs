@@ -43,7 +43,7 @@ const writeFile = function () {
   const writer = fs.createWriteStream(destFileName);
 
   const header =
-    '"use strict";\n\n' +
+    "'use strict';\n\n" +
     '/**\n' +
     ' * File generated using test/tools/generate-mariadb.js\n' +
     ' * from MariaDB ' +
