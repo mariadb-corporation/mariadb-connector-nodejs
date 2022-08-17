@@ -580,6 +580,34 @@ describe('Pool', () => {
       .catch(done);
   });
 
+  it('pool reset validation', async function () {
+    const pool = base.createPool({ connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1', queryTimeout: 10000 });
+    try {
+      const cs = [1, 2, 3, 4, 5];
+
+      await Promise.all(
+        cs.map(async (n) => {
+          let conn;
+          try {
+            conn = await pool.getConnection();
+            const res = await conn.query(
+              'SELECT @@time_zone AS tz, @aa AS aa, @@session.max_statement_time as timeout, CONNECTION_ID() AS id'
+            );
+            assert.equal("+00:00", res[0].tz);
+            assert.equal("1", res[0].aa);
+            if (shareConn.info.isMariaDB()) {
+              assert.equal("10", res[0]['timeout']);
+            }
+          } finally {
+            if (conn) conn.end();
+          }
+        })
+      );
+    } finally {
+      if (pool) await pool.end();
+    }
+  });
+
   it('pool getConnection timeout recovery', function (done) {
     if (
       process.env.srv === 'maxscale' ||
