@@ -663,6 +663,7 @@ export interface PoolConnection extends Connection {
 }
 
 export interface Pool {
+  closed: boolean;
   /**
    * Retrieve a connection from pool.
    * Create a new one, if limit is not reached.
