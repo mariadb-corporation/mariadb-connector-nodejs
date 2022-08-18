@@ -211,7 +211,7 @@ describe('Pool callback', () => {
 
   it('pool query timeout', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    this.timeout(5000);
+    this.timeout(10000);
     let errorNo = 0;
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -223,7 +223,7 @@ describe('Pool callback', () => {
       if (errorNo === 3) {
         done();
       } else {
-        done(new Error(`error expeced 3, but was ${errorNo}`));
+        done(new Error(`error expected 3, but was ${errorNo}`));
       }
     });
     pool.query('SELECT 1', (err, res) => {
@@ -232,6 +232,7 @@ describe('Pool callback', () => {
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
       errorNo += 1;
+      console.log('111');
     });
     pool.query('SELECT 2', (err) => {
       assert(err.message.includes('retrieve connection from pool timeout'));
@@ -244,6 +245,7 @@ describe('Pool callback', () => {
         'elapse time was ' + elapse + ' but must be just after 500'
       );
       errorNo += 1;
+      console.log('222');
     });
     setTimeout(() => {
       pool.query('SELECT 3', (err) => {
@@ -257,6 +259,7 @@ describe('Pool callback', () => {
           'elapse time was ' + elapse + ' but must be just after 700'
         );
         errorNo += 1;
+        console.log('333');
       });
     }, 200);
   });
