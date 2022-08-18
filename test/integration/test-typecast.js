@@ -21,6 +21,12 @@ describe('TypeCast', () => {
       typeCast: changeCaseCast
     });
     assert.deepEqual(rows, [{ upper: 'BLABLA', lower: 'blabla', std: 'blaBLA', r: '1' }]);
+    const rows2 = await shareConn.query({
+      sql: "SELECT 'blaBLA' as upper, 'blaBLA' as lower, 'blaBLA' as std, '1' as r",
+      typeCast: changeCaseCast,
+      rowsAsArray: true
+    });
+    assert.deepEqual(rows2, [['BLABLA', 'blabla', 'blaBLA', '1']]);
   });
 
   it('query level typecast function execute', async function () {

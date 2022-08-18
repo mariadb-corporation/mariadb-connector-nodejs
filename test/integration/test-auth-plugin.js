@@ -3,6 +3,9 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 describe('authentication plugin', () => {
   let rsaPublicKey = process.env.TEST_RSA_PUBLIC_KEY;
@@ -33,6 +36,7 @@ describe('authentication plugin', () => {
     await shareConn.query("DROP USER 'cachingSha256User'@'%'").catch((e) => {});
     await shareConn.query("DROP USER 'cachingSha256User2'@'%'").catch((e) => {});
     await shareConn.query("DROP USER 'cachingSha256User3'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER 'cachingSha256User4'@'%'").catch((e) => {});
 
     if (!shareConn.info.isMariaDB()) {
       if (shareConn.info.hasMinVersion(8, 0, 0)) {
@@ -51,6 +55,10 @@ describe('authentication plugin', () => {
           "CREATE USER 'cachingSha256User3'@'%'  IDENTIFIED WITH caching_sha2_password BY 'password'"
         );
         await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User3'@'%'");
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User4'@'%'  IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User4'@'%'");
       } else {
         await shareConn.query("CREATE USER 'sha256User'@'%'");
         await shareConn.query(
@@ -121,6 +129,7 @@ describe('authentication plugin', () => {
       assert(expectedMsg);
     }
   });
+
   it('name pipe authentication plugin', function (done) {
     if (process.platform !== 'win32') this.skip();
     if (process.env.srv === 'maxscale') this.skip();
@@ -329,25 +338,63 @@ describe('authentication plugin', () => {
       .catch(done);
   });
 
-  it('sha256 authentication plugin', function (done) {
-    if (process.platform === 'win32') this.skip();
+  it('sha256 authentication plugin', async function () {
     if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
 
     const self = this;
-    base
-      .createConnection({
+    try {
+      const conn = await base.createConnection({
         user: 'sha256User',
         password: 'password',
         rsaPublicKey: rsaPublicKey
-      })
-      .then((conn) => {
-        conn.end();
-        done();
-      })
-      .catch((err) => {
-        if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
-        done(err);
       });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
+
+    try {
+      const conn = await base.createConnection({
+        user: 'sha256User',
+        password: 'password',
+        rsaPublicKey: '/wrongPath'
+      });
+      conn.end();
+      throw new Error('must have thrown exception');
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      assert.isTrue(err.message.includes('/wrongPath'));
+    }
+
+    const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
+    fs.writeFileSync(filePath, rsaPublicKey);
+    try {
+      const conn = await base.createConnection({
+        user: 'sha256User',
+        password: 'password',
+        rsaPublicKey: filePath
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
+    try {
+      fs.unlinkSync(filePath);
+    } catch (e) {}
+
+    try {
+      const conn = await base.createConnection({
+        user: 'sha256User',
+        rsaPublicKey: rsaPublicKey
+      });
+      conn.end();
+      throw new Error('must have thrown exception');
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      assert.isTrue(err.message.includes('Access denied'));
+    }
   });
 
   it('sha256 authentication plugin with public key retrieval', function (done) {
@@ -424,36 +471,75 @@ describe('authentication plugin', () => {
       .catch(done);
   });
 
-  it('cachingsha256 authentication plugin', function (done) {
-    if (process.platform === 'win32') this.skip();
+  it('cachingsha256 authentication plugin', async function () {
+    // if (process.platform === 'win32') this.skip();
     if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     const self = this;
-    base
-      .createConnection({
+
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User4',
+        password: 'password',
+        cachingRsaPublicKey: '/wrongPath'
+      });
+      conn.end();
+      throw new Error('must have thrown exception');
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      assert.isTrue(err.message.includes('/wrongPath'));
+    }
+
+    const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
+    fs.writeFileSync(filePath, rsaPublicKey);
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User4',
+        password: 'password',
+        cachingRsaPublicKey: filePath
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
+    try {
+      fs.unlinkSync(filePath);
+    } catch (e) {}
+
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User',
+        cachingRsaPublicKey: rsaPublicKey
+      });
+      conn.end();
+      throw new Error('must have thrown exception');
+    } catch (err) {
+      if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
+      assert.isTrue(err.message.includes('Access denied'));
+    }
+
+    try {
+      const conn = await base.createConnection({
         user: 'cachingSha256User',
         password: 'password',
         cachingRsaPublicKey: rsaPublicKey
-      })
-      .then((conn) => {
-        conn.end();
-        //using fast auth
-        base
-          .createConnection({
-            user: 'cachingSha256User',
-            password: 'password',
-            cachingRsaPublicKey: rsaPublicKey
-          })
-          .then((conn) => {
-            conn.end();
-            done();
-          })
-          .catch(done);
-      })
-      .catch((err) => {
-        if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
-        done(err);
       });
+      conn.end();
+    } catch (e) {
+      throw e;
+    }
+
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User',
+        password: 'password',
+        cachingRsaPublicKey: rsaPublicKey
+      });
+      conn.end();
+    } catch (e) {
+      throw e;
+    }
   });
 
   it('cachingsha256 authentication plugin with public key retrieval', function (done) {

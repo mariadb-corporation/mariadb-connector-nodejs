@@ -120,7 +120,6 @@ async function testMisc(): Promise<void> {
   );
   console.log(rows[0].t === 2);
 
-
   try {
     rows = await connection.query({ sql: 'SELECT 1', nestTables: '_' });
     throw new Error('Should have thrown error!' + rows);

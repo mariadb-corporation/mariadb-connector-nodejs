@@ -344,6 +344,44 @@ describe('Pool', () => {
     }
   });
 
+  it('pool execute timeout', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    assert.isFalse(pool.closed);
+    pool.query('DO SLEEP(1)');
+    try {
+      await pool.execute('SELECT 1');
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+    } finally {
+      await pool.end();
+      assert.isTrue(pool.closed);
+    }
+  });
+
+  it('pool batch timeout', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    pool.query('DO SLEEP(1)');
+    try {
+      await pool.batch('SELECT 1', [[1]]);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('pool error event', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
