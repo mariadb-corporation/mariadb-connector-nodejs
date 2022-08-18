@@ -511,7 +511,7 @@ export interface Connection {
   /**
    * Execute batch using text protocol.
    */
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
+  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
 
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
@@ -611,7 +611,7 @@ export interface Pool {
   /**
    * Execute a batch on one connection from pool.
    */
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
+  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
 
   /**
    * Close all connection in pool
@@ -663,7 +663,7 @@ export interface Pool {
 export interface FilteredPoolCluster {
   getConnection(): Promise<PoolConnection>;
   query(sql: string | QueryOptions, values?: any): Promise<any>;
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult[]>;
+  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
 }
 
 export interface PoolCluster {

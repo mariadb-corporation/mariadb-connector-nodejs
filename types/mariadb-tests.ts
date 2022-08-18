@@ -1,5 +1,5 @@
 import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig } from '..';
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -19,7 +19,7 @@ function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
       host: baseConfig.host,
       user: baseConfig.user,
       password: baseConfig.password,
-      leakDetectionTimeout: 10
+      leakDetectionTimeout: 100
     },
     options
   );
@@ -58,6 +58,10 @@ async function testMisc(): Promise<void> {
   console.log(defaultOptions);
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
+
+  rows = await connection.query('INSERT INTO myTable VALUE (1)');
+  console.log(rows.insertId === 1);
+  console.log(rows.affectedRows === 1);
 
   rows = await connection.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
@@ -118,12 +122,7 @@ async function testMisc(): Promise<void> {
   const writable = new Stream.Writable({
     objectMode: true,
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    write(
-      this: any,
-      _chunk: any,
-      _encoding: string,
-      callback: (error?: Error | null) => void
-    ): void {
+    write(this: any, _chunk: any, _encoding: string, callback: (error?: Error | null) => void): void {
       callback(null);
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -142,7 +141,11 @@ async function testMisc(): Promise<void> {
   connection.escape(true);
   connection.escape(5);
   connection.escapeId('myColumn');
-
+  const res = (await connection.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
   await createConnection({ multipleStatements: true });
 
   await createConnection({ debug: true });
@@ -159,10 +162,7 @@ async function testChangeUser(): Promise<void> {
 }
 
 async function testTypeCast(): Promise<void> {
-  const changeCaseCast = (
-    column: FieldInfo,
-    next: mariadb.TypeCastNextFunction
-  ): mariadb.TypeCastResult => {
+  const changeCaseCast = (column: FieldInfo, next: mariadb.TypeCastNextFunction): mariadb.TypeCastResult => {
     const name = column.name();
 
     if (name.startsWith('upp')) {
@@ -191,6 +191,7 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  pool.taskQueueSize();
   function displayConn(conn: Connection): void {
     console.log(conn);
   }
@@ -215,7 +216,11 @@ async function testPool(): Promise<void> {
   pool.escape(true);
   pool.escape(5);
   pool.escapeId('myColumn');
-
+  const res = (await pool.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
   console.log(connection.threadId != null);
 
   await connection.query('SELECT 1 + 1 AS solution');
@@ -252,8 +257,15 @@ async function testPoolCluster(): Promise<void> {
   connection = await poolCluster.of(null, 'RR').getConnection();
   console.log(connection.threadId != null);
 
-  poolCluster.of('SLAVE.*', 'RANDOM');
+  const filtered = poolCluster.of('SLAVE.*', 'RANDOM');
+  const res = (await filtered.batch('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ])) as UpsertResult;
+  console.log(res.affectedRows);
 
+  await filtered.query('SELECT 1 + 1 AS solution');
+  await connection.release();
   mariadb.createPoolCluster({
     canRetry: true,
     removeNodeErrorCount: 3,
@@ -261,7 +273,7 @@ async function testPoolCluster(): Promise<void> {
     defaultSelector: 'RR'
   });
 
-  poolCluster.end();
+  await poolCluster.end();
 }
 
 async function runTests(): Promise<void> {
