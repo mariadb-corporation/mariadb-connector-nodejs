@@ -1,7 +1,6 @@
 'use strict';
 
-const pkg = require('./package.json');
-require('please-upgrade-node')(pkg);
+require('./check-node');
 
 const Connection = require('./lib/connection');
 const ConnectionPromise = require('./lib/connection-promise');
