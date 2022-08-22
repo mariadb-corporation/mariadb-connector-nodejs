@@ -122,7 +122,12 @@ async function testMisc(): Promise<void> {
   const writable = new Stream.Writable({
     objectMode: true,
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    write(this: any, _chunk: any, _encoding: string, callback: (error?: Error | null) => void): void {
+    write(
+      this: any,
+      _chunk: any,
+      _encoding: string,
+      callback: (error?: Error | null) => void
+    ): void {
       callback(null);
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -162,7 +167,10 @@ async function testChangeUser(): Promise<void> {
 }
 
 async function testTypeCast(): Promise<void> {
-  const changeCaseCast = (column: FieldInfo, next: mariadb.TypeCastNextFunction): mariadb.TypeCastResult => {
+  const changeCaseCast = (
+    column: FieldInfo,
+    next: mariadb.TypeCastNextFunction
+  ): mariadb.TypeCastResult => {
     const name = column.name();
 
     if (name.startsWith('upp')) {
