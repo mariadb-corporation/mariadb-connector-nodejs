@@ -470,9 +470,8 @@ describe('authentication plugin', () => {
       .catch(done);
   });
 
-  it('cachingsha256 authentication plugin', function (done) {
-    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0))
-      this.skip();
+  it('cachingsha256 authentication plugin', async function () {
+    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     const self = this;
 
@@ -553,8 +552,7 @@ describe('authentication plugin', () => {
       });
       conn.end();
     } catch (err) {
-      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+'))
-        self.skip();
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
       throw err;
     }
     const conn = await base.createConnection({
