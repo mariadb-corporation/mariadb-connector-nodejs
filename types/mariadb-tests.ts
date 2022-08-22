@@ -307,7 +307,7 @@ async function testPoolCluster(): Promise<void> {
 
   await filtered.query('SELECT 1 + 1 AS solution');
   await filtered.execute('SELECT 1 + 1 AS solution');
-  connection.release();
+  await connection.release();
   mariadb.createPoolCluster({
     canRetry: true,
     removeNodeErrorCount: 3,
@@ -315,7 +315,7 @@ async function testPoolCluster(): Promise<void> {
     defaultSelector: 'RR'
   });
 
-  poolCluster.end();
+  await poolCluster.end();
 }
 
 async function runTests(): Promise<void> {

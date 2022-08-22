@@ -432,7 +432,7 @@ describe('Pool callback', () => {
 
   it('pool query timeout', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
-    this.timeout(6000);
+    this.timeout(10000);
     let errorNo = 0;
     const pool = base.createPoolCallback({
       connectionLimit: 1,

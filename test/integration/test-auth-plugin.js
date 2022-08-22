@@ -398,7 +398,6 @@ describe('authentication plugin', () => {
   });
 
   it('sha256 authentication plugin with public key retrieval', function (done) {
-    if (process.platform === 'win32') this.skip();
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
 
     const self = this;
@@ -471,9 +470,9 @@ describe('authentication plugin', () => {
       .catch(done);
   });
 
-  it('cachingsha256 authentication plugin', async function () {
-    // if (process.platform === 'win32') this.skip();
-    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+  it('cachingsha256 authentication plugin', function (done) {
+    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0))
+      this.skip();
 
     const self = this;
 
@@ -542,25 +541,27 @@ describe('authentication plugin', () => {
     }
   });
 
-  it('cachingsha256 authentication plugin with public key retrieval', function (done) {
-    if (process.platform === 'win32') this.skip();
+  it('cachingsha256 authentication plugin with public key retrieval', async function () {
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     const self = this;
-    base
-      .createConnection({
+    try {
+      const conn = await base.createConnection({
         user: 'cachingSha256User2',
         password: 'password',
         allowPublicKeyRetrieval: true
-      })
-      .then((conn) => {
-        conn.end();
-        done();
-      })
-      .catch((err) => {
-        if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
-        done(err);
       });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+'))
+        self.skip();
+      throw err;
+    }
+    const conn = await base.createConnection({
+      user: 'cachingSha256User2',
+      password: 'password'
+    });
+    conn.end();
   });
 
   it('cachingsha256 authentication plugin without public key retrieval', function (done) {
