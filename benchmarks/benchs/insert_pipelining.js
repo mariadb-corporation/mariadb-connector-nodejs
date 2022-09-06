@@ -1,5 +1,3 @@
-const assert = require('assert');
-
 const basechars = '123456789abcdefghijklmnop\\Z';
 const chars = basechars.split('');
 chars.push('😎');

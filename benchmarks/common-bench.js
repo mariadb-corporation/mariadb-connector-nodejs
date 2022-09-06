@@ -20,14 +20,14 @@ const conf = require('../test/conf');
 const logUtility = require('./log-utility');
 const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false });
 console.log(config);
-const minimumSamples = 200;
+const minimumSamples = 2;
 
 //************************************************
 // bench suite
 //************************************************
 const createBenchSuite = async (bench) => {
   const reportData = [];
-  const sources = await loadsources(bench.requiresPool, bench.requireExecute);
+  const sources = await loadsources(bench.requiresPool, bench.requireExecute, bench.mariadbOnly);
   if (bench.initFct) {
     const conn = await mariadb.createConnection(config);
     await bench.initFct(conn);
@@ -85,29 +85,29 @@ const createBenchSuite = async (bench) => {
 //************************************************
 // Load connections / pools
 //************************************************
-const loadsources = async (requiresPool, requireExecute) => {
+const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   const sources = {};
   if (requiresPool == undefined || requiresPool === false) {
     if (mysql) {
-      if (requireExecute == undefined || requireExecute === false) {
+      if (!mariadbOnly && (requireExecute == undefined || requireExecute === false)) {
         sources['mysql'] = await mysql.createConnection(Object.assign({}, config));
       }
     }
-    if (mysql2) {
+    if (mysql2 && !mariadbOnly) {
       sources['mysql2'] = await mysql2.createConnection(Object.assign({}, config));
     }
     sources['mariadb'] = await mariadb.createConnection(Object.assign({}, config));
   } else {
-    if (mysql) {
+    if (!mariadbOnly && mysql) {
       sources['mysql'] = await mysql.createPool(Object.assign({ connectionLimit: 1 }, config));
     }
-    if (mysql2) {
+    if (!mariadbOnly && mysql2) {
       sources['mysql2'] = mysql2.createPool(Object.assign({ connectionLimit: 1 }, config));
     }
     sources['mariadb'] = mariadb.createPool(Object.assign({ connectionLimit: 1 }, config));
   }
 
-  if (mysql2) {
+  if (!mariadbOnly && mysql2) {
     // specific to mysql2:
     // mysql2 use a metadata client parser, filling it like it would be in normal use
     const mysql2Source = sources['mysql2'];
