@@ -365,6 +365,7 @@ mariadb.createConnection({
 | **collation** | (used in replacement of charset) Permit to defined collation used for connection. This will defined the charset encoding used for exchanges with database and defines the order used when comparing strings. It's mainly used for micro-optimizations|*string* |UTF8MB4_UNICODE_CI| 
 | **dateStrings** | Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
 | **debug** |  Logs all exchanges with the server.  Displays in hexa.|*boolean* |false| 
+| **debugLen** |  String length of logged message or error |*int* |256| 
 | **foundRows** | When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
 | **multipleStatements** | Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
 | **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
