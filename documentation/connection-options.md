@@ -30,8 +30,6 @@
 | **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values.                                                                                                                                                           | *boolean* |    false    |
 | **logger** | Permit custom logger configuration. For more information, see the [`logger` option](#logger) documentation.                                                                                                                                                            |  *mixed*  |
 | **prepareCacheLength** | Define prepare LRU cache length. 0 means no cache                                                                                                                                                                                                                      |   *int*   |     256     |
-| **debugLen** | logger length limitation                                                                                                                                                                                                                                               |   *int*   |     256     |
-| **logParam** | indicate if parameters must be logged by query logger.| *boolean* |    false    |
 
 
 ### JSON or String configuration
@@ -380,13 +378,14 @@ mariadb.createConnection({
 
 ## Other Options 
 
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
+|option| description                                                                                                                                                                                                                                                                                                      |type|default| 
+|---:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---:|:---:| 
 | **charset** | Protocol character set used with the server. Connection collation will be the [default collation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/lib/const/collations.js#L372) associated with charset. It's mainly used for micro-optimizations.  The default is often sufficient. |*string* |UTF8MB4| 
-| **collation** | (used in replacement of charset) Permit to defined collation used for connection. This will defined the charset encoding used for exchanges with database and defines the order used when comparing strings. It's mainly used for micro-optimizations|*string* |UTF8MB4_UNICODE_CI| 
-| **dateStrings** | Whether to retrieve dates as strings or as `Date` objects. |*boolean* |false| 
-| **debug** |  Logs all exchanges with the server.  Displays in hexa.|*boolean* |false| 
-| **debugLen** |  String length of logged message or error |*int* |256| 
+| **collation** | (used in replacement of charset) Permit to defined collation used for connection. This will defined the charset encoding used for exchanges with database and defines the order used when comparing strings. It's mainly used for micro-optimizations                                                            |*string* |UTF8MB4_UNICODE_CI| 
+| **dateStrings** | Whether to retrieve dates as strings or as `Date` objects.                                                                                                                                                                                                                                                       |*boolean* |false| 
+| **debug** | Logs all exchanges with the server.  Displays in hexa.                                                                                                                                                                                                                                                           |*boolean* |false| 
+| **debugLen** | String length of logged message / error or trace                                                                                                                                                                                                                                                                 |*int* |256| 
+| **logParam** | indicate if parameters must be logged by query logger.                                                                                                                                                                                                                                                           | *boolean* |    false    |
 | **foundRows** | When enabled, the update number corresponds to update rows.  When disabled, it indicates the real rows changed.  | *boolean* |true|
 | **multipleStatements** | Allows you to issue several SQL statements in a single `quer()` call. (That is, `INSERT INTO a VALUES('b'); INSERT INTO c VALUES('d');`).  <br/><br/>This may be a **security risk** as it allows for SQL Injection attacks.  |*boolean* |false|
 | **namedPlaceholders** | Allows the use of named placeholders. |*boolean* |false|
