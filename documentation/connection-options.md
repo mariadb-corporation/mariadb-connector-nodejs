@@ -12,24 +12,27 @@
 
 ## Essential Options 
 
-| option| description| type| default| 
-| ---: | --- | :---: | :---: | 
-| **user** | User to access database |*string* | 
-| **password** | User password |*string* | 
-| **host** | IP address or DNS of database server. *Not used when using the `socketPath` option*|*string*| "localhost"|  
-| **port** | Database server port number|*integer*| 3306|
-| **database** | Default database to use when establishing the connection | *string* | 
-| **socketPath** | Permit connecting to the database via Unix domain socket or named pipe, if the server allows it|  *string* |  
-| **compress** | Compress exchanges with database using gzip.  This can give you better performance when accessing a database in a different location.  |*boolean*| false|  
-| **connectTimeout** | Connection timeout in milliseconds (default changed from 10000 to 1000 in 2.5.6) |*integer* | 1000|
-| **socketTimeout** | Socket timeout in milliseconds after the connection is established |*integer* | 0|
-| **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations.|*boolean* | false|
-| **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)|*integer* | 4196304|
-| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
-| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values. |*boolean* | false |
-| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values. |*boolean* | false |
-| **logger** | Permit custom logger configuration. For more information, see the [`logger` option](#logger) documentation. |*mixed*|
-| **prepareCacheLength** | Define prepare LRU cache length. 0 means no cache |*int*| 256 |
+| option| description                                                                                                                                                                                                                                                            |   type    |   default   | 
+| ---: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------:|:-----------:| 
+| **user** | User to access database                                                                                                                                                                                                                                                | *string*  | 
+| **password** | User password                                                                                                                                                                                                                                                          | *string*  | 
+| **host** | IP address or DNS of database server. *Not used when using the `socketPath` option*                                                                                                                                                                                    | *string*  | "localhost" |  
+| **port** | Database server port number                                                                                                                                                                                                                                            | *integer* |    3306     |
+| **database** | Default database to use when establishing the connection                                                                                                                                                                                                               | *string*  | 
+| **socketPath** | Permit connecting to the database via Unix domain socket or named pipe, if the server allows it                                                                                                                                                                        | *string*  |  
+| **compress** | Compress exchanges with database using gzip.  This can give you better performance when accessing a database in a different location.                                                                                                                                  | *boolean* |    false    |  
+| **connectTimeout** | Connection timeout in milliseconds (default changed from 10000 to 1000 in 2.5.6)                                                                                                                                                                                       | *integer* |    1000     |
+| **socketTimeout** | Socket timeout in milliseconds after the connection is established                                                                                                                                                                                                     | *integer* |      0      |
+| **rowsAsArray** | Return result-sets as array, rather than a JSON object. This is a faster way to get results.  For more information, see the [Promise](../README.md#querysql-values---promise) and [Callback](callback-api.md#querysql-values-callback---emoitter) query implementations. | *boolean* |    false    |
+| **maxAllowedPacket** | permit to indicate server global variable [max_allowed_packet](https://mariadb.com/kb/en/library/server-system-variables/#max_allowed_packet) value to ensure efficient batching. default is 4Mb. see [batch documentation](./batch.md)                                | *integer* |   4196304   |
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt                                                                                                                                                   | *boolean* |    false    |
+| **decimalAsNumber** | Whether the query should return decimal as Number. If enable, this might return approximate values.                                                                                                                                                                    | *boolean* |    false    |
+| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enable, this might return approximate values.                                                                                                                                                           | *boolean* |    false    |
+| **logger** | Permit custom logger configuration. For more information, see the [`logger` option](#logger) documentation.                                                                                                                                                            |  *mixed*  |
+| **prepareCacheLength** | Define prepare LRU cache length. 0 means no cache                                                                                                                                                                                                                      |   *int*   |     256     |
+| **debugLen** | logger length limitation                                                                                                                                                                                                                                               |   *int*   |     256     |
+| **logParam** | indicate if parameters must be logged by query logger.| *boolean* |    false    |
+
 
 ### JSON or String configuration
 
@@ -66,6 +69,24 @@ There is 3 caller functions:
 
 if setting one function, function will be used for all loggers. 
 (ie. logger: console.log  ===  logger: { network: console.log, query: console.log, error: console.log})
+
+2 options defined what will be logged : `debugLen` and `logParam`.
+query and network logs are truncated to `debugLen` length (default to 256). 
+truncated trace finish by '...' : example :
+```javascript
+QUERY: insert into bigParameterInt8 values(?, ?) - parameters:['0000000...]
+==> conn:57 Query(0,1031)
++--------------------------------------------------+
+|  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++--------------------------------------------------+------------------+
+| 03 04 00 00 03 69 6E 73  65 72 74 20 69 6E 74 6F | .....insert into |
+| 20 62 69 67 50 61 72 61  6D 65 74 65 72 49 6E 74 |  bigParameterInt |
+| 38 20 76 61 6C 75 65 73  28 27 30 30 30 30 30 30 | 8 values('000000 |
+| 30 30 30 30 30 30 30 30  30 30 30 30 30 30 30 30 | 0000000000000000 |...
++--------------------------------------------------+------------------+
+```
+
+
 
 **Example:**
 
