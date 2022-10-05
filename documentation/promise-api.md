@@ -269,6 +269,7 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 * [`connection.batch(sql, values) → Promise`](#connectionbatchsql-values--promise): fast batch processing.
 * [`connection.beginTransaction() → Promise`](#connectionbegintransaction--promise): Begins a transaction.
 * [`connection.commit() → Promise`](#connectioncommit--promise): Commits the current transaction, if any.
+* [`connection.release() → Promise`](#connectionrelease--promise): Release connection to pool if connection comes from pool.
 * [`connection.rollback() → Promise`](#connectionrollback--promise): Rolls back the current transaction, if any.
 * [`connection.changeUser(options) → Promise`](#connectionchangeuseroptions--promise): Changes the current connection user.
 * [`connection.ping() → Promise`](#connectionping--promise): Sends a 1 byte packet to the database to validate the connection.
@@ -410,7 +411,7 @@ let conn;
 try {
     conn = await pool.getConnection();
     console.log('connected ! connection id is ' + conn.threadId);
-    await conn.release(); //release to pool
+    conn.release(); //release to pool
 } catch (err) {
     console.log('not connected due to error: ' + err);
 }
@@ -1035,6 +1036,29 @@ Begins a new transaction.
 
 Commits the current transaction, if there is one active.  The Connector tracks the current transaction state on the server.  In the event that you issue the `commit()` method when there's no active transaction, it ignores the method and sends no commands to MariaDB. 
 
+
+## `connection.release() → Promise`
+
+_When connection comes from pool only_
+connection.release() is an async method returning an empty promise success. This function will never throw an error.
+default behavior is that if there is a transaction still open, a rollback command will be issued, and connection will be release to pool.
+
+2 options might interfere: 
+* `resetAfterUse` when set, connection will completely be reset like a fresh connection
+* `noControlAfterUse` when set, no control (rollback or reset) will be done on release
+
+```javascript
+const conn = await pool.getConnection();
+try {
+  await conn.beginTransaction();
+  await conn.query("INSERT INTO testTransaction values ('test')");
+  await conn.query("INSERT INTO testTransaction values ('test2')");
+  await conn.commit();
+  
+} finally {
+  conn.release();
+}
+```
 
 ## `connection.rollback() → Promise`
 
