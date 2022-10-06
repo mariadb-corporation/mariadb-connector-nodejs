@@ -101,8 +101,8 @@ describe('basic query', () => {
     await conn.query('CREATE TABLE testArrayParameter (val1 int, val2 int)');
     await conn.query('INSERT INTO testArrayParameter VALUES (1,1), (1,2), (1,3), (2,2)');
 
-    const query = "SELECT * FROM testArrayParameter WHERE val1 = ? AND val2 IN (?)";
-    const res = await conn.query(query, [1, [1,3]]);
+    const query = 'SELECT * FROM testArrayParameter WHERE val1 = ? AND val2 IN (?)';
+    const res = await conn.query(query, [1, [1, 3]]);
     assert.deepEqual(res, [
       {
         val1: 1,
