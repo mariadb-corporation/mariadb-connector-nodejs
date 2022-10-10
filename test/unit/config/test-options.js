@@ -53,6 +53,7 @@ describe('test options', () => {
         logParam: false
       },
       metaAsArray: false,
+      metaEnumerable: false,
       multipleStatements: false,
       namedPlaceholders: false,
       nestTables: undefined,

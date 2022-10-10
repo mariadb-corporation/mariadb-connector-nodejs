@@ -18,7 +18,8 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
     stream: (callback) => {
       console.log('test');
       callback(null, null);
-    }
+    },
+    metaEnumerable: true
   });
 }
 

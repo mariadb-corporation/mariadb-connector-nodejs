@@ -31,6 +31,25 @@ describe('basic query', () => {
     assert.deepEqual(rows, [{ a: null }]);
   });
 
+  it('query metaEnumerable', async function () {
+    let rows = await shareConn.query({ sql: 'select ? as a', metaEnumerable: false }, null);
+    assert.equal(rows.meta.length, 1);
+    assert.equal(JSON.stringify(rows), '[{"a":null}]');
+    assert.deepStrictEqual(rows, [{ a: null }]);
+    for (var propertyName in rows) {
+      console.log(propertyName);
+    }
+
+    rows = await shareConn.query({ sql: 'select ? as a', metaEnumerable: true }, null);
+    assert.equal(rows.meta.length, 1);
+
+    console.log(rows);
+    console.log(JSON.stringify(rows));
+    for (var propertyName in rows) {
+      console.log(propertyName);
+    }
+  });
+
   it('parameter last', async () => {
     const value = "'`\\";
     const conn = await base.createConnection();

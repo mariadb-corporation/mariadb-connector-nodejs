@@ -361,6 +361,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * @param stream if wanting to set a special stream (Standard socket will be created if not set)
    */
   stream?: (callback?: typeof StreamCallback) => void;
+
+  /**
+   * make result-set metadata property enumerable.
+   * Default to false.
+   */
+  metaEnumerable?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {
