@@ -135,6 +135,13 @@ export interface QueryConfig {
   bigIntAsNumber?: boolean;
 
   /**
+   * Throw if conversion to Number is not safe.
+   *
+   * Default: false;
+   */
+  checkNumberRange?: boolean;
+
+  /**
    * Configure logger
    */
   logger?: LoggerConfig;
