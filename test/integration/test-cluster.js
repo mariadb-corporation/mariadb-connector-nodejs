@@ -594,7 +594,7 @@ describe('cluster', function () {
       expect(nodes['node3']).to.equal(5);
 
       await new Promise((resolve, reject) => {
-        new setTimeout(resolve, 100);
+        new setTimeout(resolve, 500);
       });
       expect(removedNode).to.have.length(0);
       await new Promise((resolve, reject) => {
