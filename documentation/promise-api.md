@@ -608,6 +608,7 @@ const meta = res.meta;
 * [`namedPlaceholders`](#namedPlaceholders)
 * [`typeCast`](#typeCast)
 * [`rowsAsArray`](#rowsAsArray)
+* [`metaAsArray`](#metaAsArray)
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
 * [`bigIntAsNumber`](#bigIntAsNumber)
@@ -691,6 +692,22 @@ const res = await connection.query({ rowsAsArray: true, sql: 'select * from anim
 // ]
 const meta = res.meta;
 //    meta: [...]
+```
+
+#### `metaAsArray`
+
+*boolean, default false*
+
+Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+This option is mainly for mysql2 compatibility.
+
+```javascript
+const [rows, meta] = await connection.query({ metaAsArray: true, sql: 'select * from animals' });
+// rows = [ 
+//    [ 1, 'sea lions' ], 
+//    [ 2, 'bird' ],
+// ]
+// meta = [...]
 ```
 
 #### `nestTables`
