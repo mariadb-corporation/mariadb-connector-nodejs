@@ -363,10 +363,11 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   stream?: (callback?: typeof StreamCallback) => void;
 
   /**
-   * Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+   * Compatibility option, causes Promise to return an array object,
+   * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
    * Default to false.
    */
-  metaAsArray?:boolean
+  metaAsArray?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {
