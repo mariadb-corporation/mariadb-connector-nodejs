@@ -361,6 +361,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * @param stream if wanting to set a special stream (Standard socket will be created if not set)
    */
   stream?: (callback?: typeof StreamCallback) => void;
+
+  /**
+   * Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+   * Default to false.
+   */
+  metaAsArray?:boolean
 }
 
 export interface PoolConfig extends ConnectionConfig {

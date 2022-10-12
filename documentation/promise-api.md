@@ -605,6 +605,7 @@ const res = await connection.query('select * from animals');
 * [`namedPlaceholders`](#namedPlaceholders)
 * [`typeCast`](#typeCast)
 * [`rowsAsArray`](#rowsAsArray)
+* [`metaAsArray`](#metaAsArray)
 * [`nestTables`](#nestTables)
 * [`dateStrings`](#dateStrings)
 * [`bigIntAsNumber`](#bigIntAsNumber)
