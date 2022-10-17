@@ -1,4 +1,39 @@
 # Change Log
+## [3.0.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.2) (Oct 2022)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.1...3.0.2)
+
+## Notable changes
+* CONJS-222	permit streaming prepare statement result
+example : 
+```javascript
+const prepare = await shareConn.prepare('SELECT * FROM mysql.user where host = ?');
+const stream = prepare.executeStream(['localhost']);    
+try {
+  for await (const row of stream) {
+    console.log(row);
+  }
+} catch (e) {
+  queryStream.close();
+}
+prepare.close();
+```
+
+## Issues Fixed
+* CONJS-223	Metadata column name gets sporadic corrupted
+* CONJS-211	Session timezone unset on connection re-use with connection pool
+* CONJS-212	when throwing an error when using option `leakDetectionTimeout`, might result in throwing wrong error with `Cannot read properties of null (reading 'leaked')`
+* CONJS-217	caching_sha2_password never succeed using FAST AUTHENTICATION. With correction, one less exchanges is done when connecting to a MySQL server
+* CONJS-219	prepare cache was not limited to `prepareCacheLength` but can increase up to 2x the `prepareCacheLength` value, leading to possible ER_MAX_PREPARED_STMT_COUNT_REACHED
+* CONJS-228	improving prepare cache performance
+* CONJS-226	missing typescript metaAsArray option and documentation
+* CONJS-213	update error code with recent MariaDB server
+* CONJS-215	Executing after prepare close throw an undescriptive error
+* CONJS-221	option debugLen and logParam are not documented
+* CONJS-227	Allow setting idleTimeout to 0
+* CONJS-214	missing pool.closed typescript definition
+* CONJS-216	remove please-upgrade-node dependency
+* CONJS-224	missing typescript checkNumberRange option definition
+
 
 ## [3.0.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.1) (Jul 2022)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.0...3.0.1)

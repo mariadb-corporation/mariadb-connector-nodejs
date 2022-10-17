@@ -369,7 +369,8 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   metaEnumerable?: boolean
 
   /**
-   * Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+   * Compatibility option, causes Promise to return an array object,
+   * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
    * Default to false.
    */
   metaAsArray?:boolean
@@ -541,6 +542,11 @@ export interface ConnectionInfo {
 export interface Prepare {
   id: number;
   execute(values?: any): Promise<any>;
+  /**
+   * Execute query returning a Readable Object that will emit columns/data/end/error events
+   * to permit streaming big result-set
+   */
+  queryStream(values?: any): stream.Readable;
   close(): void;
 }
 
