@@ -96,6 +96,12 @@ async function testMisc(): Promise<void> {
   const insRes = await (<Promise<UpsertResult>>prepare.execute([1]));
   console.log(insRes.insertId === 2);
   console.log(insRes.affectedRows === 2);
+
+  let currRow = 0;
+  const stream = prepare.queryStream([1]);
+  for await (const row of stream) {
+    currRow++;
+  }
   prepare.close();
 
   rows = await connection.execute('INSERT INTO myTable VALUE (1)');
@@ -138,7 +144,7 @@ async function testMisc(): Promise<void> {
   }
 
   let metaReceived = false;
-  let currRow = 0;
+  currRow = 0;
   connection
     .queryStream('SELECT * from mysql.user')
     .on('error', (err: Error) => {

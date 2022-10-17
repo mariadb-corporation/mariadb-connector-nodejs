@@ -536,6 +536,11 @@ export interface ConnectionInfo {
 export interface Prepare {
   id: number;
   execute(values?: any): Promise<any>;
+  /**
+   * Execute query returning a Readable Object that will emit columns/data/end/error events
+   * to permit streaming big result-set
+   */
+  queryStream(values?: any): stream.Readable;
   close(): void;
 }
 

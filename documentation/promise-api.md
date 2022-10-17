@@ -846,7 +846,7 @@ const rows = await connection.query("SELECT 1, 'a'");
 >
 > Returns an Emitter object that emits different types of events:
 > * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
-> * columns : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
+> * fields : Emits when column metadata from the result-set are received (the parameter is an array of [Metadata](#metadata-field) fields).
 > * data : Emits each time a row is received (parameter is a row). 
 > * end : Emits when the query ends (no parameter). 
 > a method: close() : permits closing stream (since 3.0)
@@ -951,6 +951,66 @@ Public methods :
 > Returns a promise that :
 > * resolves with a JSON object for update/insert/delete or a [result-set](#result-set-array) object for result-set.
 > * rejects with an [Error](#error).
+
+
+#### `executeStream(values) → Promise`
+> * `values`: *array | object* Defines placeholder values. This is usually an array, but in cases of only one placeholder, it can be given as a string.
+>
+> Returns an Emitter object that emits different types of events:
+> * error : Emits an [`Error`](#error) object when the query fails. (No `"end"` event will then be emitted).
+> * data : Emits each time a row is received (parameter is a row).
+> * end : Emits when the query ends (no parameter).
+> a method: close() : permits closing stream (since 3.0)
+
+This is the equivalent of `queryStream` using execute.
+
+When using the `execute()` method, documented above, the Connector returns the entire result-set with all its data in a single call. 
+While this is fine for queries that return small result-sets, it can grow unmanageable in cases of huge result-sets. 
+Instead of retrieving all the data into memory, you can use the `executeStream()` method, which uses the event drive architecture to process rows one by one, which allows you to avoid putting too much strain on memory.
+
+You may want to consider updating the [`net_read_timeout`](https://mariadb.com/kb/en/library/server-system-variables/#net_read_timeout) server system variable. 
+The resultSet must be totally received before this timeout, which defaults to 30 seconds.
+
+* for-await-of
+
+simple use with for-await-of only available since Node.js 10 (note that this must be use within async function) :
+
+```javascript
+async function streamingFunction() {
+  const prepare = await shareConn.prepare('SELECT * FROM mysql.user where host = ?');
+  const stream = prepare.executeStream(['localhost']);    
+  try {
+    for await (const row of stream) {
+      console.log(row);
+    }
+  } catch (e) {
+    queryStream.close();
+  }
+  prepare.close();
+}
+```
+
+* Events
+
+```javascript
+  const prepare = await shareConn.prepare('SELECT * FROM mysql.user where host = ?');
+  prepare.executeStream(['localhost'])
+      .on("error", err => {
+        console.log(err); //if error
+      })
+      .on("fields", meta => {
+        console.log(meta); // [ ...]
+      })
+      .on("data", row => {
+        console.log(row);
+      })
+      .on("end", () => {
+        //ended
+        prepare.close();  
+      });
+```
+
+
 
 #### `close() → void`
 This close the prepared statement. 
