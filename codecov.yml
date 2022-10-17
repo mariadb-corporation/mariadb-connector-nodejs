@@ -1,1 +1,5 @@
 comment: off
+coverage:
+  range: "95...100"
+ignore:
+  - "/check-node.js"

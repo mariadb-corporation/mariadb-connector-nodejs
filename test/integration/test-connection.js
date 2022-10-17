@@ -493,6 +493,7 @@ describe('connection', () => {
     conn.end();
     done();
   });
+
   it('connection without database', (done) => {
     base
       .createConnection({

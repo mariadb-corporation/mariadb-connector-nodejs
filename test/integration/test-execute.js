@@ -73,6 +73,54 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('prepare after prepare close - no cache', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0 });
+    const prepare = await conn.prepare('select ?');
+    await prepare.execute('1');
+    await prepare.close();
+    try {
+      await prepare.execute('1');
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+
+    const prepare2 = await conn.prepare('select ?');
+    await prepare2.execute('2');
+    await prepare2.close();
+
+    conn.end();
+  });
+
+  it('prepare after prepare close - with cache', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 2 });
+    const prepare = await conn.prepare('select ?');
+    await prepare.execute('1');
+    await prepare.close();
+
+    //in cache, so must still work
+    await prepare.execute('1');
+
+    await conn.execute('select 1, ?', ['2']);
+    await conn.execute('select 2, ?', ['2']);
+    await conn.execute('select 3, ?', ['2']);
+    await conn.execute('select 4, ?', ['2']);
+
+    //removed from cache, must really be closed
+    try {
+      await prepare.execute('1');
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+    //not in cache, so re-prepare
+    const prepare2 = await conn.prepare('select ?');
+    await prepare2.execute('2');
+    await prepare2.close();
+
+    conn.end();
+  });
+
   it('prepare cache reuse', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     let prepare = await conn.prepare('select ?', [1]);

@@ -344,6 +344,44 @@ describe('Pool', () => {
     }
   });
 
+  it('pool execute timeout', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    assert.isFalse(pool.closed);
+    pool.query('DO SLEEP(1)');
+    try {
+      await pool.execute('SELECT 1');
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+    } finally {
+      await pool.end();
+      assert.isTrue(pool.closed);
+    }
+  });
+
+  it('pool batch timeout', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    pool.query('DO SLEEP(1)');
+    try {
+      await pool.batch('SELECT 1', [[1]]);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('pool error event', async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
@@ -679,6 +717,38 @@ describe('Pool', () => {
     await conn.query('SELECT SLEEP(1)');
     await conn.release();
     await pool.end();
+  });
+
+  it('pool reset validation', async function () {
+    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1' };
+    if (shareConn.info.isMariaDB()) {
+      conf['queryTimeout'] = 10000;
+    }
+    const pool = base.createPool(conf);
+    try {
+      const cs = [1, 2, 3, 4, 5];
+
+      await Promise.all(
+        cs.map(async (n) => {
+          let conn;
+          try {
+            conn = await pool.getConnection();
+            let sql = 'SELECT @@time_zone AS tz, @aa AS aa, CONNECTION_ID() AS id';
+            if (shareConn.info.isMariaDB()) sql += ', @@session.max_statement_time as timeout';
+            const res = await conn.query(sql);
+            assert.equal('+00:00', res[0].tz);
+            assert.equal('1', res[0].aa);
+            if (shareConn.info.isMariaDB()) {
+              assert.equal('10', res[0]['timeout']);
+            }
+          } finally {
+            if (conn) conn.release();
+          }
+        })
+      );
+    } finally {
+      if (pool) await pool.end();
+    }
   });
 
   it('pool getConnection timeout recovery', function (done) {

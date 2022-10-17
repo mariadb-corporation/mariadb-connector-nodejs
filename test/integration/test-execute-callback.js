@@ -124,6 +124,79 @@ describe('prepare and execute callback', () => {
     });
   });
 
+  it('prepare after prepare close - no cache', (done) => {
+    const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
+    conn.connect((err) => {
+      if (err) return done(err);
+      conn.prepare('select ?', (err, prepare) => {
+        prepare.execute('1', (res) => {
+          prepare.close();
+          prepare.execute('1', (err, res) => {
+            if (!err) {
+              done(new Error('must have thrown error'));
+            } else {
+              assert.isTrue(err.message.includes('Execute fails, prepare command as already been closed'));
+              conn.prepare('select ?', (err, prepare2) => {
+                if (err) {
+                  done(err);
+                } else {
+                  prepare2.execute('1', (res) => {
+                    prepare2.close();
+                    conn.end();
+                    done();
+                  });
+                }
+              });
+            }
+          });
+        });
+      });
+    });
+  });
+
+  it('prepare after prepare close - with cache', (done) => {
+    const conn = base.createCallbackConnection({ prepareCacheLength: 2 });
+    conn.connect((err) => {
+      if (err) return done(err);
+      conn.prepare('select ?', (err, prepare) => {
+        prepare.execute('1', (res) => {
+          prepare.close();
+          prepare.execute('1', (err, res) => {
+            if (err) {
+              done(err);
+            } else {
+              //remove from cache
+              conn.execute('select 1, ?', ['2']);
+              conn.execute('select 2, ?', ['2']);
+              conn.execute('select 3, ?', ['2']);
+              conn.execute('select 4, ?', ['2'], (err, res) => {
+                //removed from cache, must really be closed
+                prepare.execute('1', (err, res) => {
+                  if (!err) {
+                    done(new Error('must have thrown error'));
+                  } else {
+                    assert.isTrue(err.message.includes('Execute fails, prepare command as already been closed'));
+                    conn.prepare('select ?', (err, prepare2) => {
+                      if (err) {
+                        done(err);
+                      } else {
+                        prepare2.execute('1', (res) => {
+                          prepare2.close();
+                          conn.end();
+                          done();
+                        });
+                      }
+                    });
+                  }
+                });
+              });
+            }
+          });
+        });
+      });
+    });
+  });
+
   it('prepare cache reuse', (done) => {
     const conn = base.createCallbackConnection({ prepareCacheLength: 2 });
     conn.connect((err) => {

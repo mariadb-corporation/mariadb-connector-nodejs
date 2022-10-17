@@ -432,7 +432,7 @@ describe('Pool callback', () => {
 
   it('pool query timeout', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
-    this.timeout(6000);
+    this.timeout(10000);
     let errorNo = 0;
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -937,5 +937,45 @@ describe('Pool callback', () => {
       }
     });
     pool.end();
+  });
+
+  it('pool execute timeout', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPoolCallback({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    assert.isFalse(pool.closed);
+    pool.query('DO SLEEP(1)');
+    pool.execute('SELECT 1', (err, res) => {
+      pool.end();
+      assert.isTrue(pool.closed);
+      if (err) {
+        assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+        done();
+      } else {
+        done(new Error('must have thrown error'));
+      }
+    });
+  });
+
+  it('pool batch timeout', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    this.timeout(10000);
+    const pool = base.createPoolCallback({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    pool.query('DO SLEEP(1)');
+    pool.batch('SELECT ?', [[1]], (err, res) => {
+      pool.end();
+      if (err) {
+        assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+        done();
+      } else {
+        done(new Error('must have thrown error'));
+      }
+    });
   });
 });

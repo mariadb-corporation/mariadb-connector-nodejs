@@ -90,6 +90,42 @@ async function testMisc(): Promise<void> {
   );
   console.log(rows[0].t === 2);
 
+  const prepare = await connection.prepare('INSERT INTO myTable VALUES (?)');
+  console.log(prepare.id);
+
+  const insRes = await (<Promise<UpsertResult>>prepare.execute([1]));
+  console.log(insRes.insertId === 2);
+  console.log(insRes.affectedRows === 2);
+
+  let currRow = 0;
+  const stream = prepare.queryStream([1]);
+  for await (const row of stream) {
+    currRow++;
+  }
+  prepare.close();
+
+  rows = await connection.execute('INSERT INTO myTable VALUE (1)');
+  console.log(rows.insertId === 1);
+  console.log(rows.affectedRows === 1);
+
+  rows = await connection.execute('SELECT 1 + 1 AS solution');
+  console.log(rows[0].solution === 2);
+
+  rows = await connection.execute('SELECT ? as t', 1);
+  console.log(rows[0].t === 1);
+
+  rows = await connection.execute('SELECT ? as t', [1]);
+  console.log(rows[0].t === 1);
+
+  rows = await connection.execute(
+    {
+      namedPlaceholders: true,
+      sql: 'SELECT :val as t'
+    },
+    { val: 2 }
+  );
+  console.log(rows[0].t === 2);
+
   try {
     rows = await connection.query({ sql: 'SELECT 1', nestTables: '_' });
     throw new Error('Should have thrown error!' + rows);
@@ -108,7 +144,7 @@ async function testMisc(): Promise<void> {
   }
 
   let metaReceived = false;
-  let currRow = 0;
+  currRow = 0;
   connection
     .queryStream('SELECT * from mysql.user')
     .on('error', (err: Error) => {
@@ -200,6 +236,7 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  console.log(pool.closed);
   pool.taskQueueSize();
   function displayConn(conn: Connection): void {
     console.log(conn);
@@ -232,7 +269,8 @@ async function testPool(): Promise<void> {
   console.log(res.affectedRows);
   console.log(connection.threadId != null);
 
-  await connection.query('SELECT 1 + 1 AS solution');
+  await connection.execute('SELECT 1 + 1 AS solution');
+  await connection.execute('SELECT 1 + ? AS solution', [1]);
   connection.release();
 }
 
@@ -274,7 +312,8 @@ async function testPoolCluster(): Promise<void> {
   console.log(res.affectedRows);
 
   await filtered.query('SELECT 1 + 1 AS solution');
-  connection.release();
+  await filtered.execute('SELECT 1 + 1 AS solution');
+  await connection.release();
   mariadb.createPoolCluster({
     canRetry: true,
     removeNodeErrorCount: 3,
@@ -282,7 +321,7 @@ async function testPoolCluster(): Promise<void> {
     defaultSelector: 'RR'
   });
 
-  poolCluster.end();
+  await poolCluster.end();
 }
 
 async function runTests(): Promise<void> {

@@ -135,6 +135,13 @@ export interface QueryConfig {
   bigIntAsNumber?: boolean;
 
   /**
+   * Throw if conversion to Number is not safe.
+   *
+   * Default: false;
+   */
+  checkNumberRange?: boolean;
+
+  /**
    * Configure logger
    */
   logger?: LoggerConfig;
@@ -354,6 +361,13 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * @param stream if wanting to set a special stream (Standard socket will be created if not set)
    */
   stream?: (callback?: typeof StreamCallback) => void;
+
+  /**
+   * Compatibility option, causes Promise to return an array object,
+   * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+   * Default to false.
+   */
+  metaAsArray?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {
@@ -522,6 +536,11 @@ export interface ConnectionInfo {
 export interface Prepare {
   id: number;
   execute(values?: any): Promise<any>;
+  /**
+   * Execute query returning a Readable Object that will emit columns/data/end/error events
+   * to permit streaming big result-set
+   */
+  queryStream(values?: any): stream.Readable;
   close(): void;
 }
 
@@ -663,6 +682,7 @@ export interface PoolConnection extends Connection {
 }
 
 export interface Pool {
+  closed: boolean;
   /**
    * Retrieve a connection from pool.
    * Create a new one, if limit is not reached.
