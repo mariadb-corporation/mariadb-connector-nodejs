@@ -100,6 +100,7 @@ async function testMisc(): Promise<void> {
   let currRow = 0;
   const stream = prepare.queryStream([1]);
   for await (const row of stream) {
+    console.log(row);
     currRow++;
   }
   prepare.close();
