@@ -366,14 +366,14 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * make result-set metadata property enumerable.
    * Default to false.
    */
-  metaEnumerable?: boolean
+  metaEnumerable?: boolean;
 
   /**
    * Compatibility option, causes Promise to return an array object,
    * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
    * Default to false.
    */
-  metaAsArray?:boolean
+  metaAsArray?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {
