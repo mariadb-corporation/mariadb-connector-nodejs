@@ -20,7 +20,7 @@ const conf = require('../test/conf');
 const logUtility = require('./log-utility');
 const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false });
 console.log(config);
-const minimumSamples = 2;
+const minimumSamples = 100;
 
 //************************************************
 // bench suite
