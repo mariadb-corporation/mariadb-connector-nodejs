@@ -167,7 +167,8 @@ describe('ssl', function () {
       assert(
         err.message.includes('self signed certificate') ||
           err.message.includes('self-signed certificate') ||
-          err.message.includes('unable to get local issuer certificate'),
+          err.message.includes('unable to get local issuer certificate') ||
+          err.message.includes('unable to verify the first certificate'),
         err.message
       );
     }
