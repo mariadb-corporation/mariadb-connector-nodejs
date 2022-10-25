@@ -18,7 +18,7 @@ try {
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
-const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false });
+const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false, bigIntAsNumber: true });
 console.log(config);
 const minimumSamples = 100;
 
