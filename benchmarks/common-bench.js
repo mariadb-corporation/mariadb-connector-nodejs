@@ -18,9 +18,9 @@ try {
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
-const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false, bigIntAsNumber: true });
+const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false });
 console.log(config);
-const minimumSamples = 100;
+const minimumSamples = 200;
 
 //************************************************
 // bench suite
