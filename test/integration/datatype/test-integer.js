@@ -7,6 +7,8 @@ const { isXpand } = require('../../base');
 describe('integer with big value', () => {
   before(async () => {
     await shareConn.query('DROP TABLE IF EXISTS testBigint');
+    await shareConn.query('DROP TABLE IF EXISTS testInt');
+    await shareConn.query('CREATE TABLE testInt (v INT NOT NULL AUTO_INCREMENT PRIMARY KEY)');
     await shareConn.query('CREATE TABLE testBigint (v BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY)');
     await shareConn.query('DROP TABLE IF EXISTS floatTest');
     await shareConn.query('CREATE TABLE floatTest (t DOUBLE, t2 DECIMAL(32,16), t3 DECIMAL(32,0))');
@@ -14,6 +16,7 @@ describe('integer with big value', () => {
 
   after(async () => {
     await shareConn.query('DROP TABLE IF EXISTS testBigint');
+    await shareConn.query('DROP TABLE IF EXISTS testInt');
     await shareConn.query('DROP TABLE IF EXISTS floatTest');
   });
 
@@ -116,6 +119,18 @@ describe('integer with big value', () => {
       bigNumberStrings: true
     });
     assert.deepEqual(rows, expectedBigNumberString);
+  });
+
+  it('int format', async function () {
+    if (isXpand()) this.skip();
+
+    await shareConn.query('INSERT INTO testInt values (127), (128)');
+    const rows = await shareConn.query('SELECT * FROM testInt');
+    assert.deepEqual(rows, [ { v: 127 }, { v: 128 } ]);
+
+    const rows2 = await shareConn.execute('SELECT * FROM testInt');
+    assert.deepEqual(rows2, [ { v: 127 }, { v: 128 } ]);
+
   });
 
   it('bigint format', async function () {
