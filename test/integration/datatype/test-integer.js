@@ -126,11 +126,10 @@ describe('integer with big value', () => {
 
     await shareConn.query('INSERT INTO testInt values (127), (128)');
     const rows = await shareConn.query('SELECT * FROM testInt');
-    assert.deepEqual(rows, [ { v: 127 }, { v: 128 } ]);
+    assert.deepEqual(rows, [{ v: 127 }, { v: 128 }]);
 
     const rows2 = await shareConn.execute('SELECT * FROM testInt');
-    assert.deepEqual(rows2, [ { v: 127 }, { v: 128 } ]);
-
+    assert.deepEqual(rows2, [{ v: 127 }, { v: 128 }]);
   });
 
   it('bigint format', async function () {
