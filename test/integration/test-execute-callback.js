@@ -93,7 +93,7 @@ describe('prepare and execute callback', () => {
       if (err) return done(err);
       conn.prepare('select ?', (err, prepare) => {
         if (err) return done(err);
-        assert.equal(prepare.parameters.length, 1);
+        assert.equal(prepare.parameterCount, 1);
         assert.equal(prepare.columns.length, 1);
         prepare.close();
         conn.end();
@@ -112,7 +112,7 @@ describe('prepare and execute callback', () => {
             console.log(err);
             return done(err);
           }
-          assert.equal(prepare.parameters.length, 1);
+          assert.equal(prepare.parameterCount, 1);
           assert.equal(prepare.columns.length, 2);
           prepare.close();
           if (i === 9) {
@@ -252,7 +252,7 @@ describe('prepare and execute callback', () => {
       }
       conn.prepare('select ? as a', (err, prepare) => {
         if (err) return done(err);
-        assert.equal(prepare.parameters.length, 1);
+        assert.equal(prepare.parameterCount, 1);
         assert.equal(prepare.columns.length, 1);
         prepare.execute([2], (err, res) => {
           if (err) return done(err);
