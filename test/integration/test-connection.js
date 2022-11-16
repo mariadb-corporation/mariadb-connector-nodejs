@@ -373,13 +373,13 @@ describe('connection', () => {
   it('connection.destroy() when executing', function (done) {
     this.timeout(10000);
     base
-        .createConnection()
-        .then((conn) => {
-          conn.query('SELECT 1');
-          conn.destroy();
-          done();
-        })
-        .catch(done);
+      .createConnection()
+      .then((conn) => {
+        conn.query('SELECT 1');
+        conn.destroy();
+        done();
+      })
+      .catch(done);
   });
 
   it('connection.close alias', function (done) {
