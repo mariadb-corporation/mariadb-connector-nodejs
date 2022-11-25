@@ -400,7 +400,8 @@ describe('authentication plugin', () => {
   it('sha256 authentication plugin with public key retrieval', function (done) {
     if (
       shareConn.info.isMariaDB() ||
-      !(shareConn.info.hasMinVersion(5, 7, 40) || shareConn.info.hasMinVersion(8, 0, 31))
+      shareConn.info.hasMinVersion(8, 0, 31) ||
+      (shareConn.info.hasMinVersion(5, 7, 0) && !shareConn.info.hasMinVersion(5, 7, 40))
     )
       this.skip();
 
