@@ -580,7 +580,7 @@ export interface Connection {
   /**
    * Execute query using text protocol.
    */
-  query(sql: string | QueryOptions, values?: any): Promise<any>;
+  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Prepare query.
