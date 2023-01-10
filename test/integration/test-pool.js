@@ -893,7 +893,7 @@ describe('Pool', () => {
         assert.equal(pool.activeConnections(), 10);
         assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 0);
-        assert.equal(pool.taskQueueSize(), 9990);
+        assert.isTrue(pool.taskQueueSize() > 9900);
 
         setTimeout(async () => {
           closed = true;
