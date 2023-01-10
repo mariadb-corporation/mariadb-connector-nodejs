@@ -131,7 +131,7 @@ async function asyncFunction() {
 
 ## Contributing 
 
-If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [Developers Guide.](/documentation/developers-guide.md)
+If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [contributing guide.](/CONTRIBUTING.md)
 
 To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
 
