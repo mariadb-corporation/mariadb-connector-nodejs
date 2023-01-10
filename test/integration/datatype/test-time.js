@@ -6,7 +6,8 @@ const { isXpand } = require('../../base');
 
 describe('time', () => {
   it('time data', async function () {
-    if (!base.utf8Collation()) this.skip();
+    // skipping test for mysql since TIME doesn't have microseconds
+    if (!shareConn.info.isMariaDB()) this.skip();
 
     await shareConn.query('DROP TABLE IF EXISTS time_data');
     await shareConn.query('CREATE TABLE time_data(t1 time(6), t2 time(6))');

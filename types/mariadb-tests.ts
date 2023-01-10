@@ -76,9 +76,6 @@ async function testMisc(): Promise<void> {
   const res2 = await connection.query<UpsertResult>('INSERT INTO myTable VALUE (1)');
   console.log(res2.insertId === 1);
 
-  const res3 = await connection.query<any[]>('INSERT INTO myTable VALUE (1)');
-  console.log(res3[0].tt === 1);
-
   rows = await connection.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
 
