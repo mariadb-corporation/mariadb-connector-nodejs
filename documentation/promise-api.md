@@ -798,8 +798,8 @@ For instance, casting all `TINYINT(1)` values as boolean values:
 
 ```javascript
 const tinyToBoolean = (column, next) => {
-  if (column.type == "TINY" && column.length === 1) {
-    const val = column.int();
+  if (column.type == 'TINY' && column.columnLength === 1) {
+    const val = column.tiny();
     return val === null ? null : val === 1;
   }
   return next();
@@ -812,8 +812,8 @@ connection.query({ typeCast: tinyToBoolean, sql: '...' });
 * `collation`: Object indicates the column collation.  It has the properties: `index`, `name`, `encoding`, and `maxlen`.  For instance, `33, "UTF8_GENERAL_CI", "utf8", 3`
 * `columnLength`: Shows the column's maximum length if there's a limit and `0` if there is no limit, (such as with a `BLOB` column).
 * `type`: 
-Shows the column type as an integer value.  For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
-* `columnType`: Shows the column type as a string value.  For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
+Shows the column type as a String value. For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
+* `columnType`: Shows the column type as an integer value. For more information on the relevant values, see	[`field-type.js`](/lib/const/field-type.js)
 * `scale`: Provides the decimal part length.
 * `flags`: Shows the byte-encoded flags.  For more information, see [`field-detail.js`](/lib/const/field-detail.js).
 * `db()`: Name of the database schema.    You can also retrieve this using `schema()`.
@@ -821,6 +821,19 @@ Shows the column type as an integer value.  For more information on the relevant
 * `orgTable()`: Real table name.
 * `name()`: Column alias. 
 * `orgName()`: Real column name.
+
+When using typeCast, additional function are available on Column, in order to decode value : 
+* `string(): string` : decode [VARCHAR](https://mariadb.com/kb/en/varchar/)/[CHAR](https://mariadb.com/kb/en/char/)/[TEXT](https://mariadb.com/kb/en/text/) value
+* `buffer(): Buffer` : decode [BINARY](https://mariadb.com/kb/en/binary/)/[BLOB](https://mariadb.com/kb/en/blob/) value
+* `float(): float` : decode [FLOAT](https://mariadb.com/kb/en/float/) value
+* `tiny(): int` : decode [TINY](https://mariadb.com/kb/en/tinyint/) value
+* `short(): int` : decode [SMALLINT](https://mariadb.com/kb/en/smallint/) value
+* `int(): int` : decode [INTEGER](https://mariadb.com/kb/en/int/) value
+* `long(): bigint` : decode [BIGINT](https://mariadb.com/kb/en/bigint/) value
+* `decimal(): string` : decode [DECIMAL](https://mariadb.com/kb/en/decimal/) value
+* `date(): date` : decode [DATE](https://mariadb.com/kb/en/date/) value
+* `datetime(): date` : decode [TIMESTAMP](https://mariadb.com/kb/en/timestamp/)/[DATETIME](https://mariadb.com/kb/en/datetime/) value
+* `geometry(): geojson` : decode [GEOMETRY](https://mariadb.com/kb/en/geometry-types/) value
 
 ```js
 const rows = await connection.query("SELECT 1, 'a'");
