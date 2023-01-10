@@ -1,6 +1,6 @@
-<p align="center">
-  <a href="http://mariadb.com/">
-    <img src="https://mariadb.com/kb/static/images/logo-2018-black.png">
+<p style="text-align: center;">
+  <a href="https://mariadb.com/">
+    <img src="https://mariadb.com/kb/static/images/logo-2018-black.png"/>
   </a>
 </p>
 
@@ -56,8 +56,8 @@ Using a Readable stream in your application, you can stream `INSERT` statements 
 
 With Pipelining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
 
-<p align="center">
-    <img src="./documentation/misc/pip.png">
+<p style="text-align: center;">
+    <img src="./documentation/misc/pip.png" alt="pipelining example"/>
 </p>
 
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
@@ -102,7 +102,7 @@ select 20 * int, 20 * varchar(32) using execute
 
 ## Quick Start
 
-The MariaDB Connector is available through the Node.js repositories.  You can install it using npm :
+The MariaDB Connector is available through the Node.js repositories. You can install it using npm :
 
 ```
 $ npm install mariadb

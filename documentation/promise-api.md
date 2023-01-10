@@ -423,18 +423,18 @@ Pool options includes [connection option documentation](#connection-options) tha
 
 Specific options for pools are :
 
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
-| **`acquireTimeout`** | Timeout to get a new connection from pool in ms. In order to have connection error information, must be higher than connectTimeout |*integer* | 10000 |
-| **`connectionLimit`** | Maximum number of connection in pool. |*integer* | 10 |
-| **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds (0 means never release) |*integer* | 1800 |
-| **`initializationTimeout`** | Pool will retry creating connection in loop, emitting 'error' event when reaching this timeout. In milliseconds |*integer* | 30000 |
-| **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**.|*integer* | *set to connectionLimit value* |
-| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. (in ms) |*integer*| 500|
-| **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls|*boolean*| false|
-| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (only for MariaDB version >= 10.2.22 /10.3.13). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any|*boolean*| true before version 3, false since|
-| **`leakDetectionTimeout`** |Permit to indicate a timeout to log connection borrowed from pool. When a connection is borrowed from pool and this timeout is reached, a message will be logged to console indicating a possible connection leak. Another message will tell if the possible logged leak has been released. A value of 0 (default) meaning Leak detection is disable |*integer*| 0|
-| **`pingTimeout`** | validation timeout (ping) for checking an connection not used recently from pool in ms. |*integer* | 500 |
+|option|description|type|default|
+|---:|---|:---:|:---:|
+| **`acquireTimeout`** | Timeout to get a new connection from pool. In order to have connection error information, must be higher than connectTimeout. In milliseconds. | *integer* | 10000 |
+| **`connectionLimit`** | Maximum number of connection in pool. | *integer* | 10 |
+| **`idleTimeout`** | Indicate idle time after which a pool connection is released. Value must be lower than [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout). In seconds. 0 means never release. | *integer* | 1800 |
+| **`initializationTimeout`** | Pool will retry creating connection in loop, emitting 'error' event when reaching this timeout. In milliseconds. | *integer* | 30000 |
+| **`minimumIdle`** | Permit to set a minimum number of connection in pool. **Recommendation is to use fixed pool, so not setting this value**. | *integer* | *set to connectionLimit value* |
+| **`minDelayValidation`** | When asking a connection to pool, the pool will validate the connection state. "minDelayValidation" permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. In milliseconds. 0 means validation is done each time the connection is asked. | *integer* | 500 |
+| **`noControlAfterUse`** | After giving back connection to pool (connection.end) connector will reset or rollback connection to ensure a valid state. This option permit to disable those controls | *boolean* | false |
+| **`resetAfterUse`** | When a connection is given back to pool, reset the connection if the server allows it (only for MariaDB version >= 10.2.22 /10.3.13). If disabled or server version doesn't allows reset, pool will only rollback open transaction if any| *boolean* | true before version 3, false since |
+| **`leakDetectionTimeout`** | Permit to indicate a timeout to log connection borrowed from pool. When a connection is borrowed from pool and this timeout is reached, a message will be logged to console indicating a possible connection leak. Another message will tell if the possible logged leak has been released. In milliseconds. 0 means leak detection is disabled. | *integer* | 0 |
+| **`pingTimeout`** | Validation timeout (ping) for checking an connection not used recently from pool. In milliseconds. | *integer* | 500 |
 
 ## `createPoolCluster(options) → PoolCluster`
 
