@@ -256,7 +256,7 @@ Essential options list:
 | **`database`** | Default database to use when establishing the connection. | *string* | 
 | **`socketPath`** | Permits connections to the database through the Unix domain socket or named pipe. |  *string* | 
 | **`compress`** | Compresses the exchange with the database through gzip.  This permits better performance when the database is not in the same location.  |*boolean*| false|
-| **`connectTimeout`** | Sets the connection timeout in milliseconds. |*integer* | 10 000|
+| **`connectTimeout`** | Sets the connection timeout in milliseconds. |*integer* | 1 000|
 | **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
 | **`queryTimeout`** | Set maximum query time in ms (an error will be thrown if limit is reached). 0 or undefined meaning no timeout. This can be superseded for a query using `timeout` option|*int* |0|
 | **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
