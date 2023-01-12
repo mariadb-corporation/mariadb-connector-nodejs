@@ -362,6 +362,7 @@ describe('local-infile', () => {
 
     rows = await shareConn.query('SELECT @@max_allowed_packet as t');
     const maxAllowedSize = Number(rows[0].t);
+    if (maxAllowedSize > 50000000) this.skip();
     size = Math.round((maxAllowedSize - 300) / 16);
     const header = '"a","b"\n';
     const headerLen = header.length;
