@@ -63,15 +63,13 @@ describe('test options', () => {
       rowsAsArray: false,
       decimalAsNumber: false,
       insertIdAsNumber: false,
-      skipSetTimezone: false,
       typeCast: undefined,
       stream: undefined,
       bigIntAsNumber: false,
       bulk: true,
       permitLocalInfile: false,
       bigNumberStrings: false,
-      supportBigNumbers: false,
-      tz: 'Etc/UTC'
+      supportBigNumbers: false
     };
     assert.deepEqual(expected, defaultOpts);
     assert.deepEqual(expected, defaultOptsCall);

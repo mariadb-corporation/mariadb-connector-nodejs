@@ -159,13 +159,19 @@ To give an idea, this slows down by 10% a query like 'select * from mysql.user L
 
 ### Timezone consideration
 
-Client and database can have a different timezone.
+If Client and Server share the same timezone, default behavior (`timezone`='local') is the solution.
 
-The connector has different solutions when this is the case.
-the `timezone` option can have the following value:
-* 'local' (default) : connector doesn't do any conversion. If the database has a different timezone, there will be an offset issue. 
-* 'auto' : connector retrieve server timezone. Dates will be converted if server timezone differs from client
-* IANA timezone / offset, example 'America/New_York' or '+06:00'. 
+Problem reside when client and server doesn't share timezone.  
+
+The `timezone` option can have the following value:
+* 'local' (default) : connector doesn't do any conversion. If the database has a different timezone, there will be offset issues. 
+* 'auto' : connector retrieve server timezone, and If client timezone differ from server, connector will set session timezone to client timezone
+* IANA timezone / offset, example 'America/New_York' or '+06:00'. Connector will set session timezone to indicated timezone, It is expected that this timezone correspond to client tz.
+
+Using 'auto' or setting specific timezone solve timezone correction. 
+Please be carefull for fixed timezone: Etc/GMT+12 = GMT-12:00 = -12:00 = offset -12. Etc/GMT have opposite sign !!  
+
+(Before 3.1, connector was converting date to server timezone, but these was not correcting all timezone issues)
 
 ##### IANA timezone / offset
 
