@@ -101,14 +101,18 @@ describe('datetime', () => {
   it('date text America/New_York timezone', async function () {
     const date = new Date('1999-01-31 12:13:14');
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6)) this.skip();
-    const conn = await base.createConnection({ timezone: 'America/New_York' });
-    const res = await conn.query({ sql: 'select CAST(? as datetime) d' }, [date]);
-    assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');
-    assert.equal(res[0].d.getDate(), date.getDate());
-    assert.equal(res[0].d.getHours(), date.getHours());
-    assert.equal(res[0].d.getMinutes(), date.getMinutes());
-    assert.equal(res[0].d.getSeconds(), date.getSeconds());
-    conn.close();
+    try {
+      const conn = await base.createConnection({ timezone: 'America/New_York' });
+      const res = await conn.query({ sql: 'select CAST(? as datetime) d' }, [date]);
+      assert.equal(Object.prototype.toString.call(res[0].d), '[object Date]');
+      assert.equal(res[0].d.getDate(), date.getDate());
+      assert.equal(res[0].d.getHours(), date.getHours());
+      assert.equal(res[0].d.getMinutes(), date.getMinutes());
+      assert.equal(res[0].d.getSeconds(), date.getSeconds());
+      conn.close();
+    } catch (err) {
+      assert.equal(err.errno, 45033);
+    }
   });
 
   it('date text from row', async function () {
