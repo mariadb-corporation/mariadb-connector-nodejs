@@ -1469,6 +1469,8 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+        this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(true);
@@ -1498,6 +1500,8 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+        this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(false);
