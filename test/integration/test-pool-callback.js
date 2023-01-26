@@ -332,7 +332,7 @@ describe('Pool callback', () => {
     const pool2 = base.createPoolCallback({ connectionLimit: 1, arrayParenthesis: true });
 
     pool.on('connection', (conn) => {
-      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
       assert.equal(pool.escape(Buffer.from("let's rocks\n😊 🤘")), "_binary'let\\'s rocks\\n😊 🤘'");
       assert.equal(pool.escape(19925.1), '19925.1');
       let prefix =
@@ -367,7 +367,8 @@ describe('Pool callback', () => {
 
   it('pool escape on init', function () {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
-    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.65')), "'1999-01-31 12:13:14.650'");
     assert.equal(pool.escapeId('good_$one'), '`good_$one`');
     assert.equal(pool.escapeId('f:a'), '`f:a`');
     assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');

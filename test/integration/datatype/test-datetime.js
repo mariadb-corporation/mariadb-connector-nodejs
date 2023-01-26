@@ -32,9 +32,9 @@ describe('datetime', () => {
   });
 
   it('date escape', async function () {
-    const val = '1999-01-31 12:13:14.000';
+    const val = '1999-01-31 12:13:14';
     const buf = new Date('1999-01-31 12:13:14.000');
-    assert.equal(shareConn.escape(buf), "'1999-01-31 12:13:14.000'");
+    assert.equal(shareConn.escape(buf), "'1999-01-31 12:13:14'");
 
     let rows = await shareConn.query(' SELECT ' + shareConn.escape(buf) + ' t');
     assert.deepEqual(rows, [{ t: val }]);
