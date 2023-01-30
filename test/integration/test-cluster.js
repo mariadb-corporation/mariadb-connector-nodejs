@@ -577,9 +577,11 @@ describe('cluster', function () {
       });
 
       let nodes = await testTimesWithError(cluster, /^node*/, 10);
-      expect(nodes['node1']).to.equal(4);
-      expect(nodes['node2']).to.equal(3);
-      expect(nodes['node3']).to.equal(3);
+      assert.deepEqual(
+        nodes,
+        { node1: 4, node2: 3, node3: 3 },
+        `wrong value: ${nodes} , expected { node1: 4, node2: 3, node3: 3 }`
+      );
 
       await proxy.close();
       //wait for socket to end.
@@ -589,10 +591,7 @@ describe('cluster', function () {
 
       nodes = await testTimesWithError(cluster, /^node*/, 10);
       await proxy.resume();
-      expect(nodes['node1']).to.equal(5);
-      expect(nodes['node2']).to.be.undefined;
-      expect(nodes['node3']).to.equal(5);
-
+      assert.deepEqual(nodes, { node1: 5, node3: 5 }, `wrong value: ${nodes} , expected { node1: 5, node3: 5 }`);
       await new Promise((resolve, reject) => {
         new setTimeout(resolve, 500);
       });
@@ -1465,6 +1464,12 @@ describe('cluster', function () {
       trace: true
     });
     await proxy.start();
+
+    // permit proxy to start
+    await new Promise((resolve, reject) => {
+      new setTimeout(resolve, 20);
+    });
+
     const connOption2 = Object.assign({}, Conf.baseConfig, {
       initSql: isXpand() ? ['set NAMES utf8', "set @node='node2'"] : "set @node='node2'",
       connectionLimit: 1,
