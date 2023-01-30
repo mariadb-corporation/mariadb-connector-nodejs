@@ -73,6 +73,34 @@ describe('Compression', function () {
       .catch(done);
   });
 
+  it('connection.ping()', async () => {
+    let compressCon = await base.createConnection({ compress: true, multipleStatements: true });
+    compressCon.ping();
+    await compressCon.ping();
+    try {
+      await compressCon.ping(-2);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('Ping cannot have negative timeout value'));
+    }
+    await compressCon.ping(200);
+
+    compressCon.query('SELECT SLEEP(1)');
+    const initTime = Date.now();
+
+    try {
+      await compressCon.ping(200);
+      throw new Error('must have thrown error after ' + (Date.now() - initTime));
+    } catch (err) {
+      assert.isTrue(
+        Date.now() - initTime > 195,
+        'expected > 195, without waiting for SLEEP to finish, but was ' + (Date.now() - initTime)
+      );
+      assert.isTrue(err.message.includes('Ping timeout'));
+      assert.isFalse(compressCon.isValid());
+    }
+  });
+
   it('multiple packet result (multiple rows)', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //using sequence engine
