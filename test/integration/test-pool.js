@@ -140,6 +140,56 @@ describe('Pool', () => {
     }
   });
 
+  it('ending pool no active connection', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 0);
+  });
+
+  it('ending pool with active connection', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    pool.query('SELECT SLEEP(3)');
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 3);
+  });
+
+  it('ending pool with active connection reaching end', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    pool.query('SELECT SLEEP(15)');
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 10);
+  });
+
   it('pool escape', function (done) {
     if (!base.utf8Collation()) this.skip();
     const pool = base.createPool({ connectionLimit: 1 });

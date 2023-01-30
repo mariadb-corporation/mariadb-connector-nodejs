@@ -1532,7 +1532,7 @@ res = [
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Closes the pool and underlying connections gracefully.
+Closes the pool and underlying connections gracefully if possible, remaining active request after 10s will be killed.
 
 ```javascript
 pool.end()
