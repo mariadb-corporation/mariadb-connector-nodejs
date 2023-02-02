@@ -76,8 +76,8 @@ describe('cluster', function () {
       cluster
         .getConnection('PoolNode-0')
         .then((conn) => {
+          conn.end();
           cluster.end().then(() => {
-            conn.end();
             done();
           });
         })
