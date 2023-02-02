@@ -18,9 +18,9 @@ try {
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
-const config = Object.assign({}, conf.baseConfig, { charsetNumber: 45, trace: false });
+const config = Object.assign({}, conf.baseConfig, { charset: 'utf8mb4', trace: false });
 console.log(config);
-const minimumSamples = 2;
+const minimumSamples = 200;
 
 //************************************************
 // bench suite
@@ -57,7 +57,7 @@ const createBenchSuite = async (bench) => {
   }
 
   suite.on('cycle', function (event) {
-    //console.log(chalk.grey('    ' + String(event.target)));
+    console.log(chalk.grey('    ' + String(event.target)));
     const type = event.target.name;
     const iteration = 1 / event.target.times.period;
     const variation = event.target.stats.rme;

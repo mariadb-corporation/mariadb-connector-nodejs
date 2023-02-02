@@ -363,6 +363,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   stream?: (callback?: typeof StreamCallback) => void;
 
   /**
+   * make result-set metadata property enumerable.
+   * Default to false.
+   */
+  metaEnumerable?: boolean;
+
+  /**
    * Compatibility option, causes Promise to return an array object,
    * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
    * Default to false.
@@ -535,7 +541,7 @@ export interface ConnectionInfo {
 
 export interface Prepare {
   id: number;
-  execute(values?: any): Promise<any>;
+  execute<T = any>(values?: any): Promise<T>;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
@@ -580,7 +586,7 @@ export interface Connection {
   /**
    * Execute query using text protocol.
    */
-  query(sql: string | QueryOptions, values?: any): Promise<any>;
+  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Prepare query.
@@ -590,12 +596,12 @@ export interface Connection {
   /**
    * Execute query using binary (prepare) protocol
    */
-  execute(sql: string | QueryOptions, values?: any): Promise<any>;
+  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Execute batch. Values are Array of Array.
    */
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
+  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
@@ -693,17 +699,17 @@ export interface Pool {
   /**
    * Execute a query on one connection from pool.
    */
-  query(sql: string | QueryOptions, values?: any): Promise<any>;
+  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Execute a batch on one connection from pool.
    */
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
+  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Execute query using binary (prepare) protocol
    */
-  execute(sql: string | QueryOptions, values?: any): Promise<any>;
+  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 
   /**
    * Close all connection in pool
@@ -756,9 +762,9 @@ export interface Pool {
 
 export interface FilteredPoolCluster {
   getConnection(): Promise<PoolConnection>;
-  query(sql: string | QueryOptions, values?: any): Promise<any>;
-  batch(sql: string | QueryOptions, values?: any): Promise<UpsertResult> | Promise<UpsertResult[]>;
-  execute(sql: string | QueryOptions, values?: any): Promise<any>;
+  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
+  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
 }
 
 export interface PoolCluster {

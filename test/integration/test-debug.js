@@ -324,4 +324,54 @@ describe('debug', () => {
       })
       .catch(done);
   }
+
+  it('fast path command debug', async function () {
+    await testPingDebug(false);
+  });
+
+  it('fast path commanddebug compress', async function () {
+    if (isXpand()) this.skip();
+    await testPingDebug(true);
+  });
+
+  async function testPingDebug(compress) {
+    const conn = await base.createConnection({
+      compress: compress,
+      logger: {
+        network: null,
+        query: (msg) => logger.info(msg),
+        error: (msg) => logger.info(msg)
+      }
+    });
+    await conn.ping(1000);
+    await conn.end();
+
+    //wait 100ms to ensure stream has been written
+    await new Promise(function (resolve) {
+      setTimeout(resolve, 100);
+    });
+    const serverVersion = conn.serverVersion();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+      compress = false;
+    const range = compress ? [60, 150] : [60, 120];
+    const data = fs.readFileSync(tmpLogFile, 'utf8');
+    console.log(data);
+    assert.isTrue(data.includes('PING'));
+    assert.isTrue(data.includes('QUIT'));
+
+    assert(
+      data.length > range[0] && data.length < range[1],
+      'wrong data length : ' +
+        data.length +
+        ' expected value between ' +
+        range[0] +
+        ' and ' +
+        range[1] +
+        '.' +
+        '\n server version : ' +
+        serverVersion +
+        '\n data :\n' +
+        data
+    );
+  }
 });

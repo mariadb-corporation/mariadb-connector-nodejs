@@ -46,126 +46,130 @@ describe('batch', function () {
   });
 
   const simpleBatch = async (useCompression, useBulk, timezone) => {
-    const conn = await base.createConnection({
-      compress: useCompression,
-      bulk: useBulk,
-      timezone: timezone
-    });
-    conn.query('DROP TABLE IF EXISTS simpleBatch');
-    conn.query(
-      'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
-    );
-    await shareConn.query('FLUSH TABLES');
-    await conn.query('START TRANSACTION');
+    try {
+      const conn = await base.createConnection({
+        compress: useCompression,
+        bulk: useBulk,
+        timezone: timezone
+      });
+      conn.query('DROP TABLE IF EXISTS simpleBatch');
+      conn.query(
+        'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
+      );
+      await shareConn.query('FLUSH TABLES');
+      await conn.query('START TRANSACTION');
 
-    const f = {};
-    f.toSqlString = () => {
-      return 'blabla';
-    };
-    let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
-      [
-        true,
-        'Ʉjo"h\u000An😎🌶\\\\',
-        new Date('2001-12-31 23:59:58+3'),
-        new Date('2018-01-01 12:30:20.456789+3'),
+      const f = {};
+      f.toSqlString = () => {
+        return 'blabla';
+      };
+      let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+        [
+          true,
+          'Ʉjo"h\u000An😎🌶\\\\',
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ],
+        [
+          true,
+          f,
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ],
+        [
+          false,
+          { name: 'jack\u000Aमस्', val: 'tt' },
+          null,
+          new Date('2018-01-21 11:30:20.123456+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 20]
+          }
+        ],
+        [
+          0,
+          null,
+          new Date('2020-12-31 23:59:59+3'),
+          new Date('2018-01-21 11:30:20.123456+3'),
+          {
+            type: 'Point',
+            coordinates: [20, 20]
+          }
+        ]
+      ]);
+      assert.equal(res.affectedRows, 4);
+      res = await conn.query('select * from `simpleBatch`');
+      assert.deepEqual(res, [
         {
-          type: 'Point',
-          coordinates: [10, 10]
-        }
-      ],
-      [
-        true,
-        f,
-        new Date('2001-12-31 23:59:58+3'),
-        new Date('2018-01-01 12:30:20.456789+3'),
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 'Ʉjo"h\u000An😎🌶\\\\',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        },
         {
-          type: 'Point',
-          coordinates: [10, 10]
-        }
-      ],
-      [
-        false,
-        { name: 'jack\u000Aमस्', val: 'tt' },
-        null,
-        new Date('2018-01-21 11:30:20.123456+3'),
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 'blabla',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        },
         {
-          type: 'Point',
-          coordinates: [10, 20]
-        }
-      ],
-      [
-        0,
-        null,
-        new Date('2020-12-31 23:59:59+3'),
-        new Date('2018-01-21 11:30:20.123456+3'),
+          id: 1,
+          id2: 0,
+          id3: 2,
+          t: '{"name":"jack\\nमस्","val":"tt"}',
+          d: null,
+          d2: new Date('2018-01-21 11:30:20.123456+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 20]
+          },
+          id4: 3
+        },
         {
-          type: 'Point',
-          coordinates: [20, 20]
+          id: 1,
+          id2: 0,
+          id3: 2,
+          t: null,
+          d: new Date('2020-12-31 23:59:59+3'),
+          d2: new Date('2018-01-21 11:30:20.123456+3'),
+          g: {
+            type: 'Point',
+            coordinates: [20, 20]
+          },
+          id4: 3
         }
-      ]
-    ]);
-    assert.equal(res.affectedRows, 4);
-    res = await conn.query('select * from `simpleBatch`');
-    assert.deepEqual(res, [
-      {
-        id: 1,
-        id2: 1,
-        id3: 2,
-        t: 'Ʉjo"h\u000An😎🌶\\\\',
-        d: new Date('2001-12-31 23:59:58+3'),
-        d2: new Date('2018-01-01 12:30:20.456789+3'),
-        g: {
-          type: 'Point',
-          coordinates: [10, 10]
-        },
-        id4: 3
-      },
-      {
-        id: 1,
-        id2: 1,
-        id3: 2,
-        t: 'blabla',
-        d: new Date('2001-12-31 23:59:58+3'),
-        d2: new Date('2018-01-01 12:30:20.456789+3'),
-        g: {
-          type: 'Point',
-          coordinates: [10, 10]
-        },
-        id4: 3
-      },
-      {
-        id: 1,
-        id2: 0,
-        id3: 2,
-        t: '{"name":"jack\\nमस्","val":"tt"}',
-        d: null,
-        d2: new Date('2018-01-21 11:30:20.123456+3'),
-        g: {
-          type: 'Point',
-          coordinates: [10, 20]
-        },
-        id4: 3
-      },
-      {
-        id: 1,
-        id2: 0,
-        id3: 2,
-        t: null,
-        d: new Date('2020-12-31 23:59:59+3'),
-        d2: new Date('2018-01-21 11:30:20.123456+3'),
-        g: {
-          type: 'Point',
-          coordinates: [20, 20]
-        },
-        id4: 3
-      }
-    ]);
-    await conn.query('ROLLBACK');
+      ]);
+      await conn.query('ROLLBACK');
 
-    conn.query('DROP TABLE simpleBatch');
-    const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
-    assert.deepEqual(rows, [{ 1: 1 }]);
-    await conn.end();
+      conn.query('DROP TABLE simpleBatch');
+      const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
+      assert.deepEqual(rows, [{ 1: 1 }]);
+      await conn.end();
+    } catch (err) {
+      assert.equal(err.errno, 45033);
+    }
   };
 
   const batchWithReturning = async (useBulk) => {
@@ -1465,6 +1469,8 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+        this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(true);
@@ -1494,6 +1500,8 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
+        this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(false);

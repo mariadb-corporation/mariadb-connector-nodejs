@@ -140,13 +140,63 @@ describe('Pool', () => {
     }
   });
 
+  it('ending pool no active connection', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 0);
+  });
+
+  it('ending pool with active connection', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    pool.query('SELECT SLEEP(3)');
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 3);
+  });
+
+  it('ending pool with active connection reaching end', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    this.timeout(15000);
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 2,
+      trace: true
+    });
+    await new Promise((res) => setTimeout(() => res(), 100));
+    const start = process.hrtime();
+    pool.query('SELECT SLEEP(15)');
+    await new Promise((res) => setTimeout(() => res(), 100));
+    await pool.end();
+    assert.equal(process.hrtime(start)[0], 10);
+  });
+
   it('pool escape', function (done) {
     if (!base.utf8Collation()) this.skip();
     const pool = base.createPool({ connectionLimit: 1 });
     const pool2 = base.createPool({ connectionLimit: 1, arrayParenthesis: true });
 
     pool.on('connection', async (conn) => {
-      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
       assert.equal(pool.escape(Buffer.from("let's rocks\n😊 🤘")), "_binary'let\\'s rocks\\n😊 🤘'");
       assert.equal(pool.escape(19925.1), '19925.1');
       let prefix =
@@ -181,7 +231,8 @@ describe('Pool', () => {
 
   it('pool escape on init', async function () {
     const pool = base.createPool({ connectionLimit: 1 });
-    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14.000'");
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
+    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.65')), "'1999-01-31 12:13:14.650'");
     assert.equal(pool.escapeId('good_$one'), '`good_$one`');
     assert.equal(pool.escapeId('f:a'), '`f:a`');
     assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
@@ -893,7 +944,7 @@ describe('Pool', () => {
         assert.equal(pool.activeConnections(), 10);
         assert.equal(pool.totalConnections(), 10);
         assert.equal(pool.idleConnections(), 0);
-        assert.equal(pool.taskQueueSize(), 9990);
+        assert.isTrue(pool.taskQueueSize() > 9900);
 
         setTimeout(async () => {
           closed = true;

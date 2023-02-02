@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "fast mariadb or mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -52,8 +52,7 @@
     "@types/node": "^17.0.45",
     "denque": "^2.1.0",
     "iconv-lite": "^0.6.3",
-    "lru-cache": "^7.14.0",
-    "moment-timezone": "^0.5.38"
+    "lru-cache": "^7.14.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.33.1",

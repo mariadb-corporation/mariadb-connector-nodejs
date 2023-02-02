@@ -1,4 +1,4 @@
-module.exports.title = 'select 100 int/varchar(32) - BINARY';
+module.exports.title = 'select 100 int - BINARY';
 module.exports.displaySql = 'select * FROM test100';
 module.exports.requireExecute = true;
 module.exports.benchFct = async function (conn, type, deferred) {

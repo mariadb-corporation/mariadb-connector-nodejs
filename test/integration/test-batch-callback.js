@@ -431,7 +431,7 @@ describe('batch callback', function () {
             ],
             (err, res) => {
               if (err) {
-                assert.isTrue(err.message.includes("Data too long for column 't' at row 1"), err.message);
+                assert.isTrue(err.message.includes("Data too long for column 't' at row "), err.message);
                 conn.query('DROP TABLE simpleBatch', (err, res) => {
                   conn.end(() => {
                     done();

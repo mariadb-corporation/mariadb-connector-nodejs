@@ -1,4 +1,34 @@
 # Change Log
+
+## [3.1.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.2) (Feb 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.2...3.1.0)
+
+## Notable changes
+
+### Timezone handling (CONJS-237)
+
+Connector now set session timezone, solving issue with [time function](https://mariadb.com/kb/en/time-zones/#time-zone-effects-on-functions), 
+removing needs of client side conversion.
+
+This requires that when using timezone options, to having server TZ data filled in case client timezone differ from server.
+
+### Performance
+* CONJS-230 better metadata parsing performance
+* CONJS-229 performance improvement when parsing lots of parameter
+* CONJS-238 faster execution for known length packet
+
+### Other changes
+* CONJS-225 Make result set's meta property non-enumerable
+* CONJS-235 Allow to pass TypeScript generic types without need of "as"
+
+
+## Issues Fixed
+* CONJS-231 executing batch and when parameter can be too long to fit in one mysql packet, parameter can have 4 byte missing 
+* CONJS-236 datatype TIME wrong binary decoding when not having microseconds
+* CONJS-239 When using connection with callback, pre-commands (like `initSql`) might not always be executed first
+* CONJS-232 in case of a long query running, connection.destroy() will close connection, but leaving server still running query for some time
+
+
 ## [3.0.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.2) (Oct 2022)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.1...3.0.2)
 

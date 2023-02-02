@@ -76,28 +76,28 @@ For more information, see the [Batch](/documentation/batch.md) documentation.
 MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including: 
 
 * [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.2.0 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
-* [`mysql2`](https://www.npmjs.com/package/mysql2) version 2.3.3
+* [`mysql2`](https://www.npmjs.com/package/mysql2) version 3.1.0
 
 See the [Benchmarks](./documentation/benchmarks.md) page for multiple results.
 
 #### query
 
 ```
-select 20 * int, 20 * varchar(32)
-            mysql :    3,086 ops/s ± 0.6%
-           mysql2 :  2,799.6 ops/s ± 1.6%  (   -9.3% )
-          mariadb :  4,710.8 ops/s ±   1%  (  +52.7% )
+select 100 int
+            mysql :  2,364.7 ops/s ± 1.6% 
+           mysql2 :  1,977.8 ops/s ± 1.9%  (  -16.4% )
+          mariadb :    3,869 ops/s ± 2.5%  (  +63.6% )
 ```
-![select 20 * int, 20 * varchar(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3086&data2=2800&data3=4711)
+![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2365&data2=1978&data3=3869)
 
 #### execute
 
 ```
-select 20 * int, 20 * varchar(32) using execute
-           mysql2 :    2,998 ops/s ± 1.3%
-          mariadb :  4,419.6 ops/s ±   1%  (  +47.4% )
+select 100 int using execute
+           mysql2 :  2,042.3 ops/s ± 2.3% 
+          mariadb :  8,101.4 ops/s ± 1.2%  ( +296.7% )
 ```
-![select 20 * int, 20 * varchar(32) using execute benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2998&data2=4420)
+![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2042&data2=8101)
 
 
 ## Quick Start
@@ -131,7 +131,7 @@ async function asyncFunction() {
 
 ## Contributing 
 
-If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [Developers Guide.](/documentation/developers-guide.md)
+If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [contributing guide.](/CONTRIBUTING.md)
 
 To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
 

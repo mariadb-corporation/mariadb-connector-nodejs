@@ -56,7 +56,7 @@ describe('prepare and execute', () => {
   it('prepare close, no cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 0 });
     const prepare = await conn.prepare('select ?', [2]);
-    assert.equal(prepare.parameters.length, 1);
+    assert.equal(prepare.parameterCount, 1);
     assert.equal(prepare.columns.length, 1);
     prepare.close();
     conn.end();
@@ -66,7 +66,7 @@ describe('prepare and execute', () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     for (let i = 0; i < 10; i++) {
       const prepare = await conn.prepare('select ' + i + ',?', [i]);
-      assert.equal(prepare.parameters.length, 1);
+      assert.equal(prepare.parameterCount, 1);
       assert.equal(prepare.columns.length, 2);
       prepare.close();
     }
@@ -151,7 +151,7 @@ describe('prepare and execute', () => {
       await conn.query('SET NAMES UTF8');
     }
     const prepare = await conn.prepare('select ? as a');
-    assert.equal(prepare.parameters.length, 1);
+    assert.equal(prepare.parameterCount, 1);
     assert.equal(prepare.columns.length, 1);
 
     let res = await prepare.execute([2]);

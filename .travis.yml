@@ -131,3 +131,6 @@ script:
 
 after_success:
   - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
+
+after_failure:
+  - if [ "$srv" == "maxscale" ] ; then docker-compose -f ${COMPOSE_FILE} exec -u root maxscale tail -500 /var/log/maxscale/maxscale.log; fi

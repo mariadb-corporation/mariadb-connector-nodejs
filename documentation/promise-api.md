@@ -159,13 +159,19 @@ To give an idea, this slows down by 10% a query like 'select * from mysql.user L
 
 ### Timezone consideration
 
-Client and database can have a different timezone.
+If Client and Server share the same timezone, default behavior (`timezone`='local') is the solution.
 
-The connector has different solutions when this is the case.
-the `timezone` option can have the following value:
-* 'local' (default) : connector doesn't do any conversion. If the database has a different timezone, there will be an offset issue. 
-* 'auto' : connector retrieve server timezone. Dates will be converted if server timezone differs from client
-* IANA timezone / offset, example 'America/New_York' or '+06:00'. 
+Problem reside when client and server doesn't share timezone.  
+
+The `timezone` option can have the following value:
+* 'local' (default) : connector doesn't do any conversion. If the database has a different timezone, there will be offset issues. 
+* 'auto' : connector retrieve server timezone, and If client timezone differ from server, connector will set session timezone to client timezone
+* IANA timezone / offset, example 'America/New_York' or '+06:00'. Connector will set session timezone to indicated timezone, It is expected that this timezone correspond to client tz.
+
+Using 'auto' or setting specific timezone solve timezone correction. 
+Please be carefull for fixed timezone: Etc/GMT+12 = GMT-12:00 = -12:00 = offset -12. Etc/GMT have opposite sign !!  
+
+(Before 3.1, connector was converting date to server timezone, but these was not correcting all timezone issues)
 
 ##### IANA timezone / offset
 
@@ -522,7 +528,7 @@ For instance, when using an SQL string:
 
 ```js
 const rows = await conn.query('SELECT NOW()');
-console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
+console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z } ]
 ```
 
 Alternatively, you could use the JSON object:
@@ -532,7 +538,7 @@ const rows = await conn.query({
     dateStrings: true, 
     sql: 'SELECT NOW()'
 });
-console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' }, meta: [ ... ] ]
+console.log(rows); //[ { 'NOW()': '2018-07-02 19:06:38' } ]
 ```
 
 ### Placeholder
@@ -586,7 +592,9 @@ const res = await connection.query('INSERT INTO animals(name) value (?)', ['sea 
 
 ### Array Result-sets 
 
-When the query executes a `SELECT` statement, the method returns the result-set as an array.  Each value in the array is a returned row as a JSON object.  Additionally, the method returns a special `meta` array that contains the [column metadata](#column-metadata) information. 
+When the query executes a `SELECT` statement, the method returns the result-set as an array. 
+Each value in the array is a returned row as a JSON object. 
+Additionally, the method returns a special non-enumerable property `meta` containing metadata array that contains the [column metadata](#column-metadata) information. 
 
 The rows default to JSON objects, but two other formats are also possible with the `nestTables` and `rowsAsArray` options.
 
@@ -595,8 +603,9 @@ const res = await connection.query('select * from animals');
 // res : [
 //    { id: 1, name: 'sea lions' }, 
 //    { id: 2, name: 'bird' }, 
-//    meta: [ ... ]
 // ]
+const meta = res.meta;
+//    meta: [ ... ]
 ```
 
 ### Query options
@@ -675,7 +684,8 @@ await connection.query(
 
 *boolean, default false*
 
-Using this option causes the Connector to format rows in the result-set  as arrays, rather than JSON objects.  Doing so allows you to save memory and avoid having the Connector parse [column metadata](#column-metadata) completely.  It is the fastest row format, (by 5-10%), with a local database.
+Using this option causes the Connector to format rows in the result-set  as arrays, rather than JSON objects. 
+Doing so allows you to save memory and avoid having the Connector parse [column metadata](#column-metadata) completely.  It is the fastest row format, (by 5-10%), with a local database.
 
 Default format : `{ id: 1, name: 'sea lions' }`
 with option `rowsAsArray` : `[ 1, 'sea lions' ]`
@@ -685,8 +695,25 @@ const res = await connection.query({ rowsAsArray: true, sql: 'select * from anim
 // res = [ 
 //    [ 1, 'sea lions' ], 
 //    [ 2, 'bird' ],
-//    meta: [...]
 // ]
+const meta = res.meta;
+//    meta: [...]
+```
+
+#### `metaAsArray`
+
+*boolean, default false*
+
+Compatibility option, causes Promise to return an array object, `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+This option is mainly for mysql2 compatibility.
+
+```javascript
+const [rows, meta] = await connection.query({ metaAsArray: true, sql: 'select * from animals' });
+// rows = [ 
+//    [ 1, 'sea lions' ], 
+//    [ 2, 'bird' ],
+// ]
+// meta = [...]
 ```
 
 #### `nestTables`
@@ -710,9 +737,10 @@ const res = await connection.query({
 //  { 
 //     a: { name: 'bird', id: 2 }, 
 //     b: { name: 'sea lions' } 
-//  },
-//  meta: [...]
+//  }
 //]
+const meta = res.meta;
+//    meta: [...]
 ```
 
 Alternatively, using a string value:
@@ -724,8 +752,7 @@ const res = await connection.query({
 });
 // res = [ 
 //  { a_name: 'sea lions', a_id: 1, b_name: 'sea lions' }, 
-//  { a_name: 'bird', a_id: 2, b_name: 'sea lions' },
-//  meta: [...]
+//  { a_name: 'bird', a_id: 2, b_name: 'sea lions' }
 //]
 ```
 
@@ -817,7 +844,9 @@ When using typeCast, additional function are available on Column, in order to de
 ```js
 const rows = await connection.query("SELECT 1, 'a'");
 // rows = [ 
-//   { '1': 1, a: 'a' },
+//   { '1': 1, a: 'a' }
+// ]
+const meta = rows.meta;
 //   meta: [ 
 //     { 
 //       collation: [Object],
@@ -848,7 +877,7 @@ const rows = await connection.query("SELECT 1, 'a'");
 //       orgName: [Function] 
 //     } 
 //   ] 
-// ]
+
 ```
 
 
@@ -1457,7 +1486,7 @@ const pool = mariadb.createPool({ host: 'mydb.com', user:'myUser' });
 pool
    .query("SELECT NOW()")
    .then(rows => {
-    console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z }, meta: [ ... ] ]
+    console.log(rows); //[ { 'NOW()': 2018-07-02T17:06:38.000Z } ]
    })
    .catch(err => {
     //handle error
@@ -1493,7 +1522,6 @@ res = await pool.query("select * from `parse`");
 res = [ 
     { autoId: 1, c1: 1, c2: 1, c3: 2, c4: 'john', c5: 3 },
     { autoId: 2, c1: 1, c2: 2, c3: 2, c4: 'jack', c5: 3 },
-    meta: ...
   }
 */ 
 ```
@@ -1504,7 +1532,7 @@ res = [
 >  * resolves (no argument)
 >  * rejects with an [Error](#error).
 
-Closes the pool and underlying connections gracefully.
+Closes the pool and underlying connections gracefully if possible, remaining active request after 10s will be killed.
 
 ```javascript
 pool.end()

@@ -18,7 +18,8 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
     stream: (callback) => {
       console.log('test');
       callback(null, null);
-    }
+    },
+    metaEnumerable: true
   });
 }
 
@@ -72,6 +73,9 @@ async function testMisc(): Promise<void> {
   console.log(rows.insertId === 1);
   console.log(rows.affectedRows === 1);
 
+  const res2 = await connection.query<UpsertResult>('INSERT INTO myTable VALUE (1)');
+  console.log(res2.insertId === 1);
+
   rows = await connection.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
 
@@ -93,7 +97,7 @@ async function testMisc(): Promise<void> {
   const prepare = await connection.prepare('INSERT INTO myTable VALUES (?)');
   console.log(prepare.id);
 
-  const insRes = await (<Promise<UpsertResult>>prepare.execute([1]));
+  const insRes = await prepare.execute<Promise<UpsertResult>>([1]);
   console.log(insRes.insertId === 2);
   console.log(insRes.affectedRows === 2);
 
@@ -192,6 +196,13 @@ async function testMisc(): Promise<void> {
     [4, 3]
   ])) as UpsertResult;
   console.log(res.affectedRows);
+
+  const resb = await connection.batch<UpsertResult>('INSERT INTO myTable VALUE (?,?)', [
+    [1, 2],
+    [4, 3]
+  ]);
+  console.log(resb.affectedRows);
+
   await createConnection({ multipleStatements: true });
 
   await createConnection({ debug: true });
