@@ -22,7 +22,7 @@ for (let i = 1; i < 10; i++) {
 sqlInsert = 'INSERT INTO perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
 sqlTable += ', PRIMARY KEY (id))';
 
-module.exports.title = 'insert 10 parameters of 100 characters';
+module.exports.title = 'insert 10 VARCHAR(100)';
 module.exports.displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
 module.exports.benchFct = async function (conn, type, deferred) {
   const params = [];

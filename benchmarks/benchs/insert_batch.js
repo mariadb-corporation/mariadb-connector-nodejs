@@ -13,7 +13,7 @@ function randomString(length) {
 sqlInsert = 'INSERT INTO perfTestTextBatch(t0) VALUES (?)';
 
 module.exports.title =
-  "100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)";
+  "100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)";
 module.exports.displaySql = 'INSERT INTO perfTestTextBatch VALUES (?)';
 const iterations = 100;
 module.exports.benchFct = async function (conn, type, deferred) {
@@ -21,13 +21,13 @@ module.exports.benchFct = async function (conn, type, deferred) {
   // console.log(connType.desc);
   if (type !== 'mariadb') {
     //other driver doesn't have bulk method
-    let ended = 0;
+    const queries = [];
     for (let i = 0; i < iterations; i++) {
-      const rows = await conn.query(sqlInsert, params);
-      if (++ended === iterations) {
-        deferred.resolve(rows);
-      }
+      queries.push(conn.query(sqlInsert, params));
     }
+    const res = await Promise.all(queries);
+    deferred.resolve(res);
+    return;
   } else {
     //use batch capability
     const totalParams = new Array(iterations);
