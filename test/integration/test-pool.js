@@ -187,7 +187,9 @@ describe('Pool', () => {
     pool.query('SELECT SLEEP(15)');
     await new Promise((res) => setTimeout(() => res(), 100));
     await pool.end();
-    assert.equal(process.hrtime(start)[0], 10);
+
+    // on windows, less accurate, so need to have 11 too
+    assert.isTrue(process.hrtime(start)[0] === 10 || process.hrtime(start)[0] === 11);
   });
 
   it('pool escape', function (done) {
