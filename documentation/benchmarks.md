@@ -36,11 +36,14 @@ The MariaDB Node.js Connector was then tested alongside the following MySQL conn
 * [**mysql2**](https://www.npmjs.com/package/mysql2): version 3.1.0
 * [**promise-mysql**](https://www.npmjs.com/package/promise-mysql): version 5.2.0
 
-
+in order to have stable results, environment variable PERF_SAMPLES is set to 500:
+```
+set PERF_SAMPLES=500
+```
 
 ### distant server
 
-root@ubuntu-g-4vcpu-16gb-lon1-01:~/mariadb-connector-nodejs# npm run benchmark
+root@ubuntu-g-4vcpu-16gb-sfo3-cli:~/mariadb-connector-nodejs# npm run benchmark
 
 > mariadb@3.1.0 benchmark
 > node benchmarks/benchmarks-all.js
@@ -48,7 +51,7 @@ root@ubuntu-g-4vcpu-16gb-lon1-01:~/mariadb-connector-nodejs# npm run benchmark
 {
 user: 'root',
 database: 'testn',
-host: '138.68.163.181',
+host: '137.184.6.237',
 connectTimeout: 2000,
 port: 3306,
 charset: 'utf8mb4',
@@ -58,144 +61,145 @@ trace: false
 
 ```
 do 1
-            mysql :  6,438.8 ops/s ± 0.7% 
-           mysql2 :  6,413.8 ops/s ± 0.8%  (   -0.4% )
-          mariadb :  7,102.9 ops/s ± 0.5%  (  +10.3% )
+            mysql :  7,063.6 ops/s ± 0.4% 
+           mysql2 :  6,465.3 ops/s ± 0.6%  (   -8.5% )
+          mariadb :  8,531.9 ops/s ± 0.3%  (  +20.8% )
 ```
-![do 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6439&data2=6414&data3=7103)
+![do 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=7064&data2=6465&data3=8532)
 
 ##  do 1000 parameter
 
 ```
 do 1000 parameter
-            mysql :  1,973.3 ops/s ± 0.4% 
-           mysql2 :  1,914.4 ops/s ± 0.3%  (     -3% )
-          mariadb :  2,176.6 ops/s ± 0.4%  (  +10.3% )
+            mysql :  2,410.3 ops/s ± 0.3% 
+           mysql2 :  2,279.2 ops/s ± 0.6%  (   -5.4% )
+          mariadb :    2,582 ops/s ± 0.6%  (   +7.1% )
 ```
-![do 1000 parameter benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1973&data2=1914&data3=2177)
+![do 1000 parameter benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2410&data2=2279&data3=2582)
 
 ##  do random number with pool
 
 ```
 do <random number> with pool
-            mysql :  5,644.6 ops/s ± 1.4% 
-           mysql2 :  5,485.8 ops/s ± 1.2%  (   -2.8% )
-          mariadb :  6,850.2 ops/s ± 0.8%  (  +21.4% )
+            mysql :  6,726.4 ops/s ± 0.5% 
+           mysql2 :  6,150.5 ops/s ± 0.8%  (   -8.6% )
+          mariadb :  7,463.2 ops/s ± 0.5%  (    +11% )
 ```
-![do <random number> with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5645&data2=5486&data3=6850)
+![do <random number> with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6726&data2=6150&data3=7463)
 
-##  insert 10 parameters of 100 characters
-
-```
-insert 10 parameters of 100 characters
-            mysql :  3,254.4 ops/s ± 0.8% 
-           mysql2 :  3,038.9 ops/s ± 0.8%  (   -6.6% )
-          mariadb :    3,710 ops/s ±   1%  (    +14% )
-```
-![insert 10 parameters of 100 characters benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3254&data2=3039&data3=3710)
-
-##  100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)
+##  insert 10 VARCHAR(100)
 
 ```
-100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)
-            mysql :     60.7 ops/s ± 0.7% 
-           mysql2 :       52 ops/s ± 0.9%  (  -14.3% )
-          mariadb :  3,149.3 ops/s ± 0.5%  ( +5,089.9% )
+insert 10 VARCHAR(100)
+            mysql :  3,799.9 ops/s ± 0.6% 
+           mysql2 :    3,557 ops/s ± 0.6%  (   -6.4% )
+          mariadb :  4,027.9 ops/s ± 0.5%  (     +6% )
 ```
-![100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=61&data2=52&data3=3149)
+![insert 10 VARCHAR(100) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3800&data2=3557&data3=4028)
+
+##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+
+```
+100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+            mysql :     67.8 ops/s ± 0.3% 
+           mysql2 :     66.1 ops/s ± 0.7%  (   -2.4% )
+          mariadb :  3,270.8 ops/s ± 1.3%  ( +4,725% )
+```
+![100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=68&data2=66&data3=3271)
 
 ##  3 * insert 100 characters pipelining
 
 ```
 3 * insert 100 characters pipelining
-            mysql :    1,966 ops/s ± 0.5% 
-           mysql2 :  1,825.3 ops/s ± 0.7%  (   -7.2% )
-          mariadb :  4,393.5 ops/s ± 1.3%  ( +123.5% )
+            mysql :    2,366 ops/s ± 0.5% 
+           mysql2 :  2,066.5 ops/s ± 0.6%  (  -12.7% )
+          mariadb :  4,447.5 ops/s ± 1.5%  (    +88% )
 ```
-![3 * insert 100 characters pipelining benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1966&data2=1825&data3=4394)
+![3 * insert 100 characters pipelining benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2366&data2=2067&data3=4447)
 
-##  select 1
-
-```
-select 1
-            mysql :  5,920.3 ops/s ± 0.8% 
-           mysql2 :  5,085.4 ops/s ± 0.9%  (  -14.1% )
-          mariadb :  6,675.5 ops/s ± 0.4%  (  +12.8% )
-```
-![select 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5920&data2=5085&data3=6675)
-
-##  select 1000 rows
+##  select 1000 rows of CHAR(32)
 
 ```
-select 1000 rows
-            mysql :    825.2 ops/s ± 0.5% 
-           mysql2 :  1,062.1 ops/s ± 2.2%  (  +28.7% )
-          mariadb :    1,399 ops/s ± 0.4%  (  +69.5% )
+select 1000 rows of CHAR(32)
+            mysql :  1,013.8 ops/s ± 0.5% 
+           mysql2 :  1,159.7 ops/s ± 1.3%  (  +14.4% )
+          mariadb :  1,630.6 ops/s ± 0.5%  (  +60.8% )
 ```
-![select 1000 rows benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=825&data2=1062&data3=1399)
+![select 1000 rows of CHAR(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1014&data2=1160&data3=1631)
 
-##  select 1000 rows - BINARY
-
-```
-select 1000 rows - BINARY
-           mysql2 :    1,100 ops/s ± 2.1% 
-          mariadb :    1,176 ops/s ± 0.3%  (   +6.9% )
-```
-![select 1000 rows benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1100&data2=1176)
-
-##  select 100 int - BINARY
+##  select 1000 rows of CHAR(32) - BINARY
 
 ```
-select 100 int - BINARY
-           mysql2 :  1,675.9 ops/s ± 1.7% 
-          mariadb :  4,237.6 ops/s ± 0.5%  ( +152.9% )
+select 1000 rows of CHAR(32) - BINARY
+           mysql2 :  1,125.2 ops/s ± 1.7% 
+          mariadb :  1,421.4 ops/s ± 0.6%  (  +26.3% )
 ```
-![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1676&data2=4238)
+![select 1000 rows of CHAR(32) - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1125&data2=1421)
 
 ##  select 100 int
 
 ```
 select 100 int
-            mysql :  1,829.4 ops/s ± 0.4% 
-           mysql2 :    1,613 ops/s ± 1.9%  (  -11.8% )
-          mariadb :  2,573.9 ops/s ± 0.4%  (  +40.7% )
+            mysql :  2,287.9 ops/s ± 0.6% 
+           mysql2 :  1,795.3 ops/s ± 1.6%  (  -21.5% )
+          mariadb :  3,219.9 ops/s ± 0.8%  (  +40.7% )
 ```
-![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1829&data2=1613&data3=2574)
+![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2288&data2=1795&data3=3220)
 
-##  select 1 int + char
-
-```
-select 1 int + char
-            mysql :  5,597.3 ops/s ± 0.7% 
-           mysql2 :  5,132.8 ops/s ± 1.2%  (   -8.3% )
-          mariadb :  6,352.8 ops/s ± 0.7%  (  +13.5% )
-```
-![select 1 int + char benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5597&data2=5133&data3=6353)
-
-##  select 1 int + char with pool
+##  select 100 int - BINARY
 
 ```
-select 1 int + char with pool
-            mysql :  5,528.3 ops/s ± 0.6% 
-           mysql2 :  5,374.6 ops/s ± 1.6%  (   -2.8% )
-          mariadb :    6,016 ops/s ± 0.5%  (   +8.8% )
+select 100 int - BINARY
+           mysql2 :  1,821.6 ops/s ± 1.7% 
+          mariadb :  5,428.1 ops/s ± 0.6%  (   +198% )
 ```
-![select 1 int + char with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5528&data2=5375&data3=6016)
+![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1822&data2=5428)
 
-##  select 1 random int + char
+##  select 1 int + char(32)
 
 ```
-select 1 random int + char
-            mysql :  5,439.7 ops/s ± 0.7% 
-           mysql2 :  2,492.2 ops/s ± 0.9%  (  -54.2% )
-          mariadb :  6,050.2 ops/s ± 1.6%  (  +11.2% )
+select 1 int + char(32)
+            mysql :  6,281.1 ops/s ± 0.6% 
+           mysql2 :    5,839 ops/s ±   1%  (     -7% )
+          mariadb :  6,862.8 ops/s ± 0.6%  (   +9.3% )
 ```
-![select 1 random int + char benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5440&data2=2492&data3=6050)
+![select 1 int + char(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6281&data2=5839&data3=6863)
+
+##  select 1 int + char(32) with pool
+
+```
+select 1 int + char(32) with pool
+            mysql :  6,572.1 ops/s ± 0.7% 
+           mysql2 :  5,717.6 ops/s ± 1.6%  (    -13% )
+          mariadb :    7,297 ops/s ± 0.6%  (    +11% )
+```
+![select 1 int + char(32) with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6572&data2=5718&data3=7297)
+
+##  select 1 random int + char(32)
+
+```
+select 1 random int + char(32)
+            mysql :  6,142.2 ops/s ± 0.6% 
+           mysql2 :  2,964.6 ops/s ± 1.2%  (  -51.7% )
+          mariadb :    6,781 ops/s ± 0.6%  (  +10.4% )
+```
+![select 1 random int + char(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6142&data2=2965&data3=6781)
+
+##  select now()
+
+```
+select now()
+            mysql :  6,942.1 ops/s ± 0.7% 
+           mysql2 :  6,135.5 ops/s ± 1.1%  (  -11.6% )
+          mariadb :  7,640.5 ops/s ± 0.6%  (  +10.1% )
+```
+![select now() benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6942&data2=6135&data3=7640)
+
 
 ### local server
-root@ubuntu-g-4vcpu-16gb-lon1-01:~/mariadb-connector-nodejs# npm run benchmark
+root@ubuntu-g-4vcpu-16gb-sfo3-cli:~/mariadb-connector-nodejs# npm run benchmark
 
-> mariadb@3.0.2 benchmark
+> mariadb@3.1.0 benchmark
 > node benchmarks/benchmarks-all.js
 
 {
@@ -210,137 +214,137 @@ trace: false
 
 ```
 do 1
-            mysql : 25,149.8 ops/s ± 2.5% 
-           mysql2 : 19,974.2 ops/s ± 1.9%  (  -20.6% )
-          mariadb : 35,398.9 ops/s ± 1.7%  (  +40.8% )
+            mysql : 26,415.6 ops/s ± 1.2% 
+           mysql2 : 21,160.5 ops/s ± 1.2%  (  -19.9% )
+          mariadb : 34,484.5 ops/s ± 1.2%  (  +30.5% )
 ```
-![do 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=25150&data2=19974&data3=35399)
+![do 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=26416&data2=21161&data3=34484)
 
 ##  do 1000 parameter
 
 ```
 do 1000 parameter
-            mysql :  2,769.3 ops/s ± 0.4% 
-           mysql2 :  2,626.3 ops/s ± 1.5%  (   -5.2% )
-          mariadb :  2,866.5 ops/s ± 1.3%  (   +3.5% )
+            mysql :  3,111.2 ops/s ± 1.1% 
+           mysql2 :  3,071.3 ops/s ±   1%  (   -1.3% )
+          mariadb :  3,470.3 ops/s ± 1.1%  (  +11.5% )
 ```
-![do 1000 parameter benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2769&data2=2626&data3=2866)
+![do 1000 parameter benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3111&data2=3071&data3=3470)
 
 ##  do random number with pool
 
 ```
 do <random number> with pool
-            mysql : 22,561.2 ops/s ± 2.5% 
-           mysql2 : 18,812.9 ops/s ± 2.1%  (  -16.6% )
-          mariadb : 30,034.5 ops/s ± 2.5%  (  +33.1% )
+            mysql : 24,798.3 ops/s ± 1.2% 
+           mysql2 : 20,368.8 ops/s ± 1.3%  (  -17.9% )
+          mariadb : 30,820.4 ops/s ± 1.1%  (  +24.3% )
 ```
-![do <random number> with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=22561&data2=18813&data3=30035)
+![do <random number> with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=24798&data2=20369&data3=30820)
 
-##  insert 10 parameters of 100 characters
-
-```
-insert 10 parameters of 100 characters
-            mysql :  6,192.6 ops/s ± 1.8% 
-           mysql2 :  5,272.1 ops/s ± 2.4%  (  -14.9% )
-          mariadb :  6,577.3 ops/s ± 2.8%  (   +6.2% )
-```
-![insert 10 parameters of 100 characters benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6193&data2=5272&data3=6577)
-
-##  100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)
+##  insert 10 VARCHAR(100)
 
 ```
-100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists)
-            mysql :    182.2 ops/s ±   2% 
-           mysql2 :    139.7 ops/s ± 2.8%  (  -23.3% )
-          mariadb :    5,322 ops/s ± 2.2%  ( +2,820.3% )
+insert 10 VARCHAR(100)
+            mysql :  7,043.9 ops/s ± 1.1% 
+           mysql2 :  5,988.2 ops/s ± 1.6%  (    -15% )
+          mariadb :  7,734.1 ops/s ± 1.3%  (   +9.8% )
 ```
-![100 * insert 100 characters using batch method (for mariadb) or loop for other driver (batch doesn't exists) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=182&data2=140&data3=5322)
+![insert 10 VARCHAR(100) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=7044&data2=5988&data3=7734)
+
+##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+
+```
+100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+            mysql :      219 ops/s ± 0.9% 
+           mysql2 :    173.6 ops/s ± 1.4%  (  -20.7% )
+          mariadb :  6,489.8 ops/s ± 1.2%  ( +2,863% )
+```
+![100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=219&data2=174&data3=6490)
 
 ##  3 * insert 100 characters pipelining
 
 ```
 3 * insert 100 characters pipelining
-            mysql :  6,314.2 ops/s ± 1.8% 
-           mysql2 :  5,323.2 ops/s ± 2.8%  (  -15.7% )
-          mariadb :  8,881.5 ops/s ± 5.6%  (  +40.7% )
+            mysql :  6,940.5 ops/s ±   1% 
+           mysql2 :  6,111.9 ops/s ± 1.5%  (  -11.9% )
+          mariadb : 12,327.3 ops/s ± 1.4%  (  +77.6% )
 ```
-![3 * insert 100 characters pipelining benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6314&data2=5323&data3=8881)
+![3 * insert 100 characters pipelining benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=6940&data2=6112&data3=12327)
 
-##  select 1
-
-```
-select 1
-            mysql : 18,948.5 ops/s ± 1.7% 
-           mysql2 : 13,798.8 ops/s ±   3%  (  -27.2% )
-          mariadb : 25,623.5 ops/s ± 1.5%  (  +35.2% )
-```
-![select 1 benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=18948&data2=13799&data3=25623)
-
-##  select 1000 rows
+##  select 1000 rows of CHAR(32)
 
 ```
-select 1000 rows
-            mysql :  1,000.9 ops/s ± 1.1% 
-           mysql2 :  1,203.7 ops/s ± 2.2%  (  +20.3% )
-          mariadb :    1,739 ops/s ± 1.7%  (  +73.7% )
+select 1000 rows of CHAR(32)
+            mysql :  1,140.7 ops/s ± 0.9% 
+           mysql2 :  1,474.5 ops/s ± 1.5%  (  +29.3% )
+          mariadb :  2,185.2 ops/s ± 1.1%  (  +91.6% )
 ```
-![select 1000 rows benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1001&data2=1204&data3=1739)
+![select 1000 rows of CHAR(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=1141&data2=1475&data3=2185)
 
-##  select 1000 rows - BINARY
-
-```
-select 1000 rows - BINARY
-           mysql2 :  1,245.1 ops/s ± 2.6% 
-          mariadb :  1,470.6 ops/s ± 1.2%  (  +18.1% )
-```
-![select 1000 rows benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1245&data2=1471)
-
-##  select 100 int - BINARY
+##  select 1000 rows of CHAR(32) - BINARY
 
 ```
-select 100 int - BINARY
-           mysql2 :  2,042.3 ops/s ± 2.3% 
-          mariadb :  8,101.4 ops/s ± 1.2%  ( +296.7% )
+select 1000 rows of CHAR(32) - BINARY
+           mysql2 :    1,439 ops/s ± 1.6% 
+          mariadb :  1,797.5 ops/s ± 0.6%  (  +24.9% )
 ```
-![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2042&data2=8101)
+![select 1000 rows of CHAR(32) - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=1439&data2=1797)
 
 ##  select 100 int
 
 ```
 select 100 int
-            mysql :  2,364.7 ops/s ± 1.6% 
-           mysql2 :  1,977.8 ops/s ± 1.9%  (  -16.4% )
-          mariadb :    3,869 ops/s ± 2.5%  (  +63.6% )
+            mysql :  2,738.7 ops/s ± 1.3% 
+           mysql2 :  2,404.9 ops/s ± 1.3%  (  -12.2% )
+          mariadb :  5,650.8 ops/s ± 1.4%  ( +106.3% )
 ```
-![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2365&data2=1978&data3=3869)
+![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2739&data2=2405&data3=5651)
 
-##  select 1 int + char
-
-```
-select 1 int + char
-            mysql : 18,398.6 ops/s ± 1.2% 
-           mysql2 : 12,778.7 ops/s ± 2.6%  (  -30.5% )
-          mariadb : 22,981.5 ops/s ± 1.8%  (  +24.9% )
-```
-![select 1 int + char benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=18399&data2=12779&data3=22982)
-
-##  select 1 int + char with pool
+##  select 100 int - BINARY
 
 ```
-select 1 int + char with pool
-            mysql : 17,036.2 ops/s ± 1.9% 
-           mysql2 : 12,545.6 ops/s ± 2.5%  (  -26.4% )
-          mariadb : 23,153.1 ops/s ± 1.4%  (  +35.9% )
+select 100 int - BINARY
+           mysql2 :  2,473.4 ops/s ± 1.3% 
+          mariadb :   10,533 ops/s ± 1.7%  ( +325.9% )
 ```
-![select 1 int + char with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=17036&data2=12546&data3=23153)
+![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2473&data2=10533)
 
-##  select 1 random int + char
+##  select 1 int + char(32)
 
 ```
-select 1 random int + char
-            mysql : 14,464.2 ops/s ± 2.9% 
-           mysql2 :  3,822.3 ops/s ± 1.7%  (  -73.6% )
-          mariadb : 19,917.9 ops/s ± 2.2%  (  +37.7% )
+select 1 int + char(32)
+            mysql : 19,504.9 ops/s ±   1% 
+           mysql2 : 15,340.4 ops/s ± 1.5%  (  -21.4% )
+          mariadb : 24,799.3 ops/s ± 0.4%  (  +27.1% )
 ```
-![select 1 random int + char benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=14464&data2=3822&data3=19918)
+![select 1 int + char(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=19505&data2=15340&data3=24799)
+
+##  select 1 int + char(32) with pool
+
+```
+select 1 int + char(32) with pool
+            mysql :   19,272 ops/s ±   1% 
+           mysql2 : 14,560.2 ops/s ± 1.7%  (  -24.4% )
+          mariadb : 24,219.4 ops/s ± 0.8%  (  +25.7% )
+```
+![select 1 int + char(32) with pool benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=19272&data2=14560&data3=24219)
+
+##  select 1 random int + char(32)
+
+```
+select 1 random int + char(32)
+            mysql : 17,599.9 ops/s ± 1.4% 
+           mysql2 :  4,828.1 ops/s ± 1.5%  (  -72.6% )
+          mariadb : 21,099.5 ops/s ± 1.4%  (  +19.9% )
+```
+![select 1 random int + char(32) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=17600&data2=4828&data3=21100)
+
+##  select now()
+
+```
+select now()
+            mysql : 18,902.6 ops/s ± 1.8% 
+           mysql2 : 15,491.6 ops/s ± 1.6%  (    -18% )
+          mariadb : 25,456.7 ops/s ± 0.6%  (  +34.7% )
+```
+![select now() benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=18903&data2=15492&data3=25457)
 

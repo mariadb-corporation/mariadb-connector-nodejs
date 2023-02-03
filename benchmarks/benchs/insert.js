@@ -11,13 +11,13 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text';
+let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 varchar(100))';
 let sqlParam = '';
 let sqlCol = 't0';
 for (let i = 1; i < 10; i++) {
   sqlParam += ',?';
   sqlCol += ',t' + i;
-  sqlTable += ',t' + i + ' text';
+  sqlTable += ',t' + i + ' varchar(100)';
 }
 sqlInsert = 'INSERT INTO perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
 sqlTable += ', PRIMARY KEY (id))';
