@@ -11,7 +11,7 @@ function randomString(length) {
   return result;
 }
 
-let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 varchar(100))';
+let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 varchar(100)';
 let sqlParam = '';
 let sqlCol = 't0';
 for (let i = 1; i < 10; i++) {
