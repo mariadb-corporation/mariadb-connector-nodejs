@@ -98,8 +98,12 @@ describe('prepare and execute', () => {
     await prepare.execute('1');
     await prepare.close();
 
-    //in cache, so must still work
-    await prepare.execute('1');
+    try {
+      await prepare.execute('1');
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
 
     await conn.execute('select 1, ?', ['2']);
     await conn.execute('select 2, ?', ['2']);
@@ -125,23 +129,87 @@ describe('prepare and execute', () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     let prepare = await conn.prepare('select ?', [1]);
     const initialPrepareId = prepare.id;
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
 
     prepare.close();
-    await conn.prepare('select ? + 1', [1]);
-    await conn.prepare('select ? + 2', [1]);
-    await conn.prepare('select ? + 3', [1]);
-    await conn.prepare({ sql: 'select ? + 3' }, [1]);
-    await conn.prepare({ sql: 'select 4' });
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+
+    prepare.close();
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
 
     prepare = await conn.prepare('select ?', [1]);
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+
+    let prepare_2 = await conn.prepare('select ?', [1]);
+    assert.equal(prepare_2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+
+    prepare.close();
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+
+    prepare_2.close();
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+
+    prepare = await conn.prepare('select ? + 1', [1]);
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ? + 1],[testn|select ?]}');
+
+    let preparePlus2 = await conn.prepare('select ? + 2', [1]);
+    assert.equal(preparePlus2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal('info{cache:[testn|select ? + 2],[testn|select ? + 1]}', conn.prepareCache.toString());
+
+    let prepare3 = await conn.prepare('select ? + 3', [1]);
+    assert.equal(prepare3.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal('info{cache:[testn|select ? + 3],[testn|select ? + 2]}', conn.prepareCache.toString());
+
+    let prepare2 = await conn.prepare({ sql: 'select ? + 2' }, [1]);
+    assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
+    assert.equal('info{cache:[testn|select ? + 2],[testn|select ? + 3]}', conn.prepareCache.toString());
+
+    prepare = await conn.prepare({ sql: 'select 4' });
+    assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select 4],[testn|select ? + 2]}');
+    assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
+    assert.equal(prepare3.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:false}}');
+
+    prepare = await conn.prepare('select ?', [1]);
+    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?],[testn|select 4]}');
+    assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:false}}');
+    prepare2.close();
+    assert.equal(prepare2.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:false}}');
+    preparePlus2.close();
+    assert.equal(preparePlus2.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:false}}');
+
     assert.notEqual(prepare.id, initialPrepareId);
     const secondPrepareId = prepare.id;
     for (let i = 0; i < 10; i++) {
       const prepare2 = await conn.prepare('select ?', [i]);
+      assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?],[testn|select 4]}');
+      assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
       assert.equal(prepare2.id, secondPrepareId);
       prepare2.close();
+      assert.equal(prepare2.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:true}}');
+      prepare2.close();
+      assert.equal(prepare2.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:true}}');
     }
     conn.end();
+  });
+
+  it('prepare no cache', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0 });
+    let prepare = await conn.prepare('select ?', [1]);
+    assert.equal(prepare.toString(), 'Prepare{closed:false}');
+    prepare.close();
+    assert.equal(prepare.toString(), 'Prepare{closed:true}');
+    prepare.close();
+    assert.equal(prepare.toString(), 'Prepare{closed:true}');
+    await conn.end();
   });
 
   it('basic prepare and execute', async () => {

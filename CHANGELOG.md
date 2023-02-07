@@ -21,12 +21,13 @@ This requires that when using timezone options, to having server TZ data filled 
 * CONJS-225 Make result set's meta property non-enumerable
 * CONJS-235 Allow to pass TypeScript generic types without need of "as"
 
-
 ## Issues Fixed
 * CONJS-231 executing batch and when parameter can be too long to fit in one mysql packet, parameter can have 4 byte missing 
 * CONJS-236 datatype TIME wrong binary decoding when not having microseconds
 * CONJS-239 When using connection with callback, pre-commands (like `initSql`) might not always be executed first
 * CONJS-232 in case of a long query running, connection.destroy() will close connection, but leaving server still running query for some time
+* CONJS-240 adding a Prepare result wrapper to avoid multiple close issue with cache
+* CONJS-241 metaAsArray missing option in typescript description
 
 
 ## [3.0.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.2) (Oct 2022)

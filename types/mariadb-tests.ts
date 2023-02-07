@@ -242,6 +242,43 @@ async function testTypeCast(): Promise<void> {
   }
 }
 
+async function testRowsAsArray(): Promise<void> {
+  const connection = await createConnection({ rowsAsArray: true });
+
+  const rows = await connection.query<[string, string][]>(`SELECT 'upper' as upper, 'lower' as lower`);
+
+  if (rows[0][0] !== 'upper') {
+    throw new Error('wrong value');
+  }
+
+  const rows2 = await connection.query<[string, string][]>({
+    sql: `SELECT 'upper' as upper, 'lower' as lower`,
+    rowsAsArray: true
+  });
+
+  if (rows2[0][0] !== 'upper') {
+    throw new Error('wrong value');
+  }
+}
+
+async function metaAsArray(): Promise<void> {
+  const connection = await createConnection({ metaAsArray: true });
+
+  const res = await connection.query<[[string, string][], FieldInfo[]]>(`SELECT 'upper' as upper, 'lower' as lower`);
+
+  if (res[1].length > 0) {
+    throw new Error('expected meta');
+  }
+
+  const res2 = await connection.query<[[string, string][], FieldInfo[]]>({
+    sql: `SELECT 'upper' as upper, 'lower' as lower`,
+    metaAsArray: true
+  });
+  if (res2[1].length > 0) {
+    throw new Error('expected meta');
+  }
+}
+
 async function testPool(): Promise<void> {
   let pool;
 
@@ -343,6 +380,8 @@ async function runTests(): Promise<void> {
     await testTypeCast();
     await testPool();
     await testPoolCluster();
+    await testRowsAsArray();
+    await metaAsArray();
 
     console.log('done');
   } catch (err) {

@@ -710,8 +710,8 @@ This option is mainly for mysql2 compatibility.
 ```javascript
 const [rows, meta] = await connection.query({ metaAsArray: true, sql: 'select * from animals' });
 // rows = [ 
-//    [ 1, 'sea lions' ], 
-//    [ 2, 'bird' ],
+//    {'id': 1, 'name': 'sea lions' }, 
+//    {'id': 2, 'name': 'bird' },
 // ]
 // meta = [...]
 ```
