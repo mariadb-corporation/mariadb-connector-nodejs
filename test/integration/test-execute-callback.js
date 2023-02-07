@@ -163,34 +163,35 @@ describe('prepare and execute callback', () => {
           prepare.close();
           prepare.execute('1', (err, res) => {
             if (err) {
-              done(err);
+              assert.isTrue(err.message.includes('Execute fails, prepare command as already been closed'));
             } else {
-              //remove from cache
-              conn.execute('select 1, ?', ['2']);
-              conn.execute('select 2, ?', ['2']);
-              conn.execute('select 3, ?', ['2']);
-              conn.execute('select 4, ?', ['2'], (err, res) => {
-                //removed from cache, must really be closed
-                prepare.execute('1', (err, res) => {
-                  if (!err) {
-                    done(new Error('must have thrown error'));
-                  } else {
-                    assert.isTrue(err.message.includes('Execute fails, prepare command as already been closed'));
-                    conn.prepare('select ?', (err, prepare2) => {
-                      if (err) {
-                        done(err);
-                      } else {
-                        prepare2.execute('1', (res) => {
-                          prepare2.close();
-                          conn.end();
-                          done();
-                        });
-                      }
-                    });
-                  }
-                });
-              });
+              done(new Error('expect to have thrown an error'));
             }
+            //remove from cache
+            conn.execute('select 1, ?', ['2']);
+            conn.execute('select 2, ?', ['2']);
+            conn.execute('select 3, ?', ['2']);
+            conn.execute('select 4, ?', ['2'], (err, res) => {
+              //removed from cache, must really be closed
+              prepare.execute('1', (err, res) => {
+                if (!err) {
+                  done(new Error('must have thrown error'));
+                } else {
+                  assert.isTrue(err.message.includes('Execute fails, prepare command as already been closed'));
+                  conn.prepare('select ?', (err, prepare2) => {
+                    if (err) {
+                      done(err);
+                    } else {
+                      prepare2.execute('1', (res) => {
+                        prepare2.close();
+                        conn.end();
+                        done();
+                      });
+                    }
+                  });
+                }
+              });
+            });
           });
         });
       });
