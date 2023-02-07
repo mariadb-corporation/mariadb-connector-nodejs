@@ -45,6 +45,13 @@ export interface QueryConfig {
   rowsAsArray?: boolean;
 
   /**
+   * Compatibility option, causes Promise to return an array object,
+   * `[rows, metadata]` rather than the rows as JSON objects with a `meta` property.
+   * Default to false.
+   */
+  metaAsArray?: boolean;
+
+  /**
    * force returning insertId as Number in place of BigInt
    */
   insertIdAsNumber?: boolean;
@@ -374,6 +381,11 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * Default to false.
    */
   metaAsArray?: boolean;
+
+  /**
+   * Return result-sets as array, rather than a JSON object. This is a faster way to get results
+   */
+  rowsAsArray?: boolean;
 }
 
 export interface PoolConfig extends ConnectionConfig {
