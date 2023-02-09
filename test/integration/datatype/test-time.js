@@ -15,12 +15,13 @@ describe('time', () => {
     await shareConn.query('INSERT INTO time_data VALUES (?, ?)', ['-1:00:00', '25:00:00']);
     let results = await shareConn.query('SELECT * FROM time_data');
     assert.equal(results[0].t1, '-838:59:58.000000');
-    assert.equal(results[0].t2, '-838:59:59.999999');
+
+    assert.equal(results[0].t2, isXpand() ? '-838:59:59.000000' : '-838:59:59.999999');
     assert.equal(results[1].t1, '-01:00:00.000000');
     assert.equal(results[1].t2, '25:00:00.000000');
     results = await shareConn.execute('SELECT * FROM time_data');
     assert.equal(results[0].t1, '-838:59:58');
-    assert.equal(results[0].t2, '-838:59:59.999999');
+    assert.equal(results[0].t2, isXpand() ? '-838:59:59' : '-838:59:59.999999');
     assert.equal(results[1].t1, '-01:00:00');
     assert.equal(results[1].t2, '25:00:00');
   });

@@ -6,7 +6,7 @@ const baseCallback = require('../../../callback');
 const Collations = require('../../../lib/const/collations.js');
 
 describe('test options', () => {
-  it('default options', () => {
+  it('default options', function () {
     if (process.env.srv === 'xpand') this.skip();
     const defaultOpts = basePromise.defaultOptions({ timezone: '+00:00' });
     const defaultOptsCall = baseCallback.defaultOptions({ timezone: '+00:00' });

@@ -52,7 +52,6 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: srv=build
-    - env: srv=xpand RUN_LONG_TEST=0
   include:
     - stage: Minimal
       env: srv=mariadb v=10.6 local=1

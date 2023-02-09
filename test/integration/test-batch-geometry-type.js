@@ -15,6 +15,8 @@ describe('batch geometry type', () => {
   });
 
   it('Point format', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_point_batch');
     await shareConn.query('CREATE TABLE gis_point_batch  (g POINT)');
@@ -106,6 +108,8 @@ describe('batch geometry type', () => {
   });
 
   it('LineString insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_line_batch');
     await shareConn.query('CREATE TABLE gis_line_batch (g LINESTRING)');
@@ -208,6 +212,8 @@ describe('batch geometry type', () => {
   });
 
   it('Polygon insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon_batch');
     await shareConn.query('CREATE TABLE gis_polygon_batch (g POLYGON)');
@@ -388,6 +394,8 @@ describe('batch geometry type', () => {
   });
 
   it('MultiPoint insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_point_batch');
     await shareConn.query('CREATE TABLE gis_multi_point_batch (g MULTIPOINT)');
@@ -485,6 +493,8 @@ describe('batch geometry type', () => {
   });
 
   it('Multi-line insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_line_batch');
     await shareConn.query('CREATE TABLE gis_multi_line_batch (g MULTILINESTRING)');
@@ -639,6 +649,8 @@ describe('batch geometry type', () => {
   });
 
   it('Multi-polygon insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_polygon_batch');
     await shareConn.query('CREATE TABLE gis_multi_polygon_batch (g MULTIPOLYGON)');
@@ -906,6 +918,8 @@ describe('batch geometry type', () => {
   });
 
   it('Geometry collection insert', async function () {
+    // xpand doesn't support geometry
+    // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
 
     const conn = await base.createConnection();

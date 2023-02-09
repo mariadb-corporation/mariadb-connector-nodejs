@@ -2,7 +2,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
@@ -343,7 +342,10 @@ describe('connection option', () => {
               done(new Error('must have thrown error'));
             })
             .catch((err) => {
-              assert.isTrue(err.message.includes('Cannot use timeout for MySQL server'));
+              assert.isTrue(
+                err.message.includes('Cannot use timeout for MySQL server') ||
+                  err.message.includes('Cannot use timeout for xpand/MariaDB')
+              );
               assert.equal(err.errno, 45038);
               assert.equal(err.sqlState, 'HY000');
               assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');

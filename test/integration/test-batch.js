@@ -447,10 +447,6 @@ describe('batch', function () {
       maxAllowedPacket: 16 * 1024 * 1024,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -486,10 +482,6 @@ describe('batch', function () {
       bulk: useBulk,
       maxAllowedPacket: 4 * 1024 * 1024
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -524,10 +516,6 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
@@ -627,10 +615,6 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     try {
       await conn.batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
       throw new Error('must have thrown error !');
@@ -647,10 +631,6 @@ describe('batch', function () {
 
   const simpleNamedPlaceHolders = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS simpleNamedPlaceHolders');
     conn.query(
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -686,11 +666,6 @@ describe('batch', function () {
 
   const simpleNamedPlaceHoldersErr = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
-
     try {
       await conn.batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
         { param_1: 1, param_2: 'john' },
@@ -713,11 +688,6 @@ describe('batch', function () {
 
   const more16MNamedPlaceHolders = async function (useBulk) {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
-
     conn.query('DROP TABLE IF EXISTS more16MNamedPlaceHolders');
     conn.query(
       'CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -788,10 +758,6 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
 
     await conn.query('DROP TABLE IF EXISTS blabla');
     await conn.query('CREATE TABLE blabla(i int, i2 int, i3 int, s1 TEXT, s2 TEXT, i4 int)');
@@ -1190,10 +1156,6 @@ describe('batch', function () {
       const t = makeid(100);
       const conn = await base.createConnection({ bulk: false, maxAllowedPacket: 150 });
 
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        await conn.query('SET NAMES UTF8');
-      }
       await conn.query('DROP TABLE IF EXISTS my_table');
       await conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
       await conn.query('FLUSH TABLES');

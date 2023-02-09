@@ -11,7 +11,7 @@ const { isXpand } = require('../base');
 
 describe('Pool event', () => {
   before(function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
   });
 
   it('pool connection creation', function (done) {

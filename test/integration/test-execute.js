@@ -214,10 +214,6 @@ describe('prepare and execute', () => {
 
   it('basic prepare and execute', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     const prepare = await conn.prepare('select ? as a');
     assert.equal(prepare.parameterCount, 1);
     assert.equal(prepare.columns.length, 1);
@@ -239,10 +235,6 @@ describe('prepare and execute', () => {
 
   it('direct execution without cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     let res = await conn.execute('select ? as a', [2]);
     assert.isTrue(res[0].a === 2 || res[0].a === 2n);
 
@@ -258,10 +250,7 @@ describe('prepare and execute', () => {
 
   it('direct execution with cache', async () => {
     const conn = await base.createConnection({});
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     let res = await conn.execute('select ? as a', [2]);
     assert.isTrue(res[0].a === 2 || res[0].a === 2n);
 
@@ -296,10 +285,7 @@ describe('prepare and execute', () => {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, 2n]);
@@ -345,10 +331,7 @@ describe('prepare and execute', () => {
     }
     const stVal = val.toString();
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, stVal]);
@@ -369,10 +352,7 @@ describe('prepare and execute', () => {
     const stVal = val.toString();
 
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, stVal]);
@@ -387,10 +367,7 @@ describe('prepare and execute', () => {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, 2.156]);
@@ -408,10 +385,7 @@ describe('prepare and execute', () => {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, 'test']);
@@ -427,10 +401,7 @@ describe('prepare and execute', () => {
     if (isXpand()) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0, charset: 'big5' });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, 'test']);
@@ -446,10 +417,7 @@ describe('prepare and execute', () => {
     this.timeout(30000);
     const date3 = new Date('2001-12-31 23:59:59.123456');
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, date3]);
@@ -464,10 +432,7 @@ describe('prepare and execute', () => {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0 });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
+
     await conn.query('START TRANSACTION');
     const prepare = await conn.prepare('INSERT INTO big_test_table2 (a,b) VALUES (?, ?)');
     await prepare.execute([bigVal, true]);

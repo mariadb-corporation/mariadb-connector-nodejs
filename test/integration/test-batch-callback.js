@@ -79,10 +79,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS simpleBatch');
       conn.query(
         'CREATE TABLE simpleBatch(' +
@@ -222,10 +218,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
       conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
       conn.query('FLUSH TABLES');
@@ -293,10 +285,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS simpleBatchCP1251');
       conn.query('CREATE TABLE simpleBatchCP1251(t varchar(128), id int) CHARSET utf8mb4');
       conn.query('FLUSH TABLES');
@@ -345,10 +333,6 @@ describe('batch callback', function () {
     const conn = base.createCallbackConnection({ trace: true, bulk: useBulk });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.batch(
         'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)',
         [
@@ -385,10 +369,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS simpleBatch');
       conn.query(
         'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(8), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
@@ -474,10 +454,6 @@ describe('batch callback', function () {
 
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS nonRewritableBatch');
       conn.query('CREATE TABLE nonRewritableBatch(id int, t varchar(256))');
       conn.batch(
@@ -518,10 +494,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       const values = [];
       for (let i = 0; i < 1000000; i++) {
         values.push([i, 'abcdefghijkflmnopqrtuvwxyz🤘💪']);
@@ -557,10 +529,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS batchWithStream');
       conn.query(
         'CREATE TABLE batchWithStream(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
@@ -625,10 +593,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.batch(
         'INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)',
         [
@@ -664,10 +628,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS simpleNamedPlaceHolders');
       conn.query(
         'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -729,10 +689,6 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8', () => {});
-      }
       conn.batch(
         'INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)',
         [
@@ -768,10 +724,7 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
+
       conn.query('DROP TABLE IF EXISTS nonRewritableHoldersErr');
       conn.query('CREATE TABLE nonRewritableHoldersErr(id int, t varchar(256))');
       conn.batch(
@@ -814,10 +767,7 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
+
       conn.query('DROP TABLE IF EXISTS streamNamedPlaceHolders');
       conn.query(
         'CREATE TABLE streamNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int, id5 int) CHARSET utf8mb4'
@@ -880,10 +830,7 @@ describe('batch callback', function () {
     });
     conn.connect(function (err) {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
+
       conn.batch(
         'INSERT INTO blabla values (1, :id1, 2, :id3, :id4, 3)',
         [
@@ -913,6 +860,8 @@ describe('batch callback', function () {
   describe('standard question mark using bulk', () => {
     const useCompression = false;
     it('simple batch, local date', function (done) {
+      // xpand doesn't support geometry
+      // https://jira.mariadb.org/browse/XPT-12
       if (!base.utf8Collation() || isXpand()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
@@ -973,6 +922,7 @@ describe('batch callback', function () {
     });
 
     it('simple batch encoding CP1251', function (done) {
+      // xpand doesn't support CP1251 encoding
       if (isXpand()) this.skip();
       simpleBatchEncodingCP1251(useCompression, true, 'local', done);
     });
@@ -988,6 +938,8 @@ describe('batch callback', function () {
 
     it('simple batch error message packet split', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      // xpand doesn't support geometry
+      // https://jira.mariadb.org/browse/XPT-12
       if (isXpand()) this.skip();
       simpleBatchErrorSplit(useCompression, true, 'local', done);
     });
@@ -1063,10 +1015,6 @@ describe('batch callback', function () {
 
     it('immediate batch after callback', function (done) {
       let conn = base.createCallbackConnection();
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.query('DROP TABLE IF EXISTS contacts');
       conn.query(
         'CREATE TABLE contacts(' +

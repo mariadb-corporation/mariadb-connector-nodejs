@@ -207,7 +207,7 @@ describe('connection', () => {
   });
 
   it('connection error event socket failed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     base
       .createConnection({ socketTimeout: 100 })
       .then((conn) => {
@@ -823,7 +823,8 @@ describe('connection', () => {
 
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
+      this.skip();
     this.timeout(10000);
 
     const res = await shareConn.query('select @@max_connections as a');

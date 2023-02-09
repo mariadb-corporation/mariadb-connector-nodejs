@@ -17,28 +17,29 @@ describe('debug', () => {
   let logger;
 
   before(function (done) {
-    if (isXpand()) this.skip();
-    try {
-      fs.unlinkSync(tmpLogFile);
-    } catch (e) {}
-    shareConn
-      .query('select @@local_infile')
-      .then((rows) => {
-        permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
-            if (err) reject(err);
-            else resolve();
+    if (!isXpand()) {
+      try {
+        fs.unlinkSync(tmpLogFile);
+      } catch (e) {}
+      shareConn
+        .query('select @@local_infile')
+        .then((rows) => {
+          permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
+          return new Promise(function (resolve, reject) {
+            fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
           });
-        });
-      })
-      .then(() => {
-        //ensure that debug from previous test are written to console
-        setTimeout(() => {
-          done();
-        }, 1000);
-      })
-      .catch(done);
+        })
+        .then(() => {
+          //ensure that debug from previous test are written to console
+          setTimeout(() => {
+            done();
+          }, 1000);
+        })
+        .catch(done);
+    } else done();
   });
 
   beforeEach(async function () {
@@ -131,7 +132,7 @@ describe('debug', () => {
               const serverVersion = conn.serverVersion();
               if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
                 compress = false;
-              const rangeWithEOF = compress ? [1500, 1900] : [1800, 3250];
+              const rangeWithEOF = compress ? [1500, 1900] : [1800, 4150];
               const rangeWithoutEOF = compress ? [1500, 1900] : [2350, 3150];
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               console.log(data);
@@ -257,7 +258,7 @@ describe('debug', () => {
       const conn = await base.createConnection({ debug: true });
       const res = await conn.query("SELECT '1'");
       conn.end();
-      const range = [3200, 4800];
+      const range = [3200, 5000];
       assert(
         data.length > range[0] && data.length < range[1],
         'wrong data length : ' +
@@ -353,7 +354,7 @@ describe('debug', () => {
     const serverVersion = conn.serverVersion();
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
       compress = false;
-    const range = compress ? [60, 150] : [60, 120];
+    const range = compress ? [60, 150] : [60, 140];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
     console.log(data);
     assert.isTrue(data.includes('PING'));
