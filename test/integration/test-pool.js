@@ -9,6 +9,7 @@ const path = require('path');
 const os = require('os');
 const Proxy = require('../tools/proxy');
 const { isXpand } = require('../base');
+const { baseConfig } = require('../conf');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -100,6 +101,132 @@ describe('Pool', () => {
     } finally {
       await pool.end();
     }
+  });
+
+  it('prepare cache reuse', async () => {
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2
+    });
+    await pool.execute('select ?', [1]);
+    const conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    conn.release();
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+
+    await pool.execute('select ? + 1', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ? + 1],[${baseConfig.database}|select ?]}`
+    );
+
+    await pool.execute('select ? + 2', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 1]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute('select ? + 3', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 3],[${baseConfig.database}|select ? + 2]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select ? + 2' }, [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 3]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select 4' });
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select 4],[${baseConfig.database}|select ? + 2]}`
+    );
+
+    await pool.execute('select ?', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+    );
+    for (let i = 0; i < 10; i++) {
+      pool.execute('select ?', [i]);
+      assert.equal(
+        prepareCache.toString(),
+        `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+      );
+    }
+    pool.end();
+  });
+
+  it('prepare cache reuse with reset', async function () {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 3, 13)) this.skip();
+
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2,
+      resetAfterUse: true
+    });
+    await pool.execute('select ?', [1]);
+    const conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+
+    await pool.execute('select ? + 1', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ? + 1],[${baseConfig.database}|select ?]}`
+    );
+
+    await pool.execute('select ? + 2', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 1]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute('select ? + 3', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 3],[${baseConfig.database}|select ? + 2]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select ? + 2' }, [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 3]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select 4' });
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select 4],[${baseConfig.database}|select ? + 2]}`
+    );
+
+    await pool.execute('select ?', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+    );
+    for (let i = 0; i < 10; i++) {
+      pool.execute('select ?', [i]);
+      assert.equal(
+        prepareCache.toString(),
+        `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+      );
+    }
+    pool.end();
   });
 
   it('pool batch stack trace', async function () {
