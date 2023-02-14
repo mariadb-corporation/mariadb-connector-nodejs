@@ -61,7 +61,7 @@ describe('Pool', () => {
       await pool.query('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:60:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:61:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -79,7 +79,7 @@ describe('Pool', () => {
       await pool.execute('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:78:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:79:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -97,7 +97,7 @@ describe('Pool', () => {
       await pool.execute('SELECT ?', []);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:96:7'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:97:7'), err.stack);
     } finally {
       await pool.end();
     }
@@ -241,7 +241,7 @@ describe('Pool', () => {
       await pool.batch('WRONG COMMAND', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:114:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:241:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -260,7 +260,7 @@ describe('Pool', () => {
       await pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:133:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:260:18'), err.stack);
     } finally {
       await pool.query('DROP TABLE test_batch');
       await pool.end();
