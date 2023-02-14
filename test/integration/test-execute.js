@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { isXpand } = require('../base');
+const { baseConfig } = require('../conf');
 
 describe('prepare and execute', () => {
   let bigVal;
@@ -130,56 +131,74 @@ describe('prepare and execute', () => {
     let prepare = await conn.prepare('select ?', [1]);
     const initialPrepareId = prepare.id;
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare.close();
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare.close();
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare = await conn.prepare('select ?', [1]);
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     let prepare_2 = await conn.prepare('select ?', [1]);
     assert.equal(prepare_2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare.close();
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare_2.close();
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:0,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?]}');
+    assert.equal(conn.prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
 
     prepare = await conn.prepare('select ? + 1', [1]);
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ? + 1],[testn|select ?]}');
+    assert.equal(
+      conn.prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ? + 1],[${baseConfig.database}|select ?]}`
+    );
 
     let preparePlus2 = await conn.prepare('select ? + 2', [1]);
     assert.equal(preparePlus2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal('info{cache:[testn|select ? + 2],[testn|select ? + 1]}', conn.prepareCache.toString());
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 1]}`,
+      conn.prepareCache.toString()
+    );
 
     let prepare3 = await conn.prepare('select ? + 3', [1]);
     assert.equal(prepare3.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal('info{cache:[testn|select ? + 3],[testn|select ? + 2]}', conn.prepareCache.toString());
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 3],[${baseConfig.database}|select ? + 2]}`,
+      conn.prepareCache.toString()
+    );
 
     let prepare2 = await conn.prepare({ sql: 'select ? + 2' }, [1]);
     assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
-    assert.equal('info{cache:[testn|select ? + 2],[testn|select ? + 3]}', conn.prepareCache.toString());
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 3]}`,
+      conn.prepareCache.toString()
+    );
 
     prepare = await conn.prepare({ sql: 'select 4' });
     assert.equal(prepare.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:true}}');
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select 4],[testn|select ? + 2]}');
+    assert.equal(
+      conn.prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select 4],[${baseConfig.database}|select ? + 2]}`
+    );
     assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
     assert.equal(prepare3.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:1,cached:false}}');
 
     prepare = await conn.prepare('select ?', [1]);
-    assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?],[testn|select 4]}');
+    assert.equal(
+      conn.prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+    );
     assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:false}}');
     prepare2.close();
     assert.equal(prepare2.toString(), 'PrepareWrapper{closed:true,cache:Prepare{use:1,cached:false}}');
@@ -190,7 +209,10 @@ describe('prepare and execute', () => {
     const secondPrepareId = prepare.id;
     for (let i = 0; i < 10; i++) {
       const prepare2 = await conn.prepare('select ?', [i]);
-      assert.equal(conn.prepareCache.toString(), 'info{cache:[testn|select ?],[testn|select 4]}');
+      assert.equal(
+        conn.prepareCache.toString(),
+        `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+      );
       assert.equal(prepare2.toString(), 'PrepareWrapper{closed:false,cache:Prepare{use:2,cached:true}}');
       assert.equal(prepare2.id, secondPrepareId);
       prepare2.close();
