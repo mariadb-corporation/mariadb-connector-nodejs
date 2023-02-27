@@ -1631,4 +1631,31 @@ describe('Pool', () => {
       }
     }
   });
+
+  it('prepare cache reuse pool with reset', async function () {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 3, 13)) this.skip();
+
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2,
+      resetAfterUse: true
+    });
+    await pool.execute('select ?', [1]);
+    let conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    conn = await pool.getConnection();
+    conn.execute('select ?', [2]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+    pool.end();
+  });
 });
