@@ -897,6 +897,22 @@ describe('cluster', function () {
           });
         });
     });
+
+    it('ensure failing connection on pool not exiting application', async function () {
+      this.timeout(5000);
+      const cluster = basePromise.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        port: 8888,
+        initializationTimeout: 100
+      });
+      cluster.add('node1', connOption1);
+
+      // pool will throw an error after some time and must not exit test suite
+      await new Promise((resolve, reject) => {
+        new setTimeout(resolve, 3000);
+      });
+      await cluster.end();
+    });
   });
 
   describe('callback', () => {
@@ -1379,6 +1395,22 @@ describe('cluster', function () {
             done(err);
           });
         });
+    });
+
+    it('ensure failing connection on pool not exiting application', async function () {
+      this.timeout(5000);
+      const cluster = baseCallback.createPoolCluster();
+      const connOption1 = Object.assign({}, Conf.baseConfig, {
+        port: 8888,
+        initializationTimeout: 100
+      });
+      cluster.add('node1', connOption1);
+
+      // pool will throw an error after some time and must not exit test suite
+      await new Promise((resolve, reject) => {
+        new setTimeout(resolve, 3000);
+      });
+      await cluster.end();
     });
   });
 

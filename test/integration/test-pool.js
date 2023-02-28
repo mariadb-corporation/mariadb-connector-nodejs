@@ -1658,4 +1658,18 @@ describe('Pool', () => {
     assert.equal(prepareCache.toString(), `info{cache:}`);
     pool.end();
   });
+
+  it('ensure failing connection on pool not exiting application', async function () {
+    this.timeout(5000);
+    const pool = base.createPool({
+      port: 8888,
+      initializationTimeout: 100
+    });
+
+    // pool will throw an error after some time and must not exit test suite
+    await new Promise((resolve, reject) => {
+      new setTimeout(resolve, 3000);
+    });
+    await pool.end();
+  });
 });

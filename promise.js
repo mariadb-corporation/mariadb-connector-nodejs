@@ -39,7 +39,10 @@ module.exports.createConnection = function createConnection(opts) {
 
 module.exports.createPool = function createPool(opts) {
   const options = new PoolOptions(opts);
-  return new PoolPromise(options);
+  const pool = new PoolPromise(options);
+  // adding a default error handler to avoid exiting application on connection error.
+  pool.on('error', (err) => {});
+  return pool;
 };
 
 module.exports.createPoolCluster = function createPoolCluster(opts) {
