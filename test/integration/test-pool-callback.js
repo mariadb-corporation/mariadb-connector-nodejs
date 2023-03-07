@@ -359,6 +359,10 @@ describe('Pool callback', () => {
       assert.equal(pool.escapeId('f:a'), '`f:a`');
       assert.equal(pool.escapeId('`f:a`'), '`f:a`');
       assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+      assert.equal(pool.escape('\x00\x1A'), "'\\0\\Z'");
+      assert.equal(pool.escape('\u0000\u001A'), "'\\0\\Z'");
+      assert.equal(pool.escape('\'"'), "'\\'\\\"'");
+      assert.equal(pool.escape('\b\n\r\t\\'), "'\\b\\n\\r\\t\\\\'");
       pool.end();
       pool2.end();
       done();
