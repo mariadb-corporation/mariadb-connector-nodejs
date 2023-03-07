@@ -1,0 +1,136 @@
+name: Build
+on: [push]
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run test:lint
+
+  prettier:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run test:prettier
+
+  types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run test:types
+
+  types-prettier:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run test:types-prettier
+
+  test:
+    runs-on: ubuntu-latest
+
+    needs:
+      - eslint
+      - prettier
+      - types
+      - types-prettier
+
+    strategy:
+      matrix:
+        databases:
+          - mariadb:10.4
+          - mariadb:10.5
+          - mariadb:10.6
+          - mariadb:10.9
+          - mariadb:10.10
+          - mariadb:10.11
+          - mariadb:11.0-rc
+
+    services:
+      mariadb:
+        image: ${{ matrix.databases }}
+        ports:
+          - 3306:3306
+        env:
+          MARIADB_ROOT_PASSWORD: password
+          MARIADB_USER: user
+          MARIADB_PASSWORD: password
+          MARIADB_DATABASE: testn
+        options: >-
+          --health-cmd="mariadb-admin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run test:base
+        env:
+          TEST_DB_PASSWORD: password
+
+  coverage-test:
+    runs-on: ubuntu-latest
+    needs: test
+
+    strategy:
+      matrix:
+        databases:
+          - mariadb:10.6
+          - mariadb:10.11
+          - mariadb:11.0-rc
+
+    services:
+      mariadb:
+        image: ${{ matrix.databases }}
+        ports:
+          - 3306:3306
+        env:
+          MARIADB_ROOT_PASSWORD: password
+          MARIADB_PASSWORD: password
+          MARIADB_DATABASE: testn
+        options: >-
+          --health-cmd="mariadb-admin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+      - run: npm run coverage:test
+        env:
+          TEST_DB_PASSWORD: password
