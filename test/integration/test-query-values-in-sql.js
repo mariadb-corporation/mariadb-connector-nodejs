@@ -26,10 +26,6 @@ describe('sql template strings', () => {
 
   it('batch with parameters', async () => {
     const conn = await base.createConnection();
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     await conn.query('DROP TABLE IF EXISTS batch_with_parameters');
     await conn.query('CREATE TABLE batch_with_parameters(t varchar(128))');
     await conn.beginTransaction();
@@ -102,10 +98,6 @@ describe('sql template strings', () => {
       if (err) {
         done(err);
       } else {
-        // https://jira.mariadb.org/browse/XPT-266
-        if (isXpand()) {
-          conn.query('SET NAMES UTF8');
-        }
         conn.query('DROP TABLE IF EXISTS callback_batch_with_parameters', (err) => {
           if (err) {
             conn.end();
@@ -186,9 +178,6 @@ describe('sql template strings', () => {
 
   it('pool batch with parameters', (done) => {
     let params = {};
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
-
     const pool = base.createPool(params);
     pool
       .query('DROP TABLE IF EXISTS pool_parse_batch')
@@ -238,9 +227,6 @@ describe('sql template strings', () => {
 
   it('pool callback batch with parameters', (done) => {
     let params = {};
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
-
     const pool = base.createPoolCallback(params);
     pool.query('drop table pool_batch_call', (err) => {
       pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {

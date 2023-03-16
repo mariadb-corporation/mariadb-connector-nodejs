@@ -9,6 +9,7 @@ const path = require('path');
 const os = require('os');
 const Proxy = require('../tools/proxy');
 const { isXpand } = require('../base');
+const { baseConfig } = require('../conf');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -60,7 +61,7 @@ describe('Pool', () => {
       await pool.query('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:60:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:61:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -78,7 +79,7 @@ describe('Pool', () => {
       await pool.execute('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:78:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:79:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -96,10 +97,136 @@ describe('Pool', () => {
       await pool.execute('SELECT ?', []);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:96:7'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:97:7'), err.stack);
     } finally {
       await pool.end();
     }
+  });
+
+  it('prepare cache reuse', async () => {
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2
+    });
+    await pool.execute('select ?', [1]);
+    const conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    conn.release();
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+
+    await pool.execute('select ? + 1', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ? + 1],[${baseConfig.database}|select ?]}`
+    );
+
+    await pool.execute('select ? + 2', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 1]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute('select ? + 3', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 3],[${baseConfig.database}|select ? + 2]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select ? + 2' }, [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 3]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select 4' });
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select 4],[${baseConfig.database}|select ? + 2]}`
+    );
+
+    await pool.execute('select ?', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+    );
+    for (let i = 0; i < 10; i++) {
+      pool.execute('select ?', [i]);
+      assert.equal(
+        prepareCache.toString(),
+        `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+      );
+    }
+    pool.end();
+  });
+
+  it('prepare cache reuse with reset', async function () {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 3, 13)) this.skip();
+
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2,
+      resetAfterUse: true
+    });
+    await pool.execute('select ?', [1]);
+    const conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+
+    await pool.execute('select ? + 1', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ? + 1],[${baseConfig.database}|select ?]}`
+    );
+
+    await pool.execute('select ? + 2', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 1]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute('select ? + 3', [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 3],[${baseConfig.database}|select ? + 2]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select ? + 2' }, [1]);
+    assert.equal(
+      `info{cache:[${baseConfig.database}|select ? + 2],[${baseConfig.database}|select ? + 3]}`,
+      prepareCache.toString()
+    );
+
+    await pool.execute({ sql: 'select 4' });
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select 4],[${baseConfig.database}|select ? + 2]}`
+    );
+
+    await pool.execute('select ?', [1]);
+    assert.equal(
+      prepareCache.toString(),
+      `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+    );
+    for (let i = 0; i < 10; i++) {
+      pool.execute('select ?', [i]);
+      assert.equal(
+        prepareCache.toString(),
+        `info{cache:[${baseConfig.database}|select ?],[${baseConfig.database}|select 4]}`
+      );
+    }
+    pool.end();
   });
 
   it('pool batch stack trace', async function () {
@@ -114,7 +241,7 @@ describe('Pool', () => {
       await pool.batch('WRONG COMMAND', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:114:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:241:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -133,7 +260,7 @@ describe('Pool', () => {
       await pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:133:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:260:18'), err.stack);
     } finally {
       await pool.query('DROP TABLE test_batch');
       await pool.end();
@@ -405,7 +532,7 @@ describe('Pool', () => {
       acquireTimeout: 400
     });
     assert.isFalse(pool.closed);
-    pool.query('DO SLEEP(1)');
+    pool.query('SELECT SLEEP(1)');
     try {
       await pool.execute('SELECT 1');
       throw new Error('must have thrown error');
@@ -424,7 +551,7 @@ describe('Pool', () => {
       connectionLimit: 1,
       acquireTimeout: 400
     });
-    pool.query('DO SLEEP(1)');
+    pool.query('SELECT SLEEP(1)');
     try {
       await pool.batch('SELECT 1', [[1]]);
       throw new Error('must have thrown error');
@@ -708,8 +835,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
     let errorThrown = false;
     pool
@@ -734,8 +860,7 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout with leak', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200, leakDetectionTimeout: 10 });
     let errorThrown = false;
     pool
@@ -759,8 +884,7 @@ describe('Pool', () => {
   });
 
   it('pool leakDetectionTimeout timeout', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 1,
       acquireTimeout: 200,
@@ -773,7 +897,9 @@ describe('Pool', () => {
   });
 
   it('pool reset validation', async function () {
-    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1' };
+    // xpand doesn't support timeout
+    if (isXpand()) this.skip();
+    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1', debug: true };
     if (shareConn.info.isMariaDB()) {
       conf['queryTimeout'] = 10000;
     }
@@ -952,7 +1078,7 @@ describe('Pool', () => {
           closed = true;
           try {
             await pool.end();
-            if (Conf.baseConfig.host === 'localhost' && !isXpand()) {
+            if (Conf.baseConfig.host === 'localhost') {
               assert.equal(pool.activeConnections(), 0);
               assert.equal(pool.totalConnections(), 0);
               assert.equal(pool.idleConnections(), 0);
@@ -968,8 +1094,7 @@ describe('Pool', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -991,7 +1116,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       } catch (err) {
         try {
-          assert.equal(err.sqlState, 70100);
+          assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
           assert.equal(pool.activeConnections(), 1);
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
@@ -1009,6 +1134,7 @@ describe('Pool', () => {
   });
 
   it('query fail handling', function (done) {
+    this.timeout(20000);
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
       this.skip();
     const pool = base.createPool({
@@ -1052,8 +1178,7 @@ describe('Pool', () => {
   });
 
   it('connection end', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -1087,8 +1212,7 @@ describe('Pool', () => {
   });
 
   it('connection release alias', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -1122,8 +1246,7 @@ describe('Pool', () => {
   });
 
   it('connection destroy', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -1211,7 +1334,6 @@ describe('Pool', () => {
 
   it('pool batch', function (done) {
     let params = { connectionLimit: 1, resetAfterUse: false };
-    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
     const pool = base.createPool(params);
     pool
       .query('DROP TABLE IF EXISTS parse')
@@ -1363,8 +1485,7 @@ describe('Pool', () => {
   });
 
   it('test minimum idle decrease', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(30000);
     const pool = base.createPool({
       connectionLimit: 10,
@@ -1509,5 +1630,46 @@ describe('Pool', () => {
         proxy.close();
       }
     }
+  });
+
+  it('prepare cache reuse pool with reset', async function () {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 3, 13)) this.skip();
+
+    const pool = base.createPool({
+      metaAsArray: true,
+      multipleStatements: true,
+      connectionLimit: 1,
+      prepareCacheLength: 2,
+      resetAfterUse: true
+    });
+    await pool.execute('select ?', [1]);
+    let conn = await pool.getConnection();
+    const prepareCache = conn.prepareCache;
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+
+    await pool.execute('select ?', [1]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    conn = await pool.getConnection();
+    conn.execute('select ?', [2]);
+    assert.equal(prepareCache.toString(), `info{cache:[${baseConfig.database}|select ?]}`);
+    await conn.release();
+    assert.equal(prepareCache.toString(), `info{cache:}`);
+    pool.end();
+  });
+
+  it('ensure failing connection on pool not exiting application', async function () {
+    this.timeout(5000);
+    const pool = base.createPool({
+      port: 8888,
+      initializationTimeout: 100
+    });
+
+    // pool will throw an error after some time and must not exit test suite
+    await new Promise((resolve, reject) => {
+      new setTimeout(resolve, 3000);
+    });
+    await pool.end();
   });
 });

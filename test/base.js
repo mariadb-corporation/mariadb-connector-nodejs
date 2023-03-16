@@ -17,11 +17,6 @@ before('share initialization', async () => {
       // retry
       global.shareConn = await basePromise.createConnection(Conf.baseConfig);
     }
-
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpandFct()) {
-      global.shareConn.query('SET NAMES UTF8');
-    }
   }
 });
 

@@ -10,7 +10,7 @@ describe('multi-results', () => {
   before(function (done) {
     base
       .createConnection({ multipleStatements: true })
-      .then((con) => {
+      .then(async (con) => {
         multiStmtConn = con;
         done();
       })

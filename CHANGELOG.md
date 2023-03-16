@@ -1,6 +1,16 @@
 # Change Log
 
-## [3.1.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.2) (Feb 2023)
+## [3.1.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.1.1) (Mar 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.0...3.1.1)
+
+## Issues Fixed
+* CONJS-246 pool not listening to 'error' event might exit application on error
+* CONJS-240 Repeating calling the same procedure gets a release prepare error.
+* CONJS-244 correction for node.js 12 compatibility
+* CONJS-245 batch failing when using bulk and metaAsArray
+
+
+## [3.1.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.1.0) (Feb 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.0.2...3.1.0)
 
 ## Notable changes

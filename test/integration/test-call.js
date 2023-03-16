@@ -45,14 +45,13 @@ describe('stored procedure', () => {
   });
 
   it('output call query', async function () {
+    //https://jira.mariadb.org/browse/XPT-268
+    if (isXpand()) this.skip();
     await shareConn.query('call someProc(?,@myOutputValue)', [2]);
     const res = await shareConn.query('SELECT @myOutputValue');
     assert.equal(res[0]['@myOutputValue'], 4);
-    //https://jira.mariadb.org/browse/XPT-268
-    if (!isXpand()) {
-      const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
-      assert.equal(res2[0][0]['p2'], 4);
-    }
+    const res2 = await shareConn.execute('call someProc(?, ?)', [2, null]);
+    assert.equal(res2[0][0]['p2'], 4);
   });
 
   it('simple function', function (done) {
@@ -66,15 +65,14 @@ describe('stored procedure', () => {
       .catch(done);
   });
 
-  it('call with out parameter query', async () => {
+  it('call with out parameter query', async function () {
+    //https://jira.mariadb.org/browse/XPT-268
+    if (isXpand()) this.skip();
     try {
       await shareConn.query('call stmtOutParam(?,?)', [2, 3]);
       throw new Error('must not be possible since output parameter is not a variable');
     } catch (err) {
-      //https://jira.mariadb.org/browse/XPT-268
-      if (!isXpand()) {
-        assert.ok(err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger'));
-      }
+      assert.ok(err.message.includes('is not a variable or NEW pseudo-variable in BEFORE trigger'));
     }
   });
 });

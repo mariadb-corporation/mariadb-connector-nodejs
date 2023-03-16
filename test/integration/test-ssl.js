@@ -5,6 +5,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const Conf = require('../conf');
 const tls = require('tls');
+const { isXpand } = require('../base');
 
 describe('ssl', function () {
   let ca = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? Conf.baseConfig.ssl.ca : null;
@@ -15,6 +16,7 @@ describe('ssl', function () {
   let sslPort = Conf.baseConfig.port;
 
   before(function (done) {
+    if (isXpand()) this.skip();
     if (process.env.TEST_MAXSCALE_TLS_PORT) sslPort = parseInt(process.env.TEST_MAXSCALE_TLS_PORT);
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&

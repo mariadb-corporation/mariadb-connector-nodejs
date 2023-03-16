@@ -172,6 +172,210 @@ describe('batch', function () {
     }
   };
 
+  const simpleBatchMeta = async () => {
+    try {
+      const conn = await base.createConnection({
+        bulk: true,
+        metaAsArray: true
+      });
+      conn.query('DROP TABLE IF EXISTS simpleBatch');
+      conn.query(
+        'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
+      );
+      await shareConn.query('FLUSH TABLES');
+      await conn.query('START TRANSACTION');
+
+      let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+        [
+          true,
+          'Ʉjo"h\u000An😎🌶\\\\',
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ],
+        [
+          true,
+          't1',
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ]
+      ]);
+      assert.equal(res[0].affectedRows, 2);
+      res = await conn.query('select * from `simpleBatch`');
+      assert.deepEqual(res[0], [
+        {
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 'Ʉjo"h\u000An😎🌶\\\\',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        },
+        {
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 't1',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        }
+      ]);
+      await conn.query('ROLLBACK');
+
+      conn.query('DROP TABLE simpleBatch');
+      const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
+      assert.deepEqual(rows[0], [{ 1: 1 }]);
+      await conn.end();
+    } catch (err) {
+      console.log(err);
+      assert.equal(err.errno, 45033);
+    }
+  };
+
+  const simpleBatchMeta2 = async () => {
+    try {
+      const conn = await base.createConnection({
+        metaAsArray: true,
+        bulk: true
+      });
+      conn.query('DROP TABLE IF EXISTS simpleBatch');
+      conn.query(
+        'CREATE TABLE simpleBatch(id int, id2 boolean, id3 int, t varchar(128), d datetime, d2 datetime(6), g POINT, id4 int) CHARSET utf8mb4'
+      );
+      await shareConn.query('FLUSH TABLES');
+      await conn.query('START TRANSACTION');
+
+      const f = {};
+      f.toSqlString = () => {
+        return 'blabla';
+      };
+      let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+        [
+          true,
+          'Ʉjo"h\u000An😎🌶\\\\',
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ],
+        [
+          true,
+          f,
+          new Date('2001-12-31 23:59:58+3'),
+          new Date('2018-01-01 12:30:20.456789+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 10]
+          }
+        ],
+        [
+          false,
+          { name: 'jack\u000Aमस्', val: 'tt' },
+          null,
+          new Date('2018-01-21 11:30:20.123456+3'),
+          {
+            type: 'Point',
+            coordinates: [10, 20]
+          }
+        ],
+        [
+          0,
+          null,
+          new Date('2020-12-31 23:59:59+3'),
+          new Date('2018-01-21 11:30:20.123456+3'),
+          {
+            type: 'Point',
+            coordinates: [20, 20]
+          }
+        ]
+      ]);
+      assert.equal(res[0].affectedRows, 4);
+      res = await conn.query('select * from `simpleBatch`');
+      assert.deepEqual(res[0], [
+        {
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 'Ʉjo"h\u000An😎🌶\\\\',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        },
+        {
+          id: 1,
+          id2: 1,
+          id3: 2,
+          t: 'blabla',
+          d: new Date('2001-12-31 23:59:58+3'),
+          d2: new Date('2018-01-01 12:30:20.456789+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 10]
+          },
+          id4: 3
+        },
+        {
+          id: 1,
+          id2: 0,
+          id3: 2,
+          t: '{"name":"jack\\nमस्","val":"tt"}',
+          d: null,
+          d2: new Date('2018-01-21 11:30:20.123456+3'),
+          g: {
+            type: 'Point',
+            coordinates: [10, 20]
+          },
+          id4: 3
+        },
+        {
+          id: 1,
+          id2: 0,
+          id3: 2,
+          t: null,
+          d: new Date('2020-12-31 23:59:59+3'),
+          d2: new Date('2018-01-21 11:30:20.123456+3'),
+          g: {
+            type: 'Point',
+            coordinates: [20, 20]
+          },
+          id4: 3
+        }
+      ]);
+      await conn.query('ROLLBACK');
+
+      conn.query('DROP TABLE simpleBatch');
+      const rows = await conn.query({ sql: 'select 1', bigIntAsNumber: true });
+      assert.deepEqual(rows[0], [{ 1: 1 }]);
+      await conn.end();
+    } catch (err) {
+      console.log(err);
+      assert.equal(err.errno, 45033);
+    }
+  };
+
   const batchWithReturning = async (useBulk) => {
     const conn = await base.createConnection({ bulk: useBulk });
     await conn.query('drop table if exists bar');
@@ -194,14 +398,56 @@ describe('batch', function () {
     ]);
     assert.deepEqual(res, [['7'], ['8'], ['9'], ['10']]);
 
+    res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [[11]]);
+    assert.deepEqual(res[0], [
+      {
+        id: '11'
+      }
+    ]);
+    res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [[24], [12]]);
+    assert.deepEqual(res[0], [
+      {
+        id: '24'
+      },
+      {
+        id: '12'
+      }
+    ]);
+    assert.equal(1, res[1].length);
+    res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [
+      [13],
+      [14],
+      ['15'],
+      ['16'],
+      [17]
+    ]);
+    assert.deepEqual(res[0], [
+      {
+        id: '13'
+      },
+      {
+        id: '14'
+      },
+      {
+        id: '15'
+      },
+      {
+        id: '16'
+      },
+      {
+        id: '17'
+      }
+    ]);
+    assert.equal(1, res[1].length);
+
     res = await conn.batch(
       { sql: 'insert into bar (id) values (?) returning id', supportBigNumbers: true, bigNumberStrings: true },
-      [[11], ['12'], [13], [2147483650], [9223372036854775818n]]
+      [[20], ['21'], [22], [2147483650], [9223372036854775818n]]
     );
     assert.deepEqual(res, [
-      { id: '11' },
-      { id: '12' },
-      { id: '13' },
+      { id: '20' },
+      { id: '21' },
+      { id: '22' },
       { id: '2147483650' },
       { id: '9223372036854775818' }
     ]);
@@ -447,10 +693,6 @@ describe('batch', function () {
       maxAllowedPacket: 16 * 1024 * 1024,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith16mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -486,10 +728,6 @@ describe('batch', function () {
       bulk: useBulk,
       maxAllowedPacket: 4 * 1024 * 1024
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS bigBatchWith4mMaxAllowedPacket');
     conn.query(
       'CREATE TABLE bigBatchWith4mMaxAllowedPacket(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -524,10 +762,6 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     const values = [];
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
@@ -627,10 +861,6 @@ describe('batch', function () {
       compress: useCompression,
       bulk: useBulk
     });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     try {
       await conn.batch('INSERT INTO `blabla` values (1, ?, 2, ?, ?, 3)', values);
       throw new Error('must have thrown error !');
@@ -647,10 +877,6 @@ describe('batch', function () {
 
   const simpleNamedPlaceHolders = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
     conn.query('DROP TABLE IF EXISTS simpleNamedPlaceHolders');
     conn.query(
       'CREATE TABLE simpleNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -686,11 +912,6 @@ describe('batch', function () {
 
   const simpleNamedPlaceHoldersErr = async (useBulk) => {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
-
     try {
       await conn.batch('INSERT INTO blabla values (1, :param_1, 2, :param_2, 3)', [
         { param_1: 1, param_2: 'john' },
@@ -713,11 +934,6 @@ describe('batch', function () {
 
   const more16MNamedPlaceHolders = async function (useBulk) {
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
-
     conn.query('DROP TABLE IF EXISTS more16MNamedPlaceHolders');
     conn.query(
       'CREATE TABLE more16MNamedPlaceHolders(id int, id2 int, id3 int, t varchar(128), id4 int) CHARSET utf8mb4'
@@ -788,10 +1004,6 @@ describe('batch', function () {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
     const conn = await base.createConnection({ namedPlaceholders: true, bulk: useBulk });
-    // https://jira.mariadb.org/browse/XPT-266
-    if (isXpand()) {
-      await conn.query('SET NAMES UTF8');
-    }
 
     await conn.query('DROP TABLE IF EXISTS blabla');
     await conn.query('CREATE TABLE blabla(i int, i2 int, i3 int, s1 TEXT, s2 TEXT, i4 int)');
@@ -918,6 +1130,17 @@ describe('batch', function () {
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, true, 'local');
+    });
+
+    it('simple batch, meta as Array', async function () {
+      if (!base.utf8Collation() || isXpand()) {
+        this.skip();
+        return;
+      }
+      this.timeout(30000);
+      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
+      await simpleBatchMeta();
+      await simpleBatchMeta2();
     });
 
     it('simple batch with option', async function () {
@@ -1190,10 +1413,6 @@ describe('batch', function () {
       const t = makeid(100);
       const conn = await base.createConnection({ bulk: false, maxAllowedPacket: 150 });
 
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        await conn.query('SET NAMES UTF8');
-      }
       await conn.query('DROP TABLE IF EXISTS my_table');
       await conn.query('CREATE TABLE my_table(id int, val LONGTEXT)');
       await conn.query('FLUSH TABLES');

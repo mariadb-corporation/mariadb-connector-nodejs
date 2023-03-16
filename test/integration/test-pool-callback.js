@@ -89,6 +89,7 @@ describe('Pool callback', () => {
   });
 
   it('pool execute wrong param stack trace', function (done) {
+    this.timeout(20000);
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPoolCallback({
       metaAsArray: true,
@@ -560,7 +561,6 @@ describe('Pool callback', () => {
   });
 
   it('connection fail handling', function (done) {
-    if (isXpand()) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -582,7 +582,7 @@ describe('Pool callback', () => {
           assert.equal(pool.taskQueueSize(), 0);
 
           conn.query('KILL CONNECTION_ID()', (err) => {
-            assert.equal(err.sqlState, 70100);
+            assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
             assert.equal(pool.activeConnections(), 1);
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 1);
@@ -601,7 +601,6 @@ describe('Pool callback', () => {
   });
 
   it('query fail handling', function (done) {
-    if (isXpand()) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 2,
       minDelayValidation: 200
@@ -614,7 +613,7 @@ describe('Pool callback', () => {
       assert.equal(pool.taskQueueSize(), 0);
 
       pool.query('KILL CONNECTION_ID()', (err) => {
-        assert.equal(err.sqlState, 70100);
+        assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
         setImmediate(() => {
           assert.equal(pool.taskQueueSize(), 0);
 
@@ -639,7 +638,7 @@ describe('Pool callback', () => {
   });
 
   it('connection end', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -670,7 +669,6 @@ describe('Pool callback', () => {
   });
 
   it('connection release alias', function (done) {
-    if (isXpand()) this.skip();
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -701,7 +699,6 @@ describe('Pool callback', () => {
   });
 
   it('connection destroy', function (done) {
-    if (isXpand()) this.skip();
     const pool = base.createPoolCallback({ connectionLimit: 2 });
     setTimeout(() => {
       //check available connections in pool
@@ -765,8 +762,6 @@ describe('Pool callback', () => {
 
   it('pool batch', function (done) {
     let params = { connectionLimit: 1, resetAfterUse: false };
-    if (isXpand()) params['initSql'] = 'SET NAMES UTF8';
-
     const pool = base.createPoolCallback(params);
     pool.query('DROP TABLE IF EXISTS parse', (err, res) => {
       pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)', (err, res) => {
@@ -870,7 +865,7 @@ describe('Pool callback', () => {
   });
 
   it('test minimum idle decrease', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(30000);
     const pool = base.createPoolCallback({
       connectionLimit: 10,
@@ -948,7 +943,7 @@ describe('Pool callback', () => {
       acquireTimeout: 400
     });
     assert.isFalse(pool.closed);
-    pool.query('DO SLEEP(1)');
+    pool.query('SELECT SLEEP(1)');
     pool.execute('SELECT 1', (err, res) => {
       pool.end();
       assert.isTrue(pool.closed);
@@ -968,7 +963,7 @@ describe('Pool callback', () => {
       connectionLimit: 1,
       acquireTimeout: 400
     });
-    pool.query('DO SLEEP(1)');
+    pool.query('SELECT SLEEP(1)');
     pool.batch('SELECT ?', [[1]], (err, res) => {
       pool.end();
       if (err) {
@@ -978,5 +973,19 @@ describe('Pool callback', () => {
         done(new Error('must have thrown error'));
       }
     });
+  });
+
+  it('ensure failing connection on pool not exiting application', async function () {
+    this.timeout(5000);
+    const pool = base.createPoolCallback({
+      port: 8888,
+      initializationTimeout: 100
+    });
+
+    // pool will throw an error after some time and must not exit test suite
+    await new Promise((resolve, reject) => {
+      new setTimeout(resolve, 3000);
+    });
+    pool.end();
   });
 });

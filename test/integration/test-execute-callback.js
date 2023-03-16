@@ -247,10 +247,6 @@ describe('prepare and execute callback', () => {
     conn.connect((err) => {
       if (err) return done(err);
 
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.prepare('select ? as a', (err, prepare) => {
         if (err) return done(err);
         assert.equal(prepare.parameterCount, 1);
@@ -284,10 +280,6 @@ describe('prepare and execute callback', () => {
     const conn = base.createCallbackConnection({ prepareCacheLength: 0 });
     conn.connect((err) => {
       if (err) return done(err);
-      // https://jira.mariadb.org/browse/XPT-266
-      if (isXpand()) {
-        conn.query('SET NAMES UTF8');
-      }
       conn.execute('select ? as a', [2], (err, res, meta) => {
         if (err) return done(err);
         assert.isTrue(res[0].a === 2 || res[0].a === 2n);

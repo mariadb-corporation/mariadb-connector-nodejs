@@ -36,18 +36,20 @@ describe('basic query', () => {
     assert.equal(rows.meta.length, 1);
     assert.equal(JSON.stringify(rows), '[{"a":null}]');
     assert.deepStrictEqual(rows, [{ a: null }]);
+    let nb = 0;
     for (var propertyName in rows) {
-      console.log(propertyName);
+      nb++;
     }
+    assert.equal(nb, 1);
 
     rows = await shareConn.query({ sql: 'select ? as a', metaEnumerable: true }, null);
     assert.equal(rows.meta.length, 1);
 
-    console.log(rows);
-    console.log(JSON.stringify(rows));
+    nb = 0;
     for (var propertyName in rows) {
-      console.log(propertyName);
+      nb++;
     }
+    assert.equal(nb, 2);
   });
 
   it('parameter last', async () => {
@@ -100,7 +102,7 @@ describe('basic query', () => {
     await conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
     await conn.beginTransaction();
     await conn.query("INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')");
-    const rows = await conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', 1]]);
+    const rows = await conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', '1']]);
     assert.deepEqual(rows, [
       {
         id: 2,
@@ -358,6 +360,8 @@ describe('basic query', () => {
   });
 
   it('timeout', function (done) {
+    // xpand doesn't support timeout
+    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =
@@ -372,6 +376,8 @@ describe('basic query', () => {
   });
 
   it('timeout with parameter', function (done) {
+    // xpand doesn't support timeout
+    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =

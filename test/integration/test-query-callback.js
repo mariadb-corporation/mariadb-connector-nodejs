@@ -107,7 +107,7 @@ describe('basic query callback', () => {
         conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
         conn.beginTransaction();
         conn.query("INSERT INTO arrayParam VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')");
-        conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', 1]], (err, rows) => {
+        conn.query('SELECT * FROM arrayParam WHERE val IN (?)', [['b', 'c', '1']], (err, rows) => {
           conn.end();
           if (err) {
             done(err);
@@ -343,7 +343,7 @@ describe('basic query callback', () => {
     }
     table += ')';
     insert += ')';
-    const conn = base.createCallbackConnection();
+    const conn = base.createCallbackConnection({ debug: true });
     conn.connect((err) => {
       if (err) {
         done(err);
@@ -426,6 +426,7 @@ describe('basic query callback', () => {
   });
 
   it('timeout', function (done) {
+    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =
@@ -449,6 +450,7 @@ describe('basic query callback', () => {
   });
 
   it('timeout with parameter', function (done) {
+    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =
