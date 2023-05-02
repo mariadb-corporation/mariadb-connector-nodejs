@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.1.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.1.2) (May 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.1...3.1.2)
+
+## Notable changes
+* CONJS-249	add connection.listeners function to permit TypeORM compatibility
+
+## Issues Fixed
+* CONJS-247	Improve error message when having set named parameter option and executing standard question mark command
+* CONJS-248	Ensuring not using importing file after pool.end()
+
 ## [3.1.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.1.1) (Mar 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.0...3.1.1)
 

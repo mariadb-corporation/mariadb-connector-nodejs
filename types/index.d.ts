@@ -690,6 +690,8 @@ export interface Connection {
 
   on(ev: 'end', callback: () => void): Connection;
   on(ev: 'error', callback: (err: SqlError) => void): Connection;
+  listeners(ev: 'end'): (() => void)[];
+  listeners(ev: 'error'): ((err: SqlError) => void)[];
 }
 
 export interface PoolConnection extends Connection {
