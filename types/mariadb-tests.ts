@@ -1,5 +1,5 @@
 import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult } from '..';
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
 import { Stream } from 'stream';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -166,6 +166,8 @@ async function testMisc(): Promise<void> {
     .on('end', () => {
       console.log(currRow + ' ' + metaReceived);
     });
+  connection.listeners('end')[0]();
+  connection.listeners('error')[0](new SqlError('ddd'));
 
   await connection.ping();
 

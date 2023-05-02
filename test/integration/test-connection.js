@@ -192,6 +192,7 @@ describe('connection', () => {
     base
       .createConnection()
       .then((conn) => {
+        assert.equal(0, conn.listeners('error').length);
         conn.on('error', (err) => {
           done();
         });
@@ -291,6 +292,7 @@ describe('connection', () => {
   it('connection.ping() with callback', function (done) {
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
+      assert.equal(0, conn.listeners('error').length);
       conn.ping();
       conn.ping((err) => {
         if (err) {
