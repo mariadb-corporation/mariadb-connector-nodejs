@@ -560,6 +560,25 @@ connection.query("SELECT * FROM mysql.user")
       });
 ```
 
+#### Piping
+
+piping can be use using .stream() function on query, that returns a Readable object, that will emit rows objects.
+
+```
+const logRes = new Writable({
+  objectMode: true,
+  decodeStrings: false,
+  write: (row, encoding, callback) => {
+    console.log(row);
+    callback();
+  }
+});
+
+connection.query("SELECT * FROM mysql.user")
+  .stream()
+  .pipe(logRes);
+```
+
 ## `connection.batch(sql, values [, callback])`
 
 > * `sql`: *string | JSON* SQL string value or JSON object to supersede default connections options.  JSON objects must have an `"sql"` property.  For instance, `{ dateStrings: true, sql: 'SELECT now()' }`

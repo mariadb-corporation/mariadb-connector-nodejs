@@ -43,6 +43,20 @@ describe('results-set streaming', () => {
     assert.equal(10000, currRow);
   });
 
+  it('Streaming result-set for-await-of callback', async function () {
+    let currRow = 0;
+    const conn = base.createCallbackConnection();
+    conn.connect(async (err) => {
+      const cmd = conn.query('SELECT * FROM testStreamResult');
+      const stream = cmd.stream();
+      for await (const row of stream) {
+        assert.equal(currRow++, row.v);
+      }
+      assert.equal(10000, currRow);
+      conn.end();
+    });
+  });
+
   it('Streaming execute result-set for-await-of', async function () {
     let currRow = 0;
     const prepare = await shareConn.prepare('SELECT * FROM testStreamResult');
@@ -75,6 +89,59 @@ describe('results-set streaming', () => {
         done();
       });
     stream.close();
+  });
+
+  it('Streaming result-set close callback', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    const conn = base.createCallbackConnection();
+    conn.connect(async (err) => {
+      const stream = conn.query('SELECT * FROM testStreamResult').stream();
+      stream
+        .on('error', (err) => {
+          done(new Error('must not have thrown any error !'));
+        })
+        .on('fields', (meta) => {
+          assert.equal(meta.length, 1);
+          metaReceived = true;
+        })
+        .on('data', (row) => {
+          assert.equal(currRow++, row.v);
+        })
+        .on('end', () => {
+          assert.equal(0, currRow);
+          assert.isOk(metaReceived);
+          conn.end();
+          done();
+        });
+      stream.close();
+    });
+  });
+
+  it('Streaming result-set callback', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    const conn = base.createCallbackConnection();
+    conn.connect(async (err) => {
+      const stream = conn.query('SELECT * FROM testStreamResult').stream();
+      stream
+        .on('error', (err) => {
+          done(new Error('must not have thrown any error !'));
+        })
+        .on('fields', (meta) => {
+          assert.equal(meta.length, 1);
+          metaReceived = true;
+        })
+        .on('data', (row) => {
+          assert.equal(currRow++, row.v);
+        })
+        .on('end', () => {
+          assert.equal(10000, currRow);
+          assert.isOk(metaReceived);
+          conn.end();
+          done();
+        });
+    });
   });
 
   it('Streaming result-set with promise implementation', function (done) {
@@ -218,6 +285,35 @@ describe('results-set streaming', () => {
     });
 
     shareConn.queryStream('SELECT * FROM testStreamResult').pipe(writableStream);
+  });
+
+  it('Streaming result-set callback pipe', function (done) {
+    let currRow = 0;
+    const writableStream = new Writable({
+      objectMode: true,
+      decodeStrings: false,
+      write: (row, encoding, callback) => {
+        assert.equal(currRow++, row.v);
+        callback();
+        if (process.versions.node.startsWith('6.') && currRow === 10000) {
+          //final was implemented in v8
+          done();
+        }
+      },
+      writev: (rows, callback) => {
+        for (let i = 0; i < rows.length; i++) {
+          assert.equal(++currRow, row.v);
+        }
+        callback();
+      },
+      final: () => {
+        assert.equal(10000, currRow);
+        conn.end();
+        done();
+      }
+    });
+    const conn = base.createCallbackConnection();
+    conn.query('SELECT * FROM testStreamResult').stream({ highWaterMark: 10 }).pipe(writableStream);
   });
 
   it('Streaming error handling', function (done) {
