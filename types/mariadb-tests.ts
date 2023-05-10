@@ -206,6 +206,8 @@ async function testMisc(): Promise<void> {
   console.log(resb.affectedRows);
 
   await createConnection({ multipleStatements: true });
+  await createConnection({ bigNumberStrings: true, supportBigNumbers: true });
+  await createConnection({ decimalAsNumber: true, bigIntAsNumber: true, checkNumberRange: true });
 
   await createConnection({ debug: true });
   await createConnection({ dateStrings: true });

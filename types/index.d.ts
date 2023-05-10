@@ -142,6 +142,19 @@ export interface QueryConfig {
   bigIntAsNumber?: boolean;
 
   /**
+   * @deprecated big numbers (BIGINT and DECIMAL columns) will result as string when not in safe number range.
+   * now replaced by decimalAsNumber, bigIntAsNumber and checkNumberRange options
+   */
+  supportBigNumbers?: boolean;
+
+  /**
+   * @deprecated when used with supportBigNumbers, big numbers (BIGINT and DECIMAL columns) will always result as string
+   * even if in safe number range.
+   * now replaced by decimalAsNumber, bigIntAsNumber and checkNumberRange options
+   */
+  bigNumberStrings?: boolean;
+
+  /**
    * Throw if conversion to Number is not safe.
    *
    * Default: false;
