@@ -533,39 +533,12 @@ describe('Error', () => {
       .catch(done);
   });
 
-  it('query undefined parameter', function (done) {
-    const handleResult = function (err) {
-      assert.equal(err.errno, 45017);
-      assert.equal(err.sqlState, 'HY000');
-      assert.equal(err.code, 'ER_PARAMETER_UNDEFINED');
-      assert.isTrue(!err.fatal);
-      assert.ok(
-        err.message.includes(
-          'Parameter at position 2 is undefined\n' +
-            'sql: INSERT INTO undefinedParameter values (?, ?, ?) - parameters:[1,undefined,3]'
-        )
-      );
-    };
-    shareConn
-      .query('DROP TABLE IF EXISTS undefinedParameter')
-      .then(() => {
-        return shareConn.query('CREATE TABLE undefinedParameter (id int, id2 int, id3 int)');
-      })
-      .then(() => {
-        return shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [1, undefined, 3]);
-      })
-      .then(() => {
-        done(new Error('must have thrown error !'));
-      })
-      .catch(handleResult);
-
-    shareConn
-      .query("SELECT '1'")
-      .then((rows) => {
-        assert.deepEqual(rows, [{ 1: '1' }]);
-        done();
-      })
-      .catch(done);
+  it('query undefined parameter', async function () {
+    await shareConn.query('DROP TABLE IF EXISTS undefinedParameter');
+    await shareConn.query('CREATE TABLE undefinedParameter (id int, id2 int, id3 int)');
+    await shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [1, undefined, 3]);
+    const rows = await shareConn.query('SELECT * from undefinedParameter');
+    assert.deepEqual(rows, [{ id: 1, id2: null, id3: 3 }]);
   });
 
   it('query missing parameter', function (done) {

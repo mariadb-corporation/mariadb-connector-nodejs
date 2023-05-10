@@ -889,30 +889,22 @@ describe('batch callback', function () {
       });
     });
 
-    it('batch with erroneous parameter', function (done) {
+    it('batch with undefined parameter', async function () {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      base.createConnection({ compress: useCompression, bulk: true }).then((conn) => {
-        conn.query('DROP TABLE IF EXISTS blabla');
-        conn.query('CREATE TABLE blabla(i int, i2 int)');
-        conn
-          .batch('INSERT INTO `blabla` values (?, ?)', [
-            [1, 2],
-            [1, undefined]
-          ])
-          .then((res) => {
-            conn.end();
-            done(new Error('expect an error !'));
-          })
-          .catch((err) => {
-            assert.isTrue(
-              err.message.includes('Parameter at position 1 is not set for values 1', err.message) ||
-                err.message.includes('Parameter at position 1 is undefined', err.message)
-            );
-            conn.query('DROP TABLE IF EXISTS blabla');
-            conn.end();
-            done();
-          });
-      });
+      const conn = await base.createConnection({ compress: useCompression, bulk: true });
+      conn.query('DROP TABLE IF EXISTS blabla');
+      conn.query('CREATE TABLE blabla(i int, i2 int)');
+      await conn.batch('INSERT INTO `blabla` values (?, ?)', [
+        [1, 2],
+        [1, undefined]
+      ]);
+      const rows = await conn.query('SELECT * from blabla');
+      assert.deepEqual(rows, [
+        { i: 1, i2: 2 },
+        { i: 1, i2: null }
+      ]);
+      conn.query('DROP TABLE IF EXISTS blabla');
+      conn.end();
     });
 
     it('simple batch offset date', function (done) {
@@ -1013,8 +1005,16 @@ describe('batch callback', function () {
   describe('standard question mark without bulk', () => {
     const useCompression = false;
 
-    it('immediate batch after callback', function (done) {
-      let conn = base.createCallbackConnection();
+    it('immediate batch after callback with bulk', function (done) {
+      parameterError(true, done);
+    });
+
+    it('immediate batch after callback without bulk', function (done) {
+      parameterError(false, done);
+    });
+
+    function parameterError(bulk, done) {
+      let conn = base.createCallbackConnection({ bulk: bulk });
       conn.query('DROP TABLE IF EXISTS contacts');
       conn.query(
         'CREATE TABLE contacts(' +
@@ -1030,7 +1030,7 @@ describe('batch callback', function () {
           conn.end();
           if (err) {
             if (
-              err.message.includes('Parameter at position 2 is not set for values 0') ||
+              err.message.includes('Expect 3 parameters, but at index 0, parameters only contains 2') ||
               err.message.includes('Parameter at position 2 is not set')
             ) {
               done();
@@ -1040,8 +1040,7 @@ describe('batch callback', function () {
           }
         }
       );
-    });
-
+    }
     it('simple batch, local date', function (done) {
       if (!base.utf8Collation() || isXpand()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
@@ -1092,20 +1091,21 @@ describe('batch callback', function () {
           [1, 2],
           [1, undefined]
         ],
-        (err, rows) => {
-          if (err) {
-            assert.isTrue(
-              err.message.includes('Parameter at position 1 is not set for values 1') ||
-                err.message.includes('Parameter at position 1 is undefined'),
-              err.message
-            );
-            conn.query('DROP TABLE IF EXISTS blabla', (err) => {
-              conn.end();
-              done();
-            });
-          } else {
-            done('must have thrown error');
-          }
+        (err, res) => {
+          conn.query('SELECT * from blabla', (err, rows) => {
+            if (err) {
+              done(err);
+            } else {
+              assert.deepEqual(rows, [
+                { i: 1, i2: 2 },
+                { i: 1, i2: null }
+              ]);
+              conn.query('DROP TABLE IF EXISTS blabla', (err) => {
+                conn.end();
+                done();
+              });
+            }
+          });
         }
       );
     });
