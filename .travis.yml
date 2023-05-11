@@ -97,6 +97,10 @@ jobs:
     - env: srv=mariadb v=10.6 local=1 CLEAR_TEXT=1
       node_js: 16
       name: "CS 10.6 - node.js 16"
+    - env: srv=mariadb v=10.6 local=1
+      name: "CS 10.6 - node.js 20"
+      dist: focal
+      node_js: 20
     - env: srv=mysql v=5.7
       name: "MySQL 5.7"
     - env: srv=mysql v=8.0
