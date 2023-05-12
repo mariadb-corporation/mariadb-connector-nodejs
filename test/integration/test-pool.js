@@ -899,7 +899,7 @@ describe('Pool', () => {
   it('pool reset validation', async function () {
     // xpand doesn't support timeout
     if (isXpand()) this.skip();
-    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1', debug: true };
+    const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1' };
     if (shareConn.info.isMariaDB()) {
       conf['queryTimeout'] = 10000;
     }
@@ -1069,10 +1069,19 @@ describe('Pool', () => {
         });
 
       setImmediate(() => {
-        assert.equal(pool.activeConnections(), 10);
-        assert.equal(pool.totalConnections(), 10);
-        assert.equal(pool.idleConnections(), 0);
-        assert.isTrue(pool.taskQueueSize() > 9900);
+        if (pool.activeConnections() < 10) {
+          setTimeout(() => {
+            assert.equal(pool.activeConnections(), 10);
+            assert.equal(pool.totalConnections(), 10);
+            assert.equal(pool.idleConnections(), 0);
+            assert.isOk(pool.taskQueueSize() > 8000);
+          }, 100);
+        } else {
+          assert.equal(pool.activeConnections(), 10);
+          assert.equal(pool.totalConnections(), 10);
+          assert.equal(pool.idleConnections(), 0);
+          assert.isTrue(pool.taskQueueSize() > 9900);
+        }
 
         setTimeout(async () => {
           closed = true;

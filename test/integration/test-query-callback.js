@@ -343,7 +343,7 @@ describe('basic query callback', () => {
     }
     table += ')';
     insert += ')';
-    const conn = base.createCallbackConnection({ debug: true });
+    const conn = base.createCallbackConnection({});
     conn.connect((err) => {
       if (err) {
         done(err);
