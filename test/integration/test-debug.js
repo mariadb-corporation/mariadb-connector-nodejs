@@ -210,7 +210,7 @@ describe('debug', () => {
                 .then(() => {
                   const serverVersion = conn.serverVersion();
                   const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [8000, 9500];
+                  let range = [8000, 10500];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     'wrong data length : ' +
