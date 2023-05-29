@@ -13,6 +13,7 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
+export function importFile(config: ImportFileConfig): Promise<void>;
 export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
 
 export type TypeCastResult = boolean | number | string | symbol | null | Date | geojson.Geometry | Buffer;
@@ -401,6 +402,13 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   rowsAsArray?: boolean;
 }
 
+export interface ImportFileConfig extends ConnectionConfig {
+  /**
+   * sql file path to import
+   */
+  file: string;
+}
+
 export interface PoolConfig extends ConnectionConfig {
   /**
    * The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from
@@ -521,7 +529,18 @@ export interface ServerVersion {
    */
   readonly patch: number;
 }
+export interface SqlImportOptions {
+  /**
+   * file path of sql file
+   */
+  file: string;
 
+  /**
+   * Name of the database to use to import sql file.
+   * If not set, current database is used.
+   */
+  database?: string;
+}
 export interface ConnectionInfo {
   /**
    * Server connection identifier value
@@ -651,6 +670,11 @@ export interface Connection {
   reset(): Promise<void>;
 
   /**
+   * import sql file
+   */
+  importFile(config: SqlImportOptions): Promise<void>;
+
+  /**
    * Indicates the state of the connection as the driver knows it
    */
   isValid(): boolean;
@@ -742,6 +766,11 @@ export interface Pool {
    * Close all connection in pool
    */
   end(): Promise<void>;
+
+  /**
+   * import sql file
+   */
+  importFile(config: SqlImportOptions): Promise<void>;
 
   /**
    * Get current active connections.

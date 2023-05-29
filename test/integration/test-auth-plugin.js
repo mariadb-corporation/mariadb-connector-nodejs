@@ -317,7 +317,7 @@ describe('authentication plugin', () => {
           .then((conn) => {
             conn
               .query('select 1')
-              .then((res) => {
+              .then(() => {
                 conn.end();
                 base
                   .createConnection({
@@ -325,6 +325,7 @@ describe('authentication plugin', () => {
                     password: '!Passw0rd3Wrong'
                   })
                   .then((conn) => {
+                    conn.end();
                     done(new Error('must have throw Error!'));
                   })
                   .catch(() => {

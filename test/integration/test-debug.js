@@ -356,7 +356,6 @@ describe('debug', () => {
       compress = false;
     const range = compress ? [60, 150] : [60, 140];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
-    console.log(data);
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));
 

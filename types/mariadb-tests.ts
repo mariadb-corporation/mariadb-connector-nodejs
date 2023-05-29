@@ -5,6 +5,14 @@ import { Stream } from 'stream';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { baseConfig } = require('../test/conf.js');
 
+function importSqlFile(): Promise<void> {
+  return mariadb.importFile({
+    host: baseConfig.host,
+    user: 'test',
+    password: baseConfig.password,
+    file: '/somefile'
+  });
+}
 function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection> {
   return mariadb.createConnection({
     host: baseConfig.host,
@@ -84,6 +92,9 @@ async function testMisc(): Promise<void> {
 
   rows = await connection.query('SELECT ? as t', [1]);
   console.log(rows[0].t === 1);
+
+  await connection.importFile({ file: '/path' });
+  await connection.importFile({ file: '/path', database: 'somedb' });
 
   rows = await connection.query(
     {
@@ -289,6 +300,8 @@ async function testPool(): Promise<void> {
   pool = createPool({
     connectionLimit: 10
   });
+  await pool.importFile({ file: '/path' });
+  await pool.importFile({ file: '/path', database: 'somedb' });
   console.log(pool.closed);
   pool.taskQueueSize();
   function displayConn(conn: Connection): void {
@@ -379,6 +392,7 @@ async function testPoolCluster(): Promise<void> {
 
 async function runTests(): Promise<void> {
   try {
+    await importSqlFile();
     await testMisc();
     await testChangeUser();
     await testTypeCast();
