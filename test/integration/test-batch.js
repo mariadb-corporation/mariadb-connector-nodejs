@@ -1219,7 +1219,7 @@ describe('batch', function () {
     });
 
     it('simple batch encoding CP1251', async function () {
-      if (isXpand()) {
+      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) {
         this.skip();
         return;
       }

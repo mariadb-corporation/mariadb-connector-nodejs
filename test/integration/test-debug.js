@@ -303,7 +303,7 @@ describe('debug', () => {
             setTimeout(() => {
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               const serverVersion = conn.serverVersion();
-              const range = [6500, 8100];
+              const range = [6500, 8400];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +

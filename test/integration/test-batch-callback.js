@@ -914,8 +914,10 @@ describe('batch callback', function () {
     });
 
     it('simple batch encoding CP1251', function (done) {
-      // xpand doesn't support CP1251 encoding
-      if (isXpand()) this.skip();
+      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) {
+        this.skip();
+        return;
+      }
       simpleBatchEncodingCP1251(useCompression, true, 'local', done);
     });
 

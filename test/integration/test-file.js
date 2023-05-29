@@ -9,17 +9,20 @@ const base = require('../base');
 
 describe('sql file import', () => {
   beforeEach(async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     await shareConn.query('DROP DATABASE IF EXISTS fimp');
     await shareConn.query('CREATE DATABASE IF NOT EXISTS fimp');
   });
 
   afterEach(async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     await shareConn.query('DROP DATABASE fimp');
   });
 
   describe('promise', () => {
     describe('base promise', () => {
       it('simple file import with direct connection options', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
@@ -28,6 +31,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' })
@@ -36,6 +40,7 @@ describe('sql file import', () => {
       });
 
       it('no database selected', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         try {
           await basePromise.importFile(
@@ -54,6 +59,7 @@ describe('sql file import', () => {
 
     describe('base connection', () => {
       it('missing options', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         try {
           await shareConn.importFile();
@@ -68,6 +74,7 @@ describe('sql file import', () => {
       });
 
       it('wrong file options', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         try {
           await shareConn.importFile({ file: '/tt' });
@@ -82,6 +89,7 @@ describe('sql file import', () => {
         }
       });
       it('simple file import', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         await shareConn.importFile({ file: __dirname + '/../tools/data-dump.sql', database: 'fimp' });
         const res = await shareConn.query('SELECT DATABASE() as db');
@@ -92,6 +100,7 @@ describe('sql file import', () => {
 
     describe('base pool', () => {
       it('pool import', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const pool = base.createPool({
           connectionLimit: 1
@@ -102,6 +111,7 @@ describe('sql file import', () => {
       });
 
       it('no database selected', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const pool = base.createPool({
           connectionLimit: 1,
@@ -126,11 +136,13 @@ describe('sql file import', () => {
   describe('callback', () => {
     describe('base callback', () => {
       it('simple file import without callback', function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
         );
       });
       it('simple file import with direct connection options', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' }),
@@ -145,6 +157,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' }),
@@ -159,6 +172,7 @@ describe('sql file import', () => {
       });
 
       it('no database selected', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: null }),
@@ -180,6 +194,7 @@ describe('sql file import', () => {
 
     describe('base connection', () => {
       it('missing options', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const conn = base.createCallbackConnection();
         conn.connect((err) => {
@@ -200,6 +215,7 @@ describe('sql file import', () => {
       });
 
       it('wrong file options', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const conn = base.createCallbackConnection();
         conn.connect((err) => {
@@ -220,6 +236,7 @@ describe('sql file import', () => {
       });
 
       it('simple file import', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const conn = base.createCallbackConnection();
         conn.connect((err) => {
@@ -246,6 +263,7 @@ describe('sql file import', () => {
 
     describe('base pool', () => {
       it('pool import', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const pool = base.createPoolCallback({
           connectionLimit: 1
@@ -263,6 +281,7 @@ describe('sql file import', () => {
       });
 
       it('no database selected', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(10000);
         const pool = base.createPoolCallback({
           connectionLimit: 1,
