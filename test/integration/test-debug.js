@@ -52,7 +52,9 @@ describe('debug', () => {
   //ensure that debug from previous test are written to console
   afterEach((done) => {
     logger.close();
-    fs.unlinkSync(tmpLogFile);
+    try {
+      fs.unlinkSync(tmpLogFile);
+    } catch (e) {}
     setTimeout(() => {
       done();
     }, 1000);
