@@ -6,6 +6,7 @@ require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
 const base = require('../base');
+const { isXpand } = require('../base');
 
 describe('sql file import', () => {
   beforeEach(async function () {
@@ -31,7 +32,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', async function () {
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
         this.timeout(10000);
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' })
@@ -157,7 +158,8 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', function (done) {
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        // skipping if takes too long
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
         this.timeout(10000);
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' }),
