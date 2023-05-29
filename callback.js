@@ -61,14 +61,12 @@ module.exports.importFile = function importFile(opts, callback) {
     conn
       .connect()
       .then(() => {
-        return new Promise(function (res, rej) {
-          return conn.importFile(Object.assign({ skipDbCheck: true }, opts), res, rej);
-        });
+        return new Promise(conn.importFile.bind(conn, Object.assign({ skipDbCheck: true }, opts)));
       })
       .then(() => cb())
       .catch((err) => cb(err))
       .finally(() => {
-        new Promise(conn.end.bind(conn, new CommandParameter())).catch(() => {});
+        new Promise(conn.end.bind(conn, new CommandParameter())).catch(console.log);
       });
   } catch (err) {
     cb(err);
