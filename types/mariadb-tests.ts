@@ -176,6 +176,15 @@ async function testMisc(): Promise<void> {
     })
     .on('end', () => {
       console.log(currRow + ' ' + metaReceived);
+    })
+    .once('end', () => {
+      console.log('t');
+    })
+    .once('release', () => {
+      console.log('t2');
+    })
+    .addListener('error', () => {
+      console.log('t2');
     });
   connection.listeners('end')[0]();
   connection.listeners('error')[0](new SqlError('ddd'));

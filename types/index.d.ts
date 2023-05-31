@@ -8,6 +8,7 @@
 import tls = require('tls');
 import stream = require('stream');
 import geojson = require('geojson');
+import events = require('events');
 
 export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
@@ -594,7 +595,7 @@ export interface Prepare {
   close(): void;
 }
 
-export interface Connection {
+export interface Connection extends events.EventEmitter {
   /**
    * Connection information
    */
@@ -727,6 +728,7 @@ export interface Connection {
 
   on(ev: 'end', callback: () => void): Connection;
   on(ev: 'error', callback: (err: SqlError) => void): Connection;
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this;
   listeners(ev: 'end'): (() => void)[];
   listeners(ev: 'error'): ((err: SqlError) => void)[];
 }
