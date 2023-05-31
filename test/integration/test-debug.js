@@ -8,6 +8,7 @@ const path = require('path');
 const util = require('util');
 const winston = require('winston');
 const { isXpand } = require('../base');
+const Conf = require('../conf');
 
 describe('debug', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfileDebug.txt');
@@ -305,7 +306,7 @@ describe('debug', () => {
             setTimeout(() => {
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               const serverVersion = conn.serverVersion();
-              const range = [6500, 8400];
+              const range = [6500, 8400 + (Conf.baseConfig.ssl ? 250 : 0)];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +

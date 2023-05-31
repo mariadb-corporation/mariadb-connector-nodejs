@@ -7,10 +7,15 @@ describe('bit type', () => {
   it('bit type verification', async () => {
     await shareConn.query('DROP TABLE IF EXISTS test_bit');
     await shareConn.query('CREATE TABLE test_bit ( val1 bit(1), val2 bit(8))');
-    await shareConn.query('INSERT INTO test_bit VALUES (?, ?)', [Buffer.from([0x00]), Buffer.from([0x00])]);
-    await shareConn.query('INSERT INTO test_bit VALUES (?, ?)', [Buffer.from([0x01]), Buffer.from([0x01])]);
-    await shareConn.query('INSERT INTO test_bit VALUES (?, ?)', [null, null]);
-
+    await shareConn.query('INSERT INTO test_bit VALUES (?, ?), (?, ?), (?, ?)', [
+      Buffer.from([0x00]),
+      Buffer.from([0x00]),
+      Buffer.from([0x01]),
+      Buffer.from([0x01]),
+      null,
+      null
+    ]);
+    await shareConn.query('FLUSH TABLES');
     const expected = [
       { val1: false, val2: Buffer.from([0x00]) },
       { val1: true, val2: Buffer.from([0x01]) },
