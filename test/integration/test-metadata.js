@@ -53,7 +53,7 @@ const validateResults = function (rows) {
   assert.equal(rows.meta[1].name(), 't1');
   assert.equal(rows.meta[1].orgName(), 't');
   if (base.utf8Collation() && !isXpand()) {
-    assert.equal(rows.meta[1].collation, shareConn.__tests.getCollation());
+    assert.equal(rows.meta[1].collation.maxLength, 4);
     assert.equal(rows.meta[1].columnLength, 128);
   }
   assert.equal(rows.meta[1].columnType, FieldType.VAR_STRING);

@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "description": "fast mariadb or mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -12,10 +12,10 @@
   "scripts": {
     "test": "npm run test:types-prettier && npm run test:prettier && npm run test:types && npm run test:lint && npm run test:base",
     "test:base": "mocha --no-parallel --timeout 5000 \"test/**/*.js\" ",
-    "test:lint": "eslint \"{lib,test}/**/*.js\" ",
+    "test:lint": "eslint \"*.js\" \"{lib,test}/**/*.js\" ",
     "test:types": "eslint \"types/*.ts\" ",
     "test:types-prettier": "prettier --write \"types/*.ts\"",
-    "test:prettier": "prettier --write \"{tools,lib,test,benchmarks}/**/*.js\"",
+    "test:prettier": "prettier --write \"*.js\" \"{tools,lib,test,benchmarks}/**/*.js\"",
     "coverage": "npm run coverage:test && npm run coverage:create && npm run coverage:send",
     "coverage:test": "nyc mocha --no-parallel --timeout 5000 \"test/**/*.js\"",
     "coverage:report": "npm run coverage:create && npm run coverage:send",

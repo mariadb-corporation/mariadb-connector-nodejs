@@ -35,7 +35,8 @@ Connector is production grade quality, with multiple features:
 * easy debugging, trace pointing to code line on error
 * allows data streaming without high memory consumption
 * pipelining
-* metadata skipping (for MariaDB server only) 
+* metadata skipping (for MariaDB server only)
+* sql file import
 * ...
 
 see some of those features:

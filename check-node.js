@@ -17,7 +17,7 @@ const hasMinVersion = function (nodeVersionStr, connectorRequirement) {
   if (minorNode < minorReq) return false;
 
   return true;
-}
+};
 
 module.exports.hasMinVersion = hasMinVersion;
 

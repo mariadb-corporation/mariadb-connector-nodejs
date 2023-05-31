@@ -317,7 +317,7 @@ describe('authentication plugin', () => {
           .then((conn) => {
             conn
               .query('select 1')
-              .then((res) => {
+              .then(() => {
                 conn.end();
                 base
                   .createConnection({
@@ -325,6 +325,7 @@ describe('authentication plugin', () => {
                     password: '!Passw0rd3Wrong'
                   })
                   .then((conn) => {
+                    conn.end();
                     done(new Error('must have throw Error!'));
                   })
                   .catch(() => {
@@ -399,13 +400,6 @@ describe('authentication plugin', () => {
 
   it('sha256 authentication plugin with public key retrieval', function (done) {
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7, 0)) this.skip();
-    // request files since 5.7.40 / 8.0.31 fails when requesting public key
-    if (
-      !shareConn.info.isMariaDB() &&
-      ((!shareConn.info.hasMinVersion(8, 0, 0) && shareConn.info.hasMinVersion(5, 7, 40)) ||
-        shareConn.info.hasMinVersion(8, 0, 31))
-    )
-      this.skip();
 
     const self = this;
     base

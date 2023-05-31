@@ -64,12 +64,12 @@ Since 3.x version, driver has reliable default, returning:
 
 For compatibility with previous version or mysql/mysql driver, 4 options have been added to return BIGINT/DECIMAL as number, as previous defaults. 
 
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
-| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt |*boolean* | false |
-| **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values. |*boolean* | false |
-| **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values. |*boolean* | false |
-| **checkNumberRange** | when used in conjunction of decimalAsNumber, insertIdAsNumber or bigIntAsNumber, if conversion to number is not exact, connector will throw an error (since 3.0.1) |*function*| |
+|               option | description                                                                                                                                                        |    type    | default | 
+|---------------------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------:|:-------:|
+| **insertIdAsNumber** | Whether the query should return last insert id from INSERT/UPDATE command as BigInt or Number. default return BigInt                                               | *boolean*  |  false  |
+|  **decimalAsNumber** | Whether the query should return decimal as Number. If enabled, this might return approximate values.                                                               | *boolean*  |  false  |
+|   **bigIntAsNumber** | Whether the query should return BigInt data type as Number. If enabled, this might return approximate values.                                                      | *boolean*  |  false  |
+| **checkNumberRange** | when used in conjunction of decimalAsNumber, insertIdAsNumber or bigIntAsNumber, if conversion to number is not exact, connector will throw an error (since 3.0.1) | *function* |         |
 
 Previous options `supportBigNumbers` and `bigNumberStrings` still exist for compatibility, but are now deprecated.   
 
@@ -262,6 +262,7 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 * [`createConnection(options) → Promise`](#createconnectionoptions--promise) : Creates a new connection.
 * [`createPool(options) → Pool`](#createpooloptions--pool) : Creates a new Pool.
 * [`createPoolCluster(options) → PoolCluster`](#createpoolclusteroptions--poolcluster) : Creates a new pool cluster.
+* [`importFile(options) → Promise`](#importfileoptions--promise) : import Sql file
 * [`version → String`](#version--string) : Return library version.
 * [`defaultOptions(options) → Json`](#defaultoptionsoptions--json) : list options with default values
   
@@ -288,6 +289,7 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 * [`connection.pause()`](#connectionpause): Pauses the socket output.
 * [`connection.resume()`](#connectionresume): Resumes the socket output.
 * [`connection.serverVersion()`](#connectionserverversion): Retrieves the current server version.
+* [`connection.importFile(options) → Promise`](#connectionimportfileoptions--promise) : import Sql file
 * [`events`](#events): Subscribes to connection error events.
 
 **Pool:**
@@ -298,6 +300,7 @@ BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global
 * [`pool.end() → Promise`](#poolend--promise): Gracefully closes the connection.
 * [`pool.escape(value) → String`](#poolescapevalue--string): escape parameter 
 * [`pool.escapeId(value) → String`](#poolescapeidvalue--string): escape identifier 
+* [`pool.importFile(options) → Promise`](#poolimportfileoptions--promise) : import Sql file
 * `pool.activeConnections() → Number`: Gets current active connection number.
 * `pool.totalConnections() → Number`: Gets current total connection number.
 * `pool.idleConnections() → Number`: Gets current idle connection number.
@@ -345,21 +348,21 @@ try {
 
 Essential options list:
 
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
-| **`user`** | User to access database. |*string* | 
-| **`password`** | User password. |*string* | 
-| **`host`** | IP address or DNS of the database server. *Not used when using option `socketPath`*. |*string*| "localhost"|
-| **`port`** | Database server port number. *Not used when using option `socketPath`*|*integer*| 3306|
-| **`ssl`** | Enables TLS support. For more information, see the [`ssl` option](/documentation/connection-options.md#ssl) documentation. |*mixed*|
-| **`database`** | Default database to use when establishing the connection. | *string* | 
-| **`socketPath`** | Permits connections to the database through the Unix domain socket or named pipe. |  *string* | 
-| **`compress`** | Compresses the exchange with the database through gzip.  This permits better performance when the database is not in the same location.  |*boolean*| false|
-| **`connectTimeout`** | Sets the connection timeout in milliseconds. |*integer* | 1 000|
-| **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout. |*integer* | 0|
-| **`queryTimeout`** | Set maximum query time in ms (an error will be thrown if limit is reached). 0 or undefined meaning no timeout. This can be superseded for a query using [`timeout`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#timeout) option|*int* |0| 
-| **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query. |*boolean* | false|
-| **`logger`** | Configure logger. For more information, see the [`logger` option](/documentation/connection-options.md#logger) documentation. |*mixed*|
+|               option | description                                                                                                                                                                                                                                                                                  |   type    |   default   |
+|---------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------:|:-----------:|
+|           **`user`** | User to access database.                                                                                                                                                                                                                                                                     | *string*  | 
+|       **`password`** | User password.                                                                                                                                                                                                                                                                               | *string*  | 
+|           **`host`** | IP address or DNS of the database server. *Not used when using option `socketPath`*.                                                                                                                                                                                                         | *string*  | "localhost" |
+|           **`port`** | Database server port number. *Not used when using option `socketPath`*                                                                                                                                                                                                                       | *integer* |    3306     |
+|            **`ssl`** | Enables TLS support. For more information, see the [`ssl` option](/documentation/connection-options.md#ssl) documentation.                                                                                                                                                                   |  *mixed*  |
+|       **`database`** | Default database to use when establishing the connection.                                                                                                                                                                                                                                    | *string*  | 
+|     **`socketPath`** | Permits connections to the database through the Unix domain socket or named pipe.                                                                                                                                                                                                            | *string*  | 
+|       **`compress`** | Compresses the exchange with the database through gzip.  This permits better performance when the database is not in the same location.                                                                                                                                                      | *boolean* |    false    |
+| **`connectTimeout`** | Sets the connection timeout in milliseconds.                                                                                                                                                                                                                                                 | *integer* |    1 000    |
+|  **`socketTimeout`** | Sets the socket timeout in milliseconds after connection succeeds. A value of `0` disables the timeout.                                                                                                                                                                                      | *integer* |      0      |
+|   **`queryTimeout`** | Set maximum query time in ms (an error will be thrown if limit is reached). 0 or undefined meaning no timeout. This can be superseded for a query using [`timeout`](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#timeout) option |   *int*   |      0      | 
+|    **`rowsAsArray`** | Returns result-sets as arrays, rather than JSON. This is a faster way to get results. For more information, see Query.                                                                                                                                                                       | *boolean* |    false    |
+|         **`logger`** | Configure logger. For more information, see the [`logger` option](/documentation/connection-options.md#logger) documentation.                                                                                                                                                                |  *mixed*  |
 
 For more information, see the [Connection Options](/documentation/connection-options.md) documentation. 
 
@@ -468,19 +471,38 @@ try {
 }
 ```
 
- 
 ### PoolCluster options
 
 Pool cluster options includes [pool option documentation](#pool-options) that will be used when creating new pools. 
 
 Specific options for pool cluster are :
 
-|option|description|type|default| 
-|---:|---|:---:|:---:| 
-| **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools |*boolean* | true |
-| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed. Default to Infinity since 3.0, was 5 before|*integer* | Infinity |
-| **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms) |*integer*| 1000|
-| **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails) |*string*| 'RR'|
+|                     option | description                                                                                                                                                                                    |   type    | default  | 
+|---------------------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------:|:--------:|
+|             **`canRetry`** | When getting a connection from pool fails, can cluster retry with other pools                                                                                                                  | *boolean* |   true   |
+| **`removeNodeErrorCount`** | Maximum number of consecutive connection fail from a pool before pool is removed from cluster configuration. Infinity means node won't be removed. Default to Infinity since 3.0, was 5 before | *integer* | Infinity |
+|   **`restoreNodeTimeout`** | delay before a pool can be reused after a connection fails. 0 = can be reused immediately (in ms)                                                                                              | *integer* |   1000   |
+|      **`defaultSelector`** | default pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails)                                                                 | *string*  |   'RR'   |
+
+## `importFile(options) → Promise`
+
+> * `options`: *JSON/String* [connection option documentation](#connection-options) + one additional options `file`
+>
+> Returns a promise that :
+> * resolves with an empty result,
+> * raises an [Error](#error).
+
+Import an sql file 
+
+**Example:**
+
+```javascript
+try {
+    await mariadb.importFile({ host: 'localhost', user: 'root', file: '/tmp/tools/data-dump.sql'});
+} catch (e) {
+    // ...
+}
+```
 
 ## `version → String`
 
@@ -569,8 +591,8 @@ const https = require('https');
 //3Mb page
 https.get(
     'https://node.green/#ES2018-features-Promise-prototype-finally-basic-support',
-    readableStream => conn.query('INSERT INTO StreamingContent (b) VALUE (?)', [readableStream]);
-)
+    readableStream => conn.query('INSERT INTO StreamingContent (b) VALUE (?)', [readableStream])
+);
 ```
 
 ### JSON Result-sets 
@@ -1362,6 +1384,30 @@ Retrieves the version of the currently connected server.  Throws an error when n
   console.log(connection.serverVersion()); //10.2.14-MariaDB
 ```
 
+
+## `connection.importFile(options) → Promise`
+
+> * `options` *JSON*: 
+> ** file: <string> file path (mandatory)
+> ** database: <string> database if different that current connection database (optional)
+>
+> Returns a promise that :
+>   * resolves without result
+>   * rejects with an [Error](#error).
+
+Import sql file. If database is set, database will be use, then after file import, database will be reverted
+
+```javascript
+try {
+    await conn.importFile({
+        file: '/tmp/someFile.sql', 
+        database: 'myDb'
+    });
+} catch (e) {
+  // ...  
+}
+```
+
 ## `Error`
 
 When the Connector encounters an error, Promise returns an [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) object.  In addition to the standard properties, this object has the following properties:
@@ -1548,20 +1594,44 @@ This is an alias for [`connection.escape(value) → String`](#connectionescapeva
 ## `pool.escapeId(value) → String` 
 This is an alias for [`connection.escapeId(value) → String`](#connectionescapeidvalue--string) to escape Identifier
 
+
+## `pool.importFile(options) → Promise`
+
+> * `options` <JSON>:
+> ** file: <string> file path (mandatory)
+> ** database: <string> database if different that current connection database (optional)
+>
+> Returns a promise that :
+>   * resolves without result
+>   * rejects with an [Error](#error).
+
+Import sql file. If database is set, database will be use, then after file import, database will be reverted
+
+```javascript
+try {
+    await pool.importFile({
+        file: '/tmp/someFile.sql', 
+        database: 'myDb'
+    });
+} catch (e) {
+  // ...  
+}
+```
+
 ## Pool events
 
-|event|description|
-|---:|---|
-| **`acquire`** | This event emits a connection is acquired from pool.  |
-| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter |
-| **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued. |
-| **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter|
-| **`error`** | When pool fails to create new connection after reaching `initializationTimeout` timeout |
+|            event | description                                                                                               |
+|-----------------:|-----------------------------------------------------------------------------------------------------------|
+|    **`acquire`** | This event emits a connection is acquired from pool.                                                      |
+| **`connection`** | This event is emitted when a new connection is added to the pool. Has a connection object parameter       |
+|    **`enqueue`** | This event is emitted when a command cannot be satisfied immediately by the pool and is queued.           |
+|    **`release`** | This event is emitted when a connection is released back into the pool. Has a connection object parameter |
+|      **`error`** | When pool fails to create new connection after reaching `initializationTimeout` timeout                   |
 
 **Example:**
 
 ```javascript
-pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`);
+pool.on('connection', (conn) => console.log(`connection ${conn.threadId} has been created in pool`));
 ```
 
 # Pool cluster API

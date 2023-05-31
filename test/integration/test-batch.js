@@ -1185,21 +1185,17 @@ describe('batch', function () {
       const conn = await base.createConnection({ compress: useCompression, bulk: true });
       await conn.query('DROP TABLE IF EXISTS blabla');
       await conn.query('CREATE TABLE blabla(i int, i2 int)');
-      try {
-        await conn.batch('INSERT INTO `blabla` values (?, ?)', [
-          [1, 2],
-          [1, undefined]
-        ]);
-        conn.end();
-        throw new Error('expect an error !');
-      } catch (err) {
-        assert.isTrue(
-          err.message.includes('Parameter at position 1 is not set for values 1') ||
-            err.message.includes('Parameter at position 1 is undefined')
-        );
-        await conn.query('DROP TABLE IF EXISTS blabla');
-        conn.end();
-      }
+      await conn.batch('INSERT INTO `blabla` values (?, ?)', [
+        [1, 2],
+        [1, undefined]
+      ]);
+      const rows = await conn.query('SELECT * from blabla');
+      assert.deepEqual(rows, [
+        { i: 1, i2: 2 },
+        { i: 1, i2: null }
+      ]);
+      conn.query('DROP TABLE IF EXISTS blabla');
+      conn.end();
     });
 
     it('simple batch offset date', async function () {
@@ -1223,7 +1219,7 @@ describe('batch', function () {
     });
 
     it('simple batch encoding CP1251', async function () {
-      if (isXpand()) {
+      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) {
         this.skip();
         return;
       }
@@ -1455,18 +1451,17 @@ describe('batch', function () {
       const conn = await base.createConnection({ compress: useCompression, bulk: false });
       await conn.query('DROP TABLE IF EXISTS blabla');
       await conn.query('CREATE TABLE blabla(i int, i2 int)');
-      try {
-        await conn.batch('INSERT INTO `blabla` values (?,?)', [
-          [1, 2],
-          [1, undefined]
-        ]);
-        throw new Error('expect an error !');
-      } catch (err) {
-        assert.isTrue(err.message.includes('Parameter at position 1 is undefined'), err.message);
-        await conn.query('DROP TABLE IF EXISTS blabla');
-      } finally {
-        await conn.end();
-      }
+      await conn.batch('INSERT INTO `blabla` values (?,?)', [
+        [1, 2],
+        [1, undefined]
+      ]);
+      const rows = await conn.query('SELECT * FROM blabla');
+      assert.deepEqual(rows, [
+        { i: 1, i2: 2 },
+        { i: 1, i2: null }
+      ]);
+      await conn.query('DROP TABLE IF EXISTS blabla');
+      await conn.end();
     });
 
     it('simple batch offset date', async function () {

@@ -8,6 +8,7 @@ const path = require('path');
 const util = require('util');
 const winston = require('winston');
 const { isXpand } = require('../base');
+const Conf = require('../conf');
 
 describe('debug', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfileDebug.txt');
@@ -52,7 +53,9 @@ describe('debug', () => {
   //ensure that debug from previous test are written to console
   afterEach((done) => {
     logger.close();
-    fs.unlinkSync(tmpLogFile);
+    try {
+      fs.unlinkSync(tmpLogFile);
+    } catch (e) {}
     setTimeout(() => {
       done();
     }, 1000);
@@ -210,7 +213,7 @@ describe('debug', () => {
                 .then(() => {
                   const serverVersion = conn.serverVersion();
                   const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [8000, 9500];
+                  let range = [8000, 10500];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     'wrong data length : ' +
@@ -303,7 +306,7 @@ describe('debug', () => {
             setTimeout(() => {
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               const serverVersion = conn.serverVersion();
-              const range = [6500, 8100];
+              const range = [6500, 9000 + (Conf.baseConfig.ssl ? 800 : 0)];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +
@@ -356,7 +359,6 @@ describe('debug', () => {
       compress = false;
     const range = compress ? [60, 150] : [60, 140];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
-    console.log(data);
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));
 

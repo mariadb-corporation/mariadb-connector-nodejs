@@ -8,11 +8,13 @@
 import tls = require('tls');
 import stream = require('stream');
 import geojson = require('geojson');
+import events = require('events');
 
 export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function createPool(config: PoolConfig | string): Pool;
 export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
+export function importFile(config: ImportFileConfig): Promise<void>;
 export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
 
 export type TypeCastResult = boolean | number | string | symbol | null | Date | geojson.Geometry | Buffer;
@@ -140,6 +142,19 @@ export interface QueryConfig {
    * Default: false;
    */
   bigIntAsNumber?: boolean;
+
+  /**
+   * @deprecated big numbers (BIGINT and DECIMAL columns) will result as string when not in safe number range.
+   * now replaced by decimalAsNumber, bigIntAsNumber and checkNumberRange options
+   */
+  supportBigNumbers?: boolean;
+
+  /**
+   * @deprecated when used with supportBigNumbers, big numbers (BIGINT and DECIMAL columns) will always result as string
+   * even if in safe number range.
+   * now replaced by decimalAsNumber, bigIntAsNumber and checkNumberRange options
+   */
+  bigNumberStrings?: boolean;
 
   /**
    * Throw if conversion to Number is not safe.
@@ -388,6 +403,13 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
   rowsAsArray?: boolean;
 }
 
+export interface ImportFileConfig extends ConnectionConfig {
+  /**
+   * sql file path to import
+   */
+  file: string;
+}
+
 export interface PoolConfig extends ConnectionConfig {
   /**
    * The milliseconds before a timeout occurs during the connection acquisition. This is slightly different from
@@ -508,7 +530,18 @@ export interface ServerVersion {
    */
   readonly patch: number;
 }
+export interface SqlImportOptions {
+  /**
+   * file path of sql file
+   */
+  file: string;
 
+  /**
+   * Name of the database to use to import sql file.
+   * If not set, current database is used.
+   */
+  database?: string;
+}
 export interface ConnectionInfo {
   /**
    * Server connection identifier value
@@ -562,7 +595,7 @@ export interface Prepare {
   close(): void;
 }
 
-export interface Connection {
+export interface Connection extends events.EventEmitter {
   /**
    * Connection information
    */
@@ -638,6 +671,11 @@ export interface Connection {
   reset(): Promise<void>;
 
   /**
+   * import sql file
+   */
+  importFile(config: SqlImportOptions): Promise<void>;
+
+  /**
    * Indicates the state of the connection as the driver knows it
    */
   isValid(): boolean;
@@ -690,6 +728,7 @@ export interface Connection {
 
   on(ev: 'end', callback: () => void): Connection;
   on(ev: 'error', callback: (err: SqlError) => void): Connection;
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this;
   listeners(ev: 'end'): (() => void)[];
   listeners(ev: 'error'): ((err: SqlError) => void)[];
 }
@@ -729,6 +768,11 @@ export interface Pool {
    * Close all connection in pool
    */
   end(): Promise<void>;
+
+  /**
+   * import sql file
+   */
+  importFile(config: SqlImportOptions): Promise<void>;
 
   /**
    * Get current active connections.

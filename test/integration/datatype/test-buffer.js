@@ -29,8 +29,7 @@ describe('buffer', () => {
     let rows = await shareConn.query(' SELECT ' + shareConn.escape(buf) + ' t');
     assert.deepEqual(rows, [{ t: buf }]);
 
-    await shareConn.query('INSERT INTO BufEscape VALUE (' + shareConn.escape(buf) + ')');
-    await shareConn.query('INSERT INTO BufEscape VALUE (?)', buf);
+    await shareConn.query('INSERT INTO BufEscape VALUE (' + shareConn.escape(buf) + '), (?)', buf);
     rows = await shareConn.query('SELECT * FROM BufEscape');
     assert.deepEqual(rows, [{ b: buf }, { b: buf }]);
   });

@@ -149,7 +149,8 @@ describe('sql template strings', () => {
     });
   });
 
-  it('pool query with parameters', (done) => {
+  it('pool query with parameters', function (done) {
+    if (process.env.srv === 'maxscale' && process.env.srv === 'skysql-ha') this.skip;
     const pool = base.createPool();
     pool
       .query('drop table IF EXISTS pool_query_param')
