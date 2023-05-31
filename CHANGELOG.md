@@ -1,5 +1,32 @@
 # Change Log
 
+## [3.2.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.0) (Jun 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.2...3.2.0)
+
+## Notable changes
+* CONJS-250	'undefined' parameters are now permitted, for compatibility with mysql/mysql2 behavior
+* CONJS-257	permit to import sql file directly
+
+#### new APIs:
+  [importFile(options) → Promise](./documentation/promise-api.md#importfileoptions--promise)
+  [connection.importFile({file:'...', 'database': '...'}) → Promise](./documentation/promise-api.md##connectionimportfileoptions--promise)
+  [pool.importFile({file:'...', 'database': '...'}) → Promise](./documentation/promise-api.md#poolimportfileoptions--promise)
+
+example: 
+```javascript
+    await conn.importFile({
+        file: '/tmp/someFile.sql', 
+        database: 'myDb'
+    });
+```
+
+## Issues Fixed
+* CONSJ-252 missing deprecated option supportBigNumbers and bigNumberStrings in Typescript
+* CONJS-254 ensuring option connectTimeout is respected : timeout is removed when socket is successfully established, in place of returning connection object. Wasn't set when using pipe/unix socket
+* CONJS-255	In some case, pipelining was use even option explicitly disable it
+* CONJS-256 method changeUser can lead to error when using multi-authentication and pipelining
+* CONJS-258	All eventEmitters methods are not available on connections
+
 ## [3.1.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.1.2) (May 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.1...3.1.2)
 
@@ -181,7 +208,7 @@ Notable change:
 ## [3.0.0-beta](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.0.0-beta) (11 Jun 2021)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/2.5.4...3.0.0-beta)
 
-Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/maintenance/3.x/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) documentation.
+Migrating from 2.x or mysql/mysql2 driver have some breaking changes, see [dedicated part](./documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) documentation.
 
 * [CONJS-153] support Prepared statement with 10.6 new feature metadata skip
 * [CONJS-165] Adding initial message error value on Error object
