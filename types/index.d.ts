@@ -852,8 +852,14 @@ export interface SqlError extends Error {
 
   /**
    * original error message value
+   * @deprecated since 3.2.0 prefer using sqlMessage for compatibility with other drivers.
    */
   text: string | null;
+
+  /**
+   * original error message value
+   */
+  sqlMessage: string | null;
 
   /**
    * The sql command associate

@@ -41,6 +41,7 @@ describe('Error', () => {
                 assert.equal(err.sqlState, 42000);
                 assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
                 assert.isTrue(err.message.includes('sql: wrong query - parameters:[]'));
+                assert.isTrue(err.sqlMessage.includes('You have an error in your SQL syntax'));
               }
             }
             conn.end();
