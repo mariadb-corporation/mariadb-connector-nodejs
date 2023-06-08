@@ -1095,7 +1095,7 @@ poolCluster(err => {
 ## `poolCluster.getConnection([pattern, ][selector, ]callback)`
 
 > * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
-> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
+> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the cluster option `defaultSelector` if set, 'RR' if not
 > * `callback`: *function* Callback function with arguments ([Error](#error), [Connection](#connection-api)).
 > 
 
