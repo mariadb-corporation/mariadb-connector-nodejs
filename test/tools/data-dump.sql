@@ -70,6 +70,9 @@ INSERT INTO `post` VALUES
 (3,'post #2');
 /*!40000 ALTER TABLE `post` ENABLE KEYS */;
 UNLOCK TABLES;
+--  // SPDX-License-Identifier: LGPL-2.1-or-later
+--  // Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
