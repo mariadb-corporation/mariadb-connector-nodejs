@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 import mariadb = require('..');
 import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
 import { Stream } from 'stream';
@@ -72,7 +75,7 @@ function createPool(options?: unknown): mariadb.Pool {
 async function testMisc(): Promise<void> {
   let rows;
   const defaultOptions = mariadb.defaultOptions();
-  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00' });
+  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00', debugLen: 1024, logParam: true });
   console.log(defaultOptions);
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
