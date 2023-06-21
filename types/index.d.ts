@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Type definitions for mariadb 2.5
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
@@ -266,6 +269,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * (Default: 256)
    */
   debugLen?: number;
+
+  /**
+   * indicate if parameters must be logged by query logger
+   * (Default: false)
+   */
+  logParam?: boolean;
 
   /**
    * Adds the stack trace at the time of query creation to the error stack trace, making it easier to identify the
