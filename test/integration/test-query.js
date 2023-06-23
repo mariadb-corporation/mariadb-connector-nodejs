@@ -67,6 +67,16 @@ describe('basic query', () => {
     conn.end();
   });
 
+  it('namedPlaceholders parameter', async () => {
+    const conn = await base.createConnection({ namedPlaceholders: true });
+    await conn.query('DROP TABLE IF EXISTS namedPlaceholders1');
+    await conn.query('CREATE TABLE namedPlaceholders1(t varchar(128))');
+    await conn.query("INSERT INTO `namedPlaceholders1` value ('a'), ('b'), ('c')");
+    const res = await conn.query('select * from `namedPlaceholders1` where t IN (:possible)', { possible: ['a', 'c'] });
+    assert.deepEqual(res, [{ t: 'a' }, { t: 'c' }]);
+    conn.end();
+  });
+
   it('query stack trace', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
