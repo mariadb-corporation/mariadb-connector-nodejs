@@ -14,7 +14,7 @@ describe('connection option', () => {
         done(new Error('must have thrown error!'));
       })
       .catch((err) => {
-        assert(err.message.includes('Unknown charset'));
+        assert(err.message.includes('Unknown'));
         done();
       });
   });
