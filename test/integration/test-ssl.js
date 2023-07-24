@@ -192,6 +192,7 @@ describe('ssl', function () {
   });
 
   it('ensure connection use SSL ', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!base.utf8Collation()) this.skip();
     base
@@ -530,7 +531,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -555,7 +556,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
