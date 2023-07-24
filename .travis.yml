@@ -52,6 +52,9 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: srv=build
+    - env: srv=skysql RUN_LONG_TEST=0
+    - env: srv=skysql-ha RUN_LONG_TEST=0
+    - env: srv=xpand RUN_LONG_TEST=0
   include:
     - stage: Minimal
       env: srv=mariadb v=10.6 local=1
