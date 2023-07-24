@@ -9,6 +9,7 @@ const fs = require('fs');
 const Conf = require('../conf');
 const tls = require('tls');
 const { isXpand } = require('../base');
+const crypto = require('crypto');
 
 describe('ssl', function () {
   let ca = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? Conf.baseConfig.ssl.ca : null;
@@ -418,6 +419,7 @@ describe('ssl', function () {
         ssl: {
           rejectUnauthorized: false,
           secureProtocol: 'TLSv1_2_method',
+          secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
           ciphers:
             'DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
         },
