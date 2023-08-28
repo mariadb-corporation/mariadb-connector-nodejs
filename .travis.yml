@@ -70,8 +70,8 @@ jobs:
     - env: srv=mariadb-es v=10.5
       name: "ES 10.5"
       if: type = push AND fork = false
-    - env: srv=mariadb-es-test v=23.07
-      name: "ES 23.07"
+    - env: srv=mariadb-es-test v=23.08
+      name: "ES 23.08"
       if: type = push AND fork = false
     - env: srv=maxscale
       name: "Maxscale"
