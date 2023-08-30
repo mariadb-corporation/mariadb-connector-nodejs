@@ -14,6 +14,7 @@ describe('time', () => {
 
     await shareConn.query('DROP TABLE IF EXISTS time_data');
     await shareConn.query('CREATE TABLE time_data(t1 time(6), t2 time(6))');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO time_data VALUES (?, ?)', ['-838:59:58', '-838:59:59.999999']);
     await shareConn.query('INSERT INTO time_data VALUES (?, ?)', ['-1:00:00', '25:00:00']);
     let results = await shareConn.query('SELECT * FROM time_data');
@@ -27,5 +28,6 @@ describe('time', () => {
     assert.equal(results[0].t2, isXpand() ? '-838:59:59' : '-838:59:59.999999');
     assert.equal(results[1].t1, '-01:00:00');
     assert.equal(results[1].t2, '25:00:00');
+    await shareConn.commit();
   });
 });

@@ -32,6 +32,7 @@ describe('float', () => {
 
   it('bigint format', async () => {
     await shareConn.query('TRUNCATE testBigfloat');
+    await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
     );
@@ -43,10 +44,12 @@ describe('float', () => {
     assert.equal(rows[1].b, isXpand() ? 900719925.4741 : 900719925.4740991);
     assert.equal(rows[2].a, null);
     assert.equal(rows[2].b, null);
+    await shareConn.commit();
   });
 
   it('bigint format exec', async () => {
     await shareConn.query('TRUNCATE testBigfloat');
+    await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
     );
@@ -58,5 +61,6 @@ describe('float', () => {
     assert.equal(rows[1].b, 900719925.4740991);
     assert.equal(rows[2].a, null);
     assert.equal(rows[2].b, null);
+    await shareConn.commit();
   });
 });
