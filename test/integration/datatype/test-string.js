@@ -42,12 +42,12 @@ describe('string', () => {
     if (!base.utf8Collation()) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS buf_utf8_string');
     await shareConn.query('CREATE TABLE buf_utf8_string(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)');
+    await shareConn.beginTransaction();
 
     //F0 9F 98 8E 😎 unicode 6 smiling face with sunglasses
     //F0 9F 8C B6 🌶 unicode 7 hot pepper
     //F0 9F 8E A4 🎤 unicode 8 no microphones
     //F0 9F A5 82 🥂 unicode 9 champagne glass
-
     await shareConn.query(
       'INSERT INTO buf_utf8_string values ' +
         "('hel\\'lo'), " +
@@ -60,6 +60,7 @@ describe('string', () => {
     checkUtf8String(rows);
     rows = await shareConn.execute('SELECT * from buf_utf8_string');
     checkUtf8String(rows);
+    await shareConn.commit();
   });
 
   const checkUtf8String = (res) => {
@@ -94,22 +95,26 @@ describe('string', () => {
     await shareConn.query('DROP TABLE IF EXISTS big5_encoding_table');
     await shareConn.query('CREATE TABLE utf8_encoding_table(t1 text) CHARSET utf8');
     await shareConn.query('CREATE TABLE big5_encoding_table(t2 text) CHARSET big5');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO utf8_encoding_table values (?)', [str]);
     await shareConn.query('INSERT INTO big5_encoding_table values (?)', [str]);
     let res = await shareConn.query('SELECT * from utf8_encoding_table, big5_encoding_table');
     assert.deepEqual(res, [{ t1: str, t2: str }]);
     res = await shareConn.execute('SELECT * from utf8_encoding_table, big5_encoding_table');
     assert.deepEqual(res, [{ t1: str, t2: str }]);
+    await shareConn.commit();
   });
 
   it('string escape', async () => {
     await shareConn.query('DROP TABLE IF EXISTS escape_utf8_string');
     await shareConn.query('CREATE TABLE escape_utf8_string(tt text) CHARSET utf8');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO escape_utf8_string values (?)', ['a \'b\\"c']);
     let res = await shareConn.query('SELECT * from escape_utf8_string');
     assert.deepEqual(res, [{ tt: 'a \'b\\"c' }]);
     res = await shareConn.execute('SELECT * from escape_utf8_string');
     assert.deepEqual(res, [{ tt: 'a \'b\\"c' }]);
+    await shareConn.commit();
   });
 
   it('wrong surrogate', async function () {
@@ -119,6 +124,7 @@ describe('string', () => {
     const conn = await base.createConnection();
     await conn.query('DROP TABLE IF EXISTS wrong_utf8_string');
     await conn.query('CREATE TABLE wrong_utf8_string(tt text) CHARSET utf8mb4');
+    await conn.beginTransaction();
     await conn.query('INSERT INTO wrong_utf8_string values (?)', [wrongString]);
     let res = await conn.query('SELECT * from wrong_utf8_string');
     assert.deepEqual(res, [{ tt: 'a?b?c?' }]);

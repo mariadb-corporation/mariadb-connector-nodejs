@@ -14,6 +14,7 @@ describe('set', () => {
 
     await shareConn.query('DROP TABLE IF EXISTS set_array');
     await shareConn.query("CREATE TABLE set_array(tt SET('v1','v2', 'v3'))");
+    await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO set_array values ' +
         "('v1'), " +
@@ -38,5 +39,6 @@ describe('set', () => {
     assert.deepEqual(rows, expected);
     rows = await shareConn.execute('SELECT * from set_array');
     assert.deepEqual(rows, expected);
+    await shareConn.commit();
   });
 });

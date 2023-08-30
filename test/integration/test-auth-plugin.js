@@ -72,7 +72,7 @@ describe('authentication plugin', () => {
   });
 
   it('ed25519 authentication plugin', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'skysql') this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
