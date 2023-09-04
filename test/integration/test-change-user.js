@@ -8,6 +8,10 @@ const { assert } = require('chai');
 const ServerStatus = require('../../lib/const/server-status');
 const Conf = require('../conf');
 const { isXpand } = require('../base');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+const winston = require('winston');
 
 describe('change user', () => {
   before(async () => {
@@ -82,19 +86,44 @@ describe('change user', () => {
   it('wrong collation in charset', function (done) {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
-    base.createConnection().then((conn) => {
-      conn
-        .changeUser({
-          user: 'ChangeUser',
-          password: 'm1P4ssw0@rd',
-          charset: 'UTF8MB4_UNICODE_CI'
-        })
-        .then(() => {
-          conn.end();
-          done();
-        })
-        .catch(done);
+    let tmpLogFile = path.join(os.tmpdir(), 'wrongCollation.txt');
+    try {
+      fs.unlinkSync(tmpLogFile);
+    } catch (e) {}
+    let logger = winston.createLogger({
+      transports: [new winston.transports.File({ filename: tmpLogFile })]
     });
+    base
+      .createConnection({
+        logger: {
+          warning: (msg) => logger.info(msg)
+        }
+      })
+      .then((conn) => {
+        conn
+          .changeUser({
+            user: 'ChangeUser',
+            password: 'm1P4ssw0@rd',
+            charset: 'UTF8MB4_UNICODE_CI'
+          })
+          .then(() => {
+            conn.end();
+            const data = fs.readFileSync(tmpLogFile, 'utf8');
+            assert.isTrue(
+              data.includes(
+                "warning: please use option 'collation' in replacement of 'charset' when using a collation name ('UTF8MB4_UNICODE_CI')"
+              )
+            );
+            done();
+          })
+          .catch(done)
+          .finally(() => {
+            logger.close();
+            try {
+              fs.unlinkSync(tmpLogFile);
+            } catch (e) {}
+          });
+      });
   });
 
   it('wrong collation', function (done) {
