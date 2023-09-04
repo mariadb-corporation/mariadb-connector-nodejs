@@ -53,7 +53,8 @@ describe('test options', () => {
         error: null,
         network: null,
         query: null,
-        logParam: false
+        logParam: false,
+        warning: console.log
       },
       metaAsArray: false,
       metaEnumerable: false,

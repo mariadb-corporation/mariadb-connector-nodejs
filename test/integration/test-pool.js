@@ -13,6 +13,7 @@ const os = require('os');
 const Proxy = require('../tools/proxy');
 const { isXpand } = require('../base');
 const { baseConfig } = require('../conf');
+const winston = require('winston');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -64,7 +65,7 @@ describe('Pool', () => {
       await pool.query('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:64:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:65:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -82,7 +83,7 @@ describe('Pool', () => {
       await pool.execute('wrong query');
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:82:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:83:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -100,7 +101,7 @@ describe('Pool', () => {
       await pool.execute('SELECT ?', []);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:100:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:101:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -244,7 +245,7 @@ describe('Pool', () => {
       await pool.batch('WRONG COMMAND', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:244:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:245:18'), err.stack);
     } finally {
       await pool.end();
     }
@@ -263,7 +264,7 @@ describe('Pool', () => {
       await pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.stack.includes('test-pool.js:263:18'), err.stack);
+      assert.isTrue(err.stack.includes('test-pool.js:264:18'), err.stack);
     } finally {
       await pool.query('DROP TABLE test_batch');
       await pool.end();
@@ -863,14 +864,38 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout with leak', function (done) {
+    let tmpLogFile = path.join(os.tmpdir(), 'logFile.txt');
+    try {
+      fs.unlinkSync(tmpLogFile);
+    } catch (e) {}
+    let logger = winston.createLogger({
+      transports: [new winston.transports.File({ filename: tmpLogFile })]
+    });
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-    const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200, leakDetectionTimeout: 10 });
+    const pool = base.createPool({
+      connectionLimit: 1,
+      acquireTimeout: 200,
+      leakDetectionTimeout: 10,
+      logger: {
+        network: null,
+        query: (msg) => logger.info(msg),
+        error: (msg) => logger.info(msg),
+        warning: (msg) => logger.info(msg)
+      }
+    });
     let errorThrown = false;
     pool
       .query('SELECT SLEEP(1)')
       .then(async () => {
         await pool.end();
         assert.isOk(errorThrown);
+        const data = fs.readFileSync(tmpLogFile, 'utf8');
+        assert.isTrue(data.includes('A possible connection leak on the thread'));
+        assert.isTrue(data.includes('was returned to pool'));
+        logger.close();
+        try {
+          fs.unlinkSync(tmpLogFile);
+        } catch (e) {}
         done();
       })
       .catch(done);

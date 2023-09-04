@@ -28,6 +28,7 @@ export interface LoggerConfig {
   network?: (msg: string) => void;
   query?: (msg: string) => void;
   error?: (err: Error) => void;
+  warning?: (msg: string) => void;
 }
 
 export function StreamCallback(err?: Error, stream?: stream.Duplex): void;

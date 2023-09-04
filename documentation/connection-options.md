@@ -60,10 +60,11 @@ mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=fals
 ## logger
 
 Driver permit mapping the logs to an external logger.
-There is 3 caller functions:
+There is 4 caller functions:
 * network(string): called for each network exchanges. 
 * query(string): called for each commands 
-* error(Error): called for each error. 
+* error(Error): called for each error.
+* warning(string): called for each warning (configuration warning, leak message), default to console.log if not set.
 
 if setting one function, function will be used for all loggers. 
 (ie. logger: console.log  ===  logger: { network: console.log, query: console.log, error: console.log})
