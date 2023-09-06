@@ -25,6 +25,7 @@ describe('string', () => {
     const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
     await shareConn.query('DROP TABLE IF EXISTS buf_utf8_chars');
     await shareConn.query('CREATE TABLE buf_utf8_chars(tt text  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', buf);
     let results = await shareConn.query("SELECT _binary'🤘💪' t1, '🤘💪' t2, tt FROM buf_utf8_chars");
     assert.equal(results[0].t1, '🤘💪');
@@ -36,6 +37,7 @@ describe('string', () => {
     assert.equal(rows[0].t2, '🤖');
     assert.equal(rows[1].tt, '🤘🤖');
     assert.equal(rows[1].t2, '🤖');
+    await shareConn.commit();
   });
 
   it('utf8 strings', async function () {

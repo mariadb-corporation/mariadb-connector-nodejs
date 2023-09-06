@@ -78,8 +78,8 @@ describe('Connection meta', function () {
     assert(shareConn.info.hasMinVersion(3));
     assert(shareConn.info.hasMinVersion(3, 4));
     assert(shareConn.info.hasMinVersion(3, 4, 10));
-    assert(!shareConn.info.hasMinVersion(13));
-    assert(!shareConn.info.hasMinVersion(13, 5));
-    assert(!shareConn.info.hasMinVersion(13, 5, 20));
+    assert(!shareConn.info.hasMinVersion(33));
+    assert(!shareConn.info.hasMinVersion(33, 5));
+    assert(!shareConn.info.hasMinVersion(33, 5, 20));
   });
 });
