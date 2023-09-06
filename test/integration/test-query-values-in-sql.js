@@ -212,18 +212,20 @@ describe('sql template strings', () => {
     pool.query('drop table IF EXISTS pool_parse_call', (err, res) => {
       pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
         pool.query({ sql: 'INSERT INTO pool_parse_call value (?)', values: [value] }, (err, res) => {
-          pool.query({ sql: 'select * from pool_parse_call where t = ?', values: [value] }, (err, res) => {
-            if (err) {
-              pool.end();
-              done(err);
-            } else {
-              assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_parse_call', () => {
+          setTimeout(() => {
+            pool.query({ sql: 'select * from pool_parse_call where t = ?', values: [value] }, (err, res) => {
+              if (err) {
                 pool.end();
-                done();
-              });
-            }
-          });
+                done(err);
+              } else {
+                assert.strictEqual(res[0].t, value);
+                pool.query('drop table pool_parse_call', () => {
+                  pool.end();
+                  done();
+                });
+              }
+            });
+          }, 1000);
         });
       });
     });
@@ -235,17 +237,19 @@ describe('sql template strings', () => {
     pool.query('drop table pool_batch_call', (err) => {
       pool.query('CREATE TABLE pool_batch_call(t varchar(128))', (err, res) => {
         pool.batch({ sql: 'INSERT INTO pool_batch_call value (?)', values: [value] }, (err, res) => {
-          pool.query({ sql: 'select * from pool_batch_call where t = ?', values: [value] }, (err, res) => {
-            if (err) {
-              done(err);
-            } else {
-              assert.strictEqual(res[0].t, value);
-              pool.query('drop table pool_batch_call', () => {
-                pool.end();
-                done();
-              });
-            }
-          });
+          setTimeout(() => {
+            pool.query({ sql: 'select * from pool_batch_call where t = ?', values: [value] }, (err, res) => {
+              if (err) {
+                done(err);
+              } else {
+                assert.strictEqual(res[0].t, value);
+                pool.query('drop table pool_batch_call', () => {
+                  pool.end();
+                  done();
+                });
+              }
+            });
+          }, 1000);
         });
       });
     });

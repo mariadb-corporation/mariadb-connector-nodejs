@@ -213,6 +213,7 @@ describe('TypeCast', () => {
     };
     const conn = await base.createConnection({ typeCast: longCast });
     await conn.query('DROP TABLE IF EXISTS stupidCast');
+    await conn.beginTransaction();
     await conn.query('CREATE TABLE stupidCast(b1 POINT)');
     await conn.query('INSERT INTO stupidCast VALUES (?), (?),(null)', [
       {

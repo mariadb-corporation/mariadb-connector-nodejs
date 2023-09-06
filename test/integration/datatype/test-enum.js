@@ -15,6 +15,7 @@ describe('enum', async () => {
         "  fruit ENUM('apple','orange','pear'),\n" +
         '  bushels INT)'
     );
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['pear', 20]);
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['apple', 100]);
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [2, 110]);
@@ -35,6 +36,7 @@ describe('enum', async () => {
       { id: 3, fruit: 'orange', bushels: 110 },
       { id: 4, fruit: null, bushels: 120 }
     ]);
+    await shareConn.commit();
   });
 
   it('enum type verification exec', async () => {
