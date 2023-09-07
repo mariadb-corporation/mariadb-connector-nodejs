@@ -214,6 +214,80 @@ describe('local-infile', () => {
     conn.end();
   });
 
+  it('small infileStreamFactory connection lvl', async function () {
+    if (isXpand()) this.skip();
+    const self = this;
+    const rows = await shareConn.query('select @@local_infile');
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      return self.skip();
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({
+      permitLocalInfile: true,
+      infileStreamFactory: () => {
+        return fs.createReadStream(smallFileName);
+      }
+    });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    await conn.query(
+      "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+    );
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' }
+    ]);
+    conn.end();
+  });
+
+  it('small infileStreamFactory query lvl', async function () {
+    if (isXpand()) this.skip();
+    const self = this;
+    const rows = await shareConn.query('select @@local_infile');
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      return self.skip();
+    }
+    await new Promise(function (resolve, reject) {
+      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    const conn = await base.createConnection({ permitLocalInfile: true });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    await conn.query({
+      sql: "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
+      infileStreamFactory: () => {
+        return fs.createReadStream(smallFileName);
+      }
+    });
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, [
+      { id: 1, test: 'hello' },
+      { id: 2, test: 'world' }
+    ]);
+    conn.end();
+  });
+
   it('small local infile with parameter', async function () {
     if (isXpand()) this.skip();
     const self = this;
