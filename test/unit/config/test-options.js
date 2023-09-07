@@ -38,6 +38,7 @@ describe('test options', () => {
       socketPath: undefined,
       sessionVariables: undefined,
       ssl: undefined,
+      infileStreamFactory: undefined,
       queryTimeout: 0,
       socketTimeout: 0,
       keepAliveDelay: 0,

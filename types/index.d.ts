@@ -171,6 +171,12 @@ export interface QueryConfig {
    * Configure logger
    */
   logger?: LoggerConfig;
+
+  /**
+   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * @param filepath
+   */
+  infileStreamFactory?: (filepath: string) => stream.Readable;
 }
 
 export interface QueryOptions extends QueryConfig {
@@ -411,6 +417,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * Return result-sets as array, rather than a JSON object. This is a faster way to get results
    */
   rowsAsArray?: boolean;
+
+  /**
+   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * @param filepath
+   */
+  infileStreamFactory?: (filepath: string) => stream.Readable;
 }
 
 export interface ImportFileConfig extends ConnectionConfig {

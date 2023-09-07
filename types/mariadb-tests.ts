@@ -4,6 +4,7 @@
 import mariadb = require('..');
 import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
 import { Stream } from 'stream';
+import { createReadStream } from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { baseConfig } = require('../test/conf.js');
@@ -30,6 +31,7 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
       console.log('test');
       callback(null, null);
     },
+    infileStreamFactory: (filepath) => createReadStream(filepath),
     metaEnumerable: true
   });
 }
@@ -102,7 +104,8 @@ async function testMisc(): Promise<void> {
   rows = await connection.query(
     {
       namedPlaceholders: true,
-      sql: 'SELECT :val as t'
+      sql: 'SELECT :val as t',
+      infileStreamFactory: (filepath) => createReadStream(filepath)
     },
     { val: 2 }
   );
