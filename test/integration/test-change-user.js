@@ -86,7 +86,7 @@ describe('change user', () => {
   it('wrong collation in charset', function (done) {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
-    let tmpLogFile = path.join(os.tmpdir(), 'wrongCollation.txt');
+    const tmpLogFile = path.join(os.tmpdir(), 'wrongCollation.txt');
     try {
       fs.unlinkSync(tmpLogFile);
     } catch (e) {}
@@ -107,22 +107,24 @@ describe('change user', () => {
             charset: 'UTF8MB4_UNICODE_CI'
           })
           .then(() => {
-            conn.end();
-            const data = fs.readFileSync(tmpLogFile, 'utf8');
-            assert.isTrue(
-              data.includes(
-                "warning: please use option 'collation' in replacement of 'charset' when using a collation name ('UTF8MB4_UNICODE_CI')"
-              )
-            );
-            done();
+            logger.end();
+            //wait 100ms to ensure stream has been written
+            setTimeout(() => {
+              conn.end();
+              const data = fs.readFileSync(tmpLogFile, 'utf8');
+              assert.isTrue(
+                data.includes(
+                  "warning: please use option 'collation' in replacement of 'charset' when using a collation name ('UTF8MB4_UNICODE_CI')"
+                ),
+                data
+              );
+              try {
+                fs.unlinkSync(tmpLogFile);
+              } catch (e) {}
+              done();
+            }, 100);
           })
-          .catch(done)
-          .finally(() => {
-            logger.close();
-            try {
-              fs.unlinkSync(tmpLogFile);
-            } catch (e) {}
-          });
+          .catch(done);
       });
   });
 
