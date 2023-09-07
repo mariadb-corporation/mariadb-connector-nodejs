@@ -889,14 +889,17 @@ describe('Pool', () => {
       .then(async () => {
         await pool.end();
         assert.isOk(errorThrown);
-        const data = fs.readFileSync(tmpLogFile, 'utf8');
-        assert.isTrue(data.includes('A possible connection leak on the thread'));
-        assert.isTrue(data.includes('was returned to pool'));
-        logger.close();
-        try {
-          fs.unlinkSync(tmpLogFile);
-        } catch (e) {}
-        done();
+        //wait 100ms to ensure stream has been written
+        setTimeout(() => {
+          const data = fs.readFileSync(tmpLogFile, 'utf8');
+          assert.isTrue(data.includes('A possible connection leak on the thread'));
+          assert.isTrue(data.includes('was returned to pool'));
+          logger.close();
+          try {
+            fs.unlinkSync(tmpLogFile);
+          } catch (e) {}
+          done();
+        }, 100);
       })
       .catch(done);
     setTimeout(() => {

@@ -54,14 +54,11 @@ describe('debug', () => {
   });
 
   //ensure that debug from previous test are written to console
-  afterEach((done) => {
+  afterEach(() => {
     logger.close();
     try {
       fs.unlinkSync(tmpLogFile);
     } catch (e) {}
-    setTimeout(() => {
-      done();
-    }, 1000);
   });
 
   after(async function () {
