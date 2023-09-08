@@ -152,32 +152,21 @@ describe('sql template strings', () => {
     });
   });
 
-  it('pool query with parameters', function (done) {
-    if (process.env.srv === 'maxscale' && process.env.srv === 'skysql-ha') this.skip;
+  it('pool query with parameters', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip;
     const pool = base.createPool();
-    pool
-      .query('drop table IF EXISTS pool_query_param')
-      .catch((err) => {})
-      .then(() => {
-        return pool.query('CREATE TABLE pool_query_param(t varchar(128))');
-      })
-      .then(() => {
-        return pool.query({ sql: 'INSERT INTO pool_query_param value (?)', values: [value] });
-      })
-      .then(() => {
-        return pool.query({ sql: 'select * from pool_query_param where t = ?', values: [value] });
-      })
-      .then((res) => {
-        assert.strictEqual(res[0].t, value);
-        return pool.query('drop table pool_query_param');
-      })
-      .then(() => {
-        return pool.end();
-      })
-      .then(() => {
-        done();
-      })
-      .catch(done);
+    try {
+      await pool.query('drop table IF EXISTS pool_query_param');
+    } catch (error) {
+      // ignore
+    }
+    await pool.query('CREATE TABLE pool_query_param(t varchar(128))');
+    await pool.query({ sql: 'INSERT INTO pool_query_param value (?)', values: [value] });
+    const res = await pool.query({ sql: 'select * from pool_query_param where t = ?', values: [value] });
+
+    assert.strictEqual(res[0].t, value);
+    await pool.query('drop table pool_query_param');
+    await pool.end();
   });
 
   it('pool batch with parameters', (done) => {

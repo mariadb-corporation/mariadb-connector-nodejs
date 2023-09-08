@@ -102,8 +102,8 @@ jobs:
       name: "CS 10.11"
     - env: srv=mariadb v=11.0 local=1
       name: "CS 11.0"
-    - env: srv=mariadb v=11.1-rc local=1
-      name: "CS 11.1-rc"
+    - env: srv=mariadb v=11.1 local=1
+      name: "CS 11.1"
     - env: srv=mariadb v=10.6 local=1
       name: "CS 10.6 - node.js 14"
       node_js: 14

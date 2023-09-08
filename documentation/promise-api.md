@@ -1684,7 +1684,7 @@ poolCluster.end()
 ## `poolCluster.getConnection(pattern, selector) → Promise`
 
 > * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
-> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
+> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the cluster option `defaultSelector` if set, 'RR' if not  
 > 
 > Returns a promise that :
 > * resolves with a [Connection](#connection-api) object,
