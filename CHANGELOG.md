@@ -1,4 +1,16 @@
 # Change Log
+## [3.2.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.1) (Sep 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.0...3.2.1)
+
+## Notable changes
+* CONJS-262 Binary result-set parsing performance improvement, avoiding to chromium slow issue https://bugs.chromium.org/p/v8/issues/detail?id=7161 
+* CONJS-265 permit configuration of console warning message to be exported
+* CONJS-266 Option `infileStreamFactory` addition for compatibility
+
+## Issues Fixed
+* CONJS-261 TypeScript missing logParam connection option
+* CONJS-263 ensure respecting server collation
+
 
 ## [3.2.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.0) (Jun 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.1.2...3.2.0)
