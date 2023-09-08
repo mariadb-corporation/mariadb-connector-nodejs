@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const { assert } = require('chai');
@@ -35,6 +38,7 @@ describe('test options', () => {
       socketPath: undefined,
       sessionVariables: undefined,
       ssl: undefined,
+      infileStreamFactory: undefined,
       queryTimeout: 0,
       socketTimeout: 0,
       keepAliveDelay: 0,
@@ -50,7 +54,8 @@ describe('test options', () => {
         error: null,
         network: null,
         query: null,
-        logParam: false
+        logParam: false,
+        warning: console.log
       },
       metaAsArray: false,
       metaEnumerable: false,

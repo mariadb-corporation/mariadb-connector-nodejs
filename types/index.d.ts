@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Type definitions for mariadb 2.5
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
@@ -25,6 +28,7 @@ export interface LoggerConfig {
   network?: (msg: string) => void;
   query?: (msg: string) => void;
   error?: (err: Error) => void;
+  warning?: (msg: string) => void;
 }
 
 export function StreamCallback(err?: Error, stream?: stream.Duplex): void;
@@ -167,6 +171,12 @@ export interface QueryConfig {
    * Configure logger
    */
   logger?: LoggerConfig;
+
+  /**
+   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * @param filepath
+   */
+  infileStreamFactory?: (filepath: string) => stream.Readable;
 }
 
 export interface QueryOptions extends QueryConfig {
@@ -266,6 +276,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * (Default: 256)
    */
   debugLen?: number;
+
+  /**
+   * indicate if parameters must be logged by query logger
+   * (Default: false)
+   */
+  logParam?: boolean;
 
   /**
    * Adds the stack trace at the time of query creation to the error stack trace, making it easier to identify the
@@ -401,6 +417,12 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * Return result-sets as array, rather than a JSON object. This is a faster way to get results
    */
   rowsAsArray?: boolean;
+
+  /**
+   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * @param filepath
+   */
+  infileStreamFactory?: (filepath: string) => stream.Readable;
 }
 
 export interface ImportFileConfig extends ConnectionConfig {

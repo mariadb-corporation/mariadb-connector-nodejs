@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../../base.js');
@@ -12,6 +15,7 @@ describe('enum', async () => {
         "  fruit ENUM('apple','orange','pear'),\n" +
         '  bushels INT)'
     );
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['pear', 20]);
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', ['apple', 100]);
     await shareConn.query('INSERT INTO fruits (fruit,bushels) VALUES (?, ?)', [2, 110]);
@@ -32,6 +36,7 @@ describe('enum', async () => {
       { id: 3, fruit: 'orange', bushels: 110 },
       { id: 4, fruit: null, bushels: 120 }
     ]);
+    await shareConn.commit();
   });
 
   it('enum type verification exec', async () => {
@@ -42,6 +47,7 @@ describe('enum', async () => {
         "  fruit ENUM('apple','orange','pear'),\n" +
         '  bushels INT)'
     );
+    await shareConn.beginTransaction();
     await shareConn.execute('INSERT INTO fruitsExec (fruit,bushels) VALUES (?, ?)', ['pear', 20]);
     await shareConn.execute('INSERT INTO fruitsExec (fruit,bushels) VALUES (?, ?)', ['apple', 100]);
     await shareConn.execute('INSERT INTO fruitsExec (fruit,bushels) VALUES (?, ?)', [2, 110]);
@@ -62,5 +68,6 @@ describe('enum', async () => {
       { id: 3, fruit: 'orange', bushels: 110 },
       { id: 4, fruit: null, bushels: 120 }
     ]);
+    shareConn.commit();
   });
 });

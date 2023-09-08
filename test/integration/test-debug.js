@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../base.js');
@@ -51,14 +54,11 @@ describe('debug', () => {
   });
 
   //ensure that debug from previous test are written to console
-  afterEach((done) => {
+  afterEach(() => {
     logger.close();
     try {
       fs.unlinkSync(tmpLogFile);
     } catch (e) {}
-    setTimeout(() => {
-      done();
-    }, 1000);
   });
 
   after(async function () {
@@ -135,8 +135,8 @@ describe('debug', () => {
               const serverVersion = conn.serverVersion();
               if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
                 compress = false;
-              const rangeWithEOF = compress ? [1500, 1900] : [1800, 4150];
-              const rangeWithoutEOF = compress ? [1500, 1900] : [2350, 3150];
+              const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
+              const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               console.log(data);
               assert.isTrue(data.includes('QUERY: SELECT 3'));
@@ -213,7 +213,7 @@ describe('debug', () => {
                 .then(() => {
                   const serverVersion = conn.serverVersion();
                   const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [8000, 10500];
+                  let range = [9500, 12000];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     'wrong data length : ' +
@@ -261,7 +261,7 @@ describe('debug', () => {
       const conn = await base.createConnection({ debug: true });
       const res = await conn.query("SELECT '1'");
       conn.end();
-      const range = [3200, 5000];
+      const range = [3700, 5800];
       assert(
         data.length > range[0] && data.length < range[1],
         'wrong data length : ' +
@@ -306,7 +306,7 @@ describe('debug', () => {
             setTimeout(() => {
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               const serverVersion = conn.serverVersion();
-              const range = [6500, 9000 + (Conf.baseConfig.ssl ? 800 : 0)];
+              const range = [7500, 10000 + (Conf.baseConfig.ssl ? 800 : 0)];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +
@@ -357,7 +357,7 @@ describe('debug', () => {
     const serverVersion = conn.serverVersion();
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
       compress = false;
-    const range = compress ? [60, 150] : [60, 140];
+    const range = compress ? [90, 180] : [90, 170];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));

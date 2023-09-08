@@ -60,10 +60,11 @@ mariadb.createConnection('mariadb://root:pass@localhost:3307/db?metaAsArray=fals
 ## logger
 
 Driver permit mapping the logs to an external logger.
-There is 3 caller functions:
+There is 4 caller functions:
 * network(string): called for each network exchanges. 
 * query(string): called for each commands 
-* error(Error): called for each error. 
+* error(Error): called for each error.
+* warning(string): called for each warning (configuration warning, leak message), default to console.log if not set.
 
 if setting one function, function will be used for all loggers. 
 (ie. logger: console.log  ===  logger: { network: console.log, query: console.log, error: console.log})
@@ -417,7 +418,7 @@ mariadb.createConnection({
 | **bitOneIsBoolean** | return BIT(1) values as boolean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |   *boolean*    |        true        |
 | **checkNumberRange** | when used in conjunction of decimalAsNumber, insertIdAsNumber or bigIntAsNumber, if BigInt conversion to number is not exact, connector will throw an error (since 3.0.1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |   *function*   |                    |
 | **metaEnumerable** | make resultset meta property enumerable (since 3.0.2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |   *boolean*    |       false        |
-
+| **infileStreamFactory** | When LOAD LOCAL command executed, permit to set a callback function of type (filepath?: string) => stream.Readable. Connector will then not send file from LOAD LOCAL, but Readable content. This can permit to set extra validation of file path for example.|   *function*   |                    |
 
 ### SSH tunnel
 

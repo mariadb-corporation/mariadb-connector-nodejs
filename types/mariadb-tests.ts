@@ -1,6 +1,10 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 import mariadb = require('..');
 import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
 import { Stream } from 'stream';
+import { createReadStream } from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { baseConfig } = require('../test/conf.js');
@@ -27,6 +31,7 @@ function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection
       console.log('test');
       callback(null, null);
     },
+    infileStreamFactory: (filepath) => createReadStream(filepath),
     metaEnumerable: true
   });
 }
@@ -72,7 +77,7 @@ function createPool(options?: unknown): mariadb.Pool {
 async function testMisc(): Promise<void> {
   let rows;
   const defaultOptions = mariadb.defaultOptions();
-  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00' });
+  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00', debugLen: 1024, logParam: true });
   console.log(defaultOptions);
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
@@ -99,7 +104,8 @@ async function testMisc(): Promise<void> {
   rows = await connection.query(
     {
       namedPlaceholders: true,
-      sql: 'SELECT :val as t'
+      sql: 'SELECT :val as t',
+      infileStreamFactory: (filepath) => createReadStream(filepath)
     },
     { val: 2 }
   );

@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../base.js');
@@ -1185,6 +1188,7 @@ describe('batch', function () {
       const conn = await base.createConnection({ compress: useCompression, bulk: true });
       await conn.query('DROP TABLE IF EXISTS blabla');
       await conn.query('CREATE TABLE blabla(i int, i2 int)');
+      await conn.beginTransaction();
       await conn.batch('INSERT INTO `blabla` values (?, ?)', [
         [1, 2],
         [1, undefined]
@@ -1194,7 +1198,8 @@ describe('batch', function () {
         { i: 1, i2: 2 },
         { i: 1, i2: null }
       ]);
-      conn.query('DROP TABLE IF EXISTS blabla');
+      await conn.commit();
+      await conn.query('DROP TABLE IF EXISTS blabla');
       conn.end();
     });
 
@@ -1451,6 +1456,7 @@ describe('batch', function () {
       const conn = await base.createConnection({ compress: useCompression, bulk: false });
       await conn.query('DROP TABLE IF EXISTS blabla');
       await conn.query('CREATE TABLE blabla(i int, i2 int)');
+      await conn.beginTransaction();
       await conn.batch('INSERT INTO `blabla` values (?,?)', [
         [1, 2],
         [1, undefined]
@@ -1461,6 +1467,7 @@ describe('batch', function () {
         { i: 1, i2: null }
       ]);
       await conn.query('DROP TABLE IF EXISTS blabla');
+      await conn.commit();
       await conn.end();
     });
 

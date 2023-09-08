@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const basePromise = require('../../promise');
@@ -9,6 +12,12 @@ const base = require('../base');
 const { isXpand } = require('../base');
 
 describe('sql file import', () => {
+  let maxAllowedSize;
+  before(async function () {
+    const row = await shareConn.query('SELECT @@max_allowed_packet as t');
+    maxAllowedSize = Number(row[0].t);
+  });
+
   beforeEach(async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     await shareConn.query('DROP DATABASE IF EXISTS fimp');
@@ -35,6 +44,7 @@ describe('sql file import', () => {
       it('big file import with direct connection options', async function () {
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
         this.timeout(300000);
+        if (maxAllowedSize <= 32000000) return this.skip();
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' })
         );
@@ -179,6 +189,7 @@ describe('sql file import', () => {
         // skipping if it takes too long
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
         this.timeout(300000);
+        if (maxAllowedSize <= 32000000) return this.skip();
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' }),
           (err) => {

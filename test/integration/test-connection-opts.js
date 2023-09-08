@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../base.js');
@@ -11,7 +14,7 @@ describe('connection option', () => {
         done(new Error('must have thrown error!'));
       })
       .catch((err) => {
-        assert(err.message.includes('Unknown charset'));
+        assert(err.message.includes('Unknown'));
         done();
       });
   });

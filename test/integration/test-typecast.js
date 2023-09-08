@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../base.js');
@@ -210,6 +213,7 @@ describe('TypeCast', () => {
     };
     const conn = await base.createConnection({ typeCast: longCast });
     await conn.query('DROP TABLE IF EXISTS stupidCast');
+    await conn.beginTransaction();
     await conn.query('CREATE TABLE stupidCast(b1 POINT)');
     await conn.query('INSERT INTO stupidCast VALUES (?), (?),(null)', [
       {

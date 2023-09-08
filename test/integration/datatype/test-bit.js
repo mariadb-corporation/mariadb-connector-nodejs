@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../../base');
@@ -7,6 +10,7 @@ describe('bit type', () => {
   it('bit type verification', async () => {
     await shareConn.query('DROP TABLE IF EXISTS test_bit');
     await shareConn.query('CREATE TABLE test_bit ( val1 bit(1), val2 bit(8))');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO test_bit VALUES (?, ?), (?, ?), (?, ?)', [
       Buffer.from([0x00]),
       Buffer.from([0x00]),
@@ -41,5 +45,6 @@ describe('bit type', () => {
     assert.deepEqual(rows, expectedBuffer);
     rows = await shareConn.execute({ sql: 'SELECT * FROM test_bit', bitOneIsBoolean: false });
     assert.deepEqual(rows, expectedBuffer);
+    shareConn.commit();
   });
 });

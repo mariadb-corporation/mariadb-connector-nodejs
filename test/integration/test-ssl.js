@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../base.js');
@@ -6,6 +9,7 @@ const fs = require('fs');
 const Conf = require('../conf');
 const tls = require('tls');
 const { isXpand } = require('../base');
+const crypto = require('crypto');
 
 describe('ssl', function () {
   let ca = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? Conf.baseConfig.ssl.ca : null;
@@ -188,6 +192,7 @@ describe('ssl', function () {
   });
 
   it('ensure connection use SSL ', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!base.utf8Collation()) this.skip();
     base
@@ -415,6 +420,7 @@ describe('ssl', function () {
         ssl: {
           rejectUnauthorized: false,
           secureProtocol: 'TLSv1_2_method',
+          secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
           ciphers:
             'DHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256'
         },
@@ -525,7 +531,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -550,7 +556,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();

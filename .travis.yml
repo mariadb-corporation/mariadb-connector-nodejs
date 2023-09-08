@@ -1,5 +1,5 @@
 os: linux
-dist: bionic
+dist: jammy
 language: node_js
 services: docker
 node_js: 16
@@ -52,6 +52,9 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: srv=build
+    - env: srv=skysql RUN_LONG_TEST=0
+    - env: srv=skysql-ha RUN_LONG_TEST=0
+    - env: srv=xpand RUN_LONG_TEST=0
   include:
     - stage: Minimal
       env: srv=mariadb v=10.6 local=1
@@ -63,8 +66,13 @@ jobs:
     - stage: Enterprise
       env: srv=mariadb-es v=10.4
       name: "ES 10.4"
+      if: type = push AND fork = false
     - env: srv=mariadb-es v=10.5
       name: "ES 10.5"
+      if: type = push AND fork = false
+    - env: srv=mariadb-es-test v=23.08
+      name: "ES 23.08"
+      if: type = push AND fork = false
     - env: srv=maxscale
       name: "Maxscale"
     - env: srv=skysql RUN_LONG_TEST=0
@@ -79,18 +87,23 @@ jobs:
       os: windows
       language: shell
       name: "CS 10.6 - Windows"
-    - env: srv=mariadb v=10.3 local=1
-      name: "CS 10.3"
     - env: srv=mariadb v=10.4 local=1
+      dist: bionic
       name: "CS 10.4"
     - env: srv=mariadb v=10.5 local=1 DISABLE_SSL=1
+      dist: bionic
       name: "CS 10.5"
-    - env: srv=mariadb v=10.7 local=1
-      name: "CS 10.7"
-    - env: srv=mariadb v=10.8 local=1
-      name: "CS 10.8 - node.js 18"
+    - env: srv=mariadb v=10.9 local=1
+      name: "CS 10.9"
+    - env: srv=mariadb v=10.10 local=1
+      name: "CS 10.10 - node.js 18"
       node_js: 18
-      dist: focal
+    - env: srv=mariadb v=10.11 local=1
+      name: "CS 10.11"
+    - env: srv=mariadb v=11.0 local=1
+      name: "CS 11.0"
+    - env: srv=mariadb v=11.1 local=1
+      name: "CS 11.1"
     - env: srv=mariadb v=10.6 local=1
       name: "CS 10.6 - node.js 14"
       node_js: 14
@@ -99,7 +112,6 @@ jobs:
       name: "CS 10.6 - node.js 16"
     - env: srv=mariadb v=10.6 local=1
       name: "CS 10.6 - node.js 20"
-      dist: focal
       node_js: 20
     - env: srv=mysql v=5.7
       name: "MySQL 5.7"

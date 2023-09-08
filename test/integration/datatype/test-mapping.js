@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../../base.js');
@@ -180,6 +183,7 @@ describe('mapping', () => {
         't26 BINARY(10) NULL,' +
         't27 VARBINARY(10) NULL)'
     );
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO nullMappingTable values ()');
     if (shareConn.info.isMariaDB() || shareConn.info.hasMinVersion(5, 6)) {
       //MySQL 5.6 delete YEAR(2) type
@@ -232,6 +236,7 @@ describe('mapping', () => {
       );
       await shareConn.query('INSERT INTO mappingTable VALUES ()');
     }
+    await shareConn.commit();
   });
 
   it('query mapping field', async function () {
@@ -301,6 +306,7 @@ describe('mapping', () => {
     await shareConn.query(
       'CREATE TABLE dataTypeWithNull (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
     );
+    await shareConn.beginTransaction();
     await shareConn.query("insert into dataTypeWithNull values(null, 'a','b','c')");
 
     let rows = await shareConn.query('SELECT * FROM dataTypeWithNull');
@@ -312,5 +318,6 @@ describe('mapping', () => {
     assert.ok(Buffer.isBuffer(rows[0].test));
     assert.ok(Buffer.isBuffer(rows[0].test2));
     assert.ok(typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String);
+    await shareConn.commit();
   });
 });

@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../../base.js');
@@ -31,6 +34,7 @@ describe('json', () => {
     const obj2 = { id: 3, val: 'test3' };
     await conn.query('DROP TABLE IF EXISTS `test-json-insert-type`');
     await conn.query('CREATE TABLE `test-json-insert-type` (val1 JSON)');
+    await conn.beginTransaction();
     await conn.query(
       {
         stringifyObjects: true,
@@ -75,6 +79,7 @@ describe('json', () => {
       assert.equal(rows[3].val1.id, 3);
       assert.equal(rows[3].val1.val, 'test3');
     }
+    await conn.commit();
   };
 
   it('select json format', async function () {
@@ -91,6 +96,7 @@ describe('json', () => {
 
     await shareConn.query('DROP TABLE IF EXISTS `test-json-return-type`');
     await shareConn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
+    await shareConn.beginTransaction();
     await shareConn.query(
       "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );
@@ -131,6 +137,7 @@ describe('json', () => {
     }
     assert.equal(rows[0].val2, jsonString);
     assert.equal(rows[0].val3, jsonString);
+    await shareConn.commit();
   });
 
   it('disable json format', async function () {
@@ -149,6 +156,7 @@ describe('json', () => {
     const jsonString = JSON.stringify(obj);
     await conn.query('DROP TABLE IF EXISTS `test-json-return-type`');
     await conn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
+    await conn.beginTransaction();
     await conn.query(
       "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );

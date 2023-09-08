@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
 const base = require('../../base.js');
@@ -39,6 +42,7 @@ describe('integer with big value', () => {
 
   it('decimal value without truncation', async function () {
     if (isXpand()) this.skip();
+    await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO floatTest VALUES (-0.1, 128.3, 129), (-0.9999237060546875, 9999237060546875.9999237060546875, 9999237060546875)'
     );
@@ -119,23 +123,25 @@ describe('integer with big value', () => {
       bigNumberStrings: true
     });
     assert.deepEqual(rows, expectedBigNumberString);
+    await shareConn.commit();
   });
 
   it('int format', async function () {
     if (isXpand()) this.skip();
-
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO testInt values (127), (128)');
     const rows = await shareConn.query('SELECT * FROM testInt');
     assert.deepEqual(rows, [{ v: 127 }, { v: 128 }]);
 
     const rows2 = await shareConn.execute('SELECT * FROM testInt');
     assert.deepEqual(rows2, [{ v: 127 }, { v: 128 }]);
+    await shareConn.commit();
   });
 
   it('bigint format', async function () {
     // https://jira.mariadb.org/browse/XPT-290
     if (isXpand()) this.skip();
-
+    await shareConn.beginTransaction();
     let rows = await shareConn.query('INSERT INTO testBigint values (127), (128)');
     assert.strictEqual(rows.insertId, BigInt(128));
 
@@ -486,6 +492,7 @@ describe('integer with big value', () => {
     assert.strictEqual(rows[1].v, null);
     assert.strictEqual(rows[2].v, 129);
     assert.strictEqual(rows[3].v, null);
+    await shareConn.commit();
   });
 
   it('numeric fields conversion to int', async () => {
@@ -494,6 +501,7 @@ describe('integer with big value', () => {
       'CREATE TABLE intAllField (' +
         't1 TINYINT(1), t2 SMALLINT(1), t3 MEDIUMINT(1), t4 INT(1), t5 BIGINT(1), t6 DECIMAL(1), t7 FLOAT, t8 DOUBLE)'
     );
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)');
     await shareConn.execute('INSERT INTO intAllField VALUES (null, null, null, null, null, null, null, null)');
     await shareConn.query('INSERT INTO intAllField VALUES (0, 0, 0, 0, 0, 0, 0, 0)');
@@ -528,6 +536,7 @@ describe('integer with big value', () => {
     assert.deepEqual(res, expected);
     res = await shareConn.execute('SELECT * FROM intAllField');
     assert.deepEqual(res, expected);
+    await shareConn.commit();
   });
 
   it('using very big number', async function () {
@@ -535,6 +544,7 @@ describe('integer with big value', () => {
     const conn = await base.createConnection();
     await conn.query('DROP TABLE IF EXISTS BIG_NUMBER');
     await conn.query('CREATE TABLE BIG_NUMBER (val BIGINT unsigned)');
+    await conn.beginTransaction();
     await conn.query('INSERT INTO BIG_NUMBER values (?)', [10]);
     await conn.query('INSERT INTO BIG_NUMBER values (?)', [maxValue]);
     await conn.execute('INSERT INTO BIG_NUMBER values (?)', [maxValue]);
