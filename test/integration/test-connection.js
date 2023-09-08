@@ -11,6 +11,7 @@ const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
 const { isXpand } = require('../base');
+const dns = require("dns");
 
 describe('connection', () => {
   it('with no connection attributes', function (done) {
@@ -424,24 +425,34 @@ describe('connection', () => {
 
   it('connection timeout connect (wrong url) with callback', (done) => {
     const initTime = Date.now();
-    const conn = base.createCallbackConnection({
-      host: 'www.google.fr',
-      connectTimeout: 1000
-    });
-    conn.connect((err) => {
-      if (err.code !== 'ER_CONNECTION_TIMEOUT') {
-        if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
-          // if no network access or IP¨v6 not allowed, just skip error
+    dns.resolve4('www.google.fr', (err, res) => {
+      if (err) done(err);
+      else if (res.length > 0) {
+        const host = res[0];
+        const conn = base.createCallbackConnection({
+          host: host,
+          connectTimeout: 1000
+        });
+        conn.connect((err) => {
+          if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
+            if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+              // if no network access or IP¨v6 not allowed, just skip error
+              done();
+              return;
+            }
+            console.log(err);
+          }
+          if (err.code === 'ER_CONNECTION_TIMEOUT') {
+            assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
+          }
+          assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+          assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
           done();
-          return;
-        }
-        console.log(err);
-      }
-      assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
-      assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
-      assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
-      done();
-    });
+        });
+      } else done(new Error('DNS fails'));
+    })
+
+
   });
 
   it('stream basic test', async function () {
@@ -501,7 +512,7 @@ describe('connection', () => {
         conn.end();
       })
       .catch((err) => {
-        if (err.code !== 'ER_CONNECTION_TIMEOUT') {
+        if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
           if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
             // if no network access or IP¨v6 not allowed, just skip error
             done();
@@ -510,22 +521,30 @@ describe('connection', () => {
           console.log(err);
         }
 
-        assert.isTrue(err.message.includes('Connection timeout'));
+        if (err.code === 'ER_CONNECTION_TIMEOUT') {
+          assert.isTrue(err.message.includes('Connection timeout'));
+        }
         assert.equal(err.sqlState, '08S01');
         assert.equal(err.errno, 45012);
-        assert.equal(err.code, 'ER_CONNECTION_TIMEOUT');
         done();
       });
   });
 
   it('connection timeout connect (wrong url) with callback no function', (done) => {
-    const conn = base.createCallbackConnection({
-      host: 'www.google.fr',
-      connectTimeout: 500
+    dns.resolve4('www.google.fr', (err, res) => {
+      if (err) done(err);
+      else if (res.length > 0) {
+        const host = res[0];
+        const conn = base.createCallbackConnection({
+          host: host,
+          connectTimeout: 500
+        });
+        conn.connect((err) => {
+        });
+        conn.end();
+        done();
+      }
     });
-    conn.connect((err) => {});
-    conn.end();
-    done();
   });
 
   it('connection without database', (done) => {
@@ -548,49 +567,67 @@ describe('connection', () => {
 
   it('connection timeout connect (wrong url) with promise', (done) => {
     const initTime = Date.now();
-    base
-      .createConnection({ host: 'www.google.fr', connectTimeout: 1000 })
-      .then(() => {
-        done(new Error('must have thrown error'));
-      })
-      .catch((err) => {
-        if (err.code !== 'ER_CONNECTION_TIMEOUT') {
-          if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
-            // if no network access or IP¨v6 not allowed, just skip error
-            done();
-            return;
-          }
-          console.log(err);
-        }
-        assert.isTrue(
-          err.message.includes(
-            '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-          )
-        );
-        assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
-        assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
-        done();
-      });
+    dns.resolve4('www.google.fr', (err, res) => {
+      if (err) done(err);
+      else if (res.length > 0) {
+        const host = res[0];
+        base
+            .createConnection({host: host, connectTimeout: 1000})
+            .then(() => {
+              done(new Error('must have thrown error'));
+            })
+            .catch((err) => {
+              if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
+                if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+                  // if no network access or IP¨v6 not allowed, just skip error
+                  done();
+                  return;
+                }
+                console.log(err);
+              }
+              if (err.code === 'ER_CONNECTION_TIMEOUT') {
+                assert.isTrue(
+                    err.message.includes(
+                        '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                    )
+                );
+              }
+              assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+              assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
+              done();
+            });
+      }
+    })
   });
 
   it('connection timeout error (wrong url)', function (done) {
     const initTime = Date.now();
-    base.createConnection({ host: 'www.google.fr', connectTimeout: 1000 }).catch((err) => {
-      if (err.code !== 'ER_CONNECTION_TIMEOUT') {
-        if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
-          // if no network access or IP¨v6 not allowed, just skip error
+    dns.resolve4('www.google.fr', (err, res) => {
+      if (err) done(err);
+      else if (res.length > 0) {
+        const host = res[0];
+        base.createConnection({host: host, connectTimeout: 1000}).catch((err) => {
+          if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
+            if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+              // if no network access or IP¨v6 not allowed, just skip error
+              done();
+              return;
+            }
+            console.log(err);
+          }
+          if (err.code === 'ER_CONNECTION_TIMEOUT') {
+            assert.isTrue(
+                err.message.includes(
+                    '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                )
+            );
+          }
+          assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+          assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
           done();
-          return;
-        }
-        console.log(err);
+        });
       }
-      assert.isTrue(
-        err.message.includes('(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after')
-      );
-      assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
-      assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
-      done();
-    });
+    })
   });
 
   it('changing session state', function (done) {

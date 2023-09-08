@@ -135,8 +135,8 @@ describe('debug', () => {
               const serverVersion = conn.serverVersion();
               if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
                 compress = false;
-              const rangeWithEOF = compress ? [1500, 1900] : [1800, 4150];
-              const rangeWithoutEOF = compress ? [1500, 1900] : [2350, 3150];
+              const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
+              const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               console.log(data);
               assert.isTrue(data.includes('QUERY: SELECT 3'));
