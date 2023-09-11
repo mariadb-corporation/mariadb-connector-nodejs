@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 const Benchmark = require('benchmark');
 const chalk = require('chalk');
 
@@ -18,7 +21,7 @@ try {
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
-const config = Object.assign({}, conf.baseConfig, { charset: 'utf8mb4', trace: false });
+const config = Object.assign({}, conf.baseConfig, { trace: false });
 console.log(config);
 const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMPLES) : 200;
 
