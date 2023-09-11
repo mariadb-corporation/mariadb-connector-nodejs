@@ -11,7 +11,7 @@ const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
 const { isXpand } = require('../base');
-const dns = require("dns");
+const dns = require('dns');
 
 describe('connection', () => {
   it('with no connection attributes', function (done) {
@@ -450,9 +450,7 @@ describe('connection', () => {
           done();
         });
       } else done(new Error('DNS fails'));
-    })
-
-
+    });
   });
 
   it('stream basic test', async function () {
@@ -539,8 +537,7 @@ describe('connection', () => {
           host: host,
           connectTimeout: 500
         });
-        conn.connect((err) => {
-        });
+        conn.connect((err) => {});
         conn.end();
         done();
       }
@@ -572,32 +569,32 @@ describe('connection', () => {
       else if (res.length > 0) {
         const host = res[0];
         base
-            .createConnection({host: host, connectTimeout: 1000})
-            .then(() => {
-              done(new Error('must have thrown error'));
-            })
-            .catch((err) => {
-              if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
-                if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
-                  // if no network access or IP¨v6 not allowed, just skip error
-                  done();
-                  return;
-                }
-                console.log(err);
+          .createConnection({ host: host, connectTimeout: 1000 })
+          .then(() => {
+            done(new Error('must have thrown error'));
+          })
+          .catch((err) => {
+            if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
+              if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+                // if no network access or IP¨v6 not allowed, just skip error
+                done();
+                return;
               }
-              if (err.code === 'ER_CONNECTION_TIMEOUT') {
-                assert.isTrue(
-                    err.message.includes(
-                        '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-                    )
-                );
-              }
-              assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
-              assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
-              done();
-            });
+              console.log(err);
+            }
+            if (err.code === 'ER_CONNECTION_TIMEOUT') {
+              assert.isTrue(
+                err.message.includes(
+                  '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                )
+              );
+            }
+            assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
+            assert.isTrue(Date.now() - initTime < 2000, 'expected < 2000, but was ' + (Date.now() - initTime));
+            done();
+          });
       }
-    })
+    });
   });
 
   it('connection timeout error (wrong url)', function (done) {
@@ -606,7 +603,7 @@ describe('connection', () => {
       if (err) done(err);
       else if (res.length > 0) {
         const host = res[0];
-        base.createConnection({host: host, connectTimeout: 1000}).catch((err) => {
+        base.createConnection({ host: host, connectTimeout: 1000 }).catch((err) => {
           if (err.code !== 'ER_CONNECTION_TIMEOUT' && err.code !== 'ETIMEDOUT') {
             if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
               // if no network access or IP¨v6 not allowed, just skip error
@@ -617,9 +614,9 @@ describe('connection', () => {
           }
           if (err.code === 'ER_CONNECTION_TIMEOUT') {
             assert.isTrue(
-                err.message.includes(
-                    '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
-                )
+              err.message.includes(
+                '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+              )
             );
           }
           assert.isTrue(Date.now() - initTime >= 990, 'expected > 990, but was ' + (Date.now() - initTime));
@@ -627,7 +624,7 @@ describe('connection', () => {
           done();
         });
       }
-    })
+    });
   });
 
   it('changing session state', function (done) {
