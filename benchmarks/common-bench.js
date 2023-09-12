@@ -17,12 +17,15 @@ try {
 } catch (e) {}
 
 //************************************************
-// COMMON CONFIGURATION
+// COMMON CONFIGURATION.
+// Mysql and Mysql2 doesn't use server collation, but fixed collation UTF8_GENERAL_CI.
+// setting it to default utf8mb4 collation, to be fair
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
 const config = Object.assign({}, conf.baseConfig, { trace: false });
-console.log(config);
+
+let configWithCharset = null;
 const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMPLES) : 200;
 
 //************************************************
@@ -90,22 +93,28 @@ const createBenchSuite = async (bench) => {
 //************************************************
 const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   const sources = {};
+  sources['mariadb'] = await mariadb.createConnection(Object.assign({}, config));
+  if (!configWithCharset && sources['mariadb'].info.collation) {
+    const collation = sources['mariadb'].info.collation.name;
+    configWithCharset = Object.assign({}, conf.baseConfig, { trace: false, charset: collation });
+    console.log(configWithCharset);
+  }
+
   if (requiresPool == undefined || requiresPool === false) {
     if (mysql) {
       if (!mariadbOnly && (requireExecute == undefined || requireExecute === false)) {
-        sources['mysql'] = await mysql.createConnection(Object.assign({}, config));
+        sources['mysql'] = await mysql.createConnection(Object.assign({}, configWithCharset));
       }
     }
     if (mysql2 && !mariadbOnly) {
-      sources['mysql2'] = await mysql2.createConnection(Object.assign({}, config));
+      sources['mysql2'] = await mysql2.createConnection(Object.assign({}, configWithCharset));
     }
-    sources['mariadb'] = await mariadb.createConnection(Object.assign({}, config));
   } else {
     if (!mariadbOnly && mysql) {
-      sources['mysql'] = await mysql.createPool(Object.assign({ connectionLimit: 1 }, config));
+      sources['mysql'] = await mysql.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     }
     if (!mariadbOnly && mysql2) {
-      sources['mysql2'] = mysql2.createPool(Object.assign({ connectionLimit: 1 }, config));
+      sources['mysql2'] = mysql2.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     }
   }
 

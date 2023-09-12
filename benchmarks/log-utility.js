@@ -1,6 +1,8 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+
 'use strict';
 
-const pjson = require('../package-lock.json');
 const chalk = require('chalk');
 const defaultImgJson = {
   type: 'horizontalBar',
