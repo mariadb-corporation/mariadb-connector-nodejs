@@ -1076,4 +1076,13 @@ describe('connection', () => {
         .catch(done);
     });
   });
+
+  it('collation index > 255', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
+    const conn = await base.createConnection({ collation: 'UTF8MB4_UNICODE_520_NOPAD_CI' });
+    const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');
+    assert.equal(res[0].c, 'utf8mb4_unicode_520_nopad_ci');
+    conn.end();
+  });
 });

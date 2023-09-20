@@ -142,7 +142,7 @@ describe('change user', () => {
           done(new Error('must have thrown error!'));
         })
         .catch((err) => {
-          assert(err.message.includes("Unknown collation 'wrong_collation'"));
+          assert(err.message.includes("Unknown collation 'WRONG_COLLATION'"));
           conn.end();
           done();
         });
@@ -389,5 +389,21 @@ describe('change user', () => {
           .catch(done);
       })
       .catch(done);
+  });
+
+  it('collation index > 255', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
+    const conn = await base.createConnection();
+    const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');
+    assert.notEqual(res[0].c, 'utf8mb4_unicode_520_nopad_ci');
+    await conn.changeUser({
+      user: 'ChangeUser',
+      password: 'm1P4ssw0@rd',
+      collation: 'UTF8MB4_UNICODE_520_NOPAD_CI'
+    });
+    const res2 = await conn.query('SELECT @@COLLATION_CONNECTION as c');
+    assert.equal(res2[0].c, 'utf8mb4_unicode_520_nopad_ci');
+    conn.end();
   });
 });
