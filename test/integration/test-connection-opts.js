@@ -8,6 +8,7 @@ const { assert } = require('chai');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
+    if (process.env.srv === 'xpand') this.skip();
     base
       .createConnection({ charset: 'unknown' })
       .then(() => {

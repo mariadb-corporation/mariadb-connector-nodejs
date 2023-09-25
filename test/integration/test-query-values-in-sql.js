@@ -153,7 +153,7 @@ describe('sql template strings', () => {
   });
 
   it('pool query with parameters', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip;
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool();
     try {
       await pool.query('drop table IF EXISTS pool_query_param');

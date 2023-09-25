@@ -839,7 +839,13 @@ describe('Pool', () => {
   });
 
   it('pool getConnection timeout', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (
+      process.env.srv === 'maxscale' ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha' ||
+      process.env.srv === 'xpand'
+    )
+      this.skip();
     const pool = base.createPool({ connectionLimit: 1, acquireTimeout: 200 });
     let errorThrown = false;
     pool

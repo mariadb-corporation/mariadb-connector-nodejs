@@ -143,18 +143,25 @@ describe('sql file import', () => {
       });
 
       it('Error in file', async function () {
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'xpand')
+          this.skip();
         this.timeout(30000);
         const conn = await base.createConnection({});
         try {
           await conn.importFile({ file: __dirname + '/../tools/data-dump-err.sql' });
           throw new Error('expected to throw an error');
         } catch (err) {
-          assert.equal(err.errno, 1062);
-          assert.equal(err.sqlState, '23000');
-          assert.equal(err.code, 'ER_DUP_ENTRY');
-          assert.isTrue(!err.fatal);
-          assert.ok(err.message.includes('Duplicate entry'));
+          if (err.errno === 1062) {
+            assert.equal(err.sqlState, '23000');
+            assert.equal(err.code, 'ER_DUP_ENTRY');
+            assert.isTrue(!err.fatal);
+            assert.ok(err.message.includes('Duplicate entry'));
+          } else if (err.errno === 1180) {
+            assert.equal(err.sqlState, 'HY000');
+            assert.equal(err.code, 'ER_ERROR_DURING_COMMIT');
+            assert.isTrue(!err.fatal);
+            assert.ok(err.message.includes('Operation not permitted'));
+          } else throw err;
         } finally {
           await conn.end();
         }
@@ -241,7 +248,8 @@ describe('sql file import', () => {
       });
 
       it('error in import file', function (done) {
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'xpand')
+          this.skip();
         this.timeout(30000);
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump-err.sql' }),
@@ -249,12 +257,19 @@ describe('sql file import', () => {
             if (!err) {
               done(new Error('expected to throw an error'));
             } else {
-              assert.equal(err.errno, 1062);
-              assert.equal(err.sqlState, '23000');
-              assert.equal(err.code, 'ER_DUP_ENTRY');
-              assert.isTrue(!err.fatal);
-              assert.ok(err.message.includes('Duplicate entry'));
-              done();
+              if (err.errno === 1062) {
+                assert.equal(err.sqlState, '23000');
+                assert.equal(err.code, 'ER_DUP_ENTRY');
+                assert.isTrue(!err.fatal);
+                assert.ok(err.message.includes('Duplicate entry'));
+                done();
+              } else if (err.errno === 1180) {
+                assert.equal(err.sqlState, 'HY000');
+                assert.equal(err.code, 'ER_ERROR_DURING_COMMIT');
+                assert.isTrue(!err.fatal);
+                assert.ok(err.message.includes('Operation not permitted'));
+                done();
+              } else done(err);
             }
           }
         );

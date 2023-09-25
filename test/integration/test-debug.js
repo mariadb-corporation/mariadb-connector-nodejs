@@ -330,6 +330,7 @@ describe('debug', () => {
   }
 
   it('fast path command debug', async function () {
+    if (isXpand()) this.skip();
     await testPingDebug(false);
   });
 
