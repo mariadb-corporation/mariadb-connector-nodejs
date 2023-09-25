@@ -141,6 +141,24 @@ describe('sql file import', () => {
           await pool.end();
         }
       });
+
+      it('Error in file', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        this.timeout(30000);
+        const conn = await base.createConnection({});
+        try {
+          await conn.importFile({ file: __dirname + '/../tools/data-dump-err.sql' });
+          throw new Error('expected to throw an error');
+        } catch (err) {
+          assert.equal(err.errno, 1062);
+          assert.equal(err.sqlState, '23000');
+          assert.equal(err.code, 'ER_DUP_ENTRY');
+          assert.isTrue(!err.fatal);
+          assert.ok(err.message.includes('Duplicate entry'));
+        } finally {
+          await conn.end();
+        }
+      });
     });
   });
 
@@ -216,6 +234,26 @@ describe('sql file import', () => {
               assert.equal(err.code, 'ER_MISSING_DATABASE_PARAMETER');
               assert.isTrue(!err.fatal);
               assert.ok(err.message.includes('Database parameter is not set and no database is selected'));
+              done();
+            }
+          }
+        );
+      });
+
+      it('error in import file', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        this.timeout(30000);
+        baseCallback.importFile(
+          Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump-err.sql' }),
+          (err) => {
+            if (!err) {
+              done(new Error('expected to throw an error'));
+            } else {
+              assert.equal(err.errno, 1062);
+              assert.equal(err.sqlState, '23000');
+              assert.equal(err.code, 'ER_DUP_ENTRY');
+              assert.isTrue(!err.fatal);
+              assert.ok(err.message.includes('Duplicate entry'));
               done();
             }
           }
