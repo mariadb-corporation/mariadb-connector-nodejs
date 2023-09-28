@@ -354,7 +354,7 @@ describe('Pool', () => {
       assert.equal(pool.escapeId('good_$one'), '`good_$one`');
       assert.equal(pool.escape(''), "''");
       assert.equal(pool.escapeId('f:a'), '`f:a`');
-      assert.equal(pool.escapeId('`f:a`'), '`f:a`');
+      assert.equal(pool.escapeId('`f:a`'), '```f:a```');
       assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
       await pool.end();
       await pool2.end();

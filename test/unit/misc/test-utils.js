@@ -194,4 +194,12 @@ describe('utils', () => {
       Utils.log(opt, longbuf, 1, longbuf.length, head)
     );
   });
+
+  it('escapeId', () => {
+    assert.equal('`bla`', Utils.escapeId(null, null, 'bla'));
+    assert.equal('```bla```', Utils.escapeId(null, null, '`bla`'));
+    assert.equal('```bla``s`', Utils.escapeId(null, null, '`bla`s'));
+    assert.equal('```bla````s```', Utils.escapeId(null, null, '`bla``s`'));
+    assert.equal('``````', Utils.escapeId(null, null, '``'));
+  });
 });
