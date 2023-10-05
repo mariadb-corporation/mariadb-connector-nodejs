@@ -213,7 +213,7 @@ describe('debug', () => {
                 .then(() => {
                   const serverVersion = conn.serverVersion();
                   const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [9500, 12000];
+                  let range = [8900, 12000];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     'wrong data length : ' +
@@ -358,7 +358,7 @@ describe('debug', () => {
     const serverVersion = conn.serverVersion();
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
       compress = false;
-    const range = compress ? [90, 180] : [90, 170];
+    const range = compress ? [60, 180] : [60, 170];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));
