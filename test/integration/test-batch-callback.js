@@ -459,6 +459,7 @@ describe('batch callback', function () {
       if (err) return done(err);
       conn.query('DROP TABLE IF EXISTS nonRewritableBatch');
       conn.query('CREATE TABLE nonRewritableBatch(id int, t varchar(256))');
+      conn.beginTransaction();
       conn.batch(
         'INSERT INTO nonRewritableBatch(id, t) VALUES (?,?)',
         [
@@ -481,8 +482,10 @@ describe('batch callback', function () {
                   t: 'jack'
                 }
               ]);
-              conn.end();
-              done();
+              conn.commit((err, res) => {
+                conn.end();
+                done();
+              });
             });
           }
         }
@@ -897,6 +900,7 @@ describe('batch callback', function () {
       const conn = await base.createConnection({ compress: useCompression, bulk: true });
       conn.query('DROP TABLE IF EXISTS blabla');
       conn.query('CREATE TABLE blabla(i int, i2 int)');
+      conn.beginTransaction();
       await conn.batch('INSERT INTO `blabla` values (?, ?)', [
         [1, 2],
         [1, undefined]
@@ -907,6 +911,7 @@ describe('batch callback', function () {
         { i: 1, i2: null }
       ]);
       conn.query('DROP TABLE IF EXISTS blabla');
+      conn.commit();
       conn.end();
     });
 

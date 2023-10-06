@@ -1112,7 +1112,7 @@ describe('Pool', () => {
             assert.equal(pool.totalConnections(), 10);
             assert.equal(pool.idleConnections(), 0);
             assert.isOk(pool.taskQueueSize() > 8000);
-          }, 100);
+          }, 200);
         } else {
           assert.equal(pool.activeConnections(), 10);
           assert.equal(pool.totalConnections(), 10);
