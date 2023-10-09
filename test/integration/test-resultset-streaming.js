@@ -7,6 +7,8 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const { Writable } = require('stream');
 const { isXpand } = require('../base');
+const Proxy = require('../tools/proxy');
+const Conf = require('../conf');
 
 describe('results-set streaming', () => {
   before(function (done) {
@@ -44,6 +46,13 @@ describe('results-set streaming', () => {
       assert.equal(currRow++, row.v);
     }
     assert.equal(10000, currRow);
+  });
+
+  it('Streaming Error', function (done) {
+    const stream = shareConn.queryStream('wrong');
+    stream.on('error', (error) => {
+      done();
+    });
   });
 
   it('Streaming result-set for-await-of callback', async function () {

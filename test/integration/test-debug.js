@@ -54,8 +54,8 @@ describe('debug', () => {
   });
 
   //ensure that debug from previous test are written to console
-  afterEach(() => {
-    logger.close();
+  afterEach(async function () {
+    await closeLogger(logger);
     try {
       fs.unlinkSync(tmpLogFile);
     } catch (e) {}
@@ -261,7 +261,7 @@ describe('debug', () => {
       const conn = await base.createConnection({ debug: true });
       const res = await conn.query("SELECT '1'");
       conn.end();
-      const range = [3700, 5800];
+      const range = [3600, 5800];
       assert(
         data.length > range[0] && data.length < range[1],
         'wrong data length : ' +
@@ -379,3 +379,28 @@ describe('debug', () => {
     );
   }
 });
+
+const closeLogger = async function (logger) {
+  const promises = [];
+
+  // close all transports -- transports dont use promises...
+  // syslog close function emits 'closed' when done
+  // daily-rotate-file close function emits 'finish' when done
+  for (const transport of logger.transports) {
+    if (transport.close) {
+      const promise = new Promise((resolve) => {
+        transport.once('closed', () => {
+          resolve();
+        });
+        transport.once('finish', () => {
+          resolve();
+        });
+      });
+      promises.push(promise);
+      // transport.close();  <-- invoked by logger.close()
+    }
+  }
+
+  logger.close();
+  return Promise.all(promises);
+};

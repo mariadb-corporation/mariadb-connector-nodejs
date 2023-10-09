@@ -36,6 +36,44 @@ describe('change user', () => {
     }
   });
 
+  it('mysql change user error', async function () {
+    if (shareConn.info.isMariaDB()) this.skip();
+    let logged = false;
+    const conn = await base.createConnection({
+      logger: {
+        error: (msg) => {
+          logged = true;
+        }
+      }
+    });
+    try {
+      await conn.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' });
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(logged);
+      assert.equal(err.errno, 45003);
+      assert.equal(err.code, 'ER_MYSQL_CHANGE_USER_BUG');
+      assert.isTrue(err.message.includes('method changeUser not available for MySQL server due to Bug #83472'));
+      assert.equal(err.sqlState, '0A000');
+    } finally {
+      await conn.end();
+    }
+
+    const conn2 = await base.createConnection();
+    try {
+      await conn2.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' });
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.isTrue(logged);
+      assert.equal(err.errno, 45003);
+      assert.equal(err.code, 'ER_MYSQL_CHANGE_USER_BUG');
+      assert.isTrue(err.message.includes('method changeUser not available for MySQL server due to Bug #83472'));
+      assert.equal(err.sqlState, '0A000');
+    } finally {
+      await conn2.end();
+    }
+  });
+
   it('basic change user using callback', function (done) {
     if (process.env.srv == 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();

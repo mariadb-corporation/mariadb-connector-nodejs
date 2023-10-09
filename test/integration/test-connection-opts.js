@@ -20,6 +20,15 @@ describe('connection option', () => {
       });
   });
 
+  it('collation with no id', async function () {
+    if (process.env.srv === 'xpand' || process.env.srv === 'mariadb-es' || process.env.srv === 'mariadb-es-test')
+      this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 2, 0)) this.skip();
+    const conn = await base.createConnection();
+    await conn.query('set NAMES utf8mb4 COLLATE uca1400_vietnamese_ai_ci');
+    conn.end();
+  });
+
   it('wrong IANA timezone', function (done) {
     base
       .createConnection({ timezone: 'unknown' })
@@ -36,12 +45,12 @@ describe('connection option', () => {
   });
 
   it('ensure Etc/GMT', async function () {
-    let conn = await base.createConnection({ timezone: 'Etc/GMT-8', debug: true });
+    let conn = await base.createConnection({ timezone: 'Etc/GMT-8' });
     let res = await conn.query('SELECT @@time_zone as t');
     assert.equal(res[0].t, '+08:00');
     conn.end();
 
-    conn = await base.createConnection({ timezone: 'GMT-8', debug: true });
+    conn = await base.createConnection({ timezone: 'GMT-8' });
     res = await conn.query('SELECT @@time_zone as t');
     assert.equal(res[0].t, '-08:00');
     conn.end();
@@ -73,7 +82,7 @@ describe('connection option', () => {
   });
 
   it('timezone +0h', async function () {
-    const conn = await base.createConnection({ timezone: '+00:00', debug: true });
+    const conn = await base.createConnection({ timezone: '+00:00' });
 
     let d = new Date('2000-01-01T00:00:00Z');
     let res = await conn.query("SELECT UNIX_TIMESTAMP('2000-01-01T00:00:00') tt", [d]);
