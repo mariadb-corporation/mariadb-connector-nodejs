@@ -169,7 +169,8 @@ describe('sql template strings', () => {
     await pool.end();
   });
 
-  it('pool batch with parameters', (done) => {
+  it('pool batch with parameters', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     let params = {};
     const pool = base.createPool(params);
     pool
@@ -196,7 +197,8 @@ describe('sql template strings', () => {
       .catch(done);
   });
 
-  it('pool callback query with parameters', (done) => {
+  it('pool callback query with parameters', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPoolCallback();
     pool.query('drop table IF EXISTS pool_parse_call', (err, res) => {
       pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
@@ -220,7 +222,8 @@ describe('sql template strings', () => {
     });
   });
 
-  it('pool callback batch with parameters', (done) => {
+  it('pool callback batch with parameters', function (done) {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
     let params = {};
     const pool = base.createPoolCallback(params);
     pool.query('drop table pool_batch_call', (err) => {
