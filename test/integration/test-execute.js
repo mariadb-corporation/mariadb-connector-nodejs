@@ -66,6 +66,17 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('prepare close, with eof', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0, keepEof: true });
+    const prepare = await conn.prepare("select 'a' as a, ? as b");
+    assert.equal(prepare.parameterCount, 1);
+    assert.equal(prepare.columns.length, 2);
+    const res = await prepare.execute(['2']);
+    assert.deepEqual(res, [{ a: 'a', b: '2' }]);
+    prepare.close();
+    conn.end();
+  });
+
   it('prepare close with cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     for (let i = 0; i < 10; i++) {
