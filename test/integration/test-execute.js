@@ -88,6 +88,20 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('prepare already close', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 2 });
+    const prepare = await conn.prepare('select 10,?');
+    prepare.close();
+    try {
+      await prepare.execute(['a']);
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.equal(err.errno, 45051);
+      assert.equal(err.code, 'ER_PREPARE_CLOSED');
+    }
+    conn.end();
+  });
+
   it('prepare after prepare close - no cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 0 });
     const prepare = await conn.prepare('select ?');
@@ -135,6 +149,7 @@ describe('prepare and execute', () => {
     //not in cache, so re-prepare
     const prepare2 = await conn.prepare('select ?');
     await prepare2.execute('2');
+    assert.equal(prepare2.database, baseConfig.database);
     await prepare2.close();
 
     conn.end();
