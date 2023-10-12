@@ -51,6 +51,7 @@ describe('parse', () => {
       const res = Parse.parseQueries(buf);
       assert.deepEqual(res, ['select ? // comment ; \n , ?', '\nINSERT 1\n']);
     });
+
     it('EOF in comment', () => {
       const sqlBytes = Buffer.from('select ? "// comment ; "\n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
@@ -61,6 +62,7 @@ describe('parse', () => {
       const res = Parse.parseQueries(buf);
       assert.deepEqual(res, ['select ? "// comment ; "\n , ?', '\nINSERT 1\n']);
     });
+
     it('EOF in comment 2', () => {
       const sqlBytes = Buffer.from("select ? '// comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
       const buf = {
@@ -82,6 +84,18 @@ describe('parse', () => {
       const res = Parse.parseQueries(buf);
       assert.deepEqual(res, ["select ? \\'// comment ; '\n , ?", '\nINSERT 1\n']);
     });
+
+    it('escape quotes', () => {
+      const sqlBytes = Buffer.from('select ? "// comment \\"; "\n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? "// comment \\"; "\n , ?', '\nINSERT 1\n']);
+    });
+
     it('Hash', () => {
       const sqlBytes = Buffer.from('select ? # comment ; \n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {

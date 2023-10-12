@@ -41,9 +41,11 @@ describe('connection', () => {
       .createConnection({ connectAttributes: attr, charset: charset })
       .then((conn) => {
         conn
-          .query("SELECT '1'")
+          .query("SELECT '1' as '1'")
           .then((rows) => {
             assert.deepEqual(rows, [{ 1: '1' }]);
+            assert.equal(rows.meta[0].name(), '1');
+            assert.equal(rows.meta[0].orgName(), '');
             conn.end();
             done();
           })
@@ -391,7 +393,7 @@ describe('connection', () => {
   it('connection.close alias', function (done) {
     this.timeout(10000);
     base
-      .createConnection()
+      .createConnection({ keepAliveDelay: 100 })
       .then((conn) => {
         conn.close();
         done();
