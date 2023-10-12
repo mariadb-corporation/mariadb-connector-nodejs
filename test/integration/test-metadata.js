@@ -34,6 +34,21 @@ describe('metadata', () => {
     });
     validateResults(rows2);
   });
+
+  it('metadata limit', async function () {
+    await shareConn.query('DROP TABLE IF EXISTS metadatatable');
+    let name = '';
+    for (let i = 0; i < 64; i++) name += 'a';
+
+    let alias = '';
+    for (let i = 0; i < 255; i++) alias += 'b';
+
+    await shareConn.query(`CREATE TABLE metadatatable (${name} int)`);
+    await shareConn.query('FLUSH TABLES');
+    const rows = await shareConn.query(`SELECT ${name} as ${alias} FROM metadatatable`);
+    assert.equal(rows.meta[0].name(), alias);
+    assert.equal(rows.meta[0].orgName(), name);
+  });
 });
 
 const validateResults = function (rows) {

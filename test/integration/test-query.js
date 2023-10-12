@@ -373,6 +373,20 @@ describe('basic query', () => {
     });
   });
 
+  it('toSqlString escape', async function () {
+    const fctStr = new Object();
+    fctStr.toSqlString = () => {
+      return "bla'bla";
+    };
+    await shareConn.query('DROP TABLE IF EXISTS tt1');
+    await shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+    await shareConn.beginTransaction();
+    await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, fctStr]);
+    const res = await shareConn.query('SELECT * FROM tt1');
+    assert.equal(res[0].tt, "bla'bla");
+    shareConn.commit;
+  });
+
   it('timeout', function (done) {
     // xpand doesn't support timeout
     if (isXpand()) this.skip();

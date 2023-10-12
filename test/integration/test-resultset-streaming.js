@@ -7,34 +7,24 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const { Writable } = require('stream');
 const { isXpand } = require('../base');
+const Proxy = require('../tools/proxy');
+const Conf = require('../conf');
 
 describe('results-set streaming', () => {
-  before(function (done) {
-    this.timeout(10000);
-    shareConn
-      .query('CREATE TABLE testStreamResult (v int)')
-      .then(() => {
-        let sql = 'INSERT INTO testStreamResult VALUE (?)';
-        const params = [0];
-        for (let i = 1; i < 10000; i++) {
-          sql += ',(?)';
-          params.push(i);
-        }
-        return shareConn.query(sql, params);
-      })
-      .then(() => {
-        done();
-      })
-      .catch(done);
+  before(async function () {
+    await shareConn.query('DROP TABLE IF EXISTS testStreamResult');
+    await shareConn.query('CREATE TABLE testStreamResult (v int)');
+    let sql = 'INSERT INTO testStreamResult VALUE (?)';
+    const params = [0];
+    for (let i = 1; i < 10000; i++) {
+      sql += ',(?)';
+      params.push(i);
+    }
+    await shareConn.query(sql, params);
   });
 
-  after(function (done) {
-    shareConn
-      .query('DROP TABLE testStreamResult')
-      .then(() => {
-        done();
-      })
-      .catch(done);
+  after(async function () {
+    await shareConn.query('DROP TABLE IF EXISTS testStreamResult');
   });
 
   it('Streaming result-set for-await-of', async function () {
@@ -44,6 +34,13 @@ describe('results-set streaming', () => {
       assert.equal(currRow++, row.v);
     }
     assert.equal(10000, currRow);
+  });
+
+  it('Streaming Error', function (done) {
+    const stream = shareConn.queryStream('wrong');
+    stream.on('error', (error) => {
+      done();
+    });
   });
 
   it('Streaming result-set for-await-of callback', async function () {
@@ -92,6 +89,31 @@ describe('results-set streaming', () => {
         done();
       });
     stream.close();
+  });
+
+  it('execute Streaming result-set close', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    shareConn.prepare('SELECT * FROM testStreamResult').then((prepare) => {
+      const stream = prepare.executeStream();
+      stream
+        .on('error', (err) => {
+          done(new Error('must not have thrown any error !'));
+        })
+        .on('fields', (meta) => {
+          assert.equal(meta.length, 1);
+          metaReceived = true;
+        })
+        .on('data', (row) => {
+          assert.equal(currRow++, row.v);
+        })
+        .on('end', () => {
+          assert.equal(0, currRow);
+          assert.isOk(metaReceived);
+          done();
+        });
+      stream.close();
+    });
   });
 
   it('Streaming result-set close callback', function (done) {

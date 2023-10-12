@@ -52,7 +52,8 @@ describe('test socket', () => {
 
   it('named pipe error', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
+    const localSocket = process.env.LOCAL_SOCKET_AVAILABLE;
+    if (localSocket !== undefined && localSocket) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
 
     shareConn

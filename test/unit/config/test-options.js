@@ -72,6 +72,7 @@ describe('test options', () => {
       stream: undefined,
       bigIntAsNumber: false,
       bulk: true,
+      keepEof: false,
       permitLocalInfile: false,
       bigNumberStrings: false,
       supportBigNumbers: false

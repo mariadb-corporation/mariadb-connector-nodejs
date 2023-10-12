@@ -27,11 +27,23 @@ describe('sql file import', () => {
 
   afterEach(async function () {
     if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
-    await shareConn.query('DROP DATABASE fimp');
+    await shareConn.query('DROP DATABASE IF EXISTS fimp');
   });
 
   describe('promise', () => {
     describe('base promise', () => {
+      it('without file name', async function () {
+        try {
+          await basePromise.importFile(Object.assign({}, Conf.baseConfig));
+          throw new Error('must have thrown error');
+        } catch (err) {
+          assert.equal(err.errno, 45052);
+          assert.equal(err.code, 'ER_MISSING_SQL_PARAMETER');
+          assert.isTrue(err.message.includes('SQL file parameter is mandatory'));
+          assert.equal(err.sqlState, 'HY000');
+        }
+      });
+
       it('simple file import with direct connection options', async function () {
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(30000);
@@ -110,6 +122,22 @@ describe('sql file import', () => {
     });
 
     describe('base pool', () => {
+      it('without file name', async function () {
+        const pool = base.createPool({
+          connectionLimit: 1
+        });
+        try {
+          await pool.importFile(null);
+          throw new Error('must have thrown error');
+        } catch (err) {
+          assert.equal(err.errno, 45052);
+          assert.equal(err.code, 'ER_MISSING_SQL_PARAMETER');
+          assert.isTrue(err.message.includes('SQL file parameter is mandatory'));
+          assert.equal(err.sqlState, 'HY000');
+        }
+        await pool.end();
+      });
+
       it('pool import', async function () {
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(30000);
@@ -141,11 +169,47 @@ describe('sql file import', () => {
           await pool.end();
         }
       });
+
+      it('Error in file', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'xpand')
+          this.skip();
+        this.timeout(30000);
+        const conn = await base.createConnection({});
+        try {
+          await conn.importFile({ file: __dirname + '/../tools/data-dump-err.sql' });
+          throw new Error('expected to throw an error');
+        } catch (err) {
+          if (err.errno === 1062) {
+            assert.equal(err.sqlState, '23000');
+            assert.equal(err.code, 'ER_DUP_ENTRY');
+            assert.isTrue(!err.fatal);
+            assert.ok(err.message.includes('Duplicate entry'));
+          } else if (err.errno === 1180) {
+            assert.equal(err.sqlState, 'HY000');
+            assert.equal(err.code, 'ER_ERROR_DURING_COMMIT');
+            assert.isTrue(!err.fatal);
+            assert.ok(err.message.includes('Operation not permitted'));
+          } else throw err;
+        } finally {
+          await conn.end();
+        }
+      });
     });
   });
 
   describe('callback', () => {
     describe('base callback', () => {
+      it('without file name', function (done) {
+        baseCallback.importFile(Object.assign({}, Conf.baseConfig), (err) => {
+          if (!err) return done(new Error('must have thrown error'));
+          assert.equal(err.errno, 45052);
+          assert.equal(err.code, 'ER_MISSING_SQL_PARAMETER');
+          assert.isTrue(err.message.includes('SQL file parameter is mandatory'));
+          assert.equal(err.sqlState, 'HY000');
+          done();
+        });
+      });
+
       it('simple file import without callback', function (done) {
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(30000);
@@ -217,6 +281,34 @@ describe('sql file import', () => {
               assert.isTrue(!err.fatal);
               assert.ok(err.message.includes('Database parameter is not set and no database is selected'));
               done();
+            }
+          }
+        );
+      });
+
+      it('error in import file', function (done) {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'xpand')
+          this.skip();
+        this.timeout(30000);
+        baseCallback.importFile(
+          Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump-err.sql' }),
+          (err) => {
+            if (!err) {
+              done(new Error('expected to throw an error'));
+            } else {
+              if (err.errno === 1062) {
+                assert.equal(err.sqlState, '23000');
+                assert.equal(err.code, 'ER_DUP_ENTRY');
+                assert.isTrue(!err.fatal);
+                assert.ok(err.message.includes('Duplicate entry'));
+                done();
+              } else if (err.errno === 1180) {
+                assert.equal(err.sqlState, 'HY000');
+                assert.equal(err.code, 'ER_ERROR_DURING_COMMIT');
+                assert.isTrue(!err.fatal);
+                assert.ok(err.message.includes('Operation not permitted'));
+                done();
+              } else done(err);
             }
           }
         );
@@ -293,6 +385,21 @@ describe('sql file import', () => {
     });
 
     describe('base pool', () => {
+      it('without file name', function (done) {
+        const pool = base.createPoolCallback({
+          connectionLimit: 1
+        });
+        pool.importFile(null, (err) => {
+          if (!err) return done(new Error('must have thrown error'));
+          assert.equal(err.errno, 45052);
+          assert.equal(err.code, 'ER_MISSING_SQL_PARAMETER');
+          assert.isTrue(err.message.includes('SQL file parameter is mandatory'));
+          assert.equal(err.sqlState, 'HY000');
+          done();
+        });
+        pool.end();
+      });
+
       it('pool import', function (done) {
         if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
         this.timeout(30000);

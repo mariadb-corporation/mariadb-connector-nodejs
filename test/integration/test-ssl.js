@@ -253,7 +253,8 @@ describe('ssl', function () {
     if (
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      (!shareConn.info.isMariaDB() &&
+        (shareConn.info.hasMinVersion(8, 0, 0) || shareConn.info.hasMinVersion(5, 7, 43))) ||
       shareConn.info.serverVersion.raw.includes('focal')
     ) {
       this.skip();
@@ -276,7 +277,8 @@ describe('ssl', function () {
     if (
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      (!shareConn.info.isMariaDB() &&
+        (shareConn.info.hasMinVersion(8, 0, 0) || shareConn.info.hasMinVersion(5, 7, 43))) ||
       shareConn.info.serverVersion.raw.includes('focal')
     ) {
       this.skip();
@@ -301,7 +303,8 @@ describe('ssl', function () {
       process.env.srv === 'skysql' ||
       process.env.srv === 'skysql-ha' ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      (!shareConn.info.isMariaDB() &&
+        (shareConn.info.hasMinVersion(8, 0, 0) || shareConn.info.hasMinVersion(5, 7, 43))) ||
       shareConn.info.serverVersion.raw.includes('focal')
     ) {
       this.skip();

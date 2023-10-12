@@ -184,10 +184,23 @@ describe('geometry data type', () => {
               [0, 0],
               [10, 10]
             ]
+          },
+          {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [10, 10],
+                [20, 10],
+                [20, 20],
+                [10, 20],
+                [10, 10]
+              ]
+            ]
           }
         ]
       }),
-      prefix + "GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0),LINESTRING(0 0,10 10))')"
+      prefix +
+        "GeomCollFromText('GEOMETRYCOLLECTION(POINT(0 0),LINESTRING(0 0,10 10),POLYGON((10 10,20 10,20 20,10 20,10 10)))')"
     );
   });
 

@@ -74,6 +74,44 @@ describe('prepare and execute callback', () => {
     });
   });
 
+  it('execute callback with parameter', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection();
+    conn.connect((err) => {
+      conn.prepare('SELECT ? as a', (err, prepare) => {
+        prepare.execute(['a'], (err, res) => {
+          if (err) {
+            done(err);
+          } else {
+            assert.deepEqual([{ a: 'a' }], res);
+            conn.end();
+            done();
+          }
+        });
+      });
+    });
+  });
+
+  it('execute when closed', function (done) {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = base.createCallbackConnection();
+    conn.connect((err) => {
+      conn.prepare('SELECT ? as a', (err, prepare) => {
+        prepare.close();
+        prepare.execute(['a'], (err, res) => {
+          if (!err) {
+            done(new Error('must have thrown error'));
+          } else {
+            assert.equal(err.errno, 45051);
+            assert.equal(err.code, 'ER_PREPARE_CLOSED');
+            done();
+          }
+          conn.end();
+        });
+      });
+    });
+  });
+
   it('execute callback wrong param stack trace', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });

@@ -252,6 +252,42 @@ describe('local-infile', () => {
     conn.end();
   });
 
+  it('infileStreamFactory Error', async function () {
+    if (isXpand()) this.skip();
+    const self = this;
+    const rows = await shareConn.query('select @@local_infile');
+    if (
+      rows[0]['@@local_infile'] === 0 ||
+      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
+      process.env.srv === 'skysql' ||
+      process.env.srv === 'skysql-ha'
+    ) {
+      return self.skip();
+    }
+
+    const conn = await base.createConnection({
+      permitLocalInfile: true,
+      infileStreamFactory: () => {
+        throw new Error('Expect to throw Error');
+      }
+    });
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
+    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.beginTransaction();
+    try {
+      await conn.query(
+        "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+      );
+      throw new Error('Expect to have thrown an error');
+    } catch (err) {
+      assert.equal(err.errno, 45022);
+      assert.equal(err.sqlState, '22000');
+    }
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    assert.deepEqual(rows2, []);
+    conn.end();
+  });
+
   it('small infileStreamFactory query lvl', async function () {
     if (isXpand()) this.skip();
     const self = this;

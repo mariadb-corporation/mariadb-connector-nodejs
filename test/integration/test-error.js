@@ -540,9 +540,11 @@ describe('Error', () => {
   it('query undefined parameter', async function () {
     await shareConn.query('DROP TABLE IF EXISTS undefinedParameter');
     await shareConn.query('CREATE TABLE undefinedParameter (id int, id2 int, id3 int)');
+    await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO undefinedParameter values (?, ?, ?)', [1, undefined, 3]);
     const rows = await shareConn.query('SELECT * from undefinedParameter');
     assert.deepEqual(rows, [{ id: 1, id2: null, id3: 3 }]);
+    await shareConn.commit();
   });
 
   it('query missing parameter', function (done) {

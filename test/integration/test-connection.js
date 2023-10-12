@@ -41,9 +41,11 @@ describe('connection', () => {
       .createConnection({ connectAttributes: attr, charset: charset })
       .then((conn) => {
         conn
-          .query("SELECT '1'")
+          .query("SELECT '1' as '1'")
           .then((rows) => {
             assert.deepEqual(rows, [{ 1: '1' }]);
+            assert.equal(rows.meta[0].name(), '1');
+            assert.equal(rows.meta[0].orgName(), '');
             conn.end();
             done();
           })
@@ -391,7 +393,7 @@ describe('connection', () => {
   it('connection.close alias', function (done) {
     this.timeout(10000);
     base
-      .createConnection()
+      .createConnection({ keepAliveDelay: 100 })
       .then((conn) => {
         conn.close();
         done();
@@ -1075,5 +1077,14 @@ describe('connection', () => {
         })
         .catch(done);
     });
+  });
+
+  it('collation index > 255', async function () {
+    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
+    const conn = await base.createConnection({ collation: 'UTF8MB4_UNICODE_520_NOPAD_CI' });
+    const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');
+    assert.equal(res[0].c, 'utf8mb4_unicode_520_nopad_ci');
+    conn.end();
   });
 });

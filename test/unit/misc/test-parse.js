@@ -7,18 +7,141 @@ const Parse = require('../../../lib/misc/parse');
 const { assert } = require('chai');
 
 describe('parse', () => {
-  describe('basic placeholder', () => {
-    const values = [
-      { id1: 1, id2: 2 },
-      { id3: 3, id2: 4 },
-      { id2: 5, id1: 6 }
-    ];
+  const values = [
+    { id1: 1, id2: 2 },
+    { id3: 3, id2: 4 },
+    { id2: 5, id1: 6 }
+  ];
 
+  describe('split', () => {
+    it('EOF', () => {
+      const res = Parse.splitQuery(Buffer.from('select ? // comment ? \n , ?', 'utf8'));
+      assert.deepEqual(res, [7, 8, 26, 27]);
+    });
+  });
+
+  describe('split queries', () => {
+    it('Normal', () => {
+      const sqlBytes = Buffer.from('select ? // comment ? \n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? // comment ? \n , ?', '\nINSERT 1\n']);
+    });
+    it('Normal ending semicolon', () => {
+      const sqlBytes = Buffer.from('select ? // comment ? \n , ?;\nINSERT 1;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? // comment ? \n , ?', '\nINSERT 1']);
+    });
+    it('EOF', () => {
+      const sqlBytes = Buffer.from('select ? // comment ; \n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? // comment ; \n , ?', '\nINSERT 1\n']);
+    });
+
+    it('EOF in comment', () => {
+      const sqlBytes = Buffer.from('select ? "// comment ; "\n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? "// comment ; "\n , ?', '\nINSERT 1\n']);
+    });
+
+    it('EOF in comment 2', () => {
+      const sqlBytes = Buffer.from("select ? '// comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ["select ? '// comment ; '\n , ?", '\nINSERT 1\n']);
+    });
+
+    it('EOF in comment 3', () => {
+      const sqlBytes = Buffer.from("select ? \\'// comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ["select ? \\'// comment ; '\n , ?", '\nINSERT 1\n']);
+    });
+
+    it('escape quotes', () => {
+      const sqlBytes = Buffer.from('select ? "// comment \\"; "\n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? "// comment \\"; "\n , ?', '\nINSERT 1\n']);
+    });
+
+    it('Hash', () => {
+      const sqlBytes = Buffer.from('select ? # comment ; \n , ?;\nINSERT 1\n;', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? # comment ; \n , ?', '\nINSERT 1\n']);
+    });
+
+    it('multiples', () => {
+      const sqlBytes = Buffer.from('select ? # comment ; \n , ?;\nINSERT 1\n; SELECT', 'utf8');
+      const buf = {
+        buffer: sqlBytes,
+        offset: 0,
+        end: sqlBytes.length
+      };
+      const res = Parse.parseQueries(buf);
+      assert.deepEqual(res, ['select ? # comment ; \n , ?', '\nINSERT 1\n']);
+    });
+  });
+
+  describe('basic placeholder', () => {
     it('select', () => {
       const res = Parse.searchPlaceholder('select \'\\\'\' as a, :id2 as b, "\\"" as c, :id1 as d', null, values);
       assert.deepEqual(res, {
         placeHolderIndex: ['id2', 'id1'],
         sql: 'select \'\\\'\' as a, ? as b, "\\"" as c, ? as d'
+      });
+    });
+
+    it('EOF', () => {
+      const res = Parse.searchPlaceholder('select :id1 // comment :id2 \n , :id3');
+      assert.deepEqual(res, {
+        placeHolderIndex: ['id1', 'id2', 'id3'],
+        sql: 'select ? // comment ? \n , ?'
+      });
+    });
+
+    it('question mark', () => {
+      const sql = 'select :id1 // comment :id2 \n , ?';
+      const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2, id3: 3 }, () => sql);
+      assert.deepEqual(res, {
+        paramPositions: [7, 11, 32, 33],
+        values: [1]
       });
     });
 
@@ -191,6 +314,15 @@ describe('parse', () => {
         placeHolderIndex: ['id1'],
         sql: 'INSERT INTO select_tt (tt, tt2) VALUES (LAST_INSERT_ID(), ?)'
       });
+    });
+  });
+
+  describe('validate file name', () => {
+    it('error', () => {
+      assert.isTrue(Parse.validateFileName("LOAD DATA LOCAL INFILE 'C:/Temp/myFile.txt'", [], 'C:/Temp/myFile.txt'));
+      assert.isFalse(Parse.validateFileName("LOAD DATA LOCAL INFILE 'C:/Temp/myFile.txt'", [], 'C:/myFile.txt'));
+      assert.isTrue(Parse.validateFileName('LOAD DATA LOCAL INFILE ?', ['C:/Temp/myFile.txt'], 'C:/Temp/myFile.txt'));
+      assert.isFalse(Parse.validateFileName('LOAD DATA LOCAL INFILE ?', [], 'C:/Temp/myFile.txt'));
     });
   });
 });

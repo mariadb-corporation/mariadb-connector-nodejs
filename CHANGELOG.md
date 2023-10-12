@@ -1,4 +1,15 @@
 # Change Log
+
+## [3.2.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.2) (Oct 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.1...3.2.2)
+
+## Issues Fixed
+* CONJS-270 Always send connection attributes, even when connectAttributes is not set
+* CONJS-269 avoid useless "set names utf8mb4" on connection creation if not needed
+* CONJS-268 importFile method doesn't always throw error when imported commands fails #253
+* CONJS-267 Ensure that option collation with id > 255 are respected
+
+
 ## [3.2.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.1) (Sep 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.0...3.2.1)
 

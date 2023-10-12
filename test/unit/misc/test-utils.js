@@ -6,7 +6,8 @@
 const Utils = require('../../../lib/misc/utils');
 const { assert } = require('chai');
 const ConnOptions = require('../../../lib/config/connection-options');
-
+const Collations = require('../../../lib/const/collations');
+const ConnectionInformation = require('../../../lib/misc/connection-information');
 describe('utils', () => {
   const head = Buffer.from([0xaa, 0xbb, 0xcc, 0x33]);
   const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
@@ -193,5 +194,20 @@ describe('utils', () => {
         '+--------------------------------------------------+------------------+\n',
       Utils.log(opt, longbuf, 1, longbuf.length, head)
     );
+  });
+
+  it('escapeId', () => {
+    assert.equal('`bla`', Utils.escapeId(null, null, 'bla'));
+    assert.equal('```bla```', Utils.escapeId(null, null, '`bla`'));
+    assert.equal('```bla``s`', Utils.escapeId(null, null, '`bla`s'));
+    assert.equal('```bla````s```', Utils.escapeId(null, null, '`bla``s`'));
+    assert.equal('``````', Utils.escapeId(null, null, '``'));
+  });
+
+  it('escapeParameters', () => {
+    const opt = new ConnOptions();
+    const info = new ConnectionInformation(opt);
+    info.collation = Collations.fromCharset('big5');
+    assert.equal("_binary'test'", Utils.escape(opt, info, Buffer.from('test')));
   });
 });
