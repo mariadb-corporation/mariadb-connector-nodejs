@@ -10,6 +10,7 @@ const os = require('os');
 const path = require('path');
 const { isXpand } = require('../base');
 const { baseConfig } = require('../conf');
+const { Readable } = require('stream');
 
 describe('prepare and execute', () => {
   let bigVal;
@@ -77,6 +78,26 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('execute logger', async () => {
+    let logged = '';
+    const conn = await base.createConnection({
+      logger: {
+        query: (msg) => {
+          logged += msg + '\n';
+        }
+      }
+    });
+    const prepare = await conn.prepare("select 'a' as a, ? as b");
+    const res = await prepare.execute(['2']);
+    assert.deepEqual(res, [{ a: 'a', b: '2' }]);
+    assert.isTrue(
+      logged.includes("PREPARE: select 'a' as a, ? as b\nEXECUTE: (") &&
+        logged.includes(") sql: select 'a' as a, ? as b - parameters:['2']\n")
+    );
+    prepare.close();
+    conn.end();
+  });
+
   it('prepare close with cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     for (let i = 0; i < 10; i++) {
@@ -100,6 +121,44 @@ describe('prepare and execute', () => {
       assert.equal(err.code, 'ER_PREPARE_CLOSED');
     }
     conn.end();
+  });
+
+  it('multiple long data', async () => {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS longDataTest');
+    await conn.query('CREATE TABLE longDataTest(v int, a blob, b blob)');
+    await conn.beginTransaction();
+    const prepare = await conn.prepare('INSERT INTO longDataTest VALUES (?,?,?)');
+    await prepare.execute(['10', Buffer.from('a'), Buffer.from('b')]);
+    const res = await conn.query('SELECT * FROM longDataTest');
+    assert.deepEqual(res, [
+      {
+        v: 10,
+        a: Buffer.from('a'),
+        b: Buffer.from('b')
+      }
+    ]);
+    await conn.end();
+  });
+
+  it('multiple stream data', async () => {
+    const conn = await base.createConnection();
+    await conn.query('DROP TABLE IF EXISTS longDataTest');
+    await conn.query('CREATE TABLE longDataTest(v int, a blob, b blob)');
+    await conn.beginTransaction();
+    const readableStream1 = Readable.from([Buffer.from('hello')]);
+    const readableStream2 = Readable.from([Buffer.from('world')]);
+    const prepare = await conn.prepare('INSERT INTO longDataTest VALUES (?,?,?)');
+    await prepare.execute(['10', readableStream1, readableStream2]);
+    const res = await conn.query('SELECT * FROM longDataTest');
+    assert.deepEqual(res, [
+      {
+        v: 10,
+        a: Buffer.from('hello'),
+        b: Buffer.from('world')
+      }
+    ]);
+    await conn.end();
   });
 
   it('prepare after prepare close - no cache', async () => {

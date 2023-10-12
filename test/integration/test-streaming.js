@@ -18,29 +18,23 @@ describe('streaming', () => {
   const buf2 = Buffer.alloc(size / 2);
   let maxAllowedSize;
 
-  before(function (done) {
-    this.timeout(20000);
-    shareConn
-      .query('DROP TABLE IF EXISTS Streaming')
-      .then(() => {
-        return shareConn.query(
-          'CREATE TABLE Streaming (id int NOT NULL AUTO_INCREMENT, b longblob, c varchar(10), d longblob, e varchar(10), PRIMARY KEY (id))'
-        );
-      })
-      .then(() => {
-        return shareConn.query('SELECT @@max_allowed_packet as t');
-      })
-      .then((rows) => {
-        maxAllowedSize = Number(rows[0].t);
-        createTmpFiles(done);
-      })
-      .catch(done);
+  before(async function () {
+    await shareConn.query('DROP TABLE IF EXISTS Streaming');
+    await shareConn.query(
+      'CREATE TABLE Streaming (id int NOT NULL AUTO_INCREMENT, b longblob, c varchar(10), d longblob, e varchar(10), PRIMARY KEY (id))'
+    );
+    const rows = await shareConn.query('SELECT @@max_allowed_packet as t');
+    maxAllowedSize = Number(rows[0].t);
+    createTmpFiles();
   });
 
   after(function () {
-    //create
-    fs.unlink(fileName, (err) => {});
-    fs.unlink(halfFileName, (err) => {});
+    try {
+      fs.unlinkSync(fileName);
+      fs.unlinkSync(halfFileName);
+    } catch (e) {
+      // eat
+    }
   });
 
   it('Streaming url content', function (done) {
@@ -141,27 +135,16 @@ describe('streaming', () => {
     }
   });
 
-  function createTmpFiles(done) {
+  function createTmpFiles() {
     for (let i = 0; i < buf.length; i++) {
       buf[i] = 97 + (i % 10);
     }
-
     //create
-    fs.writeFile(fileName, buf, 'utf8', function (err) {
-      if (err) {
-        done(err);
-      } else {
-        for (let i = 0; i < buf2.length; i++) {
-          buf2[i] = 97 + (i % 10);
-        }
-        fs.writeFile(halfFileName, buf2, 'utf8', function (err) {
-          if (err) {
-            done(err);
-          } else {
-            done();
-          }
-        });
-      }
-    });
+    fs.writeFileSync(fileName, buf, 'utf8');
+
+    for (let i = 0; i < buf2.length; i++) {
+      buf2[i] = 97 + (i % 10);
+    }
+    fs.writeFileSync(halfFileName, buf2, 'utf8');
   }
 });

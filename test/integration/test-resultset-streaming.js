@@ -91,6 +91,31 @@ describe('results-set streaming', () => {
     stream.close();
   });
 
+  it('execute Streaming result-set close', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    shareConn.prepare('SELECT * FROM testStreamResult').then((prepare) => {
+      const stream = prepare.executeStream();
+      stream
+        .on('error', (err) => {
+          done(new Error('must not have thrown any error !'));
+        })
+        .on('fields', (meta) => {
+          assert.equal(meta.length, 1);
+          metaReceived = true;
+        })
+        .on('data', (row) => {
+          assert.equal(currRow++, row.v);
+        })
+        .on('end', () => {
+          assert.equal(0, currRow);
+          assert.isOk(metaReceived);
+          done();
+        });
+      stream.close();
+    });
+  });
+
   it('Streaming result-set close callback', function (done) {
     let currRow = 0;
     let metaReceived = false;
