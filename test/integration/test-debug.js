@@ -19,31 +19,25 @@ describe('debug', () => {
   let permitLocalInfile = true;
   let tmpLogFile = path.join(os.tmpdir(), 'combined.txt');
   let logger;
+  let setNameAddition = 0;
 
-  before(function (done) {
+  before(async function () {
     if (!isXpand()) {
       try {
         fs.unlinkSync(tmpLogFile);
       } catch (e) {}
-      shareConn
-        .query('select @@local_infile')
-        .then((rows) => {
-          permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
-          return new Promise(function (resolve, reject) {
-            fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
-              if (err) reject(err);
-              else resolve();
-            });
-          });
-        })
-        .then(() => {
-          //ensure that debug from previous test are written to console
-          setTimeout(() => {
-            done();
-          }, 1000);
-        })
-        .catch(done);
-    } else done();
+      const rows = await shareConn.query('select @@local_infile');
+      permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
+      fs.writeFileSync(smallFileName, '1,hello\n2,world\n', 'utf8');
+      await new Promise(function (resolve, reject) {
+        //ensure that debug from previous test are written to console
+        setTimeout(resolve, 1000);
+      });
+      const defaultCharset = await shareConn.query('select @@global.character_set_client as a');
+      if (defaultCharset[0].a != 'utf8mb4') {
+        setNameAddition = 1221;
+      }
+    }
   });
 
   beforeEach(async function () {
@@ -213,7 +207,7 @@ describe('debug', () => {
                 .then(() => {
                   const serverVersion = conn.serverVersion();
                   const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [8900, 12000];
+                  let range = [8900, 12000 + setNameAddition];
                   assert(
                     data.length > range[0] && data.length < range[1],
                     'wrong data length : ' +
@@ -261,7 +255,7 @@ describe('debug', () => {
       const conn = await base.createConnection({ debug: true });
       const res = await conn.query("SELECT '1'");
       conn.end();
-      const range = [3600, 7000];
+      const range = [3600, 5800 + setNameAddition];
       assert(
         data.length > range[0] && data.length < range[1],
         'wrong data length : ' +
@@ -306,7 +300,7 @@ describe('debug', () => {
             setTimeout(() => {
               const data = fs.readFileSync(tmpLogFile, 'utf8');
               const serverVersion = conn.serverVersion();
-              const range = [7500, 11000 + (Conf.baseConfig.ssl ? 800 : 0)];
+              const range = [7500, 11000 + (Conf.baseConfig.ssl ? 800 : 0) + setNameAddition];
               assert(
                 data.length > range[0] && data.length < range[1],
                 'wrong data length : ' +
