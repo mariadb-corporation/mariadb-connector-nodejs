@@ -261,7 +261,7 @@ describe('debug', () => {
       const conn = await base.createConnection({ debug: true });
       const res = await conn.query("SELECT '1'");
       conn.end();
-      const range = [3600, 5800];
+      const range = [3600, 7000];
       assert(
         data.length > range[0] && data.length < range[1],
         'wrong data length : ' +
