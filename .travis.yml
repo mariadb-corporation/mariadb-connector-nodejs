@@ -52,8 +52,6 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: srv=build
-    - env: srv=skysql RUN_LONG_TEST=0
-    - env: srv=skysql-ha RUN_LONG_TEST=0
     - env: srv=xpand RUN_LONG_TEST=0
   include:
     - stage: Minimal
@@ -75,10 +73,6 @@ jobs:
       if: type = push AND fork = false
     - env: srv=maxscale
       name: "Maxscale"
-    - env: srv=skysql RUN_LONG_TEST=0
-      name: "SkySQL"
-    - env: srv=skysql-ha RUN_LONG_TEST=0
-      name: "SkySQL with replication"
     - env: srv=xpand RUN_LONG_TEST=0
       name: "Xpand"
 
