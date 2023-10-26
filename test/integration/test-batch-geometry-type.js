@@ -21,6 +21,9 @@ describe('batch geometry type', () => {
     // xpand doesn't support geometry
     // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
+    const serverPermitExtendedInfos =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+
     await shareConn.query('DROP TABLE IF EXISTS gis_point_batch');
     await shareConn.query('CREATE TABLE gis_point_batch  (g POINT)');
     await shareConn.query('FLUSH TABLES');
@@ -89,22 +92,10 @@ describe('batch geometry type', () => {
         }
       },
       {
-        g:
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 5, 2) &&
-          process.env.srv !== 'maxscale' &&
-          process.env.srv !== 'skysql-ha'
-            ? { type: 'Point' }
-            : null
+        g: serverPermitExtendedInfos ? { type: 'Point' } : null
       },
       {
-        g:
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 5, 2) &&
-          process.env.srv !== 'maxscale' &&
-          process.env.srv !== 'skysql-ha'
-            ? { type: 'Point' }
-            : null
+        g: serverPermitExtendedInfos ? { type: 'Point' } : null
       }
     ]);
     shareConn.commit();
@@ -114,6 +105,9 @@ describe('batch geometry type', () => {
     // xpand doesn't support geometry
     // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
+    const serverPermitExtendedInfos =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+
     await shareConn.query('DROP TABLE IF EXISTS gis_line_batch');
     await shareConn.query('CREATE TABLE gis_line_batch (g LINESTRING)');
     await shareConn.query('FLUSH TABLES');
@@ -172,17 +166,12 @@ describe('batch geometry type', () => {
                 coordinates: [],
                 type: 'LineString'
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql-ha'
+            : serverPermitExtendedInfos
             ? { type: 'LineString' }
             : null
         },
         {
-          g:
-            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
-              ? { type: 'LineString' }
-              : null
+          g: serverPermitExtendedInfos ? { type: 'LineString' } : null
         }
       ]);
     } else {
@@ -218,6 +207,9 @@ describe('batch geometry type', () => {
     // xpand doesn't support geometry
     // https://jira.mariadb.org/browse/XPT-12
     if (!shareConn.info.isMariaDB() || isXpand()) this.skip();
+    const serverPermitExtendedInfos =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon_batch');
     await shareConn.query('CREATE TABLE gis_polygon_batch (g POLYGON)');
     await shareConn.query('FLUSH TABLES');
@@ -321,10 +313,7 @@ describe('batch geometry type', () => {
           }
         },
         {
-          g:
-            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
-              ? { type: 'Polygon' }
-              : null
+          g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
         },
         {
           g: supportBulk
@@ -332,17 +321,12 @@ describe('batch geometry type', () => {
                 type: 'Polygon',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql-ha'
+            : serverPermitExtendedInfos
             ? { type: 'Polygon' }
             : null
         },
         {
-          g:
-            shareConn.info.hasMinVersion(10, 5, 2) && process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha'
-              ? { type: 'Polygon' }
-              : null
+          g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
         }
       ]);
     } else {
