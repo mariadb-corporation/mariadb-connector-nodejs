@@ -104,9 +104,9 @@ describe('json', () => {
     let rows = await shareConn.query('SELECT * FROM `test-json-return-type`');
     if (shareConn.info.isMariaDB()) {
       if (serverPermitExtendedInfos) {
-        assert.equal(rows[0].val1, obj);
+        assert.deepEqual(rows[0].val1, obj);
       } else {
-        assert.deepEqual(rows[0].val1, jsonString);
+        assert.equal(rows[0].val1, jsonString);
       }
     } else {
       assert.equal(rows[0].val1.id, 2);
