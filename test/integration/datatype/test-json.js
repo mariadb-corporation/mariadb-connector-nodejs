@@ -56,7 +56,7 @@ describe('json', () => {
     await conn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
     await conn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
     const rows = await conn.query('SELECT * FROM `test-json-insert-type`');
-    if (!serverPermitExtendedInfos) {
+    if (!serverPermitExtendedInfos && conn.info.isMariaDB()) {
       const val1 = JSON.parse(rows[0].val1);
       const val2 = JSON.parse(rows[1].val1);
       const val3 = JSON.parse(rows[2].val1);
