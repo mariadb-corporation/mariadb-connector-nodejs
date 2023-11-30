@@ -87,27 +87,16 @@ jobs:
       name: "CS 10.4"
     - env: srv=mariadb v=10.5 local=1 DISABLE_SSL=1
       dist: bionic
-      node_js: 16
-      name: "CS 10.5"
-    - env: srv=mariadb v=10.9 local=1
-      name: "CS 10.9"
-    - env: srv=mariadb v=10.10 local=1
-      name: "CS 10.10 - node.js 18"
-      node_js: 18
-    - env: srv=mariadb v=10.11 local=1
-      name: "CS 10.11"
-    - env: srv=mariadb v=11.0 local=1
-      name: "CS 11.0"
-    - env: srv=mariadb v=11.1 local=1
-      name: "CS 11.1"
-    - env: srv=mariadb v=10.6 local=1
-      name: "CS 10.6 - node.js 14"
+      name: "CS 10.5 - node.js 14"
       node_js: 14
-    - env: srv=mariadb v=10.6 local=1 CLEAR_TEXT=1
+    - env: srv=mariadb v=10.11 local=1
+      name: "CS 10.11 - node.js 16"
       node_js: 16
-      name: "CS 10.6 - node.js 16"
-    - env: srv=mariadb v=10.6 local=1
-      name: "CS 10.6 - node.js 20"
+    - env: srv=mariadb v=11.0 local=1 CLEAR_TEXT=1
+      node_js: 18
+      name: "CS 11.0 - node.js 18"
+    - env: srv=mariadb v=11.1 local=1
+      name: "CS 11.1 - node.js 20"
       node_js: 20
     - env: srv=mysql v=5.7
       name: "MySQL 5.7"
