@@ -808,6 +808,11 @@ describe('batch', function () {
           err.message.includes('This command is not supported in the prepared statement protocol yet'),
           err.message
         );
+        // ensure option is taken in account
+        await conn.batch({ bulk: false, sql: 'SELECT ? as id, ? as t' }, [
+          [1, 'john'],
+          [2, 'jack']
+        ]);
       }
     }
     await conn.end();
