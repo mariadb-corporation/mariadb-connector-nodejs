@@ -154,8 +154,8 @@ describe('Error', () => {
             } else {
               if (!isXpand()) {
                 assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-                assert.isTrue(err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long paramete...]"));
-                assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...]");
+                assert.isTrue(err.message.includes("sql: wrong query ?, ? - parameters:[123456789,'long paramete..."));
+                assert.equal(err.sql, "wrong query ?, ? - parameters:[123456789,'long paramete...");
                 assert.equal(err.sqlState, 42000);
               }
               assert.equal(err.errno, 1064);
@@ -257,8 +257,8 @@ describe('Error', () => {
               assert.equal(err.errno, 1064);
               assert.equal(err.code, 'ER_PARSE_ERROR');
             }
-            assert.isTrue(err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'some par...}"));
-            assert.equal(err.sql, "wrong query :par1, :par2 - parameters:{'par1':'some par...}");
+            assert.isTrue(err.message.includes("sql: wrong query :par1, :par2 - parameters:{'par1':'some par..."));
+            assert.equal(err.sql, "wrong query :par1, :par2 - parameters:{'par1':'some par...");
 
             conn.end();
             done();

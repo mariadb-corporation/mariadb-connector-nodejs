@@ -98,6 +98,51 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('logger error', async () => {
+    let errorLogged = '';
+    const conn = await base.createConnection({
+      logger: {
+        error: (msg) => {
+          errorLogged += msg + '\n';
+        }
+      }
+    });
+    try {
+      await conn.query('SELECT * FROM nonexistant WHERE a = ? AND b= ?', ['a', true]);
+    } catch (e) {
+      // eat
+    }
+    console.log(errorLogged);
+    assert.isTrue(
+      errorLogged.includes(
+        "Table 'testn.nonexistant' doesn't exist\n" +
+          "sql: SELECT * FROM nonexistant WHERE a = ? AND b= ? - parameters:['a',true]"
+      ),
+      errorLogged
+    );
+    conn.end();
+  });
+
+  it('logger error without parameters', async () => {
+    let errorLogged = '';
+    const conn = await base.createConnection({
+      logger: {
+        error: (msg) => {
+          errorLogged += msg + '\n';
+        }
+      },
+      logParam: false
+    });
+    try {
+      await conn.query('SELECT * FROM NONEXISTANT WHERE a = ? AND b= ?', ['a', true]);
+    } catch (e) {
+      // eat
+    }
+    console.log(errorLogged);
+    assert.isFalse(errorLogged.includes(" - parameters:['a',true]"));
+    conn.end();
+  });
+
   it('prepare close with cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 2 });
     for (let i = 0; i < 10; i++) {
@@ -170,7 +215,60 @@ describe('prepare and execute', () => {
       await prepare.execute('1');
       throw new Error('must have thrown error');
     } catch (e) {
+      assert.equal(e.sql, "select ? - parameters:['1']");
       assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+    try {
+      await prepare.execute([1, 2]);
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.equal(e.sql, 'select ? - parameters:[1,2]');
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+    const prepare2 = await conn.prepare('select ?');
+    await prepare2.execute('2');
+    await prepare2.close();
+
+    conn.end();
+  });
+
+  it('prepare after prepare close - no cache - error trunk', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0, debugLen: 8 });
+    const prepare = await conn.prepare('select ?');
+    await prepare.execute('1');
+    await prepare.close();
+    try {
+      await prepare.execute('1');
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.equal(e.sql, 'select ?...');
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+    try {
+      await prepare.execute([1, 2]);
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.equal(e.sql, 'select ?...');
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+    }
+    const prepare2 = await conn.prepare('select ?');
+    await prepare2.execute('2');
+    await prepare2.close();
+
+    conn.end();
+  });
+
+  it('prepare after prepare close - no cache - parameter logged', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0, logParam: false });
+    const prepare = await conn.prepare('select ?');
+    await prepare.execute('1');
+    await prepare.close();
+    try {
+      await prepare.execute('1');
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('Execute fails, prepare command as already been closed'));
+      assert.equal(e.sql, 'select ?');
     }
 
     const prepare2 = await conn.prepare('select ?');
