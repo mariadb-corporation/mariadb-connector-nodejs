@@ -1,22 +1,15 @@
-os: linux
-dist: jammy
 language: node_js
-services: docker
 node_js: 20
-addons:
-  hosts:
-    - mariadb.example.com
-
+version: ~> 1.0
 
 before_install:
-  - git clone https://github.com/mariadb-corporation/connector-test-machine.git
-
-
-install:
   - |-
     case $TRAVIS_OS_NAME in
       windows)
         powershell -Command Invoke-WebRequest -Uri https://uploader.codecov.io/latest/windows/codecov.exe -Outfile codecov.exe
+        choco install -y --force nodejs-lts
+        # force refresh path
+        export PATH=$(cmd.exe //c "refreshenv > nul & C:\Progra~1\Git\bin\bash -c 'echo \$PATH' ")
         ;;
       linux)
         curl -Os https://uploader.codecov.io/latest/linux/codecov
@@ -24,90 +17,29 @@ install:
         ls -lrt
         ;;
     esac
-  - |-
-    case $TRAVIS_OS_NAME in
-      windows)
-        choco install -y --force nodejs-lts
-        # force refresh path
-        export PATH=$(cmd.exe //c "refreshenv > nul & C:\Progra~1\Git\bin\bash -c 'echo \$PATH' ")
-        connector-test-machine/launch.bat -t "$srv" -v "$v" -d testn
-        ;;
-      linux)
-        source connector-test-machine/launch.sh -t "$srv" -v "$v" -d testn -l "$local"  -c "$CLEAR_TEXT" -s "$DISABLE_SSL"
-        ;;
-    esac
 
 env:
-  global:
-    - RUN_LONG_TEST=1
-    - CLEAR_TEXT=0
+  global: RUN_LONG_TEST=1 CLEAR_TEXT=0 DB=testn
 
-stages:
-  - Minimal
-  - name: Enterprise
-    if: type = push AND fork = false
-  - Community
+import: mariadb-corporation/connector-test-machine:common-build.yml@master
 
 jobs:
-  fast_finish: true
-  allow_failures:
-    - env: srv=build
-    - env: srv=xpand RUN_LONG_TEST=0
   include:
-    - stage: Minimal
-      env: srv=mariadb v=10.6 local=1 packet=40
-      name: "CS 10.6"
-    - env: srv=mariadb-es v=10.6
-      name: "ES 10.6"
-      if: type = push AND fork = false
-
-    - stage: Enterprise
-      env: srv=mariadb-es v=10.4
-      name: "ES 10.4"
-      if: type = push AND fork = false
-    - env: srv=mariadb-es v=10.5
-      name: "ES 10.5"
-      if: type = push AND fork = false
-    - env: srv=mariadb-es-test v=23.08
-      name: "ES 23.08"
-      if: type = push AND fork = false
-    - env: srv=maxscale
-      name: "Maxscale"
-    - env: srv=xpand RUN_LONG_TEST=0
-      name: "Xpand"
-
-    - stage: Community
-      env: srv=mariadb v=10.6
-      os: windows
-      language: shell
-      name: "CS 10.6 - Windows"
-    - env: srv=mariadb v=10.4 local=1
-      dist: bionic
-      node_js: 16
-      name: "CS 10.4"
-    - env: srv=mariadb v=10.5 local=1 DISABLE_SSL=1
-      dist: bionic
-      name: "CS 10.5 - node.js 14"
-      node_js: 14
-    - env: srv=mariadb v=10.11 local=1
+    - stage: Language
+      env: srv=mariadb v=10.11 local=1
       name: "CS 10.11 - node.js 16"
       node_js: 16
-    - env: srv=mariadb v=11.0 local=1 CLEAR_TEXT=1
+    - stage: Language
+      env: srv=mariadb v=10.11 local=1 CLEAR_TEXT=1
       node_js: 18
-      name: "CS 11.0 - node.js 18"
-    - env: srv=mariadb v=11.1 local=1
-      name: "CS 11.1 - node.js 20"
+      name: "CS 10.11 - node.js 18"
+    - stage: Language
+      env: srv=mariadb v=10.11 local=1
+      name: "CS 10.11 - node.js 20"
       node_js: 20
-    - env: srv=mysql v=5.7
-      name: "MySQL 5.7"
-    - env: srv=mysql v=8.0
-      name: "MySQL 8.0"
-    - env: srv=mariadb v=10.6 BENCH=1 local=1
+    - stage: Benchmarks
+      env: srv=mariadb v=10.11 BENCH=1 local=1
       name: "Benchmarks"
-      node_js: 18
-      dist: focal
-    - env: srv=build
-      name: "CS build"
 
 script:
   - npm install
@@ -131,6 +63,3 @@ script:
 
 after_success:
   - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
-
-after_failure:
-  - if [ "$srv" == "maxscale" ] ; then docker-compose -f ${COMPOSE_FILE} exec -u root maxscale tail -500 /var/log/maxscale/maxscale.log; fi
