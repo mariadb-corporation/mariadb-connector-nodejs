@@ -34,7 +34,7 @@ jobs:
       node_js: 18
       name: "CS 10.11 - node.js 18"
     - stage: Language
-      env: srv=mariadb v=10.11 local=1
+      env: srv=mariadb v=10.11 local=1 DISABLE_SSL=1
       name: "CS 10.11 - node.js 20"
       node_js: 20
     - stage: Benchmarks
