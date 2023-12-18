@@ -523,9 +523,9 @@ https.get("https://node.green/#ES2018-features-Promise-prototype-finally-basic-s
 
 Queries issued from the Connector return two different kinds of results: a JSON object and an array, depending on the type of query you issue.  Queries that write to the database, such as `INSERT`, `DELETE` and `UPDATE` commands return a JSON object with the following properties:
 
-* `affectedRows`: Indicates the number of rows affected by the query.
-* `insertId`: Shows the last auto-increment value from an `INSERT`.
-* `warningStatus`: Indicates whether the query ended with a warning.
+* `affectedRows`: An integer listing the number of affected rows.
+* `insertId`: An integer noting the auto-increment ID. In case multiple rows have been inserted, this corresponds to the FIRST auto-increment value.
+* `warningStatus`: An integer indicating whether the query ended with a warning.
 
 ```js
 connection.query(

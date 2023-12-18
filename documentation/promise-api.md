@@ -600,7 +600,7 @@ https.get(
 Queries return two different kinds of results, depending on the type of query you execute.  When you execute write statements, (such as `INSERT`, `DELETE` and `UPDATE`), the method returns a JSON object with the following properties:
 
 * `affectedRows`: An integer listing the number of affected rows.
-* `insertId`: An integer noting the auto-increment ID of the last row written to the table.
+* `insertId`: An integer noting the auto-increment ID. In case multiple rows have been inserted, this corresponds to the FIRST auto-increment value.
 * `warningStatus`: An integer indicating whether the query ended with a warning.
 
 ```js

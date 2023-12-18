@@ -13,7 +13,7 @@
 
 **Non-blocking MariaDB and MySQL client for Node.js.**
 
-MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the Promise API.
+MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the Promise API, distributed under the LGPL license version 2.1 or later (LGPL-2.1-or-later)
 
 
 ## Documentation

@@ -427,8 +427,8 @@ describe('connection', () => {
 
   it('connection timeout connect (wrong url) with callback', (done) => {
     const initTime = Date.now();
-    dns.resolve4('www.google.fr', (err, res) => {
-      if (err) done(err);
+    dns.resolve4('www.google.com', (err, res) => {
+      if (err) done();
       else if (res.length > 0) {
         const host = res[0];
         const conn = base.createCallbackConnection({
@@ -531,8 +531,8 @@ describe('connection', () => {
   });
 
   it('connection timeout connect (wrong url) with callback no function', (done) => {
-    dns.resolve4('www.google.fr', (err, res) => {
-      if (err) done(err);
+    dns.resolve4('www.google.com', (err, res) => {
+      if (err) done();
       else if (res.length > 0) {
         const host = res[0];
         const conn = base.createCallbackConnection({
@@ -566,7 +566,7 @@ describe('connection', () => {
 
   it('connection timeout connect (wrong url) with promise', (done) => {
     const initTime = Date.now();
-    dns.resolve4('www.google.fr', (err, res) => {
+    dns.resolve4('www.google.com', (err, res) => {
       if (err) done(err);
       else if (res.length > 0) {
         const host = res[0];
@@ -601,8 +601,8 @@ describe('connection', () => {
 
   it('connection timeout error (wrong url)', function (done) {
     const initTime = Date.now();
-    dns.resolve4('www.google.fr', (err, res) => {
-      if (err) done(err);
+    dns.resolve4('www.google.com', (err, res) => {
+      if (err) done();
       else if (res.length > 0) {
         const host = res[0];
         base.createConnection({ host: host, connectTimeout: 1000 }).catch((err) => {

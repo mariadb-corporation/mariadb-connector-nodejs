@@ -1,5 +1,16 @@
 # Change Log
 
+## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.2...3.2.3)
+
+* CONJS-207 Add support for connection redirection
+* CONJS-271 wrong binary decoding of 00:00:00 TIME values
+* CONJS-272 Error doesn't always have parameters according to option
+* CONJS-273 Bulk insert error when last bunch of parameters is reaching max_allowed_packet
+* CONJS-274 permit disabling BULK insert for one batch
+* CONJS-207 Add support for connection redirection
+
+
 ## [3.2.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.2) (Oct 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.1...3.2.2)
 

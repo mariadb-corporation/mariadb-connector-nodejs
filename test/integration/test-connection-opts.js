@@ -360,7 +360,7 @@ describe('connection option', () => {
           conn
             .query({
               timeout: 1000,
-              sql: 'select c1.COLUMN_NAME from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+              sql: 'select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
             })
             .then(() => {
               conn.end();
@@ -381,12 +381,12 @@ describe('connection option', () => {
         .catch(done);
     } else {
       base
-        .createConnection({ multipleStatements: true, queryTimeout: 10000 })
+        .createConnection({ multipleStatements: true, queryTimeout: 10000000 })
         .then((conn) => {
           conn
             .query({
               timeout: 1000,
-              sql: 'select c1.COLUMN_NAME from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
+              sql: 'select c1.* from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2'
             })
             .then(() => {
               conn.end();

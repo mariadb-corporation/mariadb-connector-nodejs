@@ -54,9 +54,9 @@ describe('test options', () => {
         error: null,
         network: null,
         query: null,
-        logParam: false,
         warning: console.log
       },
+      logParam: true,
       metaAsArray: false,
       metaEnumerable: false,
       multipleStatements: false,
@@ -75,7 +75,8 @@ describe('test options', () => {
       keepEof: false,
       permitLocalInfile: false,
       bigNumberStrings: false,
-      supportBigNumbers: false
+      supportBigNumbers: false,
+      permitRedirect: true
     };
     assert.deepEqual(expected, defaultOpts);
     assert.deepEqual(expected, defaultOptsCall);

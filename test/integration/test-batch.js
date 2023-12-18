@@ -808,6 +808,11 @@ describe('batch', function () {
           err.message.includes('This command is not supported in the prepared statement protocol yet'),
           err.message
         );
+        // ensure option is taken in account
+        await conn.batch({ bulk: false, sql: 'SELECT ? as id, ? as t' }, [
+          [1, 'john'],
+          [2, 'jack']
+        ]);
       }
     }
     await conn.end();
@@ -843,6 +848,42 @@ describe('batch', function () {
       'select COUNT(DISTINCT id2) as a FROM `bigBatchWith16mMaxAllowedPacket` WHERE id2 >= 0 and id2 < 1000000'
     );
     assert.equal(res[0].a, 1000000);
+
+    await conn.query('ROLLBACK');
+    await conn.end();
+  };
+
+  const bigBatchWith16mMaxAllowedPacketBig = async (useCompression, useBulk) => {
+    const conn = await base.createConnection({
+      compress: useCompression,
+      maxAllowedPacket: 16 * 1024 * 1024,
+      bulk: useBulk
+    });
+    conn.query('DROP TABLE IF EXISTS bigBatchWith16mMaxAllowedPacketBig');
+    conn.query('CREATE TABLE bigBatchWith16mMaxAllowedPacketBig(id int, t LONGTEXT) CHARSET utf8mb4');
+    await conn.query('FLUSH TABLES');
+    await conn.query('START TRANSACTION');
+    const testSize = 15 * 1024 * 1024;
+    const buf = Buffer.alloc(testSize);
+    for (let i = 0; i < testSize; i++) {
+      buf[i] = 97 + (i % 10);
+    }
+    const str = buf.toString();
+    const values = [];
+    for (let i = 0; i < 5; i++) {
+      values.push([i, str]);
+    }
+    let res = await conn.batch('INSERT INTO `bigBatchWith16mMaxAllowedPacketBig` values (?, ?)', values);
+    assert.equal(res.affectedRows, 5);
+
+    res = await conn.query('select * from `bigBatchWith16mMaxAllowedPacketBig`');
+    assert.deepEqual(res, [
+      { id: 0, t: str },
+      { id: 1, t: str },
+      { id: 2, t: str },
+      { id: 3, t: str },
+      { id: 4, t: str }
+    ]);
 
     await conn.query('ROLLBACK');
     await conn.end();
@@ -1401,6 +1442,14 @@ describe('batch', function () {
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, true);
+    });
+
+    it('16M+ batch with 16M max_allowed_packet big insert', async function () {
+      // // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
+      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
+      this.timeout(320000);
+      await bigBatchWith16mMaxAllowedPacketBig(useCompression, true);
     });
 
     it('16M+ batch with max_allowed_packet set to 4M', async function () {
