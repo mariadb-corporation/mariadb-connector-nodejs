@@ -312,12 +312,12 @@ describe('mapping', () => {
     let rows = await shareConn.query('SELECT * FROM dataTypeWithNull');
     assert.ok(Buffer.isBuffer(rows[0].test));
     assert.ok(Buffer.isBuffer(rows[0].test2));
-    assert.ok(typeof typeof rows[0].test3 === 'string' || (typeof rows[0].test3) instanceof String);
+    assert.ok(typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String);
 
     rows = await shareConn.execute('SELECT * FROM dataTypeWithNull');
     assert.ok(Buffer.isBuffer(rows[0].test));
     assert.ok(Buffer.isBuffer(rows[0].test2));
-    assert.ok(typeof typeof rows[0].test3 === 'string' || (typeof rows[0].test3) instanceof String);
+    assert.ok(typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String);
     await shareConn.commit();
   });
 });

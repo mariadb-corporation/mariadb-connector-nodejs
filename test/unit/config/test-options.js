@@ -75,7 +75,8 @@ describe('test options', () => {
       keepEof: false,
       permitLocalInfile: false,
       bigNumberStrings: false,
-      supportBigNumbers: false
+      supportBigNumbers: false,
+      permitRedirect: true
     };
     assert.deepEqual(expected, defaultOpts);
     assert.deepEqual(expected, defaultOptsCall);
