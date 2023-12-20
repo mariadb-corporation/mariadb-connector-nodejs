@@ -119,6 +119,20 @@ describe('sql file import', () => {
         assert.equal(res[0].db, Conf.baseConfig.database);
         await ensureLoaded();
       });
+
+      it('simple file import without initial import ', async function () {
+        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+        this.timeout(30000);
+        const conn = await base.createConnection({ database: null });
+        try {
+          await conn.importFile({ file: __dirname + '/../tools/data-dump.sql', database: 'fimp' });
+          const res = await conn.query('SELECT DATABASE() as db');
+          assert.equal(res[0].db, 'fimp');
+          await ensureLoaded();
+        } finally {
+          conn.end();
+        }
+      });
     });
 
     describe('base pool', () => {
