@@ -1,10 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isMaxscale } = require('../base');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
@@ -163,7 +164,7 @@ describe('connection option', () => {
     // node.js before v13 doesn't permit to set TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) this.skip();
 
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     const defaultTz = process.env.TZ;

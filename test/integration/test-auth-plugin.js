@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -9,6 +9,7 @@ const Conf = require('../conf');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isMaxscale } = require('../base');
 
 describe('authentication plugin', () => {
   let rsaPublicKey = process.env.TEST_RSA_PUBLIC_KEY;
@@ -65,14 +66,14 @@ describe('authentication plugin', () => {
       } else {
         await shareConn.query("CREATE USER 'sha256User'@'%'");
         await shareConn.query(
-          "GRANT ALL PRIVILEGES ON *.* TO 'sha256User'@'%' IDENTIFIED WITH " + "sha256_password BY 'password'"
+          "GRANT ALL PRIVILEGES ON *.* TO 'sha256User'@'%' IDENTIFIED WITH sha256_password BY 'password'"
         );
       }
     }
   });
 
   it('ed25519 authentication plugin', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || process.env.srv === 'skysql') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha' || process.env.srv === 'skysql') this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
@@ -135,7 +136,7 @@ describe('authentication plugin', () => {
 
   it('name pipe authentication plugin', function (done) {
     if (process.platform !== 'win32') this.skip();
-    if (process.env.srv === 'maxscale') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
     const windowsUser = process.env.USERNAME;
@@ -288,7 +289,7 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
     shareConn

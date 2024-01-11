@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,7 @@ const os = require('os');
 const path = require('path');
 const util = require('util');
 const winston = require('winston');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 const Conf = require('../conf');
 
 describe('debug', () => {
@@ -86,12 +86,7 @@ describe('debug', () => {
         conn
           .query('CREATE TABLE debugVoid (val int)')
           .then(() => {
-            if (
-              compress &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql' &&
-              process.env.srv !== 'skysql-ha'
-            ) {
+            if (compress && !isMaxscale() && process.env.srv !== 'skysql' && process.env.srv !== 'skysql-ha') {
               conn.debugCompress((msg) => logger.info(msg));
             } else {
               conn.debug((msg) => logger.info(msg));
@@ -99,12 +94,7 @@ describe('debug', () => {
             return conn.query('SELECT 2');
           })
           .then(() => {
-            if (
-              compress &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql' &&
-              process.env.srv !== 'skysql-ha'
-            ) {
+            if (compress && !isMaxscale() && process.env.srv !== 'skysql' && process.env.srv !== 'skysql-ha') {
               conn.debugCompress(false);
             } else {
               conn.debug(false);
@@ -127,8 +117,7 @@ describe('debug', () => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               const serverVersion = conn.serverVersion();
-              if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-                compress = false;
+              if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') compress = false;
               const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
               const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
               const data = fs.readFileSync(tmpLogFile, 'utf8');
@@ -146,7 +135,7 @@ describe('debug', () => {
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
-                process.env.srv !== 'maxscale' &&
+                !isMaxscale() &&
                 process.env.srv !== 'skysql' &&
                 process.env.srv !== 'skysql-ha'
               ) {
@@ -190,8 +179,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
 
     const buf = Buffer.alloc(5000, 'z');
     base
@@ -350,8 +338,7 @@ describe('debug', () => {
       setTimeout(resolve, 100);
     });
     const serverVersion = conn.serverVersion();
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-      compress = false;
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') compress = false;
     const range = compress ? [60, 180] : [60, 170];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
     assert.isTrue(data.includes('PING'));

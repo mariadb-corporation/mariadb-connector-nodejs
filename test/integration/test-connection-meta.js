@@ -1,9 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
+const { isMaxscale } = require('../base');
 const assert = require('chai').assert;
 
 describe('Connection meta', function () {
@@ -13,7 +14,7 @@ describe('Connection meta', function () {
       if (
         process.env.srv !== 'skysql' &&
         process.env.srv !== 'skysql-ha' &&
-        process.env.srv !== 'maxscale' &&
+        !isMaxscale() &&
         process.env.srv !== 'xpand'
       ) {
         const version = process.env.v;

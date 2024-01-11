@@ -1,12 +1,12 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../../base');
 const { assert } = require('chai');
 const Conf = require('../../conf');
-const { isXpand } = require('../../base');
+const { isXpand, isMaxscale } = require('../../base');
 
 describe('datetime', () => {
   const date = new Date('2001-12-31 00:00:00');
@@ -49,7 +49,7 @@ describe('datetime', () => {
     if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
     if (
       (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
-      process.env.srv === 'maxscale' ||
+      isMaxscale() ||
       process.env.srv === 'skysql-ha'
     )
       this.skip();

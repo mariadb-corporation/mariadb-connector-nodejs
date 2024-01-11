@@ -1,16 +1,16 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 
 describe('Pool callback', () => {
   before(function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
   });
 
   it('pool with wrong authentication', function (done) {
@@ -152,7 +152,7 @@ describe('Pool callback', () => {
   });
 
   it('pool error event', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const pool = base.createPoolCallback({
       acquireTimeout: 4000,
@@ -179,7 +179,7 @@ describe('Pool callback', () => {
   });
 
   it('pool error fail connection', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const initTime = Date.now();
     const pool = base.createPoolCallback({
@@ -939,7 +939,7 @@ describe('Pool callback', () => {
   });
 
   it('pool execute timeout', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,
@@ -960,7 +960,7 @@ describe('Pool callback', () => {
   });
 
   it('pool batch timeout', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip(); //to avoid host being blocked
     this.timeout(10000);
     const pool = base.createPoolCallback({
       connectionLimit: 1,

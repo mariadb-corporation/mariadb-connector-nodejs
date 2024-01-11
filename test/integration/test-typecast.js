@@ -1,13 +1,21 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
+const Conf = require('../conf');
+const Capabilities = require('../../lib/const/capabilities');
 
 describe('TypeCast', () => {
+  let serverPermitExtendedInfos;
+  before(function () {
+    serverPermitExtendedInfos =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+  });
+
   const changeCaseCast = (column, next) => {
     if (column.type == 'VAR_STRING') {
       const val = column.string();
@@ -239,13 +247,7 @@ describe('TypeCast', () => {
         }
       },
       {
-        b1:
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 5, 2) &&
-          process.env.srv !== 'maxscale' &&
-          process.env.srv !== 'skysql-ha'
-            ? { type: 'Point' }
-            : null
+        b1: serverPermitExtendedInfos ? { type: 'Point' } : null
       }
     ];
     let rows = await conn.query('SELECT * from stupidCast');

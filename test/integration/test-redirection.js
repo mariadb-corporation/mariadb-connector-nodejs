@@ -8,6 +8,7 @@ const base = require('../base.js');
 const Proxy = require('../tools/proxy');
 const Conf = require('../conf');
 const { assert } = require('chai');
+const { isMaxscale } = require('../base');
 describe('redirection', () => {
   it('basic redirection', async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
@@ -42,7 +43,7 @@ describe('redirection', () => {
 
   it('maxscale redirection', async function () {
     // need maxscale 23.08+
-    if (process.env.srv !== 'maxscale') this.skip();
+    if (!isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -53,6 +54,7 @@ describe('redirection', () => {
     try {
       await shareConn.query(`set @@global.redirect_url="mariadb://${Conf.baseConfig.host}:${Conf.baseConfig.port}"`);
     } catch (e) {
+      proxy.close();
       this.skip();
       return;
     }

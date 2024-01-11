@@ -1,11 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 
 describe('Error', () => {
   after((done) => {
@@ -369,7 +369,7 @@ describe('Error', () => {
 
   it('server close connection without warning', function (done) {
     //removed for maxscale, since wait_timeout will be set to other connections
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     this.timeout(20000);
     let connectionErr = false;
     base
@@ -411,8 +411,7 @@ describe('Error', () => {
 
   it('server close connection - no connection error event', function (done) {
     this.timeout(20000);
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     // Remove Mocha's error listener
     const originalException = process.listeners('uncaughtException').pop();
     process.removeListener('uncaughtException', originalException);
@@ -455,7 +454,7 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     base
       .createConnection()
@@ -467,7 +466,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') {
+            if (isMaxscale() || process.env.srv === 'skysql-ha') {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
             } else {
@@ -485,7 +484,7 @@ describe('Error', () => {
   });
 
   it('end connection query error', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection();
     setTimeout(() => {
       conn.__tests.getSocket().destroy(new Error('close forced'));

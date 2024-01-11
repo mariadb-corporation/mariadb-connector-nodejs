@@ -1,11 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 
 describe('sql template strings', () => {
   const value = "'`\\";
@@ -153,7 +153,7 @@ describe('sql template strings', () => {
   });
 
   it('pool query with parameters', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool();
     try {
       await pool.query('drop table IF EXISTS pool_query_param');
@@ -170,7 +170,7 @@ describe('sql template strings', () => {
   });
 
   it('pool batch with parameters', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     let params = {};
     const pool = base.createPool(params);
     pool
@@ -198,7 +198,7 @@ describe('sql template strings', () => {
   });
 
   it('pool callback query with parameters', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPoolCallback();
     pool.query('drop table IF EXISTS pool_parse_call', (err, res) => {
       pool.query('CREATE TABLE pool_parse_call(t varchar(128))', (err, res) => {
@@ -223,7 +223,7 @@ describe('sql template strings', () => {
   });
 
   it('pool callback batch with parameters', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     let params = {};
     const pool = base.createPoolCallback(params);
     pool.query('drop table pool_batch_call', (err) => {
