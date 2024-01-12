@@ -18,8 +18,9 @@ describe('redirection', () => {
       resetAfterUse: false
     });
     await proxy.start();
-    let conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+    let conn = null;
     try {
+      conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
       try {
@@ -36,7 +37,7 @@ describe('redirection', () => {
         await conn2.end();
       }
     } finally {
-      conn.end();
+      if (conn) conn.end();
       proxy.close();
     }
   });
