@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -11,7 +11,7 @@ const Proxy = require('../tools/proxy');
 const base = require('../base.js');
 
 const { assert } = require('chai');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 
 describe('cluster', function () {
   before(async function () {
@@ -398,8 +398,7 @@ describe('cluster', function () {
     });
 
     it('one node failing', async function () {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-        this.skip();
+      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
 
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({});
@@ -474,8 +473,7 @@ describe('cluster', function () {
     });
 
     it('one node failing with blacklisted host', async function () {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-        this.skip();
+      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
 
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({});
@@ -601,13 +599,7 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (
-        process.env.srv === 'maxscale' ||
-        process.env.srv === 'skysql' ||
-        process.env.srv === 'skysql-ha' ||
-        isXpand()
-      )
-        this.skip();
+      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
       this.timeout(20000);
       const cluster = basePromise.createPoolCluster({});
 
@@ -646,8 +638,7 @@ describe('cluster', function () {
     });
 
     it('socket close connection during query', function (done) {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-        this.skip();
+      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
       const cluster = basePromise.createPoolCluster({});

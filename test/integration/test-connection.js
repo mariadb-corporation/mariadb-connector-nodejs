@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,7 @@ const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
-const { isXpand } = require('../base');
+const { isXpand, isMaxscale } = require('../base');
 const dns = require('dns');
 
 describe('connection', () => {
@@ -193,7 +193,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -402,7 +402,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
 
     this.timeout(10000);
 
@@ -633,7 +633,7 @@ describe('connection', () => {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
       (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
-      process.env.srv === 'maxscale' ||
+      isMaxscale() ||
       process.env.srv === 'skysql' ||
       process.env.srv === 'skysql-ha'
     ) {
@@ -827,7 +827,7 @@ describe('connection', () => {
         if (
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
-          process.env.srv !== 'maxscale' &&
+          !isMaxscale() &&
           process.env.srv !== 'skysql' &&
           process.env.srv !== 'skysql-ha'
         ) {
@@ -897,8 +897,7 @@ describe('connection', () => {
 
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     this.timeout(10000);
 
     const res = await shareConn.query('select @@max_connections as a');
@@ -1000,7 +999,7 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.srv === 'maxscale' ||
+      isMaxscale() ||
       process.env.srv === 'skysql' ||
       process.env.srv === 'skysql-ha'
     ) {
@@ -1040,7 +1039,7 @@ describe('connection', () => {
     if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.srv === 'maxscale' ||
+      isMaxscale() ||
       process.env.srv === 'skysql' ||
       process.env.srv === 'skysql-ha'
     ) {
@@ -1080,7 +1079,7 @@ describe('connection', () => {
   });
 
   it('collation index > 255', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
     const conn = await base.createConnection({ collation: 'UTF8MB4_UNICODE_520_NOPAD_CI' });
     const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');

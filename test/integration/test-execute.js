@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -11,6 +11,7 @@ const path = require('path');
 const { isXpand } = require('../base');
 const { baseConfig } = require('../conf');
 const { Readable } = require('stream');
+const Conf = require('../conf');
 
 describe('prepare and execute', () => {
   let bigVal;
@@ -115,7 +116,9 @@ describe('prepare and execute', () => {
     console.log(errorLogged);
     assert.isTrue(
       errorLogged.includes(
-        "Table 'testn.nonexistant' doesn't exist\n" +
+        "Table '" +
+          Conf.baseConfig.database +
+          ".nonexistant' doesn't exist\n" +
           "sql: SELECT * FROM nonexistant WHERE a = ? AND b= ? - parameters:['a',true]"
       ),
       errorLogged
