@@ -164,7 +164,8 @@ describe('ssl', function () {
     let conn = null;
 
     // skip for ephemeral, since will succeed
-    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
+      this.skip();
     try {
       conn = await base.createConnection({
         user: 'sslTestUser',
@@ -189,7 +190,12 @@ describe('ssl', function () {
 
   it('signed certificate error with ephemeral', async function () {
     if (!sslEnable) this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(11, 4, 0) ||
+      shareConn.info.hasMinVersion(23, 0, 0)
+    )
+      this.skip();
     let conn = null;
     try {
       conn = await base.createConnection({
@@ -200,7 +206,10 @@ describe('ssl', function () {
       });
       await validConnection(conn);
       // if not ephemeral certificate must throw error
-      if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(11, 4, 0)) {
+      if (
+        !shareConn.info.isMariaDB() &&
+        (!shareConn.info.hasMinVersion(11, 4, 0) || shareConn.info.hasMinVersion(23, 0, 0))
+      ) {
         throw new Error('Must have thrown an exception !');
       }
     } finally {
@@ -221,7 +230,11 @@ describe('ssl', function () {
 
     // test will work either because server certificate chain is trusted (not don in tests)
     // or using mariadb ephemeral certificate validation
-    if (!shareConn.info.isMariaDB() || shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() ||
+      (shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
+    )
+      this.skip();
     try {
       await base.createConnection({ ssl: true, port: sslPort });
       throw new Error('must have thrown error');
@@ -236,7 +249,8 @@ describe('ssl', function () {
 
     // test will work either because server certificate chain is trusted (not done in tests)
     // or using mariadb ephemeral certificate validation
-    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
+      this.skip();
     if (Conf.baseConfig.password) this.skip();
     try {
       await base.createConnection({ ssl: true, port: sslPort });
@@ -258,7 +272,12 @@ describe('ssl', function () {
 
     // test will work either because server certificate chain is trusted (not don in tests)
     // or using mariadb ephemeral certificate validation
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(11, 4, 0) ||
+      shareConn.info.hasMinVersion(23, 0, 0)
+    )
+      this.skip();
     if (!Conf.baseConfig.password) this.skip();
     const conn = await base.createConnection({
       user: 'sslTestUser',
@@ -282,7 +301,12 @@ describe('ssl', function () {
 
     // test will work either because server certificate chain is trusted (not done in tests)
     // or using mariadb ephemeral certificate validation
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) this.skip();
+    if (
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(11, 4, 0) ||
+      shareConn.info.hasMinVersion(23, 0, 0)
+    )
+      this.skip();
     if (!Conf.baseConfig.password) this.skip();
 
     const conn = await base.createConnection({
@@ -568,7 +592,7 @@ describe('ssl', function () {
     if (conn) {
       await validConnection(conn);
       conn.end();
-      if (isMaxscale() && process.env.srv !== 'skysql-ha') {
+      if (!isMaxscale() && process.env.srv !== 'skysql-ha') {
         throw new Error('Must have thrown an exception !');
       }
     }
