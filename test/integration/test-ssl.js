@@ -575,6 +575,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication without providing client certificate', async function () {
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     let conn = null;
@@ -582,7 +583,7 @@ describe('ssl', function () {
       conn = await base.createConnection({
         user: 'X509testUser',
         password: 'éà@d684SQpl¨^',
-        host: 'mariadb.example.com',
+        host: '192.168.3.19',
         ssl: { ca: ca },
         port: sslPort
       });
@@ -592,9 +593,7 @@ describe('ssl', function () {
     if (conn) {
       await validConnection(conn);
       conn.end();
-      if (!isMaxscale() && process.env.srv !== 'skysql-ha') {
-        throw new Error('Must have thrown an exception !');
-      }
+      throw new Error('Must have thrown an exception !');
     }
   });
 
