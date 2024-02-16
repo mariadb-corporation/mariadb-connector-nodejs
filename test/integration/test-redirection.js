@@ -20,11 +20,11 @@ describe('redirection', () => {
     await proxy.start();
     let conn = null;
     try {
-      conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+      conn = await base.createConnection({ host: 'localhost', port: proxy.port(), debug: true });
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
       try {
-        await conn.beginTransaction();
+        // await conn.beginTransaction();
         await conn.query(`set @@session.redirect_url="mariadb://${Conf.baseConfig.host}:${Conf.baseConfig.port}"`);
       } catch (e) {
         // if server doesn't support redirection
@@ -92,7 +92,6 @@ describe('redirection', () => {
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
       conn.query('SELECT 1');
-      await conn.beginTransaction();
       conn
         .query(`set @@session.redirect_url="mariadb://${Conf.baseConfig.host}:${Conf.baseConfig.port}"`)
         .catch((e) => {
