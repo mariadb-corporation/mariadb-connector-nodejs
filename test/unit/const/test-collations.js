@@ -12,7 +12,7 @@ describe('collations', () => {
   });
 
   it('fromCharset good charset', () => {
-    assert.equal(Collations.fromCharset('utf8').name, 'UTF8_GENERAL_CI');
+    assert.equal(Collations.fromCharset('utf8mb4').name, 'UTF8MB4_GENERAL_CI');
   });
 
   it('fromName wrong value', () => {
@@ -20,7 +20,7 @@ describe('collations', () => {
   });
 
   it('fromName good value', () => {
-    assert.equal(Collations.fromName('UTF8_GENERAL_CI').name, 'UTF8_GENERAL_CI');
+    assert.equal(Collations.fromName('UTF8MB4_GENERAL_CI').name, 'UTF8MB4_GENERAL_CI');
   });
 
   it('fromIndex wrong index', () => {
@@ -28,6 +28,6 @@ describe('collations', () => {
   });
 
   it('fromIndex good index', () => {
-    assert.equal(Collations.fromIndex(33).name, 'UTF8_GENERAL_CI');
+    assert.equal(Collations.fromIndex(33).name, 'UTF8MB3_GENERAL_CI');
   });
 });
