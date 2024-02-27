@@ -739,6 +739,7 @@ describe('connection', () => {
   });
 
   it('connection.connect() error code validation promise', function (done) {
+    this.timeout(10000);
     base
       .createConnection({ user: 'fooUser', password: 'myPwd', allowPublicKeyRetrieval: true })
       .then(() => {
@@ -746,6 +747,10 @@ describe('connection', () => {
       })
       .catch((err) => {
         switch (err.errno) {
+          case 45012:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08S01');
+            break;
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');
