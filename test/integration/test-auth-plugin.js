@@ -243,7 +243,8 @@ describe('authentication plugin', () => {
       const conn = await base.createConnection({
         user: process.env.TEST_PAM_USER,
         password: process.env.TEST_PAM_PWD,
-        port: testPort
+        port: testPort,
+        debug: true
       });
       await conn.end();
     } catch (err) {

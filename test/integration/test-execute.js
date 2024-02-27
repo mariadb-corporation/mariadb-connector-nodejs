@@ -59,6 +59,23 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('execute error', async () => {
+    const conn = await base.createConnection({ prepareCacheLength: 0 });
+    try {
+      await conn.execute('wrong query');
+      throw new Error('Expect error');
+    } catch (err) {
+      if (!isXpand()) {
+        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+        assert.isTrue(err.message.includes('sql: wrong query'));
+        assert.equal(err.sqlState, 42000);
+      }
+      assert.equal(err.errno, 1064);
+      assert.equal(err.code, 'ER_PARSE_ERROR');
+    }
+    conn.end();
+  });
+
   it('prepare close, no cache', async () => {
     const conn = await base.createConnection({ prepareCacheLength: 0 });
     const prepare = await conn.prepare('select ?', [2]);
@@ -492,6 +509,19 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('execution with namedPlaceholders without cache', async () => {
+    const conn = await base.createConnection({ namedPlaceholders: true, prepareCacheLength: 0 });
+
+    let res = await conn.execute('select :param2 as a, :param1 as b', { param1: 2, param2: 3 });
+    assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+    assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+
+    res = await conn.execute('select :param2 as a, :param1 as b', { param1: 4, param2: 5 });
+    assert.isTrue(res[0].a === 5 || res[0].a === 5n);
+    assert.isTrue(res[0].b === 4 || res[0].b === 4n);
+
+    conn.end();
+  });
   it('prepare buffer overflow bigint', async function () {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
     this.timeout(30000);
