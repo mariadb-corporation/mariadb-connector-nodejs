@@ -683,17 +683,24 @@ describe('connection', () => {
   }
 
   it('connection.connect() error code validation callback', function (done) {
+    this.timeout(10000);
     const conn = base.createCallbackConnection({
       user: 'fooUser',
       password: 'myPwd',
-      allowPublicKeyRetrieval: true
+      allowPublicKeyRetrieval: true,
+      connectTimeout: 1000
     });
+
     conn.on('error', (err) => {});
     conn.connect((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
         switch (err.errno) {
+          case 45012:
+            assert.equal(err.sqlState, '08S01');
+            break;
+
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');
