@@ -79,6 +79,19 @@ describe('basic query', () => {
     conn.end();
   });
 
+  it('promise query stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.query('wrong query');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('From event:\n    at ConnectionPromise.query'), err.stack);
+      assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
+    } finally {
+      conn.end();
+    }
+  });
+
   it('query stack trace', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
@@ -87,6 +100,7 @@ describe('basic query', () => {
         if (!err) {
           done(Error('must have thrown error !'));
         } else {
+          assert.isTrue(err.stack.includes('From event:\n    at ConnectionCallback.query'), err.stack);
           assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
           conn.end();
           done();

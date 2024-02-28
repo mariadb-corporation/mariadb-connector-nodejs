@@ -154,7 +154,7 @@ await pool.query('wrong query');
 ```
 The caller method and line are now in error stack, permitting error easy debugging.
 
-The problem is this error stack is created using [Error.captureStackTrace](https://nodejs.org/api/errors.html#errorcapturestacktracetargetobject-constructoropt) that is very very slow. 
+The problem is this error stack is created using [Error.captureStackTrace](https://nodejs.org/api/errors.html#errorcapturestacktracetargetobject-constructoropt) that is super slow (hoping [node.js solved it at some point](https://github.com/nodejs/performance/issues/40)). 
 To give an idea, this slows down by 10% a query like 'select * from mysql.user LIMIT 1', so not recommended in production.
 
 ### Timezone consideration

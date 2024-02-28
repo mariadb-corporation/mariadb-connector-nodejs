@@ -23,7 +23,7 @@ try {
 //************************************************
 const conf = require('../test/conf');
 const logUtility = require('./log-utility');
-const config = Object.assign({}, conf.baseConfig, { trace: false });
+const config = Object.assign({}, conf.baseConfig);
 
 let configWithCharset = null;
 const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMPLES) : 200;
@@ -96,7 +96,7 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   sources['mariadb'] = await mariadb.createConnection(Object.assign({}, config));
   if (!configWithCharset && sources['mariadb'].info.collation) {
     const collation = sources['mariadb'].info.collation.name;
-    configWithCharset = Object.assign({}, conf.baseConfig, { trace: false, charset: collation });
+    configWithCharset = Object.assign({}, conf.baseConfig, { charset: collation });
     console.log(configWithCharset);
   }
 
