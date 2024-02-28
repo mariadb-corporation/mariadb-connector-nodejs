@@ -670,6 +670,33 @@ describe('ssl', function () {
     conn.query("DROP USER ChangeUser@'%'");
     conn.end();
   });
+
+  it('ssl dialog authentication plugin', async function () {
+    if (!process.env.TEST_PAM_USER) this.skip();
+    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+    if (!sslEnable) this.skip();
+
+    this.timeout(10000);
+    try {
+      await shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
+    } catch (error) {}
+    try {
+      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'%'");
+    } catch (error) {}
+
+    await shareConn.query("CREATE USER '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam USING 'mariadb'");
+    await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam");
+    await shareConn.query('FLUSH PRIVILEGES');
+
+    const conn = await base.createConnection({
+      user: process.env.TEST_PAM_USER,
+      password: process.env.TEST_PAM_PWD,
+      ssl: { rejectUnauthorized: false },
+      port: sslPort
+    });
+    await conn.end();
+  });
 });
 
 function checkProtocol(conn, protocol) {

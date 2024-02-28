@@ -238,19 +238,13 @@ describe('authentication plugin', () => {
     if (process.env.TEST_PAM_PORT != null) {
       testPort = parseInt(process.env.TEST_PAM_PORT);
     }
-    //password is unix password "myPwd"
-    try {
-      const conn = await base.createConnection({
-        user: process.env.TEST_PAM_USER,
-        password: process.env.TEST_PAM_PWD,
-        port: testPort
-      });
-      await conn.end();
-    } catch (err) {
-      if (err.errno !== 1045 && err.errno !== 1044) {
-        throw err;
-      }
-    }
+
+    const conn = await base.createConnection({
+      user: process.env.TEST_PAM_USER,
+      password: process.env.TEST_PAM_PWD,
+      port: testPort
+    });
+    await conn.end();
   });
 
   it('dialog authentication plugin multiple password', async function () {
