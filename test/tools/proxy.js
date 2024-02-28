@@ -48,19 +48,19 @@ function Proxy(args) {
 
   this.resume = () => {
     stop = false;
-    return new Promise(function (resolver, rejecter) {
+    return new Promise(function (resolve, reject) {
       try {
-        server.listen(localPort, resolver);
+        server.listen(localPort, resolve);
       } catch (e) {
         if (e.code !== 'ERR_SERVER_ALREADY_LISTEN') {
-          rejecter(e);
+          reject(e);
         }
       }
     });
   };
 
   this.start = () => {
-    return new Promise(function (resolver, rejecter) {
+    return new Promise(function (resolve, reject) {
       server = net.createServer({ noDelay: true }, (from) => {
         sockets.push(from);
         let ended = false;
@@ -131,7 +131,7 @@ function Proxy(args) {
       server.listen(() => {
         localPort = server.address().port;
         if (log) console.log('TCP server accepting connection on port: ' + localPort);
-        resolver();
+        resolve();
       });
     });
   };
