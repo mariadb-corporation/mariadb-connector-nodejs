@@ -1,3 +1,6 @@
+//  SPDX-License-Identifier: LGPL-2.1-or-later
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+
 const basechars = '123456789abcdefghijklmnop\\Z';
 const chars = basechars.split('');
 chars.push('😎');
@@ -13,7 +16,7 @@ function randomString(length) {
 sqlInsert = 'INSERT INTO perfTestTextBatch(t0) VALUES (?)';
 
 module.exports.title =
-  "100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)";
+  "100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)";
 module.exports.displaySql = 'INSERT INTO perfTestTextBatch VALUES (?)';
 const iterations = 100;
 module.exports.benchFct = async function (conn, type, deferred) {
@@ -27,7 +30,6 @@ module.exports.benchFct = async function (conn, type, deferred) {
     }
     const res = await Promise.all(queries);
     deferred.resolve(res);
-    return;
   } else {
     //use batch capability
     const totalParams = new Array(iterations);

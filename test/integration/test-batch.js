@@ -18,7 +18,7 @@ describe('batch', function () {
   const testSize = 16 * 1024 * 1024 + 80; // more than one packet
   let maxAllowedSize, bigBuf, timezoneParam;
   let supportBulk;
-  const RUN_LONG_TEST = process.env.RUN_LONG_TEST == '1';
+  const RUN_LONG_TEST = process.env.RUN_LONG_TEST === '1';
   this.timeout(30000);
   before(async function () {
     timezoneParam = 'America/New_York';
@@ -1918,10 +1918,10 @@ describe('batch', function () {
 });
 
 function makeid(length) {
-  var result = '';
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;

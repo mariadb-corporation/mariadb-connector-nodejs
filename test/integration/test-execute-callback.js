@@ -265,7 +265,7 @@ describe('prepare and execute callback', () => {
                       if (err) return done(err);
                       assert.equal(prepare2.id, secondPrepareId);
                       prepare2.close();
-                      if (i == 9) {
+                      if (i === 9) {
                         conn.reset((err) => {
                           conn.end();
                           done();

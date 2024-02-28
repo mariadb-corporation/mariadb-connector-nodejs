@@ -587,7 +587,7 @@ describe('connection', () => {
             if (err.code === 'ER_CONNECTION_TIMEOUT') {
               assert.isTrue(
                 err.message.includes(
-                  '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                  '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
                 )
               );
             }
@@ -617,7 +617,7 @@ describe('connection', () => {
           if (err.code === 'ER_CONNECTION_TIMEOUT') {
             assert.isTrue(
               err.message.includes(
-                '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
               )
             );
           }

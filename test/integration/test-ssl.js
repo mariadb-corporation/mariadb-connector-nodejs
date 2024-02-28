@@ -524,9 +524,7 @@ describe('ssl', function () {
     const conn = await base.createConnection({
       ssl: {
         ca: ca,
-        checkServerIdentity: (servername, cert) => {
-          return;
-        }
+        checkServerIdentity: (servername, cert) => {}
       },
       port: sslPort
     });
@@ -703,7 +701,7 @@ function checkProtocol(conn, protocol) {
   const ver = process.version.substring(1).split('.');
   const currentProtocol = conn.__tests.getSocket().getProtocol();
 
-  if (ver[0] > 5 || (ver[0] == 5 && ver[1] == 7)) {
+  if (ver[0] > 5 || (ver[0] === '5' && ver[1] === '7')) {
     if (Array.isArray(protocol)) {
       for (let i = 0; i < protocol.length; i++) {
         if (currentProtocol === protocol[i]) return;

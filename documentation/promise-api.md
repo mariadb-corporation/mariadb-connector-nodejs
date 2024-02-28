@@ -105,7 +105,7 @@ const pool = mariadb.createPool({
 });
 await pool.query('wrong query');
 /* will throw an error like : 
-  SqlError: (conn=15868, no: 1064, SQLState: 42000) You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1
+  SqlError: (conn:15868, no: 1064, SQLState: 42000) You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1
 sql: wrong query - parameters:[]
     at Object.module.exports.createError (C:\temp\mariadb-connector-nodejs2\lib\misc\errors.js:57:10)
     at ...
@@ -669,7 +669,7 @@ try {
     });
 } catch (err) {
   // error is:
-  // SqlError: (conn=2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
+  // SqlError: (conn:2987, no: 1969, SQLState: 70100) Query execution was interrupted (max_statement_time exceeded)
   // sql: select * from information_schema.columns as c1, information_schema.tables, information_schema.tables as t2 - parameters:[]
   // at Object.module.exports.createError (C:\projets\mariadb-connector-nodejs.git\lib\misc\errors.js:55:10)
   // at PacketNodeEncoded.readError (C:\projets\mariadb-connector-nodejs.git\lib\io\packet.js:510:19)
@@ -1418,7 +1418,7 @@ When the Connector encounters an error, Promise returns an [`Error`](https://dev
 
 Example on `console.log(error)`: 
 ```
-{ Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
+{ Error: (conn:116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
   sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
       ...
       at Socket.Readable.push (_stream_readable.js:134:10)
@@ -1455,7 +1455,7 @@ conn.on('error', err => {
   //will be executed after 100ms due to inactivity, socket has closed. 
   console.log(err);
   //log : 
-  //{ Error: (conn=6283, no: 45026, SQLState: 08S01) socket timeout
+  //{ Error: (conn:6283, no: 45026, SQLState: 08S01) socket timeout
   //    ...
   //    at Socket.emit (events.js:208:7)
   //    at Socket._onTimeout (net.js:410:8)

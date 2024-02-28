@@ -348,7 +348,6 @@ describe('batch callback', function () {
               done(new Error('must have thrown error !'));
             });
           }
-          assert.isTrue(err != null);
           assert.equal(err.errno, 1146);
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
           if (!isXpand()) {
@@ -611,7 +610,6 @@ describe('batch callback', function () {
               done(new Error('must have thrown error !'));
             });
           }
-          assert.isTrue(err != null);
           assert.equal(err.errno, 1146);
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
           if (!isXpand()) {
@@ -707,7 +705,6 @@ describe('batch callback', function () {
               done(new Error('must have thrown error !'));
             });
           }
-          assert.isTrue(err != null);
           if (!isXpand()) {
             assert.equal(err.errno, 1146);
             assert.equal(err.code, 'ER_NO_SUCH_TABLE');
@@ -850,7 +847,6 @@ describe('batch callback', function () {
             conn.end();
             return done(new Error('must have thrown error !'));
           }
-          assert.isTrue(err != null);
           if (!isXpand()) {
             assert.equal(err.errno, 1146);
             assert.equal(err.code, 'ER_NO_SUCH_TABLE');
@@ -969,7 +965,7 @@ describe('batch callback', function () {
     });
   });
 
-  describe('standard question mark and compress with bulk', () => {
+  describe('standard question mark and compress with bulk', function () {
     const useCompression = true;
 
     it('simple batch, local date', function (done) {

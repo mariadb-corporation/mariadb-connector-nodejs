@@ -336,7 +336,7 @@ describe('basic query callback', () => {
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
     for (let i = 0; i < 255; i++) {
-      if (i != 0) {
+      if (i !== 0) {
         table += ',';
         insert += ',';
       }

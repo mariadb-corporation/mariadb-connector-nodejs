@@ -352,7 +352,7 @@ async function testPool(): Promise<void> {
 
   await connection.execute('SELECT 1 + 1 AS solution');
   await connection.execute('SELECT 1 + ? AS solution', [1]);
-  connection.release();
+  await connection.release();
 }
 
 async function testPoolCluster(): Promise<void> {

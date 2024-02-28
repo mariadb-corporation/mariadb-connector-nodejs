@@ -50,7 +50,7 @@ describe('local-infile', () => {
                 break;
               default:
                 if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.isTrue(err.errno === 1148 || err.errno === 3948);
                   assert.equal(err.sqlState, '42000');
                 }
                 break;
@@ -84,7 +84,7 @@ describe('local-infile', () => {
                 break;
               default:
                 if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.isTrue(err.errno === 1148 || err.errno === 3948);
                   assert.equal(err.sqlState, '42000');
                 }
                 break;
@@ -136,7 +136,7 @@ describe('local-infile', () => {
                 break;
               default:
                 if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                  assert.isTrue(err.errno === 1148 || err.errno === 3948);
                   assert.equal(err.sqlState, '42000');
                 }
                 break;
@@ -443,7 +443,7 @@ describe('local-infile', () => {
               })
               .then(() => {
                 conn.end();
-                // expected result is to throw error, but super user might still read file.
+                // expected result is to throw error, but superuser might still read file.
                 done();
               })
               .catch((err) => {

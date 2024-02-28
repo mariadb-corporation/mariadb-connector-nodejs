@@ -35,12 +35,13 @@ describe('basic query', () => {
   });
 
   it('query metaEnumerable', async function () {
+    let propertyName;
     let rows = await shareConn.query({ sql: 'select ? as a', metaEnumerable: false }, null);
     assert.equal(rows.meta.length, 1);
     assert.equal(JSON.stringify(rows), '[{"a":null}]');
     assert.deepStrictEqual(rows, [{ a: null }]);
     let nb = 0;
-    for (var propertyName in rows) {
+    for (propertyName in rows) {
       nb++;
     }
     assert.equal(nb, 1);
@@ -49,7 +50,7 @@ describe('basic query', () => {
     assert.equal(rows.meta.length, 1);
 
     nb = 0;
-    for (var propertyName in rows) {
+    for (propertyName in rows) {
       nb++;
     }
     assert.equal(nb, 2);
@@ -315,7 +316,7 @@ describe('basic query', () => {
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
     for (let i = 0; i < 255; i++) {
-      if (i != 0) {
+      if (i !== 0) {
         table += ',';
         insert += ',';
       }
@@ -344,7 +345,7 @@ describe('basic query', () => {
     await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
     const res = await shareConn.query('SELECT * FROM tt1');
     assert.equal(res[0].tt, 'jack\nkमस्');
-    shareConn.commit;
+    shareConn.commit();
   });
 
   it('permitSetMultiParamEntries escape ', function (done) {
@@ -384,7 +385,7 @@ describe('basic query', () => {
     await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, fctStr]);
     const res = await shareConn.query('SELECT * FROM tt1');
     assert.equal(res[0].tt, "bla'bla");
-    shareConn.commit;
+    shareConn.commit();
   });
 
   it('timeout', function (done) {
