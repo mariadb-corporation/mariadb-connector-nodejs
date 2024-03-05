@@ -12,7 +12,7 @@ Install the mariadb Connector using npm
 $ npm install mariadb
 ```
 
-You can then uses the Connector in your application code with the Callback API.  For instance,
+You can then use the Connector in your application code with the Callback API.  For instance,
 
 ```js
   const mariadb = require('mariadb/callback');
@@ -854,7 +854,7 @@ When the Connector encounters an error, Promise returns an [`Error`](https://dev
 
 Example on `console.log(error)`: 
 ```
-{ Error: (conn=116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
+{ Error: (conn:116, no: 1146, SQLState: 42S02) Table 'testn.falsetable' doesn't exist
   sql: INSERT INTO falseTable(t1, t2, t3, t4, t5) values (?, ?, ?, ?, ?)  - parameters:[1,0x01ff,'hh','01/01/2001 00:00:00.000',null]
       ...
       at Socket.Readable.push (_stream_readable.js:134:10)
@@ -884,7 +884,7 @@ Connection object that inherits from the Node.js [`EventEmitter`](https://nodejs
     //will be executed after 100ms due to inactivity, socket has closed. 
     console.log(err);
     //log : 
-    //{ Error: (conn=6283, no: 45026, SQLState: 08S01) socket timeout
+    //{ Error: (conn:6283, no: 45026, SQLState: 08S01) socket timeout
     //    ...
     //    at Socket.emit (events.js:208:7)
     //    at Socket._onTimeout (net.js:410:8)

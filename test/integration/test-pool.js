@@ -1539,7 +1539,7 @@ describe('Pool', () => {
       requests.push(pool.query('SELECT ' + i));
     }
 
-    var test = () => {
+    const test = () => {
       Promise.all(requests)
         .then(() => {
           setTimeout(() => {

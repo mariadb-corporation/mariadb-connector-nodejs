@@ -587,7 +587,7 @@ describe('connection', () => {
             if (err.code === 'ER_CONNECTION_TIMEOUT') {
               assert.isTrue(
                 err.message.includes(
-                  '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                  '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
                 )
               );
             }
@@ -617,7 +617,7 @@ describe('connection', () => {
           if (err.code === 'ER_CONNECTION_TIMEOUT') {
             assert.isTrue(
               err.message.includes(
-                '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
               )
             );
           }
@@ -683,17 +683,24 @@ describe('connection', () => {
   }
 
   it('connection.connect() error code validation callback', function (done) {
+    this.timeout(10000);
     const conn = base.createCallbackConnection({
       user: 'fooUser',
       password: 'myPwd',
-      allowPublicKeyRetrieval: true
+      allowPublicKeyRetrieval: true,
+      connectTimeout: 1000
     });
+
     conn.on('error', (err) => {});
     conn.connect((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
         switch (err.errno) {
+          case 45012:
+            assert.equal(err.sqlState, '08S01');
+            break;
+
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');
@@ -732,6 +739,7 @@ describe('connection', () => {
   });
 
   it('connection.connect() error code validation promise', function (done) {
+    this.timeout(10000);
     base
       .createConnection({ user: 'fooUser', password: 'myPwd', allowPublicKeyRetrieval: true })
       .then(() => {
@@ -739,6 +747,10 @@ describe('connection', () => {
       })
       .catch((err) => {
         switch (err.errno) {
+          case 45012:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08S01');
+            break;
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -81,10 +81,10 @@ const parseExtended = function (err) {
         default:
           if (car.match(/[a-zA-Z]/i)) {
             if (line.includes('start-error-number')) {
-              counter = Number.parseInt(line.substr(19).trim());
+              counter = Number.parseInt(line.substring(19).trim());
               pause = false;
             } else if (line.includes('skip-to-error-number')) {
-              counter = Number.parseInt(line.substr(21).trim());
+              counter = Number.parseInt(line.substring(21).trim());
             } else if (!pause) {
               const words = line.split(' ');
               maria_errors[counter++] = words[0];

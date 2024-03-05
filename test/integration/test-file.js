@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -236,7 +236,7 @@ describe('sql file import', () => {
           } else {
             const inter = setInterval(function () {
               conn.query('select count(*) as c from fimp.post', (err, res) => {
-                if (res && res[0] && res[0].c == 3) {
+                if (res && res[0] && (res[0].c === 3 || res[0].c === 3n)) {
                   clearInterval(inter);
                   conn.end();
                   done();

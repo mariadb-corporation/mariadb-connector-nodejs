@@ -13,7 +13,7 @@ Npm runs a series on the MariaDB Server then returns the execution times.
 While this may give you a rough idea of how it performs, it's better to compare to other MySQL connector packages, like [mysql](https://www.npmjs.com/package/mysql) and [mysql2](https://www.npmjs.com/package/mysql2) packages.
 
 
-The [mysql](https://www.npmjs.com/package/mysql) package doesn't implement Promise, so using use the [promise-mysql](https://www.npmjs.com/package/promise-mysql) package.
+The [mysql](https://www.npmjs.com/package/mysql) package doesn't implement Promise, so using the [promise-mysql](https://www.npmjs.com/package/promise-mysql) package.
 
 run the benchmarks:
 ```
@@ -97,7 +97,7 @@ insert 10 VARCHAR(100)
 ```
 ![insert 10 VARCHAR(100) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=3800&data2=3557&data3=4028)
 
-##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)
 
 ```
 100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
@@ -250,7 +250,7 @@ insert 10 VARCHAR(100)
 ```
 ![insert 10 VARCHAR(100) benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=7044&data2=5988&data3=7734)
 
-##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)
+##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)
 
 ```
 100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exists)

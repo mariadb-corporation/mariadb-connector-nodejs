@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -21,7 +21,7 @@ describe('mapping', () => {
     32767, //SMALLINT
     65535, //SMALLINT UNSIGNED
     55000, //MEDIUMINT
-    70000, //MEDIUMINT UNSIGNED
+    9000000, //MEDIUMINT UNSIGNED
     2147483647, //INT
     2147483647, //INT UNSIGNED
     BigInt(Number.MAX_SAFE_INTEGER), //BIGINT
@@ -55,7 +55,7 @@ describe('mapping', () => {
     32767, //SMALLINT
     65535, //SMALLINT UNSIGNED
     55000, //MEDIUMINT
-    70000, //MEDIUMINT UNSIGNED
+    9000000, //MEDIUMINT UNSIGNED
     2147483647, //INT
     2147483647, //INT UNSIGNED
     Number.MAX_SAFE_INTEGER, //BIGINT
@@ -312,12 +312,12 @@ describe('mapping', () => {
     let rows = await shareConn.query('SELECT * FROM dataTypeWithNull');
     assert.ok(Buffer.isBuffer(rows[0].test));
     assert.ok(Buffer.isBuffer(rows[0].test2));
-    assert.ok(typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String);
+    assert.ok(typeof typeof rows[0].test3 === 'string' || (typeof rows[0].test3) instanceof String);
 
     rows = await shareConn.execute('SELECT * FROM dataTypeWithNull');
     assert.ok(Buffer.isBuffer(rows[0].test));
     assert.ok(Buffer.isBuffer(rows[0].test2));
-    assert.ok(typeof typeof rows[0].test3 === 'string' || typeof rows[0].test3 instanceof String);
+    assert.ok(typeof typeof rows[0].test3 === 'string' || (typeof rows[0].test3) instanceof String);
     await shareConn.commit();
   });
 });

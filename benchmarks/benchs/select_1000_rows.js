@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 module.exports.title = 'select 1000 rows of CHAR(32)';
 module.exports.displaySql = 'select * from 1000 rows (int + string(32))';

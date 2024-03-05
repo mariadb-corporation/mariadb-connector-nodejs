@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 import mariadb = require('..');
 import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
@@ -352,7 +352,7 @@ async function testPool(): Promise<void> {
 
   await connection.execute('SELECT 1 + 1 AS solution');
   await connection.execute('SELECT 1 + ? AS solution', [1]);
-  connection.release();
+  await connection.release();
 }
 
 async function testPoolCluster(): Promise<void> {

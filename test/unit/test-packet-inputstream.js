@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -47,7 +47,7 @@ describe('test PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.subarray(packet.pos, packet.end));
       })
     );
     let pis = new PacketInputStream(
@@ -64,7 +64,7 @@ describe('test PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.subarray(packet.pos, packet.end));
       })
     );
     let pis = new PacketInputStream(
@@ -82,7 +82,7 @@ describe('test PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.subarray(packet.pos, packet.end));
       })
     );
 
@@ -101,7 +101,7 @@ describe('test PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.subarray(packet.pos, packet.end));
       })
     );
 
@@ -121,7 +121,7 @@ describe('test PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(Buffer.from([1, 2, 3, 4, 5]), packet.buf.subarray(packet.pos, packet.end));
       })
     );
 

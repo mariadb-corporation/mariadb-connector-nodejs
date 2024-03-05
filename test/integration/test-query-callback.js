@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -336,7 +336,7 @@ describe('basic query callback', () => {
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
     for (let i = 0; i < 255; i++) {
-      if (i != 0) {
+      if (i !== 0) {
         table += ',';
         insert += ',';
       }

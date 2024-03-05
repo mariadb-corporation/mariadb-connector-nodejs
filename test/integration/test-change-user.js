@@ -355,7 +355,7 @@ describe('change user', () => {
           .changeUser({
             user: 'ChangeUser',
             password: 'm1P4ssw0@rd',
-            collation: 'UTF8_PERSIAN_CI'
+            collation: 'UTF8MB4_PERSIAN_CI'
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');
@@ -363,7 +363,7 @@ describe('change user', () => {
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
             assert.equal(user, 'ChangeUser@%');
-            assert.equal(conn.__tests.getCollation().name, 'UTF8_PERSIAN_CI');
+            assert.equal(conn.__tests.getCollation().name, 'UTF8MB4_PERSIAN_CI');
             conn.end();
             done();
           })

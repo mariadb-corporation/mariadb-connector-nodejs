@@ -576,21 +576,22 @@ describe('cluster', function () {
 
       await proxy.close();
       //wait for socket to end.
-      await new Promise((resolve, reject) => {
-        new setTimeout(resolve, 500);
-      });
+      await new Promise((resolve) => new setTimeout(resolve, 500));
 
       nodes = await testTimesWithError(cluster, /^node*/, 10);
       await proxy.resume();
       assert.deepEqual(nodes, { node1: 5, node3: 5 }, `wrong value: ${nodes} , expected { node1: 5, node3: 5 }`);
-      await new Promise((resolve, reject) => {
-        new setTimeout(resolve, 500);
-      });
+      await new Promise((resolve) => new setTimeout(resolve, 500));
       expect(removedNode).to.have.length(0);
-      await new Promise((resolve, reject) => {
-        new setTimeout(resolve, 2000);
-      });
+      await new Promise((resolve) => new setTimeout(resolve, 2000));
       let node2s = await testTimesWithError(cluster, /^node*/, 10);
+
+      if (node2s['node2'] === 0) {
+        // in case of pool reconnection taking longer
+        await new Promise((resolve) => new setTimeout(resolve, 2000));
+        let node2s = await testTimesWithError(cluster, /^node*/, 10);
+      }
+
       await cluster.end();
       await proxy.close();
       expect([3, 4]).to.contain.members([node2s['node1']]);
@@ -959,7 +960,7 @@ describe('cluster', function () {
               done(new Error('must have thrown an error !'));
             } else {
               expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
+                "No Connection available for 'PoolNode-0'. Last connection error was: (conn:-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
               );
               conn.end();
               cluster.end();

@@ -168,8 +168,8 @@ describe('batch geometry type', () => {
                 type: 'LineString'
               }
             : serverPermitExtendedInfos
-            ? { type: 'LineString' }
-            : null
+              ? { type: 'LineString' }
+              : null
         },
         {
           g: serverPermitExtendedInfos ? { type: 'LineString' } : null
@@ -323,8 +323,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'Polygon' }
-            : null
+              ? { type: 'Polygon' }
+              : null
         },
         {
           g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
@@ -432,8 +432,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPoint' }
-            : null
+              ? { type: 'MultiPoint' }
+              : null
         },
         {
           g: supportBulk
@@ -442,8 +442,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPoint' }
-            : null
+              ? { type: 'MultiPoint' }
+              : null
         }
       ]);
     } else {
@@ -557,8 +557,8 @@ describe('batch geometry type', () => {
                 coordinates: [[]]
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiLineString' }
-            : null
+              ? { type: 'MultiLineString' }
+              : null
         },
         {
           g: supportBulk
@@ -567,8 +567,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiLineString' }
-            : null
+              ? { type: 'MultiLineString' }
+              : null
         },
         {
           g: supportBulk
@@ -577,8 +577,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiLineString' }
-            : null
+              ? { type: 'MultiLineString' }
+              : null
         }
       ]);
     } else {
@@ -779,8 +779,8 @@ describe('batch geometry type', () => {
                 coordinates: [[[]]]
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPolygon' }
-            : null
+              ? { type: 'MultiPolygon' }
+              : null
         },
         {
           g: supportBulk
@@ -789,8 +789,8 @@ describe('batch geometry type', () => {
                 coordinates: [[]]
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPolygon' }
-            : null
+              ? { type: 'MultiPolygon' }
+              : null
         },
         {
           g: supportBulk
@@ -799,8 +799,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPolygon' }
-            : null
+              ? { type: 'MultiPolygon' }
+              : null
         },
         {
           g: supportBulk
@@ -809,8 +809,8 @@ describe('batch geometry type', () => {
                 coordinates: []
               }
             : serverPermitExtendedInfos
-            ? { type: 'MultiPolygon' }
-            : null
+              ? { type: 'MultiPolygon' }
+              : null
         }
       ]);
     } else {

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -108,14 +108,13 @@ describe('test compress PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(expectedBuf, packet.buf.slice(packet.pos, packet.end));
+        assert.deepEqual(expectedBuf, packet.buf.subarray(packet.pos, packet.end));
         done();
       })
     );
     const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
     const pis = new PacketInputStream(unexpectedPacket, queue, null, opts, info);
 
-    const cis = new CompressionInputStream(pis, queue, opts, info);
-    return cis;
+    return new CompressionInputStream(pis, queue, opts, info);
   }
 });

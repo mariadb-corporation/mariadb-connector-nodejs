@@ -238,22 +238,17 @@ describe('authentication plugin', () => {
     if (process.env.TEST_PAM_PORT != null) {
       testPort = parseInt(process.env.TEST_PAM_PORT);
     }
-    //password is unix password "myPwd"
-    try {
-      const conn = await base.createConnection({
-        user: process.env.TEST_PAM_USER,
-        password: process.env.TEST_PAM_PWD,
-        port: testPort
-      });
-      await conn.end();
-    } catch (err) {
-      if (err.errno !== 1045 && err.errno !== 1044) {
-        throw err;
-      }
-    }
+
+    const conn = await base.createConnection({
+      user: process.env.TEST_PAM_USER,
+      password: process.env.TEST_PAM_PWD,
+      port: testPort
+    });
+    await conn.end();
   });
 
   it('dialog authentication plugin multiple password', async function () {
+    if (isMaxscale()) this.skip();
     //pam is set using .travis/sql/pam.sh
     if (!process.env.TEST_PAM_USER) this.skip();
 
@@ -265,8 +260,16 @@ describe('authentication plugin', () => {
     try {
       await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'%'");
     } catch (error) {}
+    try {
+      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'localhost'");
+    } catch (error) {}
+
     await shareConn.query("CREATE USER '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam USING 'mariadb'");
     await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam");
+    await shareConn.query(
+      "CREATE USER '" + process.env.TEST_PAM_USER + "'@'localhost' IDENTIFIED VIA pam USING 'mariadb'"
+    );
+    await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'localhost' IDENTIFIED VIA pam");
     await shareConn.query('FLUSH PRIVILEGES');
 
     let testPort = Conf.baseConfig.port;
@@ -274,18 +277,12 @@ describe('authentication plugin', () => {
       testPort = parseInt(process.env.TEST_PAM_PORT);
     }
     //password is unix password "myPwd"
-    try {
-      const conn = await base.createConnection({
-        user: process.env.TEST_PAM_USER,
-        password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD],
-        port: testPort
-      });
-      await conn.end();
-    } catch (err) {
-      if (err.errno !== 1045 && err.errno !== 1044) {
-        throw err;
-      }
-    }
+    const conn = await base.createConnection({
+      user: process.env.TEST_PAM_USER,
+      password: [process.env.TEST_PAM_PWD, process.env.TEST_PAM_PWD],
+      port: testPort
+    });
+    await conn.end();
   });
 
   it('multi authentication plugin', function (done) {

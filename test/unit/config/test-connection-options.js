@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -19,7 +19,7 @@ describe('test connection options', () => {
     assert.equal(opt.collation.name, 'UTF8MB4_ESPERANTO_CI');
 
     opt = new ConnOptions({ charset: 'utf8' });
-    assert.equal(opt.collation.name, 'UTF8_GENERAL_CI');
+    assert.equal(opt.collation.name, 'UTF8MB3_GENERAL_CI');
 
     opt = new ConnOptions({ charset: 'utf8mb4' });
     //yes standard default to UTF8MB4_GENERAL_CI, not UTF8MB4_UNICODE_CI

@@ -17,7 +17,7 @@ describe('TypeCast', () => {
   });
 
   const changeCaseCast = (column, next) => {
-    if (column.type == 'VAR_STRING') {
+    if (column.type === 'VAR_STRING') {
       const val = column.string();
       if (column.name().startsWith('upp')) return val.toUpperCase();
       if (column.name().startsWith('low')) return val.toLowerCase();
@@ -108,15 +108,15 @@ describe('TypeCast', () => {
 
   it('TINY(1) to boolean cast', async function () {
     const tinyToBoolean = (column, next) => {
-      if (column.type == 'TINY' && column.columnLength === 1) {
+      if (column.type === 'TINY' && column.columnLength === 1) {
         const val = column.tiny();
         return val === null ? null : val === 1;
       }
-      if (column.type == 'SHORT') {
+      if (column.type === 'SHORT') {
         const val = column.short();
         return val === null ? null : val + 1;
       }
-      if (column.type == 'INT') {
+      if (column.type === 'INT') {
         const val = column.int();
         return val === null ? null : val + 1;
       }
@@ -147,11 +147,11 @@ describe('TypeCast', () => {
   it('long cast', async function () {
     this.timeout(5000);
     const longCast = (column, next) => {
-      if (column.type == 'TINY' && column.columnLength === 1) {
+      if (column.type === 'TINY' && column.columnLength === 1) {
         const val = column.tiny();
         return val == null ? null : Number(val);
       }
-      if (column.type == 'VAR_STRING') {
+      if (column.type === 'VAR_STRING') {
         const val = column.string();
         return val == null ? null : Number(val);
       }
@@ -178,11 +178,11 @@ describe('TypeCast', () => {
   it('date cast', async function () {
     this.timeout(5000);
     const longCast = (column, next) => {
-      if (column.type == 'TIMESTAMP' || column.type == 'DATETIME') {
+      if (column.type === 'TIMESTAMP' || column.type === 'DATETIME') {
         let da = column.datetime();
         return da == null ? null : da.getMinutes();
       }
-      if (column.type == 'DATE') {
+      if (column.type === 'DATE') {
         let da = column.date();
         return da == null ? null : da.getMonth() + 1;
       }
@@ -214,7 +214,7 @@ describe('TypeCast', () => {
     if (isXpand()) this.skip();
     this.timeout(5000);
     const longCast = (column, next) => {
-      if (column.type == 'BINARY') {
+      if (column.type === 'BINARY') {
         return column.geometry();
       }
       return next();

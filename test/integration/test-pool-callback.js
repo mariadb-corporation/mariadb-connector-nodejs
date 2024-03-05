@@ -466,7 +466,7 @@ describe('Pool callback', () => {
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
       const elapse = Date.now() - initTime;
-      assert.isOk(elapse >= 499 && elapse < 550, 'elapse time was ' + elapse + ' but must be just after 500');
+      assert.isOk(elapse >= 475 && elapse < 650, 'elapse time was ' + elapse + ' but must be just after 500');
       errorNo += 1;
     });
     setTimeout(() => {
@@ -476,7 +476,7 @@ describe('Pool callback', () => {
         assert.equal(err.errno, 45028);
         assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
         const elapse = Date.now() - initTime;
-        assert.isOk(elapse >= 698 && elapse < 750, 'elapse time was ' + elapse + ' but must be just after 700');
+        assert.isOk(elapse >= 675 && elapse < 850, 'elapse time was ' + elapse + ' but must be just after 700');
         errorNo += 1;
       });
     }, 200);

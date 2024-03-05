@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -22,10 +22,10 @@ describe('buffer', () => {
   const hex = buf.toString('hex').toUpperCase();
 
   it('buffer escape', async function () {
-    const buf = Buffer.from(base.utf8Collation() ? "let's rocks\n😊 🤘" : "let's rocks\nmore simple");
+    const buf = Buffer.from(base.utf8Collation() ? "let's r\0cks\n😊 🤘" : "let's r\0cks\nmore simple");
     assert.equal(
       shareConn.escape(buf),
-      base.utf8Collation() ? "_binary'let\\'s rocks\\n😊 🤘'" : "_binary'let\\'s rocks\\nmore simple'"
+      base.utf8Collation() ? "_binary'let\\'s r\\0cks\\n😊 🤘'" : "_binary'let\\'s r\\0cks\\nmore simple'"
     );
     await shareConn.query('DROP TABLE IF EXISTS BufEscape');
     await shareConn.query('CREATE TABLE BufEscape(b blob)');
@@ -38,10 +38,10 @@ describe('buffer', () => {
   });
 
   it('buffer escape binary', async function () {
-    const buf = Buffer.from(base.utf8Collation() ? "let's rocks\n😊 🤘" : "let's rocks\nmore simple");
+    const buf = Buffer.from(base.utf8Collation() ? "let's r\0cks\n😊 🤘" : "let's r\0cks\nmore simple");
     assert.equal(
       shareConn.escape(buf),
-      base.utf8Collation() ? "_binary'let\\'s rocks\\n😊 🤘'" : "_binary'let\\'s rocks\\nmore simple'"
+      base.utf8Collation() ? "_binary'let\\'s r\\0cks\\n😊 🤘'" : "_binary'let\\'s r\\0cks\\nmore simple'"
     );
     await shareConn.query('DROP TABLE IF EXISTS BufEscape');
     await shareConn.query('CREATE TABLE BufEscape(b blob)');

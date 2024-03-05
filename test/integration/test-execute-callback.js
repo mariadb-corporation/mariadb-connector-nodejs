@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -265,7 +265,7 @@ describe('prepare and execute callback', () => {
                       if (err) return done(err);
                       assert.equal(prepare2.id, secondPrepareId);
                       prepare2.close();
-                      if (i == 9) {
+                      if (i === 9) {
                         conn.reset((err) => {
                           conn.end();
                           done();

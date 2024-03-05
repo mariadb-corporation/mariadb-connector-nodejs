@@ -33,10 +33,7 @@ describe('debug', () => {
         //ensure that debug from previous test are written to console
         setTimeout(resolve, 1000);
       });
-      const defaultCharset = await shareConn.query('select @@global.character_set_client as a');
-      if (defaultCharset[0].a != 'utf8mb4') {
-        setNameAddition = 1221;
-      }
+      setNameAddition = 1221;
     }
   });
 

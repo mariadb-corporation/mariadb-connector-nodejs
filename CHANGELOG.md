@@ -163,7 +163,7 @@ prepare.close();
       });
       await pool.query('wrong query');
       /* will throw an error like :
-        SqlError: (conn=15868, no: 1064, SQLState: 42000) You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1
+        SqlError: (conn:15868, no: 1064, SQLState: 42000) You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1
           sql: wrong query - parameters:[]
             at Object.module.exports.createError (errors.js:57:10)
             at ...
@@ -180,7 +180,7 @@ prepare.close();
       ```
   * Pool error description is improved indicating pool information, like [CONJS-208]:
     ```javascript
-    SqlError: (conn=-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after 200ms
+    SqlError: (conn:-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after 200ms
       (pool connections: active=1 idle=0 limit=1)
       at Object.module.exports.createError
       …

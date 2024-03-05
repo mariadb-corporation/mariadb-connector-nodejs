@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -35,12 +35,13 @@ describe('basic query', () => {
   });
 
   it('query metaEnumerable', async function () {
+    let propertyName;
     let rows = await shareConn.query({ sql: 'select ? as a', metaEnumerable: false }, null);
     assert.equal(rows.meta.length, 1);
     assert.equal(JSON.stringify(rows), '[{"a":null}]');
     assert.deepStrictEqual(rows, [{ a: null }]);
     let nb = 0;
-    for (var propertyName in rows) {
+    for (propertyName in rows) {
       nb++;
     }
     assert.equal(nb, 1);
@@ -49,7 +50,7 @@ describe('basic query', () => {
     assert.equal(rows.meta.length, 1);
 
     nb = 0;
-    for (var propertyName in rows) {
+    for (propertyName in rows) {
       nb++;
     }
     assert.equal(nb, 2);
@@ -78,6 +79,19 @@ describe('basic query', () => {
     conn.end();
   });
 
+  it('promise query stack trace', async function () {
+    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    const conn = await base.createConnection({ trace: true });
+    try {
+      await conn.query('wrong query');
+    } catch (err) {
+      assert.isTrue(err.stack.includes('From event:\n    at ConnectionPromise.query'), err.stack);
+      assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
+    } finally {
+      conn.end();
+    }
+  });
+
   it('query stack trace', function (done) {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
@@ -86,6 +100,7 @@ describe('basic query', () => {
         if (!err) {
           done(Error('must have thrown error !'));
         } else {
+          assert.isTrue(err.stack.includes('From event:\n    at ConnectionCallback.query'), err.stack);
           assert.isTrue(err.stack.includes('test-query.js:'), err.stack);
           conn.end();
           done();
@@ -315,7 +330,7 @@ describe('basic query', () => {
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
     for (let i = 0; i < 255; i++) {
-      if (i != 0) {
+      if (i !== 0) {
         table += ',';
         insert += ',';
       }
@@ -344,7 +359,7 @@ describe('basic query', () => {
     await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
     const res = await shareConn.query('SELECT * FROM tt1');
     assert.equal(res[0].tt, 'jack\nkमस्');
-    shareConn.commit;
+    shareConn.commit();
   });
 
   it('permitSetMultiParamEntries escape ', function (done) {
@@ -384,7 +399,7 @@ describe('basic query', () => {
     await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, fctStr]);
     const res = await shareConn.query('SELECT * FROM tt1');
     assert.equal(res[0].tt, "bla'bla");
-    shareConn.commit;
+    shareConn.commit();
   });
 
   it('timeout', function (done) {

@@ -27,8 +27,8 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
+            assert.isTrue(err.stack.includes('test-error.js'));
             if (err.errno === 1141) {
               // SKYSQL ERROR
               assert.isTrue(
@@ -74,7 +74,6 @@ describe('Error', () => {
           done(new Error('must have thrown error !'));
         } else {
           assert.isTrue(err.stack.includes('test-error.js'));
-          assert.isTrue(err != null);
           if (err.errno === 1141) {
             // SKYSQL ERROR
             assert.isTrue(
@@ -277,8 +276,8 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            assert.isTrue(!err.stack.includes('test-error.js'));
             assert.isTrue(err != null);
+            assert.isTrue(!err.stack.includes('test-error.js'));
             if (err.errno === 1141) {
               // SKYSQL ERROR
               assert.isTrue(
