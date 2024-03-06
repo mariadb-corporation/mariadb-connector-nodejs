@@ -469,10 +469,28 @@ describe('prepare and execute', () => {
     res = await conn.execute('select ? as a', [3]);
     assert.isTrue(res[0].a === 3 || res[0].a === 3n);
 
-    res = await conn.execute('select ? as a', ['a']);
+    res = await conn.execute('select ? as b2', ['a']);
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) {
-      assert.isTrue(res[0].a === 'a');
+      assert.isTrue(res[0].b2 === 'a');
     }
+
+    // without parameter
+    res = await conn.execute('select 2 as b3');
+    assert.isTrue(res[0].b3 === 2 || res[0].b3 === 2n);
+
+    // without pipelining
+    res = await conn.execute({ sql: 'select 2 as b4', pipelining: false });
+    assert.isTrue(res[0].b4 === 2 || res[0].b4 === 2n);
+
+    // with streaming parameter
+    async function* generate() {
+      yield 'hello';
+      yield 'streams';
+    }
+    const readable = Readable.from(generate(), { objectMode: false });
+    res = await conn.execute('select CONVERT(? USING utf8) as b5', [readable]);
+    assert.isTrue(res[0].b5 === 'hellostreams');
+
     conn.end();
   });
 

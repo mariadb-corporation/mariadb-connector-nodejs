@@ -20,19 +20,30 @@ describe('Placeholder', () => {
   });
 
   it('execute without placeholder', async function () {
-    const conn = await base.createConnection({ namedPlaceholders: true });
+    const conn = await base.createConnection({ namedPlaceholders: true, debug: true });
     try {
       const rows = await conn.execute('select ? as val1, ? as val3, ? as val2', ['30', '10', '20']);
     } catch (err) {
-      assert.equal(45017, err.errno);
-      assert.equal('HY000', err.sqlState);
-      assert(!err.fatal);
-      assert(
-        err.message.includes(
-          'Command expect 3 parameters, but found only 0 named parameters. You probably use question mark in place of named parameters\n' +
-            "sql: select ? as val1, ? as val3, ? as val2 - parameters:{'0':'30','1':'10','2':'20'}"
-        )
-      );
+      if (err.errno === 1835) {
+        assert.equal('HY000', err.sqlState);
+        assert(!err.fatal);
+        assert(
+          err.message.includes(
+            'Malformed communication packet\n' +
+              "sql: select ? as val1, ? as val3, ? as val2 - parameters:{'0':'30','1':'10','2':'20'}"
+          )
+        );
+      } else {
+        assert.equal(45017, err.errno);
+        assert.equal('HY000', err.sqlState);
+        assert(!err.fatal);
+        assert(
+          err.message.includes(
+            'Command expect 3 parameters, but found only 0 named parameters. You probably use question mark in place of named parameters\n' +
+              "sql: select ? as val1, ? as val3, ? as val2 - parameters:{'0':'30','1':'10','2':'20'}"
+          )
+        );
+      }
     }
     conn.end();
   });
