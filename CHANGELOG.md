@@ -1,5 +1,20 @@
 # Change Log
 
+## [3.3.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.0) (Feb 2024)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.3...3.3.0)
+
+## Notable changes
+* CONJS-284 pipeline PREPARE and EXECUTE
+* CONJS-264 TLS ephemeral certificate automatic implementation
+* CONJS-279 Improve text encoding decoding
+
+## Issues Fixed
+* CONJS-281 cannot connect to 11.3+ server with character-set-collations = utf8mb4=uca1400_ai_ci		
+* CONJS-277 using connection.importFile when connection is not connected to database result in error		
+* CONJS-278 Possible buffer overwrite when sending query bigger than 16M
+* CONJS-282 error when using mysql_clear_test password authentication plugin		
+
+
 ## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.2...3.2.3)
 
