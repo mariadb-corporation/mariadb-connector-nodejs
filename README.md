@@ -131,6 +131,13 @@ async function asyncFunction() {
   }
 }
 ```
+## Contributors
+
+A big thanks to all contributors
+
+<a href="https://github.com/mariadb-corporation/mariadb-connector-nodejs/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mariadb-corporation/mariadb-connector-nodejs&max=180&columns=15"  alt="contributors list"/>
+</a>
 
 ## Contributing 
 
