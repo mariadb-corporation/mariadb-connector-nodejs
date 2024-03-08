@@ -71,6 +71,31 @@ describe('Pool', () => {
     }
   });
 
+  it('pool timeout', async function () {
+    this.timeout(15000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      trace: true,
+      acquireTimeout: 500,
+      connectTimeout: 100,
+      initializationTimeout: 400,
+      port: 45684
+    });
+
+    await new Promise((res) => setTimeout(() => res(), 600));
+    try {
+      await pool.query('SELECT 1');
+    } catch (err) {
+      console.log(err);
+      const ver = process.version.substring(1).split('.');
+      //on node.js 16+ error will have cause error
+      if (parseInt(ver[0]) < 16) this.skip();
+      assert.isNotNull(err.cause);
+      assert.isTrue(err.cause.code.includes('ECONNREFUSED'), err.cause);
+    }
+    await pool.end();
+  });
+
   it('pool execute stack trace', async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
