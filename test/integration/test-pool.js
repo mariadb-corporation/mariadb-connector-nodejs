@@ -71,31 +71,6 @@ describe('Pool', () => {
     }
   });
 
-  it('pool timeout', async function () {
-    this.timeout(15000);
-    const pool = base.createPool({
-      connectionLimit: 1,
-      trace: true,
-      acquireTimeout: 500,
-      connectTimeout: 100,
-      initializationTimeout: 400,
-      port: 45684
-    });
-
-    await new Promise((res) => setTimeout(() => res(), 600));
-    try {
-      await pool.query('SELECT 1');
-    } catch (err) {
-      console.log(err);
-      const ver = process.version.substring(1).split('.');
-      //on node.js 16+ error will have cause error
-      if (parseInt(ver[0]) < 16) this.skip();
-      assert.isNotNull(err.cause);
-      assert.isTrue(err.cause.code.includes('ECONNREFUSED'), err.cause);
-    }
-    await pool.end();
-  });
-
   it('pool execute stack trace', async function () {
     if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const pool = base.createPool({
@@ -504,7 +479,7 @@ describe('Pool', () => {
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -522,7 +497,7 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-      assert.isTrue(err.message.includes('Error during pool initialization:'));
+      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
       assert.isTrue(
         err.errno === 1524 ||
           err.errno === 1045 ||
@@ -537,7 +512,7 @@ describe('Pool', () => {
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -602,7 +577,7 @@ describe('Pool', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
         assert.isTrue(
           err.errno === 1524 ||
             err.errno === 1045 ||
@@ -631,7 +606,7 @@ describe('Pool', () => {
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
         assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
         pool.end();
         resolver();
       });
@@ -654,7 +629,7 @@ describe('Pool', () => {
     } catch (err) {
       assert.equal(err.errno, 45028);
       expect(err.message).to.have.string('retrieve connection from pool timeout after');
-      expect(err.message).to.have.string('Error during pool initialization');
+      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
     }
     try {
       await pool.getConnection();
@@ -662,7 +637,7 @@ describe('Pool', () => {
     } catch (err) {
       assert.equal(err.errno, 45028);
       expect(err.message).to.have.string('retrieve connection from pool timeout after');
-      expect(err.message).to.have.string('Error during pool initialization');
+      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
     } finally {
       pool.end();
     }
@@ -1735,6 +1710,31 @@ describe('Pool', () => {
     await new Promise((resolve, reject) => {
       new setTimeout(resolve, 3000);
     });
+    await pool.end();
+  });
+
+  it('pool timeout', async function () {
+    this.timeout(15000);
+    const pool = base.createPool({
+      connectionLimit: 1,
+      trace: true,
+      acquireTimeout: 500,
+      connectTimeout: 100,
+      initializationTimeout: 400,
+      port: 45684
+    });
+
+    await new Promise((res) => setTimeout(() => res(), 600));
+    try {
+      await pool.query('SELECT 1');
+    } catch (err) {
+      console.log(err);
+      const ver = process.version.substring(1).split('.');
+      //on node.js 16+ error will have cause error
+      if (parseInt(ver[0]) < 16) this.skip();
+      assert.isNotNull(err.cause);
+      assert.isTrue(err.cause.code.includes('ECONNREFUSED'), err.cause);
+    }
     await pool.end();
   });
 });

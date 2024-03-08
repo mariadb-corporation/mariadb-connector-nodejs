@@ -535,7 +535,7 @@ describe('cluster', function () {
               conn = null;
             }
             proxy.resume();
-
+            await new Promise((resolve) => new setTimeout(resolve, 500));
             conn = await cluster.getConnection('node*', 'ORDER');
             initTime = Date.now();
             await conn.query("SELECT '1'");
