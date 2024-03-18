@@ -13,6 +13,7 @@
 * CONJS-277 using connection.importFile when connection is not connected to database result in error		
 * CONJS-278 Possible buffer overwrite when sending query bigger than 16M
 * CONJS-282 error when using mysql_clear_test password authentication plugin		
+* CONJS-283 wrong decoding of binary unsigned MEDIUMINT
 
 
 ## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
