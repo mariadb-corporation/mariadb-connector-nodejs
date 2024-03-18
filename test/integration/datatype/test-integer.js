@@ -22,7 +22,7 @@ describe('integer with big value', () => {
   after(async () => {
     await shareConn.query('DROP TABLE IF EXISTS testBigint');
     await shareConn.query('DROP TABLE IF EXISTS testInt');
-    await shareConn.query('DROP TABLE IF EXISTS floatTest');
+    // await shareConn.query('DROP TABLE IF EXISTS floatTest');
     await shareConn.query('DROP TABLE IF EXISTS floatTestUnsigned');
   });
 
@@ -77,6 +77,24 @@ describe('integer with big value', () => {
     rows = await shareConn.execute({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true });
     assert.deepEqual(rows, expectedNumber);
 
+    const expectedNumberConvert = [
+      {
+        t: -0.1,
+        t2: 128.3,
+        t3: 129
+      },
+      {
+        t: -0.9999237060546875,
+        t2: '9999237060546875.9999237060546875',
+        t3: '9999237060546875'
+      }
+    ];
+    rows = await shareConn.query({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true, supportBigNumbers: true });
+    assert.deepEqual(rows, expectedNumberConvert);
+
+    rows = await shareConn.execute({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true, supportBigNumbers: true });
+    assert.deepEqual(rows, expectedNumberConvert);
+
     try {
       await shareConn.query({ sql: 'SELECT * FROM floatTest', decimalAsNumber: true, checkNumberRange: true });
       throw new Error('Expected to have failed');
@@ -94,7 +112,7 @@ describe('integer with big value', () => {
     const expectedBigNumber = [
       {
         t: -0.1,
-        t2: '128.3000000000000000',
+        t2: 128.3,
         t3: 129
       },
       { t: -0.9999237060546875, t2: '9999237060546875.9999237060546875', t3: '9999237060546875' }
@@ -181,7 +199,7 @@ describe('integer with big value', () => {
     const expectedBigNumber = [
       {
         t: 0.1,
-        t2: '128.3000000000000000',
+        t2: 128.3,
         t3: 129
       },
       { t: 0.9999237060546875, t2: '9999237060546875.9999237060546875', t3: '9999237060546875' }
