@@ -658,7 +658,7 @@ export interface Connection extends events.EventEmitter {
   /**
    * Prepare query.
    */
-  prepare(sql: string): Promise<Prepare>;
+  prepare(sql: string | QueryOptions): Promise<Prepare>;
 
   /**
    * Execute query using binary (prepare) protocol
