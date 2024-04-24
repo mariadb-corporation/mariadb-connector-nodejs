@@ -1737,4 +1737,19 @@ describe('Pool', () => {
     }
     await pool.end();
   });
+
+  it('pool ensure multiple query', async function () {
+    const pool = base.createPool({ connectionLimit: 2 });
+    await new Promise((res) =>
+      setTimeout(async () => {
+        try {
+          await pool.query('SELECT ?', [1]);
+          await pool.query('SELECT ?', [2]);
+        } finally {
+          await pool.end();
+        }
+        res();
+      }, 100)
+    );
+  });
 });
