@@ -8,7 +8,6 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isXpand } = require('../base');
 const { baseConfig } = require('../conf');
 const { Readable } = require('stream');
 const Conf = require('../conf');
@@ -48,11 +47,9 @@ describe('prepare and execute', () => {
       await conn.prepare('wrong query');
       throw new Error('Expect error');
     } catch (err) {
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-        assert.isTrue(err.message.includes('sql: wrong query'));
-        assert.equal(err.sqlState, 42000);
-      }
+      assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+      assert.isTrue(err.message.includes('sql: wrong query'));
+      assert.equal(err.sqlState, 42000);
       assert.equal(err.errno, 1064);
       assert.equal(err.code, 'ER_PARSE_ERROR');
     }
@@ -65,11 +62,9 @@ describe('prepare and execute', () => {
       await conn.execute('wrong query');
       throw new Error('Expect error');
     } catch (err) {
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-        assert.isTrue(err.message.includes('sql: wrong query'));
-        assert.equal(err.sqlState, 42000);
-      }
+      assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+      assert.isTrue(err.message.includes('sql: wrong query'));
+      assert.equal(err.sqlState, 42000);
       assert.equal(err.errno, 1064);
       assert.equal(err.code, 'ER_PARSE_ERROR');
     }
@@ -556,7 +551,6 @@ describe('prepare and execute', () => {
   });
 
   it('execute stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.execute('wrong query');
@@ -569,7 +563,6 @@ describe('prepare and execute', () => {
   });
 
   it('execute wrong param stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.execute('SELECT ?', []);
@@ -657,7 +650,6 @@ describe('prepare and execute', () => {
 
   it('prepare buffer overflow string iconv', async function () {
     if (maxAllowedSize < 20 * 1024 * 1024) this.skip();
-    if (isXpand()) this.skip();
     this.timeout(30000);
     const conn = await base.createConnection({ prepareCacheLength: 0, charset: 'big5' });
 

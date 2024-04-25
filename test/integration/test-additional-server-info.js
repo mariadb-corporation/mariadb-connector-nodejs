@@ -9,8 +9,7 @@ const { isMaxscale } = require('../base');
 
 describe('server additional information API', () => {
   it('server version', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isMaxscale() || process.env.srv === 'build')
-      this.skip();
+    if (isMaxscale() || process.env.srv === 'build') this.skip();
 
     const res = await shareConn.query('SELECT VERSION() a');
     assert.deepEqual(res, [{ a: shareConn.serverVersion() }]);

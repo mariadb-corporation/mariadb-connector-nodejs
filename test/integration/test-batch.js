@@ -10,7 +10,6 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
 const str = base.utf8Collation() ? "abcdefghijkflmn'opqrtuvwx🤘💪" : 'abcdefghijkflmn\'opqrtuvwxyz"';
 
 describe('batch', function () {
@@ -696,11 +695,9 @@ describe('batch', function () {
       assert.isTrue(err != null);
       assert.equal(err.errno, 1146);
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes(" doesn't exist"));
-        assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
-        assert.equal(err.sqlState, '42S02');
-      }
+      assert.isTrue(err.message.includes(" doesn't exist"));
+      assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
+      assert.equal(err.sqlState, '42S02');
     } finally {
       await conn.end();
     }
@@ -1002,11 +999,9 @@ describe('batch', function () {
       assert.isTrue(err != null);
       assert.equal(err.errno, 1146);
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes(" doesn't exist"));
-        assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
-        assert.equal(err.sqlState, '42S02');
-      }
+      assert.isTrue(err.message.includes(" doesn't exist"));
+      assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
+      assert.equal(err.sqlState, '42S02');
       await conn.end();
       stream1.close();
       stream2.close();
@@ -1089,11 +1084,9 @@ describe('batch', function () {
       assert.isTrue(err != null);
       assert.equal(err.errno, 1146);
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes(" doesn't exist"));
-        assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
-        assert.equal(err.sqlState, '42S02');
-      }
+      assert.isTrue(err.message.includes(" doesn't exist"));
+      assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
+      assert.equal(err.sqlState, '42S02');
     } finally {
       await conn.end();
     }
@@ -1200,7 +1193,6 @@ describe('batch', function () {
   };
 
   it('pool batch stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.batch('WRONG COMMAND', [[1], [1]]);
@@ -1213,7 +1205,6 @@ describe('batch', function () {
   });
 
   it('pool batch wrong param stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
@@ -1290,7 +1281,7 @@ describe('batch', function () {
 
     const useCompression = false;
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1300,7 +1291,7 @@ describe('batch', function () {
     });
 
     it('batch meta as array', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1310,7 +1301,7 @@ describe('batch', function () {
     });
 
     it('simple batch, meta as Array', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1378,7 +1369,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1388,7 +1379,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date Z ', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1398,30 +1389,16 @@ describe('batch', function () {
     });
 
     it('simple batch encoding CP1251', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchEncodingCP1251(useCompression, true, 'local');
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchErrorMsg(useCompression, true);
     });
 
     it('simple batch error message packet split', async function () {
-      //xpand doesn't support geometry
-      if (isXpand()) {
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatchErrorSplit(useCompression, true, 'local');
@@ -1437,14 +1414,12 @@ describe('batch', function () {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, true);
     });
 
     it('16M+ batch with 16M max_allowed_packet big insert', async function () {
-      if (process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacketBig(useCompression, true);
@@ -1460,7 +1435,7 @@ describe('batch', function () {
     });
 
     it('16M+ error batch', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || maxAllowedSize <= testSize) {
+      if (maxAllowedSize <= testSize) {
         this.skip();
       } else {
         await bigBatchError(useCompression, true);
@@ -1494,25 +1469,20 @@ describe('batch', function () {
     const useCompression = true;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, true, 'local');
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, true, timezoneParam);
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchErrorMsg(useCompression, true);
     });
@@ -1530,7 +1500,6 @@ describe('batch', function () {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(180000);
@@ -1571,7 +1540,7 @@ describe('batch', function () {
     const useCompression = false;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, false, 'local');
@@ -1651,7 +1620,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       this.timeout(30000);
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       await simpleBatch(useCompression, false, timezoneParam);
@@ -1688,11 +1657,9 @@ describe('batch', function () {
             : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
         assert.equal(err.errno, 1146);
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-        if (!isXpand()) {
-          assert.isTrue(err.message.includes(" doesn't exist"));
-          assert.equal(err.sqlState, '42S02');
-          assert.isTrue(err.message.includes(expectedMsg));
-        }
+        assert.isTrue(err.message.includes(" doesn't exist"));
+        assert.equal(err.sqlState, '42S02');
+        assert.isTrue(err.message.includes(expectedMsg));
       } finally {
         await conn.end();
       }
@@ -1710,7 +1677,6 @@ describe('batch', function () {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, false);
@@ -1744,7 +1710,7 @@ describe('batch', function () {
     const useCompression = true;
 
     it('simple batch, local date', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1754,7 +1720,7 @@ describe('batch', function () {
     });
 
     it('simple batch offset date', async function () {
-      if (!base.utf8Collation() || isXpand()) {
+      if (!base.utf8Collation()) {
         this.skip();
         return;
       }
@@ -1798,11 +1764,9 @@ describe('batch', function () {
             : 'INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?...';
         assert.equal(err.errno, 1146);
         assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-        if (!isXpand()) {
-          assert.isTrue(err.message.includes(expectedMsg));
-          assert.isTrue(err.message.includes(" doesn't exist"));
-          assert.equal(err.sqlState, '42S02');
-        }
+        assert.isTrue(err.message.includes(expectedMsg));
+        assert.isTrue(err.message.includes(" doesn't exist"));
+        assert.equal(err.sqlState, '42S02');
       } finally {
         await conn.end();
       }
@@ -1814,7 +1778,6 @@ describe('batch', function () {
     });
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
-      if (process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(380000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, false);
@@ -1857,17 +1820,11 @@ describe('batch', function () {
     });
 
     it('simple batch error', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleNamedPlaceHoldersErr(true);
     });
 
     it('16M+ batch', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(true);
@@ -1897,7 +1854,6 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(false);

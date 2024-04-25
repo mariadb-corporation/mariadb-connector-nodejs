@@ -5,8 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand, isMaxscale } = require('../base');
-const Conf = require('../conf');
 const Capabilities = require('../../lib/const/capabilities');
 
 describe('TypeCast', () => {
@@ -83,7 +81,7 @@ describe('TypeCast', () => {
   it('cast fields', async function () {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      if (!isXpand()) assert.equal(field.columnLength, shareConn.info.collation.maxLength * 6);
+      assert.equal(field.columnLength, shareConn.info.collation.maxLength * 6);
       return next();
     };
     const rows = await shareConn.query({
@@ -96,7 +94,7 @@ describe('TypeCast', () => {
   it('cast fields execute', async function () {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      if (!isXpand()) assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
+      assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
       return next();
     };
     const rows = await shareConn.execute({
@@ -211,7 +209,6 @@ describe('TypeCast', () => {
   });
 
   it('geometry cast', async function () {
-    if (isXpand()) this.skip();
     this.timeout(5000);
     const longCast = (column, next) => {
       if (column.type === 'BINARY') {

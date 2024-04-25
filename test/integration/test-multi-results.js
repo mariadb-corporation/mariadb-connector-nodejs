@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('multi-results', () => {
   let multiStmtConn;
@@ -29,7 +28,6 @@ describe('multi-results', () => {
   });
 
   it('simple do 1', function (done) {
-    if (isXpand()) this.skip();
     shareConn
       .query('DO 1')
       .then((rows) => {
@@ -120,7 +118,6 @@ describe('multi-results', () => {
   });
 
   it('simple do 1 with callback', function (done) {
-    if (isXpand()) this.skip();
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect((err) => {
       if (err) {
@@ -211,7 +208,6 @@ describe('multi-results', () => {
   });
 
   it('query result with option metaPromiseAsArray multiple', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     base.createConnection({ metaAsArray: true, multipleStatements: true }).then((conn) => {
       conn
         .query("select '1'; select '2'")
@@ -246,7 +242,6 @@ describe('multi-results', () => {
   });
 
   it('multiple selects', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     multiStmtConn
       .query("SELECT '1' as t; SELECT '2' as t2; SELECT '3' as t3")
       .then((rows) => {
@@ -260,7 +255,6 @@ describe('multi-results', () => {
   });
 
   it('multiple selects with callbacks', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const callbackConn = base.createCallbackConnection({
       multipleStatements: true
     });
@@ -285,7 +279,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result type', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     multiStmtConn
       .query("SELECT '1' as t; DO 1")
       .then((rows) => {
@@ -302,7 +295,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result type with callback', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     const callbackConn = base.createCallbackConnection({
       multipleStatements: true
     });
@@ -331,7 +323,6 @@ describe('multi-results', () => {
 
   it('multiple result type with multiple rows', async function () {
     if (shareConn.serverVersion().includes('maxScale-6.2.0')) this.skip();
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     //using sequence engine
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1)) this.skip();
     const rows = await multiStmtConn.query('select * from seq_1_to_2; DO 1;select * from seq_2_to_3');
@@ -346,7 +337,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result from procedure', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     shareConn.query("CREATE PROCEDURE myProc () BEGIN  SELECT '1'; SELECT '2'; END");
     shareConn
       .query('call myProc()')

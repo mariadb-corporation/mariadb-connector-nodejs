@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('pipelining', () => {
   let conn1, conn2;
@@ -34,7 +33,6 @@ describe('pipelining', () => {
   });
 
   it('simple query chain no pipelining', function (done) {
-    if (isXpand()) this.skip();
     conn1
       .query('DO 1')
       .then((rows) => {
@@ -83,7 +81,6 @@ describe('pipelining', () => {
   });
 
   it('500 insert test speed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(60000);
     let diff, pipelineDiff;
     conn1

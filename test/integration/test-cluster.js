@@ -11,11 +11,10 @@ const Proxy = require('../tools/proxy');
 const base = require('../base.js');
 
 const { assert } = require('chai');
-const { isXpand, isMaxscale } = require('../base');
+const { isMaxscale } = require('../base');
 
 describe('cluster', function () {
   before(async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     await shareConn.query('DROP TABLE IF EXISTS clusterInsert');
     await shareConn.query('CREATE TABLE clusterInsert(id int, nam varchar(256))');
     await shareConn.query('FLUSH TABLES');
@@ -42,7 +41,6 @@ describe('cluster', function () {
     });
 
     it('no pattern match', function (done) {
-      if (process.env.srv === 'xpand') this.skip();
       const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
@@ -67,7 +65,6 @@ describe('cluster', function () {
     });
 
     it('default id', function (done) {
-      if (process.env.srv === 'xpand') this.skip();
       const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         initSql: "set @node='node1'",
@@ -88,7 +85,6 @@ describe('cluster', function () {
     });
 
     it('pool full', function (done) {
-      if (process.env.srv === 'xpand') this.skip();
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 1 });
       const connOption1 = Object.assign({}, Conf.baseConfig, {
@@ -398,7 +394,7 @@ describe('cluster', function () {
     });
 
     it('one node failing', async function () {
-      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
 
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({});
@@ -473,7 +469,7 @@ describe('cluster', function () {
     });
 
     it('one node failing with blacklisted host', async function () {
-      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
 
       this.timeout(30000);
       const cluster = basePromise.createPoolCluster({});
@@ -557,7 +553,6 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
       this.timeout(30000);
       const cl = await get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
@@ -600,7 +595,7 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+      if (isMaxscale()) this.skip();
       this.timeout(20000);
       const cluster = basePromise.createPoolCluster({});
 
@@ -639,7 +634,7 @@ describe('cluster', function () {
     });
 
     it('socket close connection during query', function (done) {
-      if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) this.skip();
       this.timeout(10000);
       const cluster = basePromise.createPoolCluster({});
@@ -828,11 +823,9 @@ describe('cluster', function () {
         } else {
           assert.equal(err.errno, 1064);
           assert.equal(err.code, 'ER_PARSE_ERROR');
-          if (!isXpand()) {
-            assert.equal(err.sqlState, 42000);
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('wrong query'));
-          }
+          assert.equal(err.sqlState, 42000);
+          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+          assert.isTrue(err.message.includes('wrong query'));
         }
       }
     });
@@ -884,9 +877,7 @@ describe('cluster', function () {
           });
         })
         .catch((err) => {
-          if (isXpand()) {
-            expect(err.message).to.have.string('Relation not found:');
-          } else expect(err.message).to.have.string("notexistingtable' doesn't exist");
+          expect(err.message).to.have.string("notexistingtable' doesn't exist");
           cluster.end().then(() => {
             done();
           });

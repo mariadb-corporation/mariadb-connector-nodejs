@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('initial connection commands', () => {
   describe('session variables', () => {
@@ -28,7 +27,7 @@ describe('initial connection commands', () => {
     it('with one session variables', async function () {
       const conn = await base.createConnection({ sessionVariables: { wait_timeout: 10000 } });
       const rows = await conn.query('SELECT @@wait_timeout');
-      assert.deepEqual(rows, [{ '@@wait_timeout': isXpand() ? 10000 : BigInt(10000) }]);
+      assert.deepEqual(rows, [{ '@@wait_timeout': BigInt(10000) }]);
       conn.end();
     });
 
@@ -39,8 +38,8 @@ describe('initial connection commands', () => {
       const rows = await conn.query('SELECT @@wait_timeout, @@interactive_timeout');
       assert.deepEqual(rows, [
         {
-          '@@wait_timeout': isXpand() ? 10000 : BigInt(10000),
-          '@@interactive_timeout': isXpand() ? 2540 : BigInt(2540)
+          '@@wait_timeout': BigInt(10000),
+          '@@interactive_timeout': BigInt(2540)
         }
       ]);
       conn.end();
@@ -62,7 +61,6 @@ describe('initial connection commands', () => {
   });
   describe('initial SQL', function () {
     it('with empty initial SQL', function (done) {
-      if (process.env.srv === 'xpand') this.skip();
       base
         .createConnection({ initSql: '' })
         .then((conn) => {
@@ -79,7 +77,6 @@ describe('initial connection commands', () => {
     });
 
     it('with one initial SQL', async function () {
-      if (process.env.srv === 'xpand') this.skip();
       const conn = await base.createConnection({ initSql: 'SET @user_var=1' });
       const rows = await conn.query('SELECT @user_var');
       assert.deepEqual(rows, [{ '@user_var': BigInt(1) }]);
@@ -87,7 +84,6 @@ describe('initial connection commands', () => {
     });
 
     it('with multiple initial SQL', async function () {
-      if (process.env.srv === 'xpand') this.skip();
       const conn = await base.createConnection({
         initSql: ['SET @user_var=1', 'SET @user_var2=2']
       });
@@ -97,7 +93,6 @@ describe('initial connection commands', () => {
     });
 
     it('error handling', function (done) {
-      if (process.env.srv === 'xpand') this.skip();
       base
         .createConnection({ initSql: 'WRONG SQL' })
         .then((conn) => {

@@ -8,7 +8,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const Conf = require('../conf');
 const tls = require('tls');
-const { isXpand, isMaxscale } = require('../base');
+const { isMaxscale } = require('../base');
 const crypto = require('crypto');
 const errors = require('../../lib/misc/errors');
 
@@ -21,7 +21,6 @@ describe('ssl', function () {
   let sslPort = Conf.baseConfig.port;
 
   before(function (done) {
-    if (isXpand()) this.skip();
     if (process.env.TEST_MAXSCALE_TLS_PORT) sslPort = parseInt(process.env.TEST_MAXSCALE_TLS_PORT);
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
@@ -143,7 +142,7 @@ describe('ssl', function () {
   });
 
   it('error when server ssl is disable', async function () {
-    if (sslEnable || process.env.srv === 'skysql-ha') {
+    if (sslEnable) {
       this.skip();
       return;
     }
@@ -225,7 +224,7 @@ describe('ssl', function () {
   });
 
   it('self signed certificate server before ephemeral', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
 
     // test will work either because server certificate chain is trusted (not don in tests)
@@ -244,7 +243,7 @@ describe('ssl', function () {
   });
 
   it('self signed certificate forcing no password', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
 
     // test will work either because server certificate chain is trusted (not done in tests)
@@ -261,13 +260,7 @@ describe('ssl', function () {
   });
 
   it('self signed certificate forcing with password ssl:true', async function () {
-    if (
-      isMaxscale() ||
-      process.env.srv === 'skysql-ha' ||
-      process.env.srv === 'mariadb-es' ||
-      process.env.srv === 'mariadb-es-test'
-    )
-      this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
 
     // test will work either because server certificate chain is trusted (not don in tests)
@@ -290,13 +283,7 @@ describe('ssl', function () {
   });
 
   it('self signed certificate forcing with password ssl: {rejectUnauthorized: true}', async function () {
-    if (
-      isMaxscale() ||
-      process.env.srv === 'skysql-ha' ||
-      process.env.srv === 'mariadb-es' ||
-      process.env.srv === 'mariadb-es-test'
-    )
-      this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
 
     // test will work either because server certificate chain is trusted (not done in tests)
@@ -320,7 +307,7 @@ describe('ssl', function () {
   });
 
   it('ensure connection use SSL ', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
     if (!base.utf8Collation()) this.skip();
     const conn = await base.createConnection({
@@ -403,8 +390,6 @@ describe('ssl', function () {
   it('TLSv1.1 with permit cipher', async function () {
     if (
       !sslEnable ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha' ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
       (!shareConn.info.isMariaDB() &&
         (shareConn.info.hasMinVersion(8, 0, 0) || shareConn.info.hasMinVersion(5, 7, 43))) ||
@@ -491,7 +476,7 @@ describe('ssl', function () {
   });
 
   it('TLSv1.2 with cipher working', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
@@ -573,7 +558,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication without providing client certificate', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
     if (!ca) this.skip();
     let conn = null;
@@ -596,7 +581,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client certificate', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKey || !clientCert) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -616,7 +601,7 @@ describe('ssl', function () {
   });
 
   it('Mutual authentication providing client keystore', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
     if (!ca || !clientKeystore) this.skip();
     if (!base.utf8Collation()) this.skip();
@@ -641,7 +626,7 @@ describe('ssl', function () {
   });
 
   it('ssl change user', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     if (!sslEnable) this.skip();
     let currUser;
@@ -671,7 +656,7 @@ describe('ssl', function () {
 
   it('ssl dialog authentication plugin', async function () {
     if (!process.env.TEST_PAM_USER) this.skip();
-    if (isMaxscale() || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     if (!sslEnable) this.skip();
 

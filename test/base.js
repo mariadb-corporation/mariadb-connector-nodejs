@@ -126,8 +126,3 @@ module.exports.utf8Collation = () => {
   const collation = Collations.fromName(collationString.toUpperCase());
   return collation.charset === 'utf8' || collation.charset === 'utf8mb4';
 };
-
-const isXpandFct = () => {
-  return process.env.srv === 'xpand' || global.shareConn.serverVersion().includes('Xpand');
-};
-module.exports.isXpand = isXpandFct;

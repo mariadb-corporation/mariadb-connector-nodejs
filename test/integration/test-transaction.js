@@ -138,11 +138,9 @@ describe('transaction', () => {
     assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
     await shareConn.commit();
     assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-    if (process.env.srv !== 'skysql-ha') {
-      const rows = await shareConn.query('SELECT count(*) as nb FROM testTransaction');
-      assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
-      assert.equal(rows[0].nb, 1);
-    }
+    const rows = await shareConn.query('SELECT count(*) as nb FROM testTransaction');
+    assert.equal(shareConn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+    assert.equal(rows[0].nb, 1);
   });
 
   it('transaction commit error handling', function (done) {

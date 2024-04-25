@@ -10,7 +10,7 @@ const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
-const { isXpand, isMaxscale } = require('../base');
+const { isMaxscale } = require('../base');
 const dns = require('dns');
 
 describe('connection', () => {
@@ -23,7 +23,6 @@ describe('connection', () => {
   });
 
   it('with basic connection attributes non node.js encoding', function (done) {
-    if (isXpand()) this.skip();
     connectWithAttributes(true, done, 'big5');
   });
 
@@ -55,7 +54,6 @@ describe('connection', () => {
   }
 
   it('connection attributes with encoding not supported by node.js', function (done) {
-    if (isXpand()) this.skip();
     const mediumAttribute = Buffer.alloc(500, 'a').toString();
     base
       .createConnection({
@@ -193,7 +191,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
-    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -214,7 +212,6 @@ describe('connection', () => {
   });
 
   it('connection error event socket failed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     base
       .createConnection({ socketTimeout: 100 })
       .then((conn) => {
@@ -402,7 +399,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
 
     this.timeout(10000);
 
@@ -633,9 +630,7 @@ describe('connection', () => {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
       (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
-      isMaxscale() ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
+      isMaxscale()
     ) {
       //session tracking not implemented
       this.skip();
@@ -717,7 +712,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
+            assert.equal(err.sqlState, '28000');
             break;
 
           case 1044:
@@ -767,7 +762,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
+            assert.equal(err.sqlState, '28000');
             break;
 
           case 1044:
@@ -839,9 +834,7 @@ describe('connection', () => {
         if (
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
-          !isMaxscale() &&
-          process.env.srv !== 'skysql' &&
-          process.env.srv !== 'skysql-ha'
+          !isMaxscale()
         ) {
           //ok packet contain meta change
           assert.equal(shareConn.info.database, 'changedb');
@@ -897,7 +890,7 @@ describe('connection', () => {
   });
 
   it('charset change', async function () {
-    if (!shareConn.info.isMariaDB() || isXpand()) {
+    if (!shareConn.info.isMariaDB()) {
       //session tracking not implemented
       this.skip();
     }
@@ -909,7 +902,7 @@ describe('connection', () => {
 
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
-    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (isMaxscale()) this.skip();
     this.timeout(10000);
 
     const res = await shareConn.query('select @@max_connections as a');
@@ -1008,13 +1001,7 @@ describe('connection', () => {
   });
 
   it('connection error if user expired', function (done) {
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(10, 4, 3) ||
-      isMaxscale() ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale()) {
       //session tracking not implemented
       this.skip();
     }
@@ -1048,13 +1035,7 @@ describe('connection', () => {
   });
 
   it('connection with expired user', function (done) {
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(10, 4, 3) ||
-      isMaxscale() ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale()) {
       //session tracking not implemented
       this.skip();
     }
@@ -1091,7 +1072,7 @@ describe('connection', () => {
   });
 
   it('collation index > 255', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
     const conn = await base.createConnection({ collation: 'UTF8MB4_UNICODE_520_NOPAD_CI' });
     const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');

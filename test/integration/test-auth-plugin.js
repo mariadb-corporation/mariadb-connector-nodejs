@@ -73,7 +73,7 @@ describe('authentication plugin', () => {
   });
 
   it('ed25519 authentication plugin', async function () {
-    if (isMaxscale() || process.env.srv === 'skysql-ha' || process.env.srv === 'skysql') this.skip();
+    if (isMaxscale()) this.skip();
     const self = this;
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 22)) this.skip();
 
@@ -286,7 +286,7 @@ describe('authentication plugin', () => {
   });
 
   it('multi authentication plugin', function (done) {
-    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3)) this.skip();
     shareConn.query("drop user IF EXISTS mysqltest1@'%'").catch((err) => {});
     shareConn

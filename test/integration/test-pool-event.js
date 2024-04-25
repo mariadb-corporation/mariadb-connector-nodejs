@@ -5,18 +5,8 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const Conf = require('../conf');
-const stream = require('stream');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const { isXpand } = require('../base');
 
 describe('Pool event', () => {
-  before(function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-  });
-
   it('pool connection creation', function (done) {
     this.timeout(5000);
     const pool = base.createPool();

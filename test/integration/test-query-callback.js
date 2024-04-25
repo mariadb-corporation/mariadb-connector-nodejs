@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('basic query callback', () => {
   it('query with value without placeholder', function (done) {
@@ -40,7 +39,6 @@ describe('basic query callback', () => {
   });
 
   it('query stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.query('wrong query');
@@ -53,7 +51,6 @@ describe('basic query callback', () => {
   });
 
   it('query parameter error stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.query('SELECT', []);
@@ -305,7 +302,6 @@ describe('basic query callback', () => {
   });
 
   it('query warning', function (done) {
-    if (isXpand()) this.skip();
     //mysql 8 force truncation as error, even with SQL_MODE disable it.
     if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
     const conn = base.createCallbackConnection();
@@ -330,8 +326,6 @@ describe('basic query callback', () => {
   });
 
   it('255 columns', function (done) {
-    // skip for Xpand, limited by max_columns
-    if (isXpand()) this.skip();
     let table = 'CREATE TABLE myTable(';
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
@@ -429,7 +423,6 @@ describe('basic query callback', () => {
   });
 
   it('timeout', function (done) {
-    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =
@@ -453,7 +446,6 @@ describe('basic query callback', () => {
   });
 
   it('timeout with parameter', function (done) {
-    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =

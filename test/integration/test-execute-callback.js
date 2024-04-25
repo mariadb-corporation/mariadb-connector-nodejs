@@ -5,10 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const { isXpand } = require('../base');
 
 describe('prepare and execute callback', () => {
   let bigVal;
@@ -45,11 +41,9 @@ describe('prepare and execute callback', () => {
       if (err) return done(err);
       conn.prepare('wrong query', (err, prepare) => {
         if (!err) return done(new Error('Expect error'));
-        if (!isXpand()) {
-          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-          assert.isTrue(err.message.includes('sql: wrong query'));
-          assert.equal(err.sqlState, 42000);
-        }
+        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+        assert.isTrue(err.message.includes('sql: wrong query'));
+        assert.equal(err.sqlState, 42000);
         assert.equal(err.errno, 1064);
         assert.equal(err.code, 'ER_PARSE_ERROR');
         conn.end();
@@ -59,7 +53,6 @@ describe('prepare and execute callback', () => {
   });
 
   it('execute callback stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.execute('wrong query', (err) => {
@@ -75,7 +68,6 @@ describe('prepare and execute callback', () => {
   });
 
   it('execute callback with parameter', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
       conn.prepare('SELECT ? as a', (err, prepare) => {
@@ -93,7 +85,6 @@ describe('prepare and execute callback', () => {
   });
 
   it('execute when closed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
       conn.prepare('SELECT ? as a', (err, prepare) => {
@@ -113,7 +104,6 @@ describe('prepare and execute callback', () => {
   });
 
   it('execute callback wrong param stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.execute('SELECT ?', [], (err) => {

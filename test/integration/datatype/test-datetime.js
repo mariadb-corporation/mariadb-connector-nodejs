@@ -6,7 +6,7 @@
 const base = require('../../base');
 const { assert } = require('chai');
 const Conf = require('../../conf');
-const { isXpand, isMaxscale } = require('../../base');
+const { isMaxscale } = require('../../base');
 
 describe('datetime', () => {
   const date = new Date('2001-12-31 00:00:00');
@@ -152,12 +152,7 @@ describe('datetime', () => {
     const rowsExecute = await conn.execute('select * from table_date');
     const check = (rows, binary) => {
       assert.equal(rows[0].t0, '2001-12-31');
-      if (isXpand() && binary) {
-        //https://jira.mariadb.org/browse/XPT-274
-        assert.equal(rows[0].t1, '2001-12-31 23:59:58.123000');
-      } else {
-        assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
-      }
+      assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
       //microsecond doesn't work in javascript date
       assert.equal(rows[0].t2, '2001-12-31 23:59:59.123000');
 
@@ -167,14 +162,8 @@ describe('datetime', () => {
 
       if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7)) {
         assert.equal(rows[2].t0, '0000-00-00');
-        if (isXpand() && binary) {
-          //https://jira.mariadb.org/browse/XPT-274
-          assert.equal(rows[2].t1, '0000-00-00 00:00:00');
-          assert.equal(rows[2].t2, '0000-00-00 00:00:00');
-        } else {
-          assert.equal(rows[2].t1, '0000-00-00 00:00:00.000');
-          assert.equal(rows[2].t2, '0000-00-00 00:00:00.000000');
-        }
+        assert.equal(rows[2].t1, '0000-00-00 00:00:00.000');
+        assert.equal(rows[2].t2, '0000-00-00 00:00:00.000000');
       }
     };
     check(rows, false);
@@ -191,12 +180,7 @@ describe('datetime', () => {
     });
     const check = (rows, binary) => {
       assert.equal(rows[0].t0, '2001-12-31');
-      if (isXpand() && binary) {
-        //https://jira.mariadb.org/browse/XPT-274
-        assert.equal(rows[0].t1, '2001-12-31 23:59:58.123000');
-      } else {
-        assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
-      }
+      assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
       //microsecond doesn't work in javascript date
       assert.equal(rows[0].t2, '2001-12-31 23:59:59.123000');
 
@@ -206,14 +190,8 @@ describe('datetime', () => {
 
       if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(5, 7)) {
         assert.equal(rows[2].t0, '0000-00-00');
-        if (isXpand() && binary) {
-          //https://jira.mariadb.org/browse/XPT-274
-          assert.equal(rows[2].t1, '0000-00-00 00:00:00');
-          assert.equal(rows[2].t2, '0000-00-00 00:00:00');
-        } else {
-          assert.equal(rows[2].t1, '0000-00-00 00:00:00.000');
-          assert.equal(rows[2].t2, '0000-00-00 00:00:00.000000');
-        }
+        assert.equal(rows[2].t1, '0000-00-00 00:00:00.000');
+        assert.equal(rows[2].t2, '0000-00-00 00:00:00.000000');
       }
     };
     check(rows, false);

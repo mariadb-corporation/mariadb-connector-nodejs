@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('basic query', () => {
   it('query with value without placeholder', function (done) {
@@ -80,7 +79,6 @@ describe('basic query', () => {
   });
 
   it('promise query stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.query('wrong query');
@@ -93,7 +91,6 @@ describe('basic query', () => {
   });
 
   it('query stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.query('wrong query', (err) => {
@@ -110,7 +107,6 @@ describe('basic query', () => {
   });
 
   it('query parameter error stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.query('SELECT ?', [], (err) => {
@@ -293,7 +289,6 @@ describe('basic query', () => {
   });
 
   it('query warning', function (done) {
-    if (isXpand()) this.skip();
     //mysql 8 force truncation as error, even with SQL_MODE disable it.
     if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
     base
@@ -324,8 +319,6 @@ describe('basic query', () => {
   });
 
   it('255 columns', async function () {
-    // skip for Xpand, limited by max_columns
-    if (isXpand()) this.skip();
     let table = 'CREATE TABLE myTable(';
     let insert = 'INSERT INTO myTable VALUES (';
     let expRes = {};
@@ -403,8 +396,6 @@ describe('basic query', () => {
   });
 
   it('timeout', function (done) {
-    // xpand doesn't support timeout
-    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =
@@ -419,8 +410,6 @@ describe('basic query', () => {
   });
 
   it('timeout with parameter', function (done) {
-    // xpand doesn't support timeout
-    if (isXpand()) this.skip();
     this.timeout(20000);
     const initTime = Date.now();
     const query =

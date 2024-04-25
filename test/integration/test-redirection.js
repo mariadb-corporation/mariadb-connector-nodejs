@@ -11,7 +11,6 @@ const { assert } = require('chai');
 const { isMaxscale } = require('../base');
 describe('redirection', () => {
   it('basic redirection', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -80,7 +79,6 @@ describe('redirection', () => {
   });
 
   it('redirection during pipelining', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -110,7 +108,6 @@ describe('redirection', () => {
   });
 
   it('redirection during transaction', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,

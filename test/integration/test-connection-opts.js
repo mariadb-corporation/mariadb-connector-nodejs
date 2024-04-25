@@ -9,7 +9,6 @@ const { isMaxscale } = require('../base');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
-    if (process.env.srv === 'xpand') this.skip();
     base
       .createConnection({ charset: 'unknown' })
       .then(() => {
@@ -22,8 +21,7 @@ describe('connection option', () => {
   });
 
   it('collation with no id', async function () {
-    if (process.env.srv === 'xpand' || process.env.srv === 'mariadb-es' || process.env.srv === 'mariadb-es-test')
-      this.skip();
+    if (process.env.srv === 'mariadb-es' || process.env.srv === 'mariadb-es-test') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 2, 0)) this.skip();
     const conn = await base.createConnection();
     await conn.query('set NAMES utf8mb4 COLLATE uca1400_vietnamese_ai_ci');
@@ -164,7 +162,7 @@ describe('connection option', () => {
     // node.js before v13 doesn't permit to set TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) this.skip();
 
-    if (isMaxscale() || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     const defaultTz = process.env.TZ;
@@ -307,7 +305,6 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -350,7 +347,6 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
 
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) {
@@ -368,10 +364,7 @@ describe('connection option', () => {
               done(new Error('must have thrown error'));
             })
             .catch((err) => {
-              assert.isTrue(
-                err.message.includes('Cannot use timeout for MySQL server') ||
-                  err.message.includes('Cannot use timeout for xpand/MariaDB')
-              );
+              assert.isTrue(err.message.includes('Cannot use timeout for MySQL server'));
               assert.equal(err.errno, 45038);
               assert.equal(err.sqlState, 'HY000');
               assert.equal(err.code, 'ER_TIMEOUT_NOT_SUPPORTED');

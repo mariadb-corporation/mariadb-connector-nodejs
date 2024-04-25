@@ -6,11 +6,9 @@
 require('../base.js');
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('stored procedure', () => {
   before(async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (shareConn.serverVersion().includes('maxScale-6.2.0')) this.skip();
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
@@ -48,8 +46,6 @@ describe('stored procedure', () => {
   });
 
   it('output call query', async function () {
-    //https://jira.mariadb.org/browse/XPT-268
-    if (isXpand()) this.skip();
     await shareConn.query('call someProc(?,@myOutputValue)', [2]);
     const res = await shareConn.query('SELECT @myOutputValue');
     assert.equal(res[0]['@myOutputValue'], 4);
@@ -69,8 +65,6 @@ describe('stored procedure', () => {
   });
 
   it('call with out parameter query', async function () {
-    //https://jira.mariadb.org/browse/XPT-268
-    if (isXpand()) this.skip();
     try {
       await shareConn.query('call stmtOutParam(?,?)', [2, 3]);
       throw new Error('must not be possible since output parameter is not a variable');
@@ -85,10 +79,8 @@ const testRes = async function (res) {
   //results
   assert.equal(res[0][0].t, 4);
   //execution result
-  if (!isXpand()) {
-    assert.equal(res[1].affectedRows, 0);
-    assert.equal(res[1].insertId, 0);
-  }
+  assert.equal(res[1].affectedRows, 0);
+  assert.equal(res[1].insertId, 0);
   assert.equal(res[1].warningStatus, 0);
   const rows = await shareConn.query('SELECT 9 t');
   assert.equal(rows[0].t, 9);

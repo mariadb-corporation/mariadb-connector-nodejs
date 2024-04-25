@@ -13,9 +13,6 @@ describe('Big query', function () {
   before(async function () {
     const row = await shareConn.query('SELECT @@max_allowed_packet as t');
     maxAllowedSize = Number(row[0].t);
-    if (process.env.srv === 'skysql-ha' || process.env.srv === 'skysql') {
-      maxAllowedSize = 16 * 1024 * 1024;
-    }
     if (testSize < maxAllowedSize + 100) {
       buf = Buffer.alloc(testSize);
       for (let i = 0; i < testSize; i++) {
