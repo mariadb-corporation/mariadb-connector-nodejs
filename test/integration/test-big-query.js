@@ -137,4 +137,29 @@ describe('Big query', function () {
     }
     conn.end();
   }
+
+  it('parameter bigger than maxAllowedPacket must end bulk', async function () {
+    if (maxAllowedSize > 11 * 1024 * 1024) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+
+    this.timeout(30000); //can take some time
+    const conn = await base.createConnection({ maxAllowedSize: maxAllowedSize });
+    conn.query('DROP TABLE IF EXISTS bigParameterError');
+    conn.query('CREATE TABLE bigParameterError (b longblob)');
+    await conn.query('FLUSH TABLES');
+
+    conn.beginTransaction();
+    try {
+      const param = Buffer.alloc(maxAllowedSize / 2, '0').toString();
+      await conn.batch('insert into bigParameterError(b) values(?)', [[param], ['b'], [param]]);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      console.log(err);
+      assert.equal(err.code, 'ER_MAX_ALLOWED_PACKET');
+      assert.isTrue(err.message.includes('is >= to max_allowed_packet'));
+      assert.equal(err.sqlState, 'HY000');
+    } finally {
+      await conn.end();
+    }
+  });
 });

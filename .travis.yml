@@ -26,11 +26,11 @@ import: mariadb-corporation/connector-test-machine:common-build.yml@master
 jobs:
   include:
     - stage: Language
-      env: srv=mariadb v=10.11 local=1
+      env: srv=mariadb v=10.11 local=1 packet=8
       name: "CS 10.11 - node.js 16"
       node_js: 16
     - stage: Language
-      env: srv=mariadb v=10.11 local=1 CLEAR_TEXT=1
+      env: srv=mariadb v=10.11 local=1 packet=40 CLEAR_TEXT=1
       node_js: 18
       name: "CS 10.11 - node.js 18"
     - stage: Language
