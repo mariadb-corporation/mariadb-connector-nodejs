@@ -143,23 +143,83 @@ describe('Big query', function () {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     this.timeout(30000); //can take some time
-    const conn = await base.createConnection({ maxAllowedSize: maxAllowedSize });
+    const conn = await base.createConnection({ maxAllowedPacket: maxAllowedSize});
     conn.query('DROP TABLE IF EXISTS bigParameterError');
     conn.query('CREATE TABLE bigParameterError (b longblob)');
     await conn.query('FLUSH TABLES');
 
-    conn.beginTransaction();
     try {
+      conn.beginTransaction();
       const param = Buffer.alloc(maxAllowedSize / 2, '0').toString();
       await conn.batch('insert into bigParameterError(b) values(?)', [[param], ['b'], [param]]);
-      throw new Error('must have thrown an error');
-    } catch (err) {
-      console.log(err);
-      assert.equal(err.code, 'ER_MAX_ALLOWED_PACKET');
-      assert.isTrue(err.message.includes('is >= to max_allowed_packet'));
-      assert.equal(err.sqlState, 'HY000');
     } finally {
       await conn.end();
     }
+
+    const conn2 = await base.createConnection();
+    try {
+      const param = Buffer.alloc(maxAllowedSize, '0').toString();
+      await conn2.batch('insert into bigParameterError(b) values(?)', [[param], ['b'], [param]]);
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert.equal(err.code, 'ECONNRESET');
+    } finally {
+      await conn2.end();
+    }
   });
+
+  it('bunch parameter bigger than 16M', async function () {
+    if (maxAllowedSize < 32 * 1024 * 1024) this.skip();
+    if (!shareConn.info.isMariaDB()) this.skip();
+
+    this.timeout(60000); //can take some time
+    const mb = 1024 * 1024;
+    await sendBigParamBunch(10 * mb, 10 * mb);
+    await sendBigParamBunch(10 * mb, 20 * mb);
+    await sendBigParamBunch(20 * mb, 10 * mb);
+    if (maxAllowedSize < 40 * 1024 * 1024) {
+      await sendBigParamBunch(33 * mb, 20 * mb);
+    }
+  });
+
+  async function sendBigParamBunch(firstLen, secondLen) {
+    const conn = await base.createConnection({ maxAllowedSize: maxAllowedSize });
+    conn.query('DROP TABLE IF EXISTS bigParameter2');
+    conn.query('CREATE TABLE bigParameter2 (a longtext, b longtext)');
+    await conn.query('FLUSH TABLES');
+    try {
+      conn.beginTransaction();
+      const param1 = Buffer.alloc(firstLen, 'a').toString();
+      const param2 = Buffer.alloc(secondLen, 'c').toString();
+      await conn.batch('insert into bigParameter2(a,b) values(?, ?)', [
+        ['q', 's'],
+        [param1, param2],
+        ['b', 'n']
+      ]);
+      await conn.batch('insert into bigParameter2(a,b) values(?, ?)', [
+        [param1, param2],
+        ['q2', 's2'],
+        [param1, 's3']
+      ]);
+      const rows = await conn.query('SELECT * from bigParameter2');
+
+      assert.deepEqual(rows[0], { a: 'q', b: 's' });
+      assert.deepEqual(rows[1], {
+        a: param1,
+        b: param2
+      });
+      assert.deepEqual(rows[2], { a: 'b', b: 'n' });
+      assert.deepEqual(rows[3], {
+        a: param1,
+        b: param2
+      });
+      assert.deepEqual(rows[4], { a: 'q2', b: 's2' });
+      assert.deepEqual(rows[5], {
+        a: param1,
+        b: 's3'
+      });
+    } finally {
+      await conn.end();
+    }
+  }
 });
