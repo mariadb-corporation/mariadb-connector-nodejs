@@ -1750,4 +1750,11 @@ describe('Pool', () => {
       }, 100)
     );
   });
+
+  it('pool.toString', async function () {
+    const pool = base.createPool({ connectionLimit: 1 });
+    await pool.query('DO 1');
+    assert.equal('poolPromise(active=0 idle=1 limit=1)', pool.toString());
+    await pool.end();
+  });
 });

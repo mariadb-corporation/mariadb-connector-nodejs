@@ -977,4 +977,14 @@ describe('Pool callback', () => {
     });
     pool.end();
   });
+  it('pool.toString', function (done) {
+    const pool = base.createPoolCallback({
+      connectionLimit: 1
+    });
+    pool.query('DO 1', () => {
+      assert.equal('poolCallback(active=0 idle=1 limit=1)', pool.toString());
+      pool.end();
+      done();
+    });
+  });
 });

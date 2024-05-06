@@ -143,7 +143,7 @@ describe('Big query', function () {
     if (!shareConn.info.isMariaDB()) this.skip();
 
     this.timeout(30000); //can take some time
-    const conn = await base.createConnection({ maxAllowedPacket: maxAllowedSize});
+    const conn = await base.createConnection({ maxAllowedPacket: maxAllowedSize });
     conn.query('DROP TABLE IF EXISTS bigParameterError');
     conn.query('CREATE TABLE bigParameterError (b longblob)');
     await conn.query('FLUSH TABLES');
