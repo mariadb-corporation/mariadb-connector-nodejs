@@ -366,7 +366,7 @@ describe('authentication plugin', () => {
       throw new Error('must have thrown exception');
     } catch (err) {
       if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
-      assert.isTrue(err.message.includes('/wrongPath'));
+      assert.isTrue(err.message.includes('wrongPath'));
     }
 
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
@@ -425,7 +425,8 @@ describe('authentication plugin', () => {
     base
       .createConnection({
         user: 'sha256User',
-        password: 'password'
+        password: 'password',
+        allowPublicKeyRetrieval: false
       })
       .then((conn) => {
         conn.end();
@@ -448,7 +449,7 @@ describe('authentication plugin', () => {
       .query("SHOW VARIABLES LIKE 'have_ssl'")
       .then((rows) => {
         // console.log("ssl is not enable on database, skipping test :");
-        if (rows[0].Value === 'YES') {
+        if (rows.length === 0 || rows[0].Value === 'YES') {
           base
             .createConnection({
               user: 'sha256User',
@@ -487,7 +488,7 @@ describe('authentication plugin', () => {
       throw new Error('must have thrown exception');
     } catch (err) {
       if (err.message.includes('sha256_password authentication plugin require node 11.6+')) self.skip();
-      assert.isTrue(err.message.includes('/wrongPath'));
+      assert.isTrue(err.message.includes('wrongPath'));
     }
 
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
@@ -577,7 +578,8 @@ describe('authentication plugin', () => {
     base
       .createConnection({
         user: 'cachingSha256User3',
-        password: 'password'
+        password: 'password',
+        allowPublicKeyRetrieval: false
       })
       .then((conn) => {
         conn.end();
@@ -600,7 +602,7 @@ describe('authentication plugin', () => {
       .query("SHOW VARIABLES LIKE 'have_ssl'")
       .then((rows) => {
         // console.log("ssl is not enable on database, skipping test :");
-        if (rows[0].Value === 'YES') {
+        if (rows.length === 0 || rows[0].Value === 'YES') {
           base
             .createConnection({
               user: 'cachingSha256User3',

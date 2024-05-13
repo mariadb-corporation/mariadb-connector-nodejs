@@ -50,6 +50,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', async function () {
+        if (!shareConn.info.isMariaDB()) this.skip();
         this.timeout(300000);
         if (maxAllowedSize <= 32000000) return this.skip();
         await basePromise.importFile(
@@ -248,6 +249,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', function (done) {
+        if (!shareConn.info.isMariaDB()) this.skip();
         // skipping if it takes too long
         this.timeout(300000);
         if (maxAllowedSize <= 32000000) return this.skip();

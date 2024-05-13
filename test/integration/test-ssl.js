@@ -100,17 +100,13 @@ describe('ssl', function () {
       })
       .then(() => {
         if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
-          return shareConn.query(
-            "ALTER USER 'sslTestUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'ytoKS@ç%ùed5'"
-          );
+          return shareConn.query("ALTER USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5'");
         }
         return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('ytoKS@ç%ùed5')");
       })
       .then(() => {
         if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
-          return shareConn.query(
-            "ALTER USER 'X509testUser'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'éà@d684SQpl¨^'"
-          );
+          return shareConn.query("ALTER USER 'X509testUser'@'%' IDENTIFIED  BY 'éà@d684SQpl¨^'");
         }
         return shareConn.query("SET PASSWORD FOR 'X509testUser'@'%' = PASSWORD('éà@d684SQpl¨^')");
       })
@@ -121,7 +117,7 @@ describe('ssl', function () {
         return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
       })
       .then((rows) => {
-        if (rows.length > 0 && rows[0].Value === 'YES') {
+        if (rows.length === 0 || rows[0].Value === 'YES') {
           sslEnable = true;
           done();
         } else {
