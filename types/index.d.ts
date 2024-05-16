@@ -115,7 +115,7 @@ export interface QueryConfig {
   /**
    * Allows timeout for command execution.
    */
-  timeout?: number;
+  queryTimeout?: number;
 
   /**
    * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
