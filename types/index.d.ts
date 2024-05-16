@@ -115,7 +115,7 @@ export interface QueryConfig {
   /**
    * Allows timeout for command execution.
    */
-  queryTimeout?: number;
+  timeout?: number;
 
   /**
    * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
@@ -233,7 +233,7 @@ export interface UserConnectionConfig {
   password?: string;
 }
 
-export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
+export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig, 'timeout'> {
   /**
    * The hostname of the database you are connecting to. (Default: localhost)
    */
@@ -258,6 +258,11 @@ export interface ConnectionConfig extends UserConnectionConfig, QueryConfig {
    * Socket timeout in milliseconds after the connection is established
    */
   socketTimeout?: number;
+
+  /**
+   * Allows timeout for command execution.
+   */
+  queryTimeout?: number;
 
   /**
    * This will print all incoming and outgoing packets on stdout.
