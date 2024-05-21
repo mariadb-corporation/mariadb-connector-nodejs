@@ -36,6 +36,12 @@ describe('string', () => {
     assert.equal(rows[0].t2, '🤖');
     assert.equal(rows[1].tt, '🤘🤖');
     assert.equal(rows[1].t2, '🤖');
+
+    await shareConn.query('INSERT INTO buf_utf8_chars VALUES (?)', [new String('🧸1')]);
+    await shareConn.execute('INSERT INTO buf_utf8_chars VALUES (?)', [new String('🧸2')]);
+    const rows2 = await shareConn.execute('SELECT tt FROM buf_utf8_chars', ['🤖']);
+    assert.equal(rows2[2].tt, '🧸1');
+    assert.equal(rows2[3].tt, '🧸2');
     await shareConn.commit();
   });
 
