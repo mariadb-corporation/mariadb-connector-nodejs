@@ -13,7 +13,6 @@ const ConnOptions = require('./lib/config/connection-options');
 const PoolOptions = require('./lib/config/pool-options');
 const ClusterOptions = require('./lib/config/cluster-options');
 const Connection = require('./lib/connection');
-const CommandParameter = require('./lib/command-parameter');
 
 module.exports.version = require('./package.json').version;
 module.exports.SqlError = require('./lib/misc/errors').SqlError;
@@ -69,7 +68,7 @@ module.exports.importFile = function importFile(opts, callback) {
       .then(() => cb())
       .catch((err) => cb(err))
       .finally(() => {
-        new Promise(conn.end.bind(conn, new CommandParameter())).catch(console.log);
+        new Promise(conn.end.bind(conn, {})).catch(console.log);
       });
   } catch (err) {
     cb(err);
