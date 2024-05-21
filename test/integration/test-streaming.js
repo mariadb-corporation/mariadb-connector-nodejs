@@ -48,18 +48,29 @@ describe('streaming', () => {
       })
       .then(() => {
         const https = require('https');
-        https.get(
-          'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.3.0/mariadb-java-client-2.3.0.jar',
-          (readableStream) => {
-            shareConn
-              .query('INSERT INTO StreamingContent (b, c) VALUE (?, ?)', [readableStream, null])
-              .then(() => shareConn.query('SELECT * FROM StreamingContent'))
-              .then((rows) => {
-                done();
-              })
-              .catch(done);
-          }
-        );
+        https
+          .get(
+            'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.3.0/mariadb-java-client-2.3.0.jar',
+            (readableStream) => {
+              shareConn
+                .query('INSERT INTO StreamingContent (b, c) VALUE (?, ?)', [readableStream, null])
+                .then(() => shareConn.query('SELECT * FROM StreamingContent'))
+                .then((rows) => {
+                  done();
+                })
+                .catch((err) => {
+                  done(err);
+                });
+            }
+          )
+          .on('error', (err) => {
+            if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+              // if no network access or IP¨v6 not allowed, just skip error
+              done();
+              return;
+            }
+            done(err);
+          });
       });
   });
 

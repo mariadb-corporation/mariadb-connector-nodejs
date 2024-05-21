@@ -488,6 +488,11 @@ describe('connection', () => {
         conn.end();
       })
       .catch((err) => {
+        if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+          // if no network access or IP¨v6 not allowed, just skip error
+          done();
+          return;
+        }
         assert.isTrue(
           err.message.includes('socket timeout') || err.message.includes('Connection timeout'),
           err.message
@@ -561,11 +566,13 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('connection timeout connect (wrong url) with promise', (done) => {
+  it('connection timeout connect (wrong url) with promise', function (done) {
     const initTime = Date.now();
-    dns.resolve4('www.google.com', (err, res) => {
-      if (err) done(err);
-      else if (res.length > 0) {
+    dns.resolve4('www.google.com', function (err, res) {
+      if (err) {
+        // skipping since DNS not available
+        done();
+      } else if (res.length > 0) {
         const host = res[0];
         base
           .createConnection({ host: host, connectTimeout: 1000 })
