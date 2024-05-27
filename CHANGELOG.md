@@ -1,5 +1,16 @@
 # Change Log
 
+## [3.3.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.1) (May 2024)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.0...3.3.1)
+
+## Issues Fixed
+* CONJS-288 ensure pool timeout error give details #268
+* CONJS-289 connection possibly staying in hanging state after batch execution #281
+* CONJS-290 possible ECONRESET when executing batch #281
+* CONJS-292 ensure String object parameter
+* CONJS-286 exchanges stop when closing prepare and prepareCacheLength is set to 0
+* CONJS-287	typescript missing queryoption for prepare command
+
 ## [3.3.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.0) (Mar 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.3...3.3.0)
 
