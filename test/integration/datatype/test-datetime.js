@@ -10,8 +10,8 @@ const { isMaxscale } = require('../../base');
 
 describe('datetime', () => {
   const date = new Date('2001-12-31 00:00:00');
-  const date2 = new Date('2001-12-31 23:59:58.123');
-  const date3 = new Date('2001-12-31 23:59:59.123456');
+  const date2 = new Date('2250-12-31 23:59:58.123');
+  const date3 = new Date('888-12-31 23:59:59.123456');
 
   after(async () => {
     await shareConn.query('DROP TABLE IF EXISTS table_date');
@@ -152,9 +152,9 @@ describe('datetime', () => {
     const rowsExecute = await conn.execute('select * from table_date');
     const check = (rows, binary) => {
       assert.equal(rows[0].t0, '2001-12-31');
-      assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
+      assert.equal(rows[0].t1, '2250-12-31 23:59:58.123');
       //microsecond doesn't work in javascript date
-      assert.equal(rows[0].t2, '2001-12-31 23:59:59.123000');
+      assert.equal(rows[0].t2, '0888-12-31 23:59:59.123000');
 
       assert.isNull(rows[1].t0);
       assert.isNull(rows[1].t1);
@@ -180,9 +180,9 @@ describe('datetime', () => {
     });
     const check = (rows, binary) => {
       assert.equal(rows[0].t0, '2001-12-31');
-      assert.equal(rows[0].t1, '2001-12-31 23:59:58.123');
+      assert.equal(rows[0].t1, '2250-12-31 23:59:58.123');
       //microsecond doesn't work in javascript date
-      assert.equal(rows[0].t2, '2001-12-31 23:59:59.123000');
+      assert.equal(rows[0].t2, '0888-12-31 23:59:59.123000');
 
       assert.isNull(rows[1].t0);
       assert.isNull(rows[1].t1);
@@ -196,5 +196,32 @@ describe('datetime', () => {
     };
     check(rows, false);
     check(rowsExecute, true);
+  });
+
+
+  it('date insert with bulk', async function () {
+    const val = '1999-01-31 12:13:14';
+    const buf = new Date('1999-01-31 12:13:14.000');
+    assert.equal(shareConn.escape(buf), "'1999-01-31 12:13:14'");
+
+    await shareConn.query('DROP TABLE IF EXISTS table_date2');
+    await shareConn.query('CREATE TABLE table_date2 (t0 DATE, t1 DATETIME(3), t2 DATETIME(6))');
+    await shareConn.execute('INSERT INTO table_date2 VALUES (?, ?, ?)', [date, date2, date3]);
+    let rows = await shareConn.query('select * from table_date2');
+    assert.equal(rows[0].t0.getTime(), date.getTime());
+    assert.equal(rows[0].t1.getTime(), date2.getTime());
+    assert.equal(rows[0].t2.getTime(), date3.getTime());
+    await shareConn.query('TRUNCATE TABLE table_date2');
+    await shareConn.batch('INSERT INTO table_date2 VALUES (?, ?, ?)', [
+      [date, date2, date3],
+      [date, date2, date3]
+    ]);
+    rows = await shareConn.query('select * from table_date2');
+    assert.equal(rows[0].t0.getTime(), date.getTime());
+    assert.equal(rows[0].t1.getTime(), date2.getTime());
+    assert.equal(rows[0].t2.getTime(), date3.getTime());
+    assert.equal(rows[1].t0.getTime(), date.getTime());
+    assert.equal(rows[1].t1.getTime(), date2.getTime());
+    assert.equal(rows[1].t2.getTime(), date3.getTime());
   });
 });
