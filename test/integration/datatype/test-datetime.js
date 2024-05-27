@@ -198,7 +198,6 @@ describe('datetime', () => {
     check(rowsExecute, true);
   });
 
-
   it('date insert with bulk', async function () {
     const val = '1999-01-31 12:13:14';
     const buf = new Date('1999-01-31 12:13:14.000');
