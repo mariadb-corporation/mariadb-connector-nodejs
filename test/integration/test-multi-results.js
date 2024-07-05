@@ -98,6 +98,21 @@ describe('multi-results', () => {
     }
   });
 
+  it('nestTables private prop', async function () {
+    const conn = await base.createConnection({ nestTables: true });
+    try {
+      await conn.query("SELECT * FROM (SELECT 'key_val' as key_pp FROM dual) as __proto__");
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert.isTrue(err.message.includes('Use of `__proto__` is not permitted with option `nestTables`'));
+      assert.equal(err.errno, 45058);
+      assert.equal(err.sqlState, 42000);
+      assert.equal(err.code, 'ER_PRIVATE_FIELDS_USE');
+    } finally {
+      conn.end();
+    }
+  });
+
   it('duplicate column disabled nestTables', async function () {
     const conn = await base.createConnection({ checkDuplicate: false, nestTables: true });
     await conn.query('DROP TABLE IF EXISTS t');
