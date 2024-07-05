@@ -13,7 +13,7 @@ describe('Connection meta', function () {
     if (process.env.srv) {
       if (!isMaxscale()) {
         const version = process.env.v;
-        if (version) {
+        if (version && !version.includes('-rc')) {
           assert(serverVersion.startsWith(version), serverVersion + '/' + version);
         }
       }
