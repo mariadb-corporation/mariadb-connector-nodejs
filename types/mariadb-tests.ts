@@ -77,7 +77,12 @@ function createPool(options?: unknown): mariadb.Pool {
 async function testMisc(): Promise<void> {
   let rows;
   const defaultOptions = mariadb.defaultOptions();
-  const defaultOptionsWithTz = mariadb.defaultOptions({ timezone: '+00:00', debugLen: 1024, logParam: true });
+  const defaultOptionsWithTz = mariadb.defaultOptions({
+    timezone: '+00:00',
+    debugLen: 1024,
+    logParam: true,
+    queryTimeout: 2000
+  });
   console.log(defaultOptions);
   console.log(defaultOptionsWithTz);
   const connection = await createConnection();
@@ -137,6 +142,9 @@ async function testMisc(): Promise<void> {
   console.log(rows[0].t === 1);
 
   rows = await connection.execute('SELECT ? as t', [1]);
+  console.log(rows[0].t === 1);
+
+  rows = await connection.execute({ sql: 'SELECT ? as t', timeout: 1000 }, [1]);
   console.log(rows[0].t === 1);
 
   rows = await connection.execute(
