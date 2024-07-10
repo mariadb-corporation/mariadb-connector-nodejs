@@ -933,7 +933,7 @@ export const enum TypeNumbers {
   DOUBLE = 5,
   NULL = 6,
   TIMESTAMP = 7,
-  LONGLONG = 8,
+  BIGINT = 8,
   INT24 = 9,
   DATE = 10,
   TIME = 11,
@@ -1000,7 +1000,7 @@ export const enum Types {
   DOUBLE = 'DOUBLE',
   NULL = 'NULL',
   TIMESTAMP = 'TIMESTAMP',
-  LONGLONG = 'LONGLONG',
+  BIGINT = 'BIGINT',
   INT24 = 'INT24',
   DATE = 'DATE',
   TIME = 'TIME',
@@ -1022,8 +1022,7 @@ export const enum Types {
   BLOB = 'BLOB',
   VAR_STRING = 'VAR_STRING',
   STRING = 'STRING',
-  GEOMETRY = 'GEOMETRY',
-  BIGINT = 'BIGINT'
+  GEOMETRY = 'GEOMETRY'
 }
 
 export interface Collation {

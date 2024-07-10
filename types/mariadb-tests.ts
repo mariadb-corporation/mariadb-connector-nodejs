@@ -2,7 +2,7 @@
 //  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError } from '..';
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError, Types, TypeNumbers } from "..";
 import { Stream } from 'stream';
 import { createReadStream } from 'fs';
 
@@ -262,6 +262,13 @@ async function testTypeCast(): Promise<void> {
 
     if (name.startsWith('upp')) {
       return column.string().toUpperCase();
+    }
+
+    if (column.type === Types.BIGINT) {
+      return column.string();
+    }
+    if (column.columnType === TypeNumbers.BIGINT) {
+      return column.string();
     }
 
     return next();
