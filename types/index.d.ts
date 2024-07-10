@@ -1022,7 +1022,8 @@ export const enum Types {
   BLOB = 'BLOB',
   VAR_STRING = 'VAR_STRING',
   STRING = 'STRING',
-  GEOMETRY = 'GEOMETRY'
+  GEOMETRY = 'GEOMETRY',
+  BIGINT = 'BIGINT'
 }
 
 export interface Collation {
