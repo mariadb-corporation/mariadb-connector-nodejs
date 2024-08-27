@@ -246,6 +246,18 @@ DB_PWD=secretPasswrd
 ```
 .env files must NOT be pushed into repository,  using .gitignore
 
+Alternatively, node.js 20.0 introduced the experimental feature of using the `node --env-file=.env` syntax to load environment variables without the need for external dependencies. WE can then simply write
+
+```js
+const conn = await mariadb.createConnection({
+ host: process.env.DB_HOST,
+ user: process.env.DB_USER,
+ password: process.env.DB_PWD
+});
+```
+
+Assuming the presence of the same .env file as previously described.
+
 
 ### Default options consideration
 
