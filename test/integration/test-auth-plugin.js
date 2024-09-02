@@ -36,11 +36,11 @@ describe('authentication plugin', () => {
       }
     }
 
-    await shareConn.query("DROP USER 'sha256User'@'%'").catch((e) => {});
-    await shareConn.query("DROP USER 'cachingSha256User'@'%'").catch((e) => {});
-    await shareConn.query("DROP USER 'cachingSha256User2'@'%'").catch((e) => {});
-    await shareConn.query("DROP USER 'cachingSha256User3'@'%'").catch((e) => {});
-    await shareConn.query("DROP USER 'cachingSha256User4'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'sha256User'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User2'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User3'@'%'").catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User4'@'%'").catch((e) => {});
 
     if (!shareConn.info.isMariaDB()) {
       if (shareConn.info.hasMinVersion(8, 0, 0)) {
@@ -624,5 +624,56 @@ describe('authentication plugin', () => {
         }
       })
       .catch(done);
+  });
+
+  it('parsec authentication plugin', async function () {
+    if (isMaxscale()) this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 6, 1)) this.skip();
+    try {
+      await shareConn.query("INSTALL SONAME 'auth_parsec'");
+    } catch (e) {
+      this.skip();
+    }
+
+    await shareConn.query("drop user verifParsec@'%'").catch(() => {});
+    await shareConn.query("CREATE USER verifParsec@'%' IDENTIFIED VIA parsec USING PASSWORD('MySup8%rPassw@ord')");
+    await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + "`.* to verifParsec@'%'");
+
+    await shareConn.query("drop user verifParsec2@'%'").catch(() => {});
+    await shareConn.query("CREATE USER verifParsec2@'%' IDENTIFIED VIA parsec USING PASSWORD('')");
+    await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + "`.* to verifParsec2@'%'");
+
+    let conn = await base.createConnection({
+      user: 'verifParsec',
+      password: 'MySup8%rPassw@ord'
+    });
+    await conn.changeUser({
+      user: 'verifParsec',
+      password: 'MySup8%rPassw@ord'
+    });
+    conn.end();
+
+    // disable until https://jira.mariadb.org/browse/MDEV-34854
+    // conn = await base.createConnection({
+    //   user: 'verifParsec2',
+    //   password: ''
+    // });
+    // conn.end();
+
+    try {
+      conn = await base.createConnection({
+        user: 'verifParsec',
+        password: 'MySup8%rPassw@ord',
+        restrictedAuth: ''
+      });
+      conn.end();
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.equal(err.text, 'Unsupported authentication plugin parsec. Authorized plugin: ');
+      assert.equal(err.errno, 45047);
+      assert.equal(err.sqlState, '42000');
+      assert.equal(err.code, 'ER_NOT_SUPPORTED_AUTH_PLUGIN');
+      assert.isTrue(err.fatal);
+    }
   });
 });
