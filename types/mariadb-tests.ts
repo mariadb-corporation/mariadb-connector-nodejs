@@ -2,7 +2,7 @@
 //  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError, Types, TypeNumbers } from "..";
+import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError, Types, TypeNumbers } from '..';
 import { Stream } from 'stream';
 import { createReadStream } from 'fs';
 

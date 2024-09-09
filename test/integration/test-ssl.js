@@ -20,7 +20,7 @@ describe('ssl', function () {
   let sslEnable = false;
   let sslPort = Conf.baseConfig.port;
 
-  before(function (done) {
+  before(async () => {
     if (process.env.TEST_MAXSCALE_TLS_PORT) sslPort = parseInt(process.env.TEST_MAXSCALE_TLS_PORT);
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
@@ -61,80 +61,22 @@ describe('ssl', function () {
     if (clientCertFileName) clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
     if (clientKeystoreFileName) clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
 
-    shareConn.query("DROP USER 'sslTestUser'@'%'").catch((e) => {});
-    shareConn.query("DROP USER 'X509testUser'@'%'").catch((e) => {});
-    shareConn
-      .query(
-        "CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5' " +
-          ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-            ? ' REQUIRE SSL'
-            : '')
-      )
-      .then(() => {
-        return shareConn.query(
-          "GRANT SELECT ON *.* TO 'sslTestUser'@'%' " +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE SSL'
-              : '')
-        );
-      })
-      .then(() => {
-        return shareConn.query(
-          "CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' " +
-            ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE X509'
-              : '')
-        );
-      })
-      .then(() => {
-        return shareConn.query(
-          "GRANT SELECT ON *.* TO 'X509testUser'@'%' " +
-            ((shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 0)) ||
-            (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 0))
-              ? ' REQUIRE X509'
-              : '')
-        );
-      })
-      .then(() => {
-        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
-          return shareConn.query("ALTER USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@ç%ùed5'");
-        }
-        return shareConn.query("SET PASSWORD FOR 'sslTestUser'@'%' = PASSWORD('ytoKS@ç%ùed5')");
-      })
-      .then(() => {
-        if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8)) {
-          return shareConn.query("ALTER USER 'X509testUser'@'%' IDENTIFIED  BY 'éà@d684SQpl¨^'");
-        }
-        return shareConn.query("SET PASSWORD FOR 'X509testUser'@'%' = PASSWORD('éà@d684SQpl¨^')");
-      })
-      .then(() => {
-        return shareConn.query('FLUSH PRIVILEGES');
-      })
-      .then(() => {
-        return shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
-      })
-      .then((rows) => {
-        if (rows.length === 0 || rows[0].Value === 'YES') {
-          sslEnable = true;
-          done();
-        } else {
-          //ssl is not enable on database, skipping test.
-          shareConn
-            .query("SHOW VARIABLES LIKE '%ssl%'")
-            .then((rows) => {
-              // console.log("ssl is not enable on database, skipping test :");
-              // for (let i = 0; i < rows.length; i++) {
-              //   console.log(rows[0]["Variable_name"] + " = " + rows[0]["Value"]);
-              // }
-              done();
-            })
-            .catch(done);
-        }
-      })
-      .catch(done);
+    await shareConn.query("DROP USER IF EXISTS 'sslTestUser'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'X509testUser'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'nosslTestUser'@'%'");
+
+    await shareConn.query("CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@led5' REQUIRE SSL");
+    await shareConn.query("CREATE USER 'nosslTestUser'@'%' IDENTIFIED BY 'ytoKS@led5'");
+    await shareConn.query("GRANT SELECT ON *.* TO 'sslTestUser'@'%'");
+    await shareConn.query("GRANT SELECT ON *.* TO 'nosslTestUser'@'%'");
+    await shareConn.query("CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' REQUIRE X509");
+    await shareConn.query("GRANT SELECT ON *.* TO 'X509testUser'@'%'");
+
+    await shareConn.query('FLUSH PRIVILEGES');
+    const rows = await shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
+    if (rows.length === 0 || rows[0].Value === 'YES') {
+      sslEnable = true;
+    }
   });
 
   it('error when server ssl is disable', async function () {
@@ -164,7 +106,7 @@ describe('ssl', function () {
     try {
       conn = await base.createConnection({
         user: 'sslTestUser',
-        password: 'ytoKS@ç%ùed5',
+        password: 'ytoKS@led5',
         ssl: true,
         port: sslPort
       });
@@ -172,7 +114,7 @@ describe('ssl', function () {
       throw new Error('Must have thrown an exception !');
     } catch (err) {
       assert(
-        err.message.includes('self signed certificate') ||
+        err.message.includes('Self signed certificate') ||
           err.message.includes('self-signed certificate') ||
           err.message.includes('unable to get local issuer certificate') ||
           err.message.includes('unable to verify the first certificate'),
@@ -195,7 +137,7 @@ describe('ssl', function () {
     try {
       conn = await base.createConnection({
         user: 'sslTestUser',
-        password: 'ytoKS@ç%ùed5',
+        password: 'ytoKS@led5',
         ssl: true,
         port: sslPort
       });
@@ -270,7 +212,7 @@ describe('ssl', function () {
     if (!Conf.baseConfig.password) this.skip();
     const conn = await base.createConnection({
       user: 'sslTestUser',
-      password: 'ytoKS@ç%ùed5',
+      password: 'ytoKS@led5',
       ssl: true,
       port: sslPort
     });
@@ -294,7 +236,7 @@ describe('ssl', function () {
 
     const conn = await base.createConnection({
       user: 'sslTestUser',
-      password: 'ytoKS@ç%ùed5',
+      password: 'ytoKS@led5',
       ssl: { rejectUnauthorized: true },
       port: sslPort
     });
@@ -308,9 +250,21 @@ describe('ssl', function () {
     if (!base.utf8Collation()) this.skip();
     const conn = await base.createConnection({
       user: 'sslTestUser',
-      password: 'ytoKS@ç%ùed5',
-      ssl: { rejectUnauthorized: false },
+      password: 'ytoKS@led5',
+      ssl: { rejectUnauthorized: false, checkServerIdentity: () => {} },
       port: sslPort
+    });
+    await validConnection(conn);
+    conn.end();
+  });
+
+  it('ensure connection use NOT SSL ', async function () {
+    if (isMaxscale()) this.skip();
+    if (!sslEnable) this.skip();
+    if (!base.utf8Collation()) this.skip();
+    const conn = await base.createConnection({
+      user: 'nosslTestUser',
+      password: 'ytoKS@led5'
     });
     await validConnection(conn);
     conn.end();
