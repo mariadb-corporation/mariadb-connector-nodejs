@@ -67,3 +67,7 @@ script:
 
 after_success:
   - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
+
+after_failure:
+  - if [ "$srv" == "maxscale" ] ; then docker-compose -f ${COMPOSE_FILE} exec -u root maxscale tail -500 /var/log/maxscale/maxscale.log; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo tail -200 /var/lib/mysql/mariadb.err; fi
