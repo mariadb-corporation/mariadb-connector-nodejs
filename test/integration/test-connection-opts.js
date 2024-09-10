@@ -56,6 +56,7 @@ describe('connection option', () => {
   });
 
   it('automatic timezone', async function () {
+    if (process.env.local == undefined || process.env.local == '0') this.skip();
     const conn = await base.createConnection({ timezone: 'auto' });
     conn.end();
   });
