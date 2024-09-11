@@ -912,12 +912,14 @@ export interface SqlError extends Error {
 interface SqlErrorConstructor extends ErrorConstructor {
   new (
     msg: string,
+    sql?: string,
     fatal?: boolean,
     info?: { threadId?: number },
     sqlState?: string | null,
     errno?: number,
     additionalStack?: string,
-    addHeader?: boolean
+    addHeader?: boolean,
+    cause?: unknown
   ): SqlError;
   readonly prototype: SqlError;
 }
