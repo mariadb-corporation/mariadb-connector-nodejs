@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.3.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.1) (Sept 2024)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
+
+## Issues Fixed
+* CONJS-301 temporary disabling TLS identity validation until certificate automatic resolution
+* CONJS-302 TypeScript type definition file for SqlError constructor does not match actual constructor
+
 ## [3.3.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.1) (May 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.0...3.3.1)
 
