@@ -33,6 +33,16 @@ describe('results-set streaming', () => {
     assert.equal(10000, currRow);
   });
 
+  it('Streaming Update for-await-of', async function () {
+    let currRow = 0;
+    const stream = shareConn.queryStream('DO 1');
+    for await (const row of stream) {
+      console.log(row);
+      currRow++;
+    }
+    assert.equal(1, currRow);
+  });
+
   it('Streaming Error', function (done) {
     const stream = shareConn.queryStream('wrong');
     stream.on('error', (error) => {
