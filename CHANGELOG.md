@@ -6,6 +6,8 @@
 ## Issues Fixed
 * CONJS-301 temporary disabling TLS identity validation until certificate automatic resolution
 * CONJS-302 TypeScript type definition file for SqlError constructor does not match actual constructor
+* CONJS-297	Typescript connection option timeout in place of queryTimeout
+* CONJS-298	Typescript wrong named longlong in place of bigint
 
 ## [3.3.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.1) (May 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.0...3.3.1)
