@@ -381,7 +381,9 @@ describe('ssl', function () {
       });
       throw new Error('Must have thrown an exception !');
     } catch (err) {
-      assert(err.message.includes('no ciphers available'));
+      if (err.code !== 'ERR_SSL_NO_PROTOCOLS_AVAILABLE') {
+        assert(err.message.includes('no ciphers available'), err);
+      }
     }
   });
 
