@@ -97,7 +97,7 @@ module.exports.isMaxscaleMinVersion = function isMaxscaleMinVersion(major, minor
     };
   }
 
-  let ver = this.maxscaleVersion;
+  let ver = global.maxscaleVersion;
   return (
     ver.major > major ||
     (ver.major === major && ver.minor > minor) ||

@@ -15,6 +15,7 @@ before_install:
         curl -Os https://uploader.codecov.io/latest/linux/codecov
         chmod +x codecov
         ls -lrt
+        sudo apt install glibc-source -y
         ;;
     esac
 
