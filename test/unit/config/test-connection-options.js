@@ -231,5 +231,23 @@ describe('test connection options', () => {
         permitSetMultiParamEntries: true
       });
     });
+
+    it('mysql2 alias', () => {
+      let result = new ConnOptions(
+        'mariadb://root:pass@example.com:3307/db?enableKeepAlive=true&keepAliveInitialDelay=100'
+      );
+      assert.equal(result.keepAliveDelay, 100);
+
+      result = new ConnOptions(
+        'mariadb://root:pass@example.com:3307/db?enableKeepAlive=false&keepAliveInitialDelay=100'
+      );
+      assert.equal(result.keepAliveDelay, 0);
+
+      result = new ConnOptions('mariadb://root:pass@example.com:3307/db?enableKeepAlive=true');
+      assert.equal(result.keepAliveDelay, 0);
+
+      result = new ConnOptions('mariadb://root:pass@example.com:3307/db?enableKeepAlive=true&keepAliveInitialDelay=-1');
+      assert.equal(result.keepAliveDelay, -1);
+    });
   });
 });

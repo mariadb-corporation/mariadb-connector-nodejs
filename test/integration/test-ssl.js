@@ -103,8 +103,7 @@ describe('ssl', function () {
     // skip for ephemeral, since will succeed
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
       this.skip();
-    if (isMaxscale() && isMaxscaleMinVersion(25, 0, 0))
-      this.skip();  
+    if (isMaxscale() && isMaxscaleMinVersion(25, 0, 0)) this.skip();
     try {
       conn = await base.createConnection({
         user: 'sslTestUser',
@@ -130,12 +129,10 @@ describe('ssl', function () {
   it('signed certificate error with ephemeral', async function () {
     if (!sslEnable) this.skip();
     let isMaxscaleEphemeral = false;
-    if (isMaxscale() && isMaxscaleMinVersion(25, 0, 0))
-    {
+    if (isMaxscale() && isMaxscaleMinVersion(25, 0, 0)) {
       // MaxScale implements this in the 25.xx release
       isMaxscaleEphemeral = true;
-    }
-    else if (
+    } else if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(11, 4, 0) ||
       shareConn.info.hasMinVersion(23, 0, 0)
