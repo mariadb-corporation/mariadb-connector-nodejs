@@ -72,6 +72,7 @@ describe('test options', () => {
       bigIntAsNumber: false,
       bulk: true,
       keepEof: false,
+      jsonStrings: false,
       permitLocalInfile: false,
       bigNumberStrings: false,
       supportBigNumbers: false,

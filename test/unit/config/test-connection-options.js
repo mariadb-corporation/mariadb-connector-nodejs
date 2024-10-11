@@ -249,5 +249,22 @@ describe('test connection options', () => {
       result = new ConnOptions('mariadb://root:pass@example.com:3307/db?enableKeepAlive=true&keepAliveInitialDelay=-1');
       assert.equal(result.keepAliveDelay, -1);
     });
+
+    it('jsonStrings', () => {
+      let result = new ConnOptions('mariadb://root:pass@example.com:3307/db');
+      assert.equal(result.autoJsonMap, true);
+      assert.equal(result.jsonStrings, false);
+
+      result = new ConnOptions('mariadb://root:pass@example.com:3307/db?autoJsonMap=false');
+      assert.equal(result.autoJsonMap, false);
+      assert.equal(result.jsonStrings, false);
+
+      result = new ConnOptions('mariadb://root:pass@example.com:3307/db?jsonStrings=false');
+      assert.equal(result.autoJsonMap, true);
+      assert.equal(result.jsonStrings, false);
+      result = new ConnOptions('mariadb://root:pass@example.com:3307/db?jsonStrings=true');
+      assert.equal(result.autoJsonMap, false);
+      assert.equal(result.jsonStrings, true);
+    });
   });
 });

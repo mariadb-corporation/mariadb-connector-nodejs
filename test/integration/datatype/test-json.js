@@ -24,13 +24,21 @@ describe('json', () => {
     ) {
       this.skip();
     }
-    await testJsonInsertFormat(shareConn);
+    await testJsonInsertFormat(shareConn, false, true);
     const con = await base.createConnection({ charset: 'latin7' });
-    await testJsonInsertFormat(con);
+    await testJsonInsertFormat(con, false, true);
     await con.end();
+
+    const con2 = await base.createConnection({ charset: 'latin7', jsonStrings: true });
+    await testJsonInsertFormat(con2, true, true);
+    await con2.end();
+
+    const con3 = await base.createConnection({ charset: 'latin7', autoJsonMap: false });
+    await testJsonInsertFormat(con3, true, false);
+    await con3.end();
   });
 
-  const testJsonInsertFormat = async function (conn) {
+  const testJsonInsertFormat = async function (conn, jsonStrings, autoJsonMap) {
     const serverPermitExtendedInfos =
       (conn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
 
@@ -55,8 +63,36 @@ describe('json', () => {
     );
     await conn.query('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
     await conn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
-    const rows = await conn.query('SELECT * FROM `test-json-insert-type`');
-    if (!serverPermitExtendedInfos && conn.info.isMariaDB()) {
+    let rows = await conn.query('SELECT * FROM `test-json-insert-type`');
+    if (
+      (!serverPermitExtendedInfos && conn.info.isMariaDB()) ||
+      jsonStrings ||
+      (conn.info.isMariaDB() && !autoJsonMap)
+    ) {
+      const val1 = JSON.parse(rows[0].val1);
+      const val2 = JSON.parse(rows[1].val1);
+      const val3 = JSON.parse(rows[2].val1);
+      const val4 = JSON.parse(rows[3].val1);
+      assert.equal(val1.id, 2);
+      assert.equal(val1.val, 'tes\\t');
+      assert.equal(val2.id, 2);
+      assert.equal(val2.val, 'tes\\t');
+      assert.equal(val3.id, 3);
+      assert.equal(val3.val, 'test3');
+      assert.equal(val4.id, 3);
+      assert.equal(val4.val, 'test3');
+    } else {
+      assert.equal(rows[0]['val1'].id, 2);
+      assert.equal(rows[0].val1.val, 'tes\\t');
+      assert.equal(rows[1].val1.id, 2);
+      assert.equal(rows[1].val1.val, 'tes\\t');
+      assert.equal(rows[2].val1.id, 3);
+      assert.equal(rows[2].val1.val, 'test3');
+      assert.equal(rows[3].val1.id, 3);
+      assert.equal(rows[3].val1.val, 'test3');
+    }
+    rows = await conn.execute('SELECT * FROM `test-json-insert-type`');
+    if ((!serverPermitExtendedInfos && conn.info.isMariaDB()) || jsonStrings) {
       const val1 = JSON.parse(rows[0].val1);
       const val2 = JSON.parse(rows[1].val1);
       const val3 = JSON.parse(rows[2].val1);
