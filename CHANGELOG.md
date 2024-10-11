@@ -1,6 +1,17 @@
 # Change Log
+## [3.4.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.0) (Oct 2024)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
 
-## [3.3.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.1) (Sept 2024)
+## Notable changes
+* CONJS-299 Parsec authentication implementation
+* CONJS-295 add new option jsonStrings to ensure to return JSON field as string 
+
+## Issues Fixed
+* CONJS-296 Add option enableKeepAlive / keepAliveInitialDelay alias for keepAliveDelay for mysql2 compatibility
+* CONJS-303 DMLs are not returning an output while streaming
+
+
+## [3.3.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.2) (Sept 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
 
 ## Issues Fixed
