@@ -33,7 +33,7 @@ describe('json', () => {
     await testJsonInsertFormat(con2, true, true);
     await con2.end();
 
-    const con3 = await base.createConnection({ charset: 'latin7', autoJsonMap: false });
+    const con3 = await base.createConnection({ charset: 'latin7', jsonStrings: true, autoJsonMap: false });
     await testJsonInsertFormat(con3, true, false);
     await con3.end();
   });
