@@ -11,8 +11,8 @@ describe('geometry data type', () => {
   it('Point format', async function () {
     //MySQL 5.5 doesn't have ST_PointFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_point');
     await shareConn.query('CREATE TABLE gis_point (g POINT)');
@@ -27,7 +27,7 @@ describe('geometry data type', () => {
     );
     const expected = [
       {
-        g: serverPermitExtendedInfos ? { type: 'Point' } : null
+        g: serverPermitExtendedMetas ? { type: 'Point' } : null
       },
       {
         g: {
@@ -203,8 +203,8 @@ describe('geometry data type', () => {
   it('Point Insert', async function () {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
     await shareConn.query('DROP TABLE IF EXISTS gis_point_insert');
     await shareConn.query('CREATE TABLE gis_point_insert (g POINT)');
     await shareConn.beginTransaction();
@@ -226,10 +226,10 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Point' } : null
+        g: serverPermitExtendedMetas ? { type: 'Point' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Point' } : null
+        g: serverPermitExtendedMetas ? { type: 'Point' } : null
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_point_insert');
@@ -349,8 +349,8 @@ describe('geometry data type', () => {
 
   it('LineString insert', async function () {
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_line_insert');
     await shareConn.query('CREATE TABLE gis_line_insert (g LINESTRING)');
@@ -396,10 +396,10 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'LineString' } : null
+        g: serverPermitExtendedMetas ? { type: 'LineString' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'LineString' } : null
+        g: serverPermitExtendedMetas ? { type: 'LineString' } : null
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_line_insert');
@@ -568,8 +568,8 @@ describe('geometry data type', () => {
   it('Polygon insert', async function () {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon_insert');
     await shareConn.query('CREATE TABLE gis_polygon_insert (g POLYGON)');
@@ -659,13 +659,13 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'Polygon' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'Polygon' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'Polygon' } : null
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_polygon_insert');
@@ -743,8 +743,8 @@ describe('geometry data type', () => {
   it('MultiPoint insert', async function () {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_point_insert');
     await shareConn.query('CREATE TABLE gis_multi_point_insert (g MULTIPOINT)');
@@ -784,10 +784,10 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPoint' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPoint' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPoint' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPoint' } : null
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_multi_point_insert');
@@ -879,8 +879,8 @@ describe('geometry data type', () => {
   it('Multi-line insert', async function () {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_line_insert');
     await shareConn.query('CREATE TABLE gis_multi_line_insert (g MULTILINESTRING)');
@@ -952,13 +952,13 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiLineString' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiLineString' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiLineString' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiLineString' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiLineString' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiLineString' } : null
       }
     ];
 
@@ -1085,8 +1085,8 @@ describe('geometry data type', () => {
   it('Multi-polygon insert', async function () {
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_multi_polygon_insert');
     await shareConn.query('CREATE TABLE gis_multi_polygon_insert (g MULTIPOLYGON)');
@@ -1222,16 +1222,16 @@ describe('geometry data type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPolygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPolygon' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPolygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPolygon' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPolygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPolygon' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'MultiPolygon' } : null
+        g: serverPermitExtendedMetas ? { type: 'MultiPolygon' } : null
       }
     ];
     let rows = await shareConn.query('SELECT * FROM gis_multi_polygon_insert');

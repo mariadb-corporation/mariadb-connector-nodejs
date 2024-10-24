@@ -10,8 +10,7 @@ const Capabilities = require('../../lib/const/capabilities');
 describe('TypeCast', () => {
   let serverPermitExtendedInfos;
   before(function () {
-    serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    serverPermitExtendedMetas = (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
   });
 
   const changeCaseCast = (column, next) => {
@@ -244,7 +243,7 @@ describe('TypeCast', () => {
         }
       },
       {
-        b1: serverPermitExtendedInfos ? { type: 'Point' } : null
+        b1: serverPermitExtendedMetas ? { type: 'Point' } : null
       }
     ];
     let rows = await conn.query('SELECT * from stupidCast');

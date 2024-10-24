@@ -39,8 +39,8 @@ describe('json', () => {
   });
 
   const testJsonInsertFormat = async function (conn, jsonStrings, autoJsonMap) {
-    const serverPermitExtendedInfos =
-      (conn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (conn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     const obj = { id: 2, val: 'tes\\t' };
     const obj2 = { id: 3, val: 'test3' };
@@ -65,7 +65,7 @@ describe('json', () => {
     await conn.execute('INSERT INTO `test-json-insert-type` values (?)', [JSON.stringify(obj2)]);
     let rows = await conn.query('SELECT * FROM `test-json-insert-type`');
     if (
-      (!serverPermitExtendedInfos && conn.info.isMariaDB()) ||
+      (!serverPermitExtendedMetas && conn.info.isMariaDB()) ||
       jsonStrings ||
       (conn.info.isMariaDB() && !autoJsonMap)
     ) {
@@ -92,7 +92,7 @@ describe('json', () => {
       assert.equal(rows[3].val1.val, 'test3');
     }
     rows = await conn.execute('SELECT * FROM `test-json-insert-type`');
-    if ((!serverPermitExtendedInfos && conn.info.isMariaDB()) || jsonStrings) {
+    if ((!serverPermitExtendedMetas && conn.info.isMariaDB()) || jsonStrings) {
       const val1 = JSON.parse(rows[0].val1);
       const val2 = JSON.parse(rows[1].val1);
       const val3 = JSON.parse(rows[2].val1);
@@ -129,8 +129,8 @@ describe('json', () => {
 
     const obj = { id: 2, val: 'test' };
     const jsonString = JSON.stringify(obj);
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
     await shareConn.query('DROP TABLE IF EXISTS `test-json-return-type`');
     await shareConn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
     await shareConn.beginTransaction();
@@ -139,7 +139,7 @@ describe('json', () => {
     );
     let rows = await shareConn.query('SELECT * FROM `test-json-return-type`');
     if (shareConn.info.isMariaDB()) {
-      if (serverPermitExtendedInfos) {
+      if (serverPermitExtendedMetas) {
         assert.deepEqual(rows[0].val1, obj);
       } else {
         assert.equal(rows[0].val1, jsonString);
@@ -153,7 +153,7 @@ describe('json', () => {
 
     rows = await shareConn.execute('SELECT * FROM `test-json-return-type`');
     if (shareConn.info.isMariaDB()) {
-      if (serverPermitExtendedInfos) {
+      if (serverPermitExtendedMetas) {
         assert.deepEqual(rows[0].val1, obj);
       } else {
         assert.equal(rows[0].val1, jsonString);
@@ -169,9 +169,9 @@ describe('json', () => {
 
   it('disable json format', async function () {
     //server permit JSON format
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
-    if ((shareConn.info.isMariaDB() && serverPermitExtendedInfos) || !shareConn.info.isMariaDB()) {
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
+    if ((shareConn.info.isMariaDB() && serverPermitExtendedMetas) || !shareConn.info.isMariaDB()) {
       this.skip();
     }
     const conn = await base.createConnection({ autoJsonMap: false });
