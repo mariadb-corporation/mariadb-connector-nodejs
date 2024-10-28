@@ -10,13 +10,12 @@ const Capabilities = require('../../lib/const/capabilities');
 
 describe('batch geometry type', () => {
   let supportBulk;
-  let serverPermitExtendedInfos;
+  let serverPermitExtendedMetas;
   before(function () {
     supportBulk = (Conf.baseConfig.bulk === undefined ? true : Conf.baseConfig.bulk)
       ? (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_STMT_BULK_OPERATIONS) > 0
       : false;
-    serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    serverPermitExtendedMetas = (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
   });
 
   it('Point format', async function () {
@@ -90,10 +89,10 @@ describe('batch geometry type', () => {
         }
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Point' } : null
+        g: serverPermitExtendedMetas ? { type: 'Point' } : null
       },
       {
-        g: serverPermitExtendedInfos ? { type: 'Point' } : null
+        g: serverPermitExtendedMetas ? { type: 'Point' } : null
       }
     ]);
     shareConn.commit();
@@ -101,8 +100,8 @@ describe('batch geometry type', () => {
 
   it('LineString insert', async function () {
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_line_batch');
     await shareConn.query('CREATE TABLE gis_line_batch (g LINESTRING)');
@@ -162,12 +161,12 @@ describe('batch geometry type', () => {
                 coordinates: [],
                 type: 'LineString'
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'LineString' }
               : null
         },
         {
-          g: serverPermitExtendedInfos ? { type: 'LineString' } : null
+          g: serverPermitExtendedMetas ? { type: 'LineString' } : null
         }
       ]);
     } else {
@@ -201,8 +200,8 @@ describe('batch geometry type', () => {
 
   it('Polygon insert', async function () {
     if (!shareConn.info.isMariaDB()) this.skip();
-    const serverPermitExtendedInfos =
-      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
+    const serverPermitExtendedMetas =
+      (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_METADATA) > 0;
 
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon_batch');
     await shareConn.query('CREATE TABLE gis_polygon_batch (g POLYGON)');
@@ -307,7 +306,7 @@ describe('batch geometry type', () => {
           }
         },
         {
-          g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
+          g: serverPermitExtendedMetas ? { type: 'Polygon' } : null
         },
         {
           g: supportBulk
@@ -315,12 +314,12 @@ describe('batch geometry type', () => {
                 type: 'Polygon',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'Polygon' }
               : null
         },
         {
-          g: serverPermitExtendedInfos ? { type: 'Polygon' } : null
+          g: serverPermitExtendedMetas ? { type: 'Polygon' } : null
         }
       ]);
     } else {
@@ -422,7 +421,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPoint',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPoint' }
               : null
         },
@@ -432,7 +431,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPoint',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPoint' }
               : null
         }
@@ -545,7 +544,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: [[]]
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiLineString' }
               : null
         },
@@ -555,7 +554,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiLineString' }
               : null
         },
@@ -565,7 +564,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiLineString' }
               : null
         }
@@ -765,7 +764,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: [[[]]]
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -775,7 +774,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: [[]]
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -785,7 +784,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -795,7 +794,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: []
               }
-            : serverPermitExtendedInfos
+            : serverPermitExtendedMetas
               ? { type: 'MultiPolygon' }
               : null
         }
