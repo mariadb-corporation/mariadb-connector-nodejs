@@ -182,6 +182,21 @@ describe('Big query', function () {
     }
   });
 
+  it('Bulk 16M packet size', async function () {
+    if (maxAllowedSize > 16 * 1024 * 1024) this.skip();
+    let conn = null;
+    try {
+      conn = await base.createConnection({ maxAllowedPacket: maxAllowedSize, debug: true });
+      conn.query('DROP TABLE IF EXISTS bigParameter3');
+      conn.query('CREATE TABLE bigParameter3 (a longtext)');
+      await conn.query('FLUSH TABLES');
+      const param1 = Buffer.alloc(maxAllowedSize - 16, 'a').toString();
+      await conn.batch('insert into bigParameter3(a) values(?)', [['q'], [param1], ['b']]);
+    } finally {
+      await conn.end();
+    }
+  });
+
   async function sendBigParamBunch(firstLen, secondLen) {
     const conn = await base.createConnection({ maxAllowedSize: maxAllowedSize });
     conn.query('DROP TABLE IF EXISTS bigParameter2');
