@@ -135,7 +135,8 @@ describe('ssl', function () {
     } else if (
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0)
+      shareConn.info.hasMinVersion(23, 0, 0) ||
+      (isMaxscale() && !isMaxscaleMinVersion(25, 8, 0)))
     )
       this.skip();
     let conn = null;
