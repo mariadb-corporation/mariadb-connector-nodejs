@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -136,7 +136,7 @@ describe('ssl', function () {
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(11, 4, 0) ||
       shareConn.info.hasMinVersion(23, 0, 0) ||
-      (isMaxscale() && !isMaxscaleMinVersion(25, 8, 0)))
+      (isMaxscale() && !isMaxscaleMinVersion(25, 8, 0))
     )
       this.skip();
     let conn = null;
