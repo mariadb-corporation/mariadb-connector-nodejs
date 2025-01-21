@@ -8,7 +8,7 @@ const base = require('../base.js');
 const Proxy = require('../tools/proxy');
 const Conf = require('../conf');
 const { assert } = require('chai');
-const { isMaxscale } = require('../base');
+const { isMaxscale, isMaxscaleMinVersion } = require('../base');
 describe('redirection', () => {
   it('basic redirection', async function () {
     const proxy = new Proxy({
@@ -43,7 +43,7 @@ describe('redirection', () => {
 
   it('maxscale redirection', async function () {
     // need maxscale 23.08+
-    if (!isMaxscale()) this.skip();
+    if (!isMaxscale() || !isMaxscaleMinVersion(23, 8, 0)) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
