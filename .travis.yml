@@ -27,17 +27,21 @@ import: mariadb-corporation/connector-test-machine:common-build.yml@master
 jobs:
   include:
     - stage: Language
-      env: srv=mariadb v=10.11 local=1
+      env: srv=mariadb v=10.11 local=1 packet=8
       name: "CS 10.11 - node.js 16"
       node_js: 16
     - stage: Language
-      env: srv=mariadb v=10.11 local=1 CLEAR_TEXT=1
+      env: srv=mariadb v=10.11 local=1 packet=40 CLEAR_TEXT=1
       node_js: 18
       name: "CS 10.11 - node.js 18"
     - stage: Language
       env: srv=mariadb v=10.11 local=1 DISABLE_SSL=1
       name: "CS 10.11 - node.js 20"
       node_js: 20
+    - stage: Language
+      env: srv=mariadb v=10.11 local=1
+      name: "CS 10.11 - node.js 22"
+      node_js: 22
     - stage: Benchmarks
       env: srv=mariadb v=10.11 BENCH=1 local=1
       name: "Benchmarks"
@@ -64,3 +68,7 @@ script:
 
 after_success:
   - if [ -z "$BENCH" ] ; then npm run coverage:report; fi
+
+after_failure:
+  - if [ "$srv" == "maxscale" ] ; then docker-compose -f ${COMPOSE_FILE} exec -u root maxscale tail -500 /var/log/maxscale/maxscale.log; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] ; then sudo tail -200 /var/lib/mysql/mariadb.err; fi
