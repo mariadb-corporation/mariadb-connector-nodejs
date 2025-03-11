@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Type definitions for mariadb 2.5
@@ -711,6 +711,11 @@ export interface Connection extends events.EventEmitter {
    * Terminate connection gracefully.
    */
   end(): Promise<void>;
+
+  /**
+   * @deprecated alias for end().
+   */
+  close(): Promise<void>;
 
   /**
    * Force connection termination by closing the underlying socket and killing server process if any.
