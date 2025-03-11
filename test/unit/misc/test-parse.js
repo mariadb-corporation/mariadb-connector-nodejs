@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -136,12 +136,21 @@ describe('parse', () => {
       });
     });
 
-    it('question mark', () => {
+    it('question mark along with placeholder', () => {
       const sql = 'select :id1 // comment :id2 \n , ?';
       const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2, id3: 3 }, () => sql);
       assert.deepEqual(res, {
         paramPositions: [7, 11, 32, 33],
-        values: [1]
+        values: [1, 2]
+      });
+    });
+
+    it('question mark only', () => {
+      const sql = 'select ? // comment :id2 \n , ?';
+      const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2, id3: 3 }, () => sql);
+      assert.deepEqual(res, {
+        paramPositions: [7, 8, 29, 30],
+        values: [1, 2]
       });
     });
 
