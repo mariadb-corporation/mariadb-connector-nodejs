@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -417,7 +417,7 @@ describe('Pool callback', () => {
     }
 
     pool.getConnection((err) => {
-      assert(err.message.includes('retrieve connection from pool timeout'));
+      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -443,14 +443,14 @@ describe('Pool callback', () => {
       });
     });
     pool.query('SELECT 1', (err, res) => {
-      assert(err.message.includes('retrieve connection from pool timeout'));
+      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
       errorNo += 1;
     });
     pool.query('SELECT 2', (err) => {
-      assert(err.message.includes('retrieve connection from pool timeout'));
+      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -460,7 +460,7 @@ describe('Pool callback', () => {
     });
     setTimeout(() => {
       pool.query('SELECT 3', (err) => {
-        assert(err.message.includes('retrieve connection from pool timeout'));
+        assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45028);
         assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -912,10 +912,11 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({});
     pool.getConnection((err, conn) => {
       if (err) {
-        assert(err.message.includes('Cannot add request to pool, pool is closed'));
+        console.log(err);
+        assert(err.message.includes('pool is ending, connection request aborted'));
         assert.equal(err.sqlState, 'HY000');
-        assert.equal(err.errno, 45027);
-        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
+        assert.equal(err.errno, 45037);
+        assert.equal(err.code, 'ER_CLOSING_POOL');
         done();
       } else {
         done(new Error('must have thrown an Exception'));
@@ -937,7 +938,7 @@ describe('Pool callback', () => {
       pool.end();
       assert.isTrue(pool.closed);
       if (err) {
-        assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+        assert.isTrue(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
         done();
       } else {
         done(new Error('must have thrown error'));
@@ -956,7 +957,7 @@ describe('Pool callback', () => {
     pool.batch('SELECT ?', [[1]], (err, res) => {
       pool.end();
       if (err) {
-        assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+        assert.isTrue(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
         done();
       } else {
         done(new Error('must have thrown error'));
@@ -983,6 +984,20 @@ describe('Pool callback', () => {
     });
     pool.query('DO 1', () => {
       assert.equal('poolCallback(active=0 idle=1 limit=1)', pool.toString());
+      pool.end();
+      done();
+    });
+  });
+
+  it('direct execution without cache', (done) => {
+    const pool = base.createPoolCallback({
+      connectionLimit: 1,
+      acquireTimeout: 400
+    });
+    pool.execute('select ? as a', [2], (err, res, meta) => {
+      if (err) return done(err);
+      assert.isTrue(res[0].a === 2 || res[0].a === 2n);
+      assert.isTrue(meta.length === 1);
       pool.end();
       done();
     });

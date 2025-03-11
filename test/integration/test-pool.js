@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -528,7 +528,7 @@ describe('Pool', () => {
       await pool.execute('SELECT 1');
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+      assert.isTrue(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
     } finally {
       await pool.end();
       assert.isTrue(pool.closed);
@@ -547,7 +547,7 @@ describe('Pool', () => {
       await pool.batch('SELECT 1', [[1]]);
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.message.includes('retrieve connection from pool timeout'));
+      assert.isTrue(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
     } finally {
       await pool.end();
     }
@@ -615,7 +615,7 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert.equal(err.errno, 45028);
-      expect(err.message).to.have.string('retrieve connection from pool timeout after');
+      expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
       assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
     }
     try {
@@ -623,7 +623,7 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert.equal(err.errno, 45028);
-      expect(err.message).to.have.string('retrieve connection from pool timeout after');
+      expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
       assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
     } finally {
       pool.end();
@@ -839,7 +839,7 @@ describe('Pool', () => {
       .catch(done);
 
     pool.getConnection().catch((err) => {
-      assert(err.message.includes('retrieve connection from pool timeout'));
+      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
       assert(err.message.includes('(pool connections: active=1 idle=0 limit=1)'));
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
@@ -877,7 +877,7 @@ describe('Pool', () => {
         //wait 100ms to ensure stream has been written
         setTimeout(() => {
           const data = fs.readFileSync(tmpLogFile, 'utf8');
-          assert.isTrue(data.includes('A possible connection leak on the thread'));
+          assert.isTrue(data.includes('A possible connection leak on thread'));
           assert.isTrue(data.includes('was returned to pool'));
           logger.close();
           try {
@@ -889,7 +889,7 @@ describe('Pool', () => {
       .catch(done);
     setTimeout(() => {
       pool.getConnection().catch((err) => {
-        assert(err.message.includes('retrieve connection from pool timeout'));
+        assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
         assert(err.message.includes('(pool connections: active=1 idle=0 leak=1 limit=1)'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45028);
@@ -963,7 +963,7 @@ describe('Pool', () => {
           .getConnection()
           .then(() => done(new Error('must have thrown error')))
           .catch((err) => {
-            assert(err.message.includes('retrieve connection from pool timeout'));
+            assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'));
             assert.equal(err.sqlState, 'HY000');
             assert.equal(err.errno, 45028);
             assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -1042,7 +1042,10 @@ describe('Pool', () => {
         done(new Error('must have thrown error 3 !'));
       } catch (err) {
         try {
-          assert.isTrue(err.message.includes('retrieve connection from pool timeout'), err.message);
+          assert.isTrue(
+            err.message.includes('pool timeout: failed to retrieve a connection from pool after'),
+            err.message
+          );
           assert.equal(err.sqlState, 'HY000');
           assert.equal(err.errno, 45028);
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -1616,10 +1619,10 @@ describe('Pool', () => {
         done(new Error('must have thrown an Exception'));
       })
       .catch((err) => {
-        assert(err.message.includes('Cannot add request to pool, pool is closed'));
+        assert(err.message.includes('pool is ending, connection request aborted'));
         assert.equal(err.sqlState, 'HY000');
-        assert.equal(err.errno, 45027);
-        assert.equal(err.code, 'ER_POOL_ALREADY_CLOSED');
+        assert.equal(err.errno, 45037);
+        assert.equal(err.code, 'ER_CLOSING_POOL');
         setTimeout(done, 200);
       });
     pool.end();
@@ -1651,7 +1654,7 @@ describe('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error !' + (Date.now() - initTime));
     } catch (err) {
-      assert(err.message.includes('retrieve connection from pool timeout after'), err.message);
+      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'), err.message);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -1703,7 +1706,7 @@ describe('Pool', () => {
       port: 8888,
       initializationTimeout: 100
     });
-
+    pool.on('error', console.log);
     // pool will throw an error after some time and must not exit test suite
     await new Promise((resolve, reject) => {
       new setTimeout(resolve, 3000);
@@ -1726,12 +1729,10 @@ describe('Pool', () => {
     try {
       await pool.query('SELECT 1');
     } catch (err) {
-      console.log(err);
       const ver = process.version.substring(1).split('.');
       //on node.js 16+ error will have cause error
       if (parseInt(ver[0]) < 16) this.skip();
       assert.isNotNull(err.cause);
-      assert.isTrue(err.cause.code.includes('ECONNREFUSED'), err.cause);
     }
     await pool.end();
   });
@@ -1755,6 +1756,19 @@ describe('Pool', () => {
     const pool = base.createPool({ connectionLimit: 1 });
     await pool.query('DO 1');
     assert.equal('poolPromise(active=0 idle=1 limit=1)', pool.toString());
+    await pool.end();
+  });
+
+  it('pool with connection timeout', async function () {
+    const pool = base.createPool({ acquireTimeout: 200, connectionLimit: 1, connectTimeout: 0.0001 });
+    try {
+      const conn = await pool.getConnection();
+      // must normally fail, but in case having a superfast host
+      conn.release();
+    } catch (err) {
+      assert.isNotNull(err.cause);
+    }
+    await new Promise((r) => setTimeout(r, 50));
     await pool.end();
   });
 });

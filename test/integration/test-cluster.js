@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -108,7 +108,7 @@ describe('cluster', function () {
               done(new Error('must have thrown an error !'));
             })
             .catch((err) => {
-              expect(err.message).to.have.string('retrieve connection from pool timeout after ');
+              expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
               expect(err.message).to.have.string('(pool connections: active=1 idle=0 limit=1)');
 
               cluster
@@ -951,7 +951,7 @@ describe('cluster', function () {
               done(new Error('must have thrown an error !'));
             } else {
               expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: (conn:-1, no: 45028, SQLState: HY000) retrieve connection from pool timeout after"
+                "No Connection available for 'PoolNode-0'. Last connection error was: (conn:-1, no: 45028, SQLState: HY000) pool timeout: failed to retrieve a connection from pool after"
               );
               conn.end();
               cluster.end();
