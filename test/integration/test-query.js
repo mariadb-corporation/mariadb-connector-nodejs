@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -68,13 +68,17 @@ describe('basic query', () => {
   });
 
   it('namedPlaceholders parameter', async () => {
-    const conn = await base.createConnection({ namedPlaceholders: true });
+    const conn = await base.createConnection({ namedPlaceholders: true, debug: true });
     await conn.query('DROP TABLE IF EXISTS namedPlaceholders1');
     await conn.query('CREATE TABLE namedPlaceholders1(t varchar(128))');
     await conn.query('START TRANSACTION'); // if MAXSCALE ensure using WRITER
     await conn.query("INSERT INTO `namedPlaceholders1` value ('a'), ('b'), ('c')");
-    const res = await conn.query('select * from `namedPlaceholders1` where t IN (:possible)', { possible: ['a', 'c'] });
+    let res = await conn.query('select * from `namedPlaceholders1` where t IN (:possible)', { possible: ['a', 'c'] });
     assert.deepEqual(res, [{ t: 'a' }, { t: 'c' }]);
+
+    res = await conn.query('select * from `namedPlaceholders1` where t IN (?)', [['b', 'c']]);
+    assert.deepEqual(res, [{ t: 'b' }, { t: 'c' }]);
+
     conn.end();
   });
 
