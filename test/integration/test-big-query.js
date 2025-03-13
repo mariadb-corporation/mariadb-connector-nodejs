@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -176,6 +176,7 @@ describe('Big query', function () {
     const mb = 1024 * 1024;
     await sendBigParamBunch(10 * mb, 10 * mb);
     await sendBigParamBunch(10 * mb, 20 * mb);
+    await sendBigParamBunch(16 * mb - 50, 35);
     await sendBigParamBunch(20 * mb, 10 * mb);
     if (maxAllowedSize < 40 * 1024 * 1024) {
       await sendBigParamBunch(33 * mb, 20 * mb);
