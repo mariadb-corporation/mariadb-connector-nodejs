@@ -675,5 +675,13 @@ describe('authentication plugin', () => {
       assert.equal(err.code, 'ER_NOT_SUPPORTED_AUTH_PLUGIN');
       assert.isTrue(err.fatal);
     }
+
+    // adding ssl test, since zero ssl must work automagically
+    conn = await base.createConnection({
+      user: 'verifParsec',
+      password: 'MySup8%rPassw@ord',
+      ssl: true
+    });
+    conn.end();
   });
 });
