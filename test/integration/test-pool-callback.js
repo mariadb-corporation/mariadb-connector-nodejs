@@ -765,7 +765,23 @@ describe('Pool callback', () => {
             if (err) {
               done(err);
             } else {
-              assert.equal(res.affectedRows, 2);
+              if (res.affectedRows) {
+                assert.equal(res.affectedRows, 2);
+              } else {
+                assert.deepEqual(res, [
+                  {
+                    affectedRows: 1,
+                    insertId: 0n,
+                    warningStatus: 0
+                  },
+                  {
+                    affectedRows: 1,
+                    insertId: 0n,
+                    warningStatus: 0
+                  }
+                ]);
+              }
+
               pool.query('select * from `parse`', (err2, res2) => {
                 assert.deepEqual(res2, [
                   {

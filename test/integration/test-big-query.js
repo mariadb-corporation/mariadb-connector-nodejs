@@ -174,6 +174,7 @@ describe('Big query', function () {
 
     this.timeout(60000); //can take some time
     const mb = 1024 * 1024;
+    await sendBigParamBunch(mb, mb);
     await sendBigParamBunch(10 * mb, 10 * mb);
     await sendBigParamBunch(10 * mb, 20 * mb);
     await sendBigParamBunch(16 * mb - 50, 35);
@@ -198,10 +199,28 @@ describe('Big query', function () {
     }
   });
 
+  function deepCompare(arg1, arg2) {
+    if (Object.prototype.toString.call(arg1) === Object.prototype.toString.call(arg2)) {
+      if (
+        Object.prototype.toString.call(arg1) === '[object Object]' ||
+        Object.prototype.toString.call(arg1) === '[object Array]'
+      ) {
+        if (Object.keys(arg1).length !== Object.keys(arg2).length) {
+          return false;
+        }
+        return Object.keys(arg1).every(function (key) {
+          return deepCompare(arg1[key], arg2[key]);
+        });
+      }
+      return arg1 === arg2;
+    }
+    return false;
+  }
+
   async function sendBigParamBunch(firstLen, secondLen) {
     const conn = await base.createConnection({ maxAllowedSize: maxAllowedSize });
     conn.query('DROP TABLE IF EXISTS bigParameter2');
-    conn.query('CREATE TABLE bigParameter2 (a longtext, b longtext)');
+    conn.query('CREATE TABLE bigParameter2 (id int not null primary key auto_increment, a longtext, b longtext)');
     await conn.query('FLUSH TABLES');
     try {
       conn.beginTransaction();
@@ -212,12 +231,66 @@ describe('Big query', function () {
         [param1, param2],
         ['b', 'n']
       ]);
-      await conn.batch('insert into bigParameter2(a,b) values(?, ?)', [
+      const res = await conn.batch({ sql: 'insert into bigParameter2(a,b) values(?, ?)', fullResult: true }, [
         [param1, param2],
         ['q2', 's2'],
         [param1, 's3']
       ]);
-      const rows = await conn.query('SELECT * from bigParameter2');
+
+      assert.isOk(
+        deepCompare(res, [
+          {
+            affectedRows: 1,
+            insertId: 4n,
+            warningStatus: 0
+          },
+          {
+            affectedRows: 1,
+            insertId: 5n,
+            warningStatus: 0
+          },
+          {
+            affectedRows: 1,
+            insertId: 6n,
+            warningStatus: 0
+          }
+        ]) ||
+          deepCompare(res, [
+            {
+              affectedRows: 1,
+              insertId: 5n,
+              warningStatus: 0
+            },
+            {
+              affectedRows: 1,
+              insertId: 6n,
+              warningStatus: 0
+            },
+            {
+              affectedRows: 1,
+              insertId: 7n,
+              warningStatus: 0
+            }
+          ]) ||
+          deepCompare(res, [
+            {
+              affectedRows: 1,
+              insertId: 5n,
+              warningStatus: 0
+            },
+            {
+              affectedRows: 1,
+              insertId: 6n,
+              warningStatus: 0
+            },
+            {
+              affectedRows: 1,
+              insertId: 8n,
+              warningStatus: 0
+            }
+          ])
+      );
+      const rows = await conn.query('SELECT a,b from bigParameter2');
 
       assert.deepEqual(rows[0], { a: 'q', b: 's' });
       assert.deepEqual(rows[1], {

@@ -1388,7 +1388,22 @@ describe('Pool', () => {
         ]);
       })
       .then((res) => {
-        assert.equal(res.affectedRows, 2);
+        if (res.affectedRows) {
+          assert.equal(res.affectedRows, 2);
+        } else {
+          assert.deepEqual(res, [
+            {
+              affectedRows: 1,
+              insertId: 0n,
+              warningStatus: 0
+            },
+            {
+              affectedRows: 1,
+              insertId: 0n,
+              warningStatus: 0
+            }
+          ]);
+        }
         return pool.query('select * from `parse`');
       })
       .then((res) => {
@@ -1422,7 +1437,27 @@ describe('Pool', () => {
     await pool.query('DROP TABLE IF EXISTS singleBatchArray');
     await pool.query('CREATE TABLE singleBatchArray(id int)');
     let res = await pool.batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3]);
-    assert.equal(res.affectedRows, 3);
+    if (res.affectedRows) {
+      assert.equal(res.affectedRows, 2);
+    } else {
+      assert.deepEqual(res, [
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        },
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        },
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        }
+      ]);
+    }
     res = await pool.query('select * from `singleBatchArray`');
     assert.deepEqual(res, [
       {

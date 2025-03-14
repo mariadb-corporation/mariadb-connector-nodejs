@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -95,7 +95,7 @@ describe('batch callback', function () {
           return 'blabla';
         };
         conn.batch(
-          'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)',
+          { sql: 'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', fullResult: false },
           [
             [
               true,
@@ -222,7 +222,9 @@ describe('batch callback', function () {
     conn.connect(function (err) {
       if (err) return done(err);
       conn.query('DROP TABLE IF EXISTS simpleBatchWithOptions');
-      conn.query('CREATE TABLE simpleBatchWithOptions(id int, d datetime)');
+      conn.query(
+        'CREATE TABLE simpleBatchWithOptions(id INT NOT NULL AUTO_INCREMENT, d datetime, UNIQUE KEY `id` (`id`))'
+      );
       conn.query('FLUSH TABLES');
       conn.beginTransaction(() => {
         const f = {};
@@ -231,21 +233,29 @@ describe('batch callback', function () {
         };
         conn.batch(
           {
-            sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?)',
-            maxAllowedPacket: 1048576
+            sql: 'INSERT INTO `simpleBatchWithOptions`(d) values (?)',
+            maxAllowedPacket: 1048576,
+            fullResult: true
           },
-          [
-            [1, new Date('2001-12-31 23:59:58')],
-            [2, new Date('2001-12-31 23:59:58')]
-          ],
+          [[new Date('2001-12-31 23:59:58')], [new Date('2001-12-31 23:59:58')]],
           (err, res) => {
             if (err) {
               return conn.end(() => {
                 done(err);
               });
             }
-
-            assert.equal(res.affectedRows, 2);
+            assert.deepEqual(res, [
+              {
+                affectedRows: 1,
+                insertId: 1n,
+                warningStatus: 0
+              },
+              {
+                affectedRows: 1,
+                insertId: 2n,
+                warningStatus: 0
+              }
+            ]);
             conn.query('select * from `simpleBatchWithOptions`', (err, res) => {
               if (err) return done(err);
               assert.deepEqual(res, [
@@ -293,7 +303,7 @@ describe('batch callback', function () {
       conn.query('FLUSH TABLES');
       conn.beginTransaction(() => {
         conn.batch(
-          'INSERT INTO `simpleBatchCP1251` values (?, ?)',
+          { sql: 'INSERT INTO `simpleBatchCP1251` values (?, ?)', fullResult: false },
           [
             ['john', 2],
             ['©°', 3]
@@ -646,7 +656,23 @@ describe('batch callback', function () {
                   done(err);
                 });
               }
-              assert.equal(res.affectedRows, 2);
+              if (res.affectedRows) {
+                assert.equal(res.affectedRows, 2);
+              } else {
+                assert.deepEqual(res, [
+                  {
+                    affectedRows: 1,
+                    insertId: 0n,
+                    warningStatus: 0
+                  },
+                  {
+                    affectedRows: 1,
+                    insertId: 0n,
+                    warningStatus: 0
+                  }
+                ]);
+              }
+
               conn.query('select * from `simpleNamedPlaceHolders`', (err, res) => {
                 if (err) {
                   return conn.end(() => {

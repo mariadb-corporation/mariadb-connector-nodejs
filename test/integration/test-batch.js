@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -230,7 +230,32 @@ describe('batch', function () {
           }
         ]
       ]);
-      assert.equal(res.affectedRows, 4);
+      if (res.affectedRows) {
+        assert.equal(res.affectedRows, 4);
+      } else {
+        assert.deepEqual(res, [
+          {
+            affectedRows: 1,
+            insertId: 0n,
+            warningStatus: 0
+          },
+          {
+            affectedRows: 1,
+            insertId: 0n,
+            warningStatus: 0
+          },
+          {
+            affectedRows: 1,
+            insertId: 0n,
+            warningStatus: 0
+          },
+          {
+            affectedRows: 1,
+            insertId: 0n,
+            warningStatus: 0
+          }
+        ]);
+      }
       res = await conn.query('select * from `simpleBatch`');
       assert.deepEqual(res, [
         {
@@ -310,28 +335,31 @@ describe('batch', function () {
       await shareConn.query('FLUSH TABLES');
       await conn.query('START TRANSACTION');
 
-      let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+      let res = await conn.batch(
+        { sql: 'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', fullResult: false },
         [
-          true,
-          'Ʉjo"h\u000An😎🌶\\\\',
-          new Date('2001-12-31 23:59:58+3'),
-          new Date('2018-01-01 12:30:20.456789+3'),
-          {
-            type: 'Point',
-            coordinates: [10, 10]
-          }
-        ],
-        [
-          true,
-          't1',
-          new Date('2001-12-31 23:59:58+3'),
-          new Date('2018-01-01 12:30:20.456789+3'),
-          {
-            type: 'Point',
-            coordinates: [10, 10]
-          }
+          [
+            true,
+            'Ʉjo"h\u000An😎🌶\\\\',
+            new Date('2001-12-31 23:59:58+3'),
+            new Date('2018-01-01 12:30:20.456789+3'),
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            }
+          ],
+          [
+            true,
+            't1',
+            new Date('2001-12-31 23:59:58+3'),
+            new Date('2018-01-01 12:30:20.456789+3'),
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            }
+          ]
         ]
-      ]);
+      );
       assert.equal(res[0].affectedRows, 2);
       res = await conn.query('select * from `simpleBatch`');
       assert.deepEqual(res[0], [
@@ -391,48 +419,51 @@ describe('batch', function () {
       f.toSqlString = () => {
         return 'blabla';
       };
-      let res = await conn.batch('INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', [
+      let res = await conn.batch(
+        { sql: 'INSERT INTO `simpleBatch` values (1, ?, 2, ?, ?, ?, ?, 3)', fullResult: false },
         [
-          true,
-          'Ʉjo"h\u000An😎🌶\\\\',
-          new Date('2001-12-31 23:59:58+3'),
-          new Date('2018-01-01 12:30:20.456789+3'),
-          {
-            type: 'Point',
-            coordinates: [10, 10]
-          }
-        ],
-        [
-          true,
-          f,
-          new Date('2001-12-31 23:59:58+3'),
-          new Date('2018-01-01 12:30:20.456789+3'),
-          {
-            type: 'Point',
-            coordinates: [10, 10]
-          }
-        ],
-        [
-          false,
-          { name: 'jack\u000Aमस्', val: 'tt' },
-          null,
-          new Date('2018-01-21 11:30:20.123456+3'),
-          {
-            type: 'Point',
-            coordinates: [10, 20]
-          }
-        ],
-        [
-          0,
-          null,
-          new Date('2020-12-31 23:59:59+3'),
-          new Date('2018-01-21 11:30:20.123456+3'),
-          {
-            type: 'Point',
-            coordinates: [20, 20]
-          }
+          [
+            true,
+            'Ʉjo"h\u000An😎🌶\\\\',
+            new Date('2001-12-31 23:59:58+3'),
+            new Date('2018-01-01 12:30:20.456789+3'),
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            }
+          ],
+          [
+            true,
+            f,
+            new Date('2001-12-31 23:59:58+3'),
+            new Date('2018-01-01 12:30:20.456789+3'),
+            {
+              type: 'Point',
+              coordinates: [10, 10]
+            }
+          ],
+          [
+            false,
+            { name: 'jack\u000Aमस्', val: 'tt' },
+            null,
+            new Date('2018-01-21 11:30:20.123456+3'),
+            {
+              type: 'Point',
+              coordinates: [10, 20]
+            }
+          ],
+          [
+            0,
+            null,
+            new Date('2020-12-31 23:59:59+3'),
+            new Date('2018-01-21 11:30:20.123456+3'),
+            {
+              type: 'Point',
+              coordinates: [20, 20]
+            }
+          ]
         ]
-      ]);
+      );
       assert.equal(res[0].affectedRows, 4);
       res = await conn.query('select * from `simpleBatch`');
       assert.deepEqual(res[0], [
@@ -593,7 +624,8 @@ describe('batch', function () {
     let res = await conn.batch(
       {
         sql: 'INSERT INTO `simpleBatchWithOptions` values (?, ?, ?)',
-        maxAllowedPacket: 1048576
+        maxAllowedPacket: 1048576,
+        fullResult: false
       },
       [
         [1, new Date('2001-12-31 23:59:58'), 9223372036854775818n],
@@ -671,7 +703,22 @@ describe('batch', function () {
       ['john', 2],
       ['©°', 3]
     ]);
-    assert.equal(res.affectedRows, 2);
+    if (res.affectedRows) {
+      assert.equal(res.affectedRows, 2);
+    } else {
+      assert.deepEqual(res, [
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        },
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        }
+      ]);
+    }
     res = await conn.query('select * from `simpleBatchCP1251`');
     assert.deepEqual(res, [
       { id: 2, t: 'john' },
@@ -832,11 +879,16 @@ describe('batch', function () {
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
     }
-    let res = await conn.batch('INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values);
-    assert.equal(res.affectedRows, 1000000);
+    await conn.batch(
+      { sql: 'INSERT INTO `bigBatchWith16mMaxAllowedPacket` values (1, ?, 2, ?, 3)', fullResult: false },
+      values
+    );
 
-    res = await conn.query(
-      'select count(*) as a from `bigBatchWith16mMaxAllowedPacket` WHERE id = 1 AND id3 = 2 AND t = ?',
+    let res = await conn.query(
+      {
+        sql: 'select count(*) as a from `bigBatchWith16mMaxAllowedPacket` WHERE id = 1 AND id3 = 2 AND t = ?',
+        fullResult: false
+      },
       [str]
     );
     assert.equal(res[0].a, 1000000);
@@ -871,7 +923,6 @@ describe('batch', function () {
       values.push([i, str]);
     }
     let res = await conn.batch('INSERT INTO `bigBatchWith16mMaxAllowedPacketBig` values (?, ?)', values);
-    assert.equal(res.affectedRows, 5);
 
     res = await conn.query('select * from `bigBatchWith16mMaxAllowedPacketBig`');
     assert.deepEqual(res, [
@@ -903,10 +954,9 @@ describe('batch', function () {
     for (let i = 0; i < 1000000; i++) {
       values.push([i, str]);
     }
-    let res = await conn.batch('INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values);
-    assert.equal(res.affectedRows, 1000000);
+    await conn.batch('INSERT INTO `bigBatchWith4mMaxAllowedPacket` values (1, ?, 2, ?, 3)', values);
 
-    res = await conn.query(
+    let res = await conn.query(
       'select count(*) as a from `bigBatchWith4mMaxAllowedPacket` WHERE id = 1 AND id3 = 2 AND t = ?',
       [str]
     );
@@ -1050,7 +1100,22 @@ describe('batch', function () {
       { param_1: 1, param_2: 'john' },
       { param_1: 2, param_2: 'jack' }
     ]);
-    assert.equal(res.affectedRows, 2);
+    if (res.affectedRows) {
+      assert.equal(res.affectedRows, 2);
+    } else {
+      assert.deepEqual(res, [
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        },
+        {
+          affectedRows: 1,
+          insertId: 0n,
+          warningStatus: 0
+        }
+      ]);
+    }
     res = await conn.query('select * from `simpleNamedPlaceHolders`');
     assert.deepEqual(res, [
       {
@@ -1254,6 +1319,40 @@ describe('batch', function () {
       ]);
       assert.deepEqual(res, { affectedRows: 4, insertId: 0n, warningStatus: 0 });
       await conn.end();
+
+      const connBulk = await base.createConnection({ bulk: true });
+      res = await connBulk.batch('INSERT INTO bufLength VALUES (?)', [
+        ['abc'],
+        ['cde'],
+        [1],
+        [new Date('2001-12-31 23:59:58')]
+      ]);
+      assert.deepEqual(res, [
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+      ]);
+      res = await connBulk.batch({ sql: 'INSERT INTO bufLength VALUES (?)', fullResult: true }, [
+        ['abc'],
+        ['cde'],
+        [1],
+        [new Date('2001-12-31 23:59:58')]
+      ]);
+      assert.deepEqual(res, [
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+      ]);
+      res = await connBulk.batch({ sql: 'INSERT INTO bufLength VALUES (?)', fullResult: false }, [
+        ['abc'],
+        ['cde'],
+        [1],
+        [new Date('2001-12-31 23:59:58')]
+      ]);
+      assert.deepEqual(res, { affectedRows: 4, insertId: 0n, warningStatus: 0 });
+      await connBulk.end();
     });
 
     it('batch timeout error', async function () {

@@ -1573,7 +1573,7 @@ describe('cluster', function () {
     const conn = await cluster.getConnection(pattern);
     const row = await conn.query('SELECT @node');
     nodeName = row[0]['@node'];
-    const res = await conn.batch('INSERT INTO clusterInsert VALUES (?,?)', [
+    const res = await conn.batch({ sql: 'INSERT INTO clusterInsert VALUES (?,?)', fullResult: false }, [
       [1, 'TOM'],
       [2, 'JERRY']
     ]);
