@@ -1438,7 +1438,7 @@ describe('Pool', () => {
     await pool.query('CREATE TABLE singleBatchArray(id int)');
     let res = await pool.batch('INSERT INTO `singleBatchArray` values (?)', [1, 2, 3]);
     if (res.affectedRows) {
-      assert.equal(res.affectedRows, 2);
+      assert.equal(res.affectedRows, 3);
     } else {
       assert.deepEqual(res, [
         {

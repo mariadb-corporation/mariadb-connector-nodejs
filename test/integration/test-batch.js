@@ -1328,8 +1328,7 @@ describe('batch', function () {
         [new Date('2001-12-31 23:59:58')]
       ]);
       assert.deepEqual(res, [
-        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
-        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+        { affectedRows: 2, insertId: 0n, warningStatus: 0 },
         { affectedRows: 1, insertId: 0n, warningStatus: 0 },
         { affectedRows: 1, insertId: 0n, warningStatus: 0 }
       ]);
