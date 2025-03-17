@@ -1327,11 +1327,20 @@ describe('batch', function () {
         [1],
         [new Date('2001-12-31 23:59:58')]
       ]);
-      assert.deepEqual(res, [
-        { affectedRows: 2, insertId: 0n, warningStatus: 0 },
-        { affectedRows: 1, insertId: 0n, warningStatus: 0 },
-        { affectedRows: 1, insertId: 0n, warningStatus: 0 }
-      ]);
+      if (shareConn.info.hasMinVersion(11, 5, 1)) {
+        assert.deepEqual(res, [
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+        ]);
+      } else {
+        assert.deepEqual(res, [
+          { affectedRows: 2, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+        ]);
+      }
       res = await connBulk.batch({ sql: 'INSERT INTO bufLength VALUES (?)', fullResult: true }, [
         ['abc'],
         ['cde'],
