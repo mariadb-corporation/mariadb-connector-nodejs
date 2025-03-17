@@ -288,7 +288,8 @@ describe('Big query', function () {
               insertId: 8n,
               warningStatus: 0
             }
-          ])
+          ]),
+        res
       );
       const rows = await conn.query('SELECT a,b from bigParameter2');
 
