@@ -14,6 +14,7 @@ const Proxy = require('../tools/proxy');
 const { isMaxscale } = require('../base');
 const { baseConfig } = require('../conf');
 const winston = require('winston');
+const basePromise = require('../../promise');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -1432,7 +1433,9 @@ describe('Pool', () => {
   });
 
   it('pool batch single array', async function () {
-    const pool = base.createPool({ connectionLimit: 1, resetAfterUse: false });
+    const config = Conf.baseConfig;
+    const poolString = `mariadb://${config.user}${config.password ? ':' + config.password : ''}@${config.host}:${config.port}/${config.database}?connectionLimit=1&resetAfterUse=false`;
+    const pool = basePromise.createPool(poolString);
 
     await pool.query('DROP TABLE IF EXISTS singleBatchArray');
     await pool.query('CREATE TABLE singleBatchArray(id int)');

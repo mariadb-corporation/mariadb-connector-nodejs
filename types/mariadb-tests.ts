@@ -351,6 +351,8 @@ async function testPool(): Promise<void> {
   const rows = await pool.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
 
+  pool = createPool('mariadb://root:pwd@localhost:3306/db?connectionLimit=10');
+  await pool.end();
   pool = createPool();
 
   const connection = await pool.getConnection();
