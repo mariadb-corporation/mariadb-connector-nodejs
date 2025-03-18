@@ -8,7 +8,7 @@ let baseConfig = {
   database: 'testn',
   host: 'localhost',
   connectTimeout: 2000,
-  port: 3306
+  port: 3206
 };
 
 if (process.env.TEST_DB_HOST) baseConfig['host'] = process.env.TEST_DB_HOST;

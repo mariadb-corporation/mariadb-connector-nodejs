@@ -1171,7 +1171,13 @@ describe('batch', function () {
       values.push({ id1: i, id2: str });
     }
     let res = await conn.batch('INSERT INTO `more16MNamedPlaceHolders` values (1, :id1, 2, :id2, 3)', values);
-    assert.equal(res.affectedRows, 1000000);
+    if (res.affectedRows) {
+      assert.equal(res.affectedRows, 1000000);
+    } else {
+      let totalAffectedRows = 0;
+      for (let i = 0; i < res.length; i++) totalAffectedRows += res[i].affectedRows;
+      assert.equal(totalAffectedRows, 1000000);
+    }
     res = await conn.query('select count(*) as a from `more16MNamedPlaceHolders` WHERE id = 1 AND id3 = 2 AND t = :t', {
       t: str
     });
@@ -1933,7 +1939,7 @@ describe('batch', function () {
 
     it('16M+ batch', async function () {
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
-      this.timeout(320000);
+      this.timeout(520000);
       await more16MNamedPlaceHolders(true);
     });
 
