@@ -401,8 +401,7 @@ describe('cluster', function () {
 
       const proxy = new Proxy({
         port: Conf.baseConfig.port,
-        host: Conf.baseConfig.host,
-        resetAfterUse: false
+        host: Conf.baseConfig.host
       });
       await proxy.start();
 
@@ -410,6 +409,7 @@ describe('cluster', function () {
         connectionLimit: 1,
         host: 'localhost',
         socketTimeout: 200,
+        connectTimeout: 200,
         acquireTimeout: 500,
         minDelayValidation: 0,
         port: proxy.port(),
