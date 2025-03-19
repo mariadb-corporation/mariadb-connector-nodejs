@@ -1111,6 +1111,48 @@ const res = await connection.batch('INSERT INTO `batchExample` values (1, ?, 2, 
 console.log(res.affectedRows); // 2
 ```
 
+
+### Using the `fullResult` option
+
+By default, batch operations aggregate results, combining all individual operations into a single result. You can use the `fullResult: true` option to retrieve individual results for each parameter set.
+
+```javascript
+// Get individual results for each insert operation
+let results = await connection.batch(
+  {sql :'INSERT INTO users(name, age) VALUES (?, ?)', fullResult: true },
+  [['John', 25], ['Jane', 26], ['Bob', 32]])
+// results is an array of individual OkPacket objects
+results.forEach((res, i) => {
+  console.log(`Result ${i+1}:`, res);
+});
+// Output:
+// Result 1: OkPacket { affectedRows: 1, insertId: 1, warningStatus: 0 }
+// Result 2: OkPacket { affectedRows: 1, insertId: 2, warningStatus: 0 }
+// Result 3: OkPacket { affectedRows: 1, insertId: 3, warningStatus: 0 }
+
+// Get aggregate results for each insert operation
+let results = await connection.batch(
+  {sql :'INSERT INTO users(name, age) VALUES (?, ?)', fullResult: true },
+  [['Boby', 24], ['Rico', 20], ['Johnny', 321]])
+// results is an array of individual OkPacket objects
+results.forEach((res, i) => {
+  console.log(`Result ${i+1}:`, res);
+});
+// Output:
+// Result 1: OkPacket { affectedRows: 3, insertId: 1, warningStatus: 0 }
+```
+
+#### When to use fullResult
+
+The `fullResult` option is particularly useful when:
+
+1. You need to know which specific parameter sets succeeded or failed
+2. You need to access individual insertId values for each inserted row
+
+#### Performance considerations
+
+For MariaDB servers that support it (version 10.2.7+), the connector will use the optimized COM_STMT_BULK_EXECUTE protocol for better performance when possible. The `fullResult` option with bulk protocol requires 11.5.1.
+
 ## `connection.beginTransaction() → Promise`
 
 >Returns a promise that :
@@ -1684,10 +1726,9 @@ async function addMultipleUsers(users) {
       user.created_at || new Date()
     ]);
     
-    const result = await pool.batch({
-      sql: 'INSERT INTO users(name, email, password, created_at) VALUES (?, ?, ?, ?)',
-      fullResult: true  // To get individual results with generated IDs
-    }, userValues);
+    const result = await pool.batch(
+      'INSERT INTO users(name, email, password, created_at) VALUES (?, ?, ?, ?)',
+      userValues);
     
     console.log(`Added ${result.affectedRows} users`);
     return {

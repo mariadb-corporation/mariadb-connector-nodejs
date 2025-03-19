@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -15,6 +15,7 @@ describe('test options', () => {
     const expected = {
       host: 'localhost',
       port: 3306,
+      fullResult: undefined,
       user: process.env.USERNAME,
       password: undefined,
       database: undefined,
