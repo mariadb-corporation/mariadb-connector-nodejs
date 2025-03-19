@@ -1521,45 +1521,73 @@ conn.on('error', err => {
 
 # Pool API
 
-Each time a connection is asked, if the pool contains a connection that is not used, the pool will validate the connection, 
-exchanging an empty MySQL packet with the server to ensure the connection state, then give the connection. 
-The pool reuses connection intensively, so this validation is done only if a connection has not been used for a period 
-(specified by the "minDelayValidation" option with the default value of 500ms).
+A connection pool is a cache of database connections maintained so that connections can be reused when future requests to the database are required. Connection pools are used to enhance the performance of executing commands on a database.
 
-If no connection is available, the request for a connection will be put in a queue until connection timeout. 
-When a connection is available (new creation or released to the pool), it will be used to satisfy queued requests in FIFO order.
+## Pool overview
 
-When a connection is given back to the pool, any remaining transactions will be rolled back.
+Each time a connection is requested, if the pool contains an available connection, the pool will validate the connection by exchanging an empty MySQL packet with the server to ensure the connection is still valid, then provide the connection. 
+
+The pool reuses connections intensively to improve performance. This validation is only performed if a connection has been idle for a period (specified by the `minDelayValidation` option, which defaults to 500ms).
+
+If no connection is available, the request will be queued until either:
+- A connection becomes available (through creation or release)
+- The connection timeout (`acquireTimeout`) is reached
+
+When a connection is released back to the pool, any remaining transactions will be automatically rolled back to ensure a clean state for the next use.
 
 ## `pool.getConnection() → Promise`
 
-> Returns a promise that:
-> * resolves with a [Connection](#connection-api) object
-> * rejects with an [Error](#error)
+> * Returns a promise that:
+>   * resolves with a [Connection](#connection-api) object
+>   * rejects with an [Error](#error)
 
 Retrieves a connection from the pool. If the pool is at its connection limit, the promise will wait until a connection becomes available or the `acquireTimeout` is reached.
+
+**Example: Using a pooled connection with transactions**
 
 ```javascript
 // Create a pool
 const pool = mariadb.createPool({
   host: 'localhost',
   user: 'root',
+  password: 'password',
   connectionLimit: 5
 });
 
-async function executeQueries() {
+async function transferFunds(fromAccount, toAccount, amount) {
   let conn;
   try {
     // Get a connection from the pool
     conn = await pool.getConnection();
     
-    // Use the connection for multiple operations
+    // Use the connection for a transaction
     await conn.query("START TRANSACTION");
-    await conn.query("INSERT INTO orders(user_id, product_id) VALUES (?, ?)", [userId, productId]);
-    await conn.query("UPDATE inventory SET stock = stock - 1 WHERE product_id = ?", [productId]);
-    await conn.query("COMMIT");
     
-    return { success: true };
+    // Verify sufficient funds
+    const [account] = await conn.query(
+      "SELECT balance FROM accounts WHERE id = ? FOR UPDATE", 
+      [fromAccount]
+    );
+    
+    if (account.balance < amount) {
+      await conn.query("ROLLBACK");
+      return { success: false, message: "Insufficient funds" };
+    }
+    
+    // Perform the transfer
+    await conn.query(
+      "UPDATE accounts SET balance = balance - ? WHERE id = ?", 
+      [amount, fromAccount]
+    );
+    await conn.query(
+      "UPDATE accounts SET balance = balance + ? WHERE id = ?", 
+      [amount, toAccount]
+    );
+    
+    // Commit the transaction
+    await conn.query("COMMIT");
+    return { success: true, message: "Transfer completed" };
+    
   } catch (err) {
     // Handle errors
     if (conn) await conn.query("ROLLBACK");
@@ -1583,45 +1611,97 @@ async function executeQueries() {
 
 Executes a query using a connection from the pool. The connection is automatically acquired and released, making this method ideal for simple queries.
 
+**Example: Simple query with error handling**
+
 ```javascript
 // Simple query using the pool directly
-try {
-  const rows = await pool.query('SELECT * FROM products WHERE category = ?', ['electronics']);
-  console.log('Products found:', rows.length);
-  return rows;
-} catch (err) {
-  console.error('Query failed:', err);
-  throw err;
+async function getProductsByCategory(category) {
+  try {
+    const rows = await pool.query(
+      'SELECT * FROM products WHERE category = ? ORDER BY price ASC', 
+      [category]
+    );
+    
+    console.log(`Found ${rows.length} products in ${category} category`);
+    return {
+      success: true,
+      count: rows.length,
+      products: rows
+    };
+  } catch (err) {
+    console.error('Query failed:', err);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+}
+```
+
+**Example: Using query options**
+
+```javascript
+async function getRecentOrders(options) {
+  try {
+    const rows = await pool.query({
+      sql: 'SELECT * FROM orders WHERE created_at > ? LIMIT ?',
+      values: [options.since, options.limit || 10],
+      dateStrings: true,  // Return dates as strings
+      nestTables: true    // Group results by table
+    });
+    
+    return rows;
+  } catch (err) {
+    console.error('Failed to fetch recent orders:', err);
+    throw err;
+  }
 }
 ```
 
 ## `pool.batch(sql, values) → Promise`
 
 > * `sql`: *string | JSON* SQL string or JSON object with query options
-> * `values`: *array* Array of parameter sets
+> * `values`: *array* Array of parameter sets (array of arrays or array of objects for named placeholders)
 >
 > Returns a promise that:
 > * resolves with batch operation results
 > * rejects with an [Error](#error)
 
-Executes a batch operation using a connection from the pool. Like `pool.query()`, this method automatically handles connection acquisition and release.
+Executes a batch operation using a connection from the pool. The pool automatically handles connection acquisition and release.
+
+For MariaDB server version 10.2.7+, this implementation uses a dedicated bulk protocol for improved performance.
+
+**Example: Batch insert with generated IDs**
 
 ```javascript
-// Batch insert multiple products
-const productData = [
-  ['Laptop', 'electronics', 999.99],
-  ['Headphones', 'electronics', 149.99],
-  ['Coffee Maker', 'appliances', 79.99]
-];
-
-try {
-  const result = await pool.batch(
-    'INSERT INTO products(name, category, price) VALUES (?, ?, ?)',
-    productData
-  );
-  console.log(`Inserted ${result.affectedRows} products`);
-} catch (err) {
-  console.error('Batch operation failed:', err);
+async function addMultipleUsers(users) {
+  try {
+    // Format user data for batch insert
+    const userValues = users.map(user => [
+      user.name,
+      user.email,
+      user.password,
+      user.created_at || new Date()
+    ]);
+    
+    const result = await pool.batch({
+      sql: 'INSERT INTO users(name, email, password, created_at) VALUES (?, ?, ?, ?)',
+      fullResult: true  // To get individual results with generated IDs
+    }, userValues);
+    
+    console.log(`Added ${result.affectedRows} users`);
+    return {
+      success: true,
+      insertCount: result.affectedRows,
+      insertIds: result.map(r => r.insertId)
+    };
+  } catch (err) {
+    console.error('Batch user creation failed:', err);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
 }
 ```
 
@@ -1633,51 +1713,88 @@ try {
 
 Gracefully closes all connections in the pool and ends the pool. This should be called when your application is shutting down to ensure all database resources are properly released.
 
+**Example: Application shutdown handler**
+
 ```javascript
 // Application shutdown handler
-async function shutdown() {
-  console.log('Shutting down, closing database connections...');
+async function gracefulShutdown() {
+  console.log('Application shutting down...');
+  
   try {
+    // Close database pool
+    console.log('Closing database connections...');
     await pool.end();
-    console.log('All database connections closed');
+    console.log('All database connections closed successfully');
+    
+    // Close other resources
+    // ...
+    
+    console.log('Shutdown complete');
+    process.exit(0);
   } catch (err) {
-    console.error('Error closing database connections:', err);
+    console.error('Error during shutdown:', err);
+    process.exit(1);
   }
 }
 
+// Register shutdown handlers
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 ```
 
-
 ## `pool.escape(value) → String`
-This is an alias for [`connection.escape(value) → String`](#connectionescapevalue--string) to escape parameters
+This is an alias for [`connection.escape(value) → String`](#connectionescapevalue--string) to escape parameters when building queries manually.
+
+**Example:**
+```javascript
+const userId = "user's-id";
+const query = `SELECT * FROM users WHERE id = ${pool.escape(userId)}`;
+// query = "SELECT * FROM users WHERE id = 'user\\'s-id'"
+```
 
 ## `pool.escapeId(value) → String`
-This is an alias for [`connection.escapeId(value) → String`](#connectionescapeidvalue--string) to escape Identifier
+This is an alias for [`connection.escapeId(value) → String`](#connectionescapeidvalue--string) to escape identifiers like table or column names.
 
+**Example:**
+```javascript
+const tableName = "user-data";
+const columnName = "last-login";
+const query = `SELECT ${pool.escapeId(columnName)} FROM ${pool.escapeId(tableName)}`;
+// query = "SELECT `last-login` FROM `user-data`"
+```
 
 ## `pool.importFile(options) → Promise`
 
 > * `options` <JSON>:
-    > ** file: <string> file path (mandatory)
-    > ** database: <string> database if different that current connection database (optional)
+>   * `file`: <string> file path (mandatory)
+>   * `database`: <string> database if different from current connection database (optional)
 >
-> Returns a promise that :
+> Returns a promise that:
 >   * resolves without result
->   * rejects with an [Error](#error).
+>   * rejects with an [Error](#error)
 
-Import sql file. If database is set, database will be use, then after file import, database will be reverted
+Imports an SQL file. If a database is specified, it will be used for the import and then reverted to the original database afterward.
+
+**Example: Import a database dump**
 
 ```javascript
-try {
+async function importDatabaseDump(filePath, targetDatabase) {
+  try {
     await pool.importFile({
-        file: '/tmp/someFile.sql', 
-        database: 'myDb'
+      file: filePath,
+      database: targetDatabase
     });
-} catch (e) {
-  // ...  
+    console.log(`Successfully imported ${filePath} into ${targetDatabase}`);
+    return { success: true };
+  } catch (err) {
+    console.error(`Import failed: ${err.message}`);
+    return { 
+      success: false, 
+      error: err.message 
+    };
+  }
 }
 ```
-
 
 ## Pool events
 
@@ -1689,19 +1806,21 @@ Emitted when a connection is acquired from the pool.
 
 ```javascript
 pool.on('acquire', (connection) => {
-  console.log(`Connection ${connection.threadId} acquired`);
+  console.log(`Connection ${connection.threadId} acquired from pool`);
 });
 ```
 
 ### `connection`
 
-Emitted when a new connection is created.
+Emitted when a new connection is created within the pool.
 
 ```javascript
 pool.on('connection', (connection) => {
-  console.log(`New connection ${connection.threadId} created`);
-  // Set session variables or execute initialization queries
-  connection.query("SET time_zone='+00:00'");
+  console.log(`New connection ${connection.threadId} created in pool`);
+  
+  // You can initialize connections with specific settings
+  connection.query("SET SESSION time_zone='+00:00'");
+  connection.query("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE'");
 });
 ```
 
@@ -1711,7 +1830,7 @@ Emitted when a connection is released back to the pool.
 
 ```javascript
 pool.on('release', (connection) => {
-  console.log(`Connection ${connection.threadId} released`);
+  console.log(`Connection ${connection.threadId} released back to pool`);
 });
 ```
 
@@ -1722,175 +1841,513 @@ Emitted when an error occurs in the pool, such as failure to create a connection
 ```javascript
 pool.on('error', (err) => {
   console.error('Pool error:', err);
-  // Implement recovery logic if needed
+  // Implement monitoring or recovery logic
+  notifyAdministrator(`Database pool error: ${err.message}`);
 });
+```
+
+## Pool monitoring methods
+
+The pool provides several methods to monitor its state:
+
+```javascript
+// Get current number of active connections
+const active = pool.activeConnections(); 
+
+// Get total number of connections (used and unused)
+const total = pool.totalConnections();  
+
+// Get current number of unused connections
+const idle = pool.idleConnections();    
+
+// Get size of pending connection requests queue
+const queued = pool.taskQueueSize();   
+
+console.log(`Pool status: ${active}/${total} connections active, ${idle} idle, ${queued} requests queued`);
 ```
 
 ## Pool best practices
 
-1. **Size your pool appropriately**: Set `connectionLimit` based on your application needs and server capacity. Too many connections can overload the database server.
+1. **Right-size your connection pool**:
+   - Set `connectionLimit` based on your application's concurrency needs and database server capacity
+   - Too few connections can create bottlenecks
+   - Too many connections can overload the database server
+   - Start with a connection limit of 10-20 and adjust based on performance testing
 
-2. **Handle connection leaks**: Enable `leakDetectionTimeout` to identify connections that aren't properly released.
+2. **Handle connection leaks**:
+   ```javascript
+   const pool = mariadb.createPool({
+     // ...connection options
+     connectionLimit: 10,
+     leakDetectionTimeout: 30000  // Log potential leaks after 30 seconds
+   });
+   ```
 
-3. **Use connection validation**: The pool automatically validates connections before providing them, but you can tune this with `minDelayValidation`.
+3. **Always release connections**:
+   ```javascript
+   let conn;
+   try {
+     conn = await pool.getConnection();
+     // Use connection...
+   } catch (err) {
+     // Handle error...
+   } finally {
+     if (conn) conn.release();  // Always release in finally block
+   }
+   ```
 
-4. **Prefer pool.query() for simple operations**: For single queries, use `pool.query()` instead of manually acquiring and releasing connections.
+4. **Use connection validation wisely**:
+   ```javascript
+   const pool = mariadb.createPool({
+     // ...connection options
+     minDelayValidation: 500,  // Only validate connections unused for 500ms
+     pingTimeout: 1000         // Timeout for ping validation
+   });
+   ```
 
-5. **Always release connections**: Use try/finally blocks to ensure connections are released even when errors occur.
+5. **Prefer pool.query() for simple operations**:
+   - For single queries, use `pool.query()` instead of manually acquiring and releasing connections
+   - Only use `getConnection()` when you need to maintain context across multiple queries
 
-6. **Close the pool on application shutdown**: Always call `pool.end()` when your application terminates.
+6. **Implement proper error handling**:
+   - Listen for 'error' events on the pool
+   - Implement reconnection strategies for fatal errors
+   - Consider using a circuit breaker pattern for persistent database issues
+
+7. **Close the pool during application shutdown**:
+   - Always call `pool.end()` when your application terminates
+   - Use process signal handlers (SIGINT, SIGTERM) to ensure proper cleanup
 
 # Pool cluster API
 
-Cluster handle multiple pools according to patterns and handle failover / distributed load (round robin / random / ordered ).
+A pool cluster manages multiple database connection pools and provides high availability and load balancing capabilities. It allows your application to:
 
-## `poolCluster.add(id, config)`
+- Connect to multiple database servers (for primary/replica setups)
+- Automatically handle failover if a database server goes down
+- Distribute queries across multiple servers
+- Group servers by pattern for targeted operations
 
-> * `id`: *string* node identifier. example : 'master'
-> * `config`: *JSON* [pool options](#pool-options) to create pool. 
+## Pool cluster overview
+
+The cluster manages a collection of connection pools, each identified by a name. You can select pools using pattern matching and specify different load balancing strategies (selectors) to determine which pool to use for each connection request.
+
+When a connection fails, the cluster can automatically retry with another pool matching the same pattern. If a pool fails consistently, it can be temporarily blacklisted or even removed from the cluster configuration.
+
+## `createPoolCluster(options) → PoolCluster`
+
+> * `options`: *JSON* [poolCluster options](#poolcluster-options)
 >
+> Returns a [PoolCluster](#poolcluster-api) object
 
-Add a new Pool to cluster.
+Creates a new pool cluster to manage multiple database connection pools.
 
-**Example:**
+**Example: Creating a basic primary/replica setup**
 
 ```javascript
 const mariadb = require('mariadb');
+
+// Create the cluster
+const cluster = mariadb.createPoolCluster({
+  removeNodeErrorCount: 5,      // Remove a node after 5 consecutive connection failures
+  restoreNodeTimeout: 1000,     // Wait 1 second before trying a failed node again
+  defaultSelector: 'ORDER'      // Use nodes in order (first working node in the list)
+});
+
+// Add database nodes to the cluster
+cluster.add('primary', {
+  host: 'primary-db.example.com', 
+  user: 'app_user',
+  password: 'password',
+  connectionLimit: 10
+});
+
+cluster.add('replica1', {
+  host: 'replica1-db.example.com', 
+  user: 'app_user',
+  password: 'password',
+  connectionLimit: 20
+});
+
+cluster.add('replica2', {
+  host: 'replica2-db.example.com', 
+  user: 'app_user',
+  password: 'password',
+  connectionLimit: 20
+});
+```
+
+## `poolCluster.add(id, config)`
+
+> * `id`: *string* node identifier. Example: `'primary'`, `'replica1'`
+> * `config`: *JSON* [pool options](#pool-options) to create the pool
+>
+> Returns: void
+
+Adds a new connection pool to the cluster with the specified identifier and configuration.
+
+**Example: Adding nodes with descriptive identifiers**
+
+```javascript
+// Create an empty cluster
 const cluster = mariadb.createPoolCluster();
-cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
+
+// Add a primary database node
+cluster.add('primary', {
+  host: 'primary-db.example.com',
+  user: 'app_user',
+  password: 'password',
+  connectionLimit: 10
+});
+
+// Add multiple read-only replica nodes
+cluster.add('replica-east', {
+  host: 'replica-east.example.com',
+  user: 'readonly_user',
+  password: 'password',
+  connectionLimit: 20
+});
+
+cluster.add('replica-west', {
+  host: 'replica-west.example.com',
+  user: 'readonly_user',
+  password: 'password',
+  connectionLimit: 20
+});
 ```
 
 ## `poolCluster.remove(pattern)`
 
-> * `pattern`: *string* regex pattern to select pools. Example, `"slave*"`
+> * `pattern`: *string* Regex pattern to select pools. Example: `'replica*'`
 >
-remove and end pool(s) configured in cluster.
+> Returns: void
 
+Removes and ends all pools whose identifiers match the specified pattern.
+
+**Example: Removing nodes from the cluster**
+
+```javascript
+// Create a cluster with multiple nodes
+const cluster = mariadb.createPoolCluster();
+cluster.add('primary', { host: 'primary-db.example.com', user: 'app_user' });
+cluster.add('replica1', { host: 'replica1.example.com', user: 'readonly_user' });
+cluster.add('replica2', { host: 'replica2.example.com', user: 'readonly_user' });
+cluster.add('analytics', { host: 'analytics-db.example.com', user: 'analytics_user' });
+
+// Later, remove all replica nodes
+cluster.remove('replica*');
+
+// Remove a specific node
+cluster.remove('analytics');
+```
+
+## `poolCluster.getConnection([pattern], [selector]) → Promise`
+
+> * `pattern`: *string* Regex pattern to select pools. Default: `'*'` (all pools)
+> * `selector`: *string* Selection strategy: 'RR' (round-robin), 'RANDOM', or 'ORDER'. Default: value of the `defaultSelector` option
+>
+> Returns a promise that:
+> * resolves with a [Connection](#connection-api) object
+> * rejects with an [Error](#error)
+
+Gets a connection from a pool in the cluster that matches the pattern using the specified selection strategy.
+
+**Example: Using different selectors for different connection patterns**
+
+```javascript
+async function executeQuery(sql, params) {
+  let conn;
+  
+  try {
+    // For write operations, always use the primary
+    if (sql.toLowerCase().startsWith('insert') || 
+        sql.toLowerCase().startsWith('update') || 
+        sql.toLowerCase().startsWith('delete')) {
+      conn = await cluster.getConnection('primary');
+    } 
+    // For read operations, use round-robin among replicas
+    else {
+      conn = await cluster.getConnection('replica*', 'RR');
+    }
+    
+    const result = await conn.query(sql, params);
+    return result;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+// Usage
+const users = await executeQuery('SELECT * FROM users WHERE status = ?', ['active']);
+await executeQuery('UPDATE users SET last_login = NOW() WHERE id = ?', [userId]);
+```
+
+**Example: Handling failover gracefully**
+
+```javascript
+async function executeQueryWithRetry(sql, params, maxRetries = 3) {
+  let attempts = 0;
+  let lastError;
+  
+  while (attempts < maxRetries) {
+    let conn;
+    attempts++;
+    
+    try {
+      conn = await cluster.getConnection('*', 'ORDER');  // Try nodes in order
+      const result = await conn.query(sql, params);
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Query attempt ${attempts} failed:`, err.message);
+      
+      // Only retry on connection errors, not query syntax errors
+      if (!err.fatal) throw err;
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } finally {
+      if (conn) conn.release();
+    }
+  }
+  
+  throw new Error(`All ${maxRetries} query attempts failed. Last error: ${lastError.message}`);
+}
+```
+
+## `poolCluster.of(pattern, [selector]) → FilteredPoolCluster`
+
+> * `pattern`: *string* Regex pattern to select pools. Example: `'replica*'`
+> * `selector`: *string* Selection strategy: 'RR' (round-robin), 'RANDOM', or 'ORDER'
+>
+> Returns a [FilteredPoolCluster](#filteredpoolcluster) object
+
+Creates a new filtered pool cluster that only includes pools matching the specified pattern. This allows you to create specialized interfaces for different database roles.
+
+**Example: Creating dedicated interfaces for read and write operations**
+
+```javascript
+// Create interfaces for different database roles
+const primaryPool = cluster.of('primary');  // Only the primary node
+const replicaPool = cluster.of('replica*', 'RANDOM');  // All replicas with random selection
+
+async function readData(userId) {
+  let conn;
+  try {
+    // Get connection from any replica randomly
+    conn = await replicaPool.getConnection();
+    return await conn.query('SELECT * FROM users WHERE id = ?', [userId]);
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function writeData(userData) {
+  let conn;
+  try {
+    // Always write to primary
+    conn = await primaryPool.getConnection();
+    await conn.query('INSERT INTO users SET ?', userData);
+    return { success: true };
+  } finally {
+    if (conn) conn.release();
+  }
+}
+```
 
 ## `poolCluster.end() → Promise`
 
-> Returns a promise that :
->  * resolves (no argument)
->  * rejects with an [Error](#error).
+> Returns a promise that:
+> * resolves when all pools in the cluster are closed
+> * rejects with an [Error](#error) if closing fails
 
-Closes the pool cluster and underlying pools.
+Gracefully closes all connection pools in the cluster.
+
+**Example: Application shutdown with clustered connections**
 
 ```javascript
-poolCluster.end()
-  .then(() => {
-    //pools have been ended properly
-  })
-  .catch(err => console.log);
+// Application shutdown handler
+async function gracefulShutdown() {
+  console.log('Application shutting down...');
+  
+  try {
+    // Close database connection pool cluster
+    console.log('Closing database connections...');
+    await cluster.end();
+    console.log('All database connections closed successfully');
+    
+    // Close other resources
+    // ...
+    
+    console.log('Shutdown complete');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+}
+
+// Register shutdown handlers
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 ```
 
+## FilteredPoolCluster
 
+A filtered pool cluster is a subset of the main cluster that only includes pools matching a specific pattern. It provides a simplified interface for working with logically grouped database nodes.
 
-## `poolCluster.getConnection(pattern, selector) → Promise`
+### `filteredPoolCluster.getConnection() → Promise`
 
-> * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
-> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the cluster option `defaultSelector` if set, 'RR' if not  
-> 
-> Returns a promise that :
-> * resolves with a [Connection](#connection-api) object,
-> * raises an [Error](#error).
+> Returns a promise that:
+> * resolves with a [Connection](#connection-api) object
+> * rejects with an [Error](#error)
 
-Creates a new [Connection](#connection-api) object.
-Connection must be given back to pool with the connection.end() method.
+Gets a connection from one of the pools in the filtered cluster using the selector specified when the filtered cluster was created.
 
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
-const cluster = mariadb.createPoolCluster();
-cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
-cluster.getConnection("slave*")
+// Create a filtered cluster with only replica nodes
+const replicas = cluster.of('replica*', 'RR');  // Round-robin among replicas
+
+async function getReadOnlyData() {
+  let conn;
+  try {
+    // This will automatically use round-robin selection among replica nodes
+    conn = await replicas.getConnection();
+    return await conn.query('SELECT * FROM some_large_table LIMIT 1000');
+  } finally {
+    if (conn) conn.release();
+  }
+}
 ```
 
-## `poolCluster events`
+### `filteredPoolCluster.query(sql[, values]) → Promise`
 
-PoolCluster object inherits from the Node.js [`EventEmitter`](https://nodejs.org/api/events.html). 
-Emits 'remove' event when a node is removed from configuration if the option `removeNodeErrorCount` is defined 
-(default to 5) and connector fails to connect more than `removeNodeErrorCount` times. 
-(if other nodes are present, each attemps will wait for value of the option `restoreNodeTimeout`)
-
-```javascript
-const mariadb = require('mariadb');
-const cluster = mariadb.createPoolCluster({ removeNodeErrorCount: 20, restoreNodeTimeout: 5000 });
-cluster.add("master", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
-cluster.on('remove', node => {
-  console.log(`node ${node} was removed`);
-})
-```
-
-## `poolCluster.of(pattern, selector) → FilteredPoolCluster`
-
-> * `pattern`:  *string* regex pattern to select pools. Example, `"slave*"`. default `'*'`
-> * `selector`: *string* pools selector. Can be 'RR' (round-robin), 'RANDOM' or 'ORDER' (use in sequence = always use first pools unless fails). default to the  
+> * `sql`: *string | JSON* SQL string or JSON object with query options
+> * `values`: *array | object* Placeholder values
 >
-> Returns :
-> * resolves with a [filtered pool cluster](#filteredpoolcluster) object,
-> * raises an [Error](#error).
+> Returns a promise that:
+> * resolves with query results
+> * rejects with an [Error](#error)
 
-Creates a new [filtered pool cluster](#filteredpoolcluster) object that is a subset of cluster.
-
+Shorthand method to get a connection from the filtered cluster, execute a query, and release the connection.
 
 **Example:**
 
 ```javascript
-const mariadb = require('mariadb');
+// Create filtered clusters for different roles
+const primary = cluster.of('primary');
+const replicas = cluster.of('replica*', 'RR');
 
-const cluster = mariadb.createPoolCluster();
-cluster.add("master-north", { host: 'mydb1.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("master-south", { host: 'mydb2.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1-north", { host: 'mydb3.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave2-north", { host: 'mydb4.com', user: 'myUser', connectionLimit: 5 });
-cluster.add("slave1-south", { host: 'mydb5.com', user: 'myUser', connectionLimit: 5 });
+// Read from replicas using the shorthand query method
+async function getUserById(id) {
+  try {
+    return await replicas.query('SELECT * FROM users WHERE id = ?', [id]);
+  } catch (err) {
+    console.error('Failed to get user:', err);
+    throw err;
+  }
+}
 
-const masterCluster = cluster.of('master*');
-const northSlaves = cluster.of(/^slave?-north/, 'RANDOM');
-
-const conn = await northSlaves.getConnection();
-// use that connection
-
+// Write to primary
+async function updateUserStatus(id, status) {
+  try {
+    return await primary.query(
+      'UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?',
+      [status, id]
+    );
+  } catch (err) {
+    console.error('Failed to update user status:', err);
+    throw err;
+  }
+}
 ```
 
-### `filtered pool cluster`
+## Pool Cluster Events
 
-* `filteredPoolCluster.getConnection() → Promise` : Creates a new connection from pools that corresponds to pattern .
-* `filteredPoolCluster.query(sql[, values]) → Promise` : this is a shortcut to get a connection from pools that corresponds to pattern, execute a query and release connection.
+The pool cluster inherits from Node.js [EventEmitter](https://nodejs.org/api/events.html) and emits the following events:
 
-## Stored procedure with output parameter
+### `remove`
 
-Output parameters can be retrieved with 2 differents ways:
-
-### Using simple query
-solution is to define output parameters as user-defined variables and retrieving them afterwhile.
+Emitted when a node is removed from the cluster configuration. This happens when a node fails to connect more than `removeNodeErrorCount` times (if this option is defined).
 
 ```javascript
-//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
-// begin set p2 = p1 * 2; end
-await shareConn.query('call multiplyBy2(?,@myOutputValue)', [2]);
-const res = await shareConn.query('SELECT @myOutputValue');
-// res = [{ '@myOutputValue': 4n }]
+cluster.on('remove', (nodeId) => {
+  console.warn(`Database node '${nodeId}' has been removed from the cluster`);
+  
+  // You might want to send alerts or trigger monitoring
+  notifyAdministrators(`Database node ${nodeId} has been removed from the cluster due to repeated connection failures`);
+});
 ```
 
-### Using execute
-(only when using 3.x version or the driver)
-execute use another protocol that permits to return output parameters directly.
-(OUT parameters must have null value) 
+## Selection Strategies
 
-```javascript
-//CREATE OR REPLACE PROCEDURE multiplyBy2 (IN p1 INT, OUT p2 INT)
-// begin set p2 = p1 * 2; end
-const res = await shareConn.execute('call multiplyBy2(?, ?)', [2, null]);
-// res = [
-//   [ { p2: 4 }],
-//   OkPacket { affectedRows: 0, insertId: 0n, warningStatus: 0 }
-// ]
-```
+The pool cluster supports three different selection strategies for choosing which database node to use:
+
+1. **Round-Robin (`'RR'`)**: Uses pools in rotation, ensuring an even distribution of connections.
+2. **Random (`'RANDOM'`)**: Selects a random pool for each connection request.
+3. **Order (`'ORDER'`)**: Always tries pools in sequence, using the first available one. Useful for primary/fallback setups.
+
+## Pool Cluster Best Practices
+
+1. **Use meaningful node identifiers**:
+   - Choose clear identifiers that indicate the node's role (e.g., 'primary', 'replica1')
+   - This makes pattern matching more intuitive and maintenance easier
+
+2. **Implement role-based access with patterns**:
+   ```javascript
+   // Direct write operations to primary
+   const primary = cluster.of('primary');
+   
+   // Direct read operations to replicas
+   const replicas = cluster.of('replica*', 'RR');
+   
+   async function saveData(data) {
+     // Writes go to primary
+     return await primary.query('INSERT INTO table SET ?', [data]);
+   }
+   
+   async function getData(id) {
+     // Reads come from replicas
+     return await replicas.query('SELECT * FROM table WHERE id = ?', [id]);
+   }
+   ```
+
+3. **Use appropriate selectors for different scenarios**:
+   - `'ORDER'` for high availability with failover (tries primary first, then fallbacks)
+   - `'RR'` for load balancing across equivalent nodes (like replicas)
+   - `'RANDOM'` when pure distribution is needed
+
+4. **Configure node removal thresholds appropriately**:
+   ```javascript
+   const cluster = mariadb.createPoolCluster({
+     removeNodeErrorCount: 5,    // Remove after 5 consecutive failures
+     restoreNodeTimeout: 10000,  // Wait 10 seconds before retrying failed nodes
+     canRetry: true              // Enable retry on different nodes
+   });
+   ```
+
+5. **Monitor removed nodes**:
+   ```javascript
+   // Track cluster health
+   let clusterHealth = {
+     removedNodes: [],
+     lastIncident: null
+   };
+   
+   cluster.on('remove', (nodeId) => {
+     clusterHealth.removedNodes.push(nodeId);
+     clusterHealth.lastIncident = new Date();
+     
+     // Alert operations team
+     alertOps(`Database node ${nodeId} removed from cluster at ${clusterHealth.lastIncident}`);
+   });
+   ```
+
+6. **Implement graceful degradation**:
+   - Design your application to function with reduced capabilities when some nodes are unavailable
+   - Use fallback strategies when specific node patterns become unavailable
+
+7. **Always close the cluster during application shutdown**:
+   - Call `cluster.end()` to properly release all resources
+   - Use process signal handlers to ensure cleanup
