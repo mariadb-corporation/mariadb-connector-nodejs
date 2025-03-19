@@ -179,7 +179,7 @@ describe('Big query', function () {
     await sendBigParamBunch(10 * mb, 20 * mb);
     await sendBigParamBunch(16 * mb - 50, 35);
     await sendBigParamBunch(20 * mb, 10 * mb);
-    if (maxAllowedSize < 40 * 1024 * 1024) {
+    if (maxAllowedSize > 40 * 1024 * 1024) {
       await sendBigParamBunch(33 * mb, 20 * mb);
     }
   });
