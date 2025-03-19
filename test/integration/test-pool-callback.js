@@ -928,7 +928,6 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({});
     pool.getConnection((err, conn) => {
       if (err) {
-        console.log(err);
         assert(err.message.includes('pool is ending, connection request aborted'));
         assert.equal(err.sqlState, 'HY000');
         assert.equal(err.errno, 45037);

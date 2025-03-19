@@ -68,7 +68,7 @@ describe('basic query', () => {
   });
 
   it('namedPlaceholders parameter', async () => {
-    const conn = await base.createConnection({ namedPlaceholders: true, debug: true });
+    const conn = await base.createConnection({ namedPlaceholders: true });
     await conn.query('DROP TABLE IF EXISTS namedPlaceholders1');
     await conn.query('CREATE TABLE namedPlaceholders1(t varchar(128))');
     await conn.query('START TRANSACTION'); // if MAXSCALE ensure using WRITER

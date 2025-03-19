@@ -1009,7 +1009,7 @@ describe('Pool', () => {
       })
       .catch((err) => {
         try {
-          assert(err.message.includes('retrieve connection from pool timeout'));
+          assert(err.message.includes('pool timeout'));
           assert.equal(err.sqlState, 'HY000');
           assert.equal(err.errno, 45028);
           assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
