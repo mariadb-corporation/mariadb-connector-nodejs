@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -19,7 +19,7 @@ describe('Placeholder', () => {
   });
 
   it('execute without placeholder', async function () {
-    const conn = await base.createConnection({ namedPlaceholders: true, debug: true });
+    const conn = await base.createConnection({ namedPlaceholders: true });
     try {
       const rows = await conn.execute('select ? as val1, ? as val3, ? as val2', ['30', '10', '20']);
     } catch (err) {
