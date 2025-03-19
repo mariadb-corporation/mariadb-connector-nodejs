@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 const net = require('net');
 
@@ -18,12 +18,12 @@ function Proxy(args) {
   this.close = () => {
     server.close();
     sockets.forEach((socket) => {
-      socket.destroy();
+      socket.destroy(new Error('proxy destroyed socket'));
     });
     sockets.length = 0;
 
     remoteSockets.forEach((socket) => {
-      socket.destroy();
+      socket.end();
     });
     remoteSockets.length = 0;
 
@@ -99,6 +99,10 @@ function Proxy(args) {
           if (log) console.log('>> localsocket end (' + ended + ':' + from.address().port + ')');
           if (!ended) to.end();
           ended = true;
+        });
+
+        from.on('error', (err) => {
+          if (log) console.log(err);
         });
       });
 
