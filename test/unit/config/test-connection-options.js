@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -114,6 +114,10 @@ describe('test connection options', () => {
     assert.equal(result.user, 'root');
   });
 
+  it('undefined maxAllowedPacket value', () => {
+    new ConnOptions({ maxAllowedPacket: undefined });
+  });
+
   it('wrong maxAllowedPacket value', () => {
     try {
       new ConnOptions({ maxAllowedPacket: 'abc' });
@@ -123,7 +127,7 @@ describe('test connection options', () => {
     }
   });
 
-  it('wrong maxAllowedPacket value', () => {
+  it('wrong collation value', () => {
     try {
       new ConnOptions({ collation: 'wrongcollation' });
       throw new Error('must have thrown exception');
