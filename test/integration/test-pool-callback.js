@@ -152,6 +152,7 @@ describe('Pool callback', () => {
     const pool = base.createPoolCallback({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
+      allowPublicKeyRetrieval: true,
       user: 'wrongAuthentication'
     });
 

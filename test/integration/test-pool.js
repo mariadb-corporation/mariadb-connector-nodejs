@@ -457,7 +457,8 @@ describe('Pool', () => {
     const pool = base.createPool({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
-      user: 'wrongAuthentication'
+      user: 'wrongAuthentication',
+      allowPublicKeyRetrieval: true
     });
 
     setTimeout(async () => {
@@ -560,6 +561,7 @@ describe('Pool', () => {
     const pool = base.createPool({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
+      allowPublicKeyRetrieval: true,
       user: 'wrongAuthentication'
     });
 
@@ -610,7 +612,8 @@ describe('Pool', () => {
       pool = base.createPool({
         acquireTimeout: 4000,
         initializationTimeout: 2000,
-        user: 'wrongAuthentication'
+        user: 'wrongAuthentication',
+        allowPublicKeyRetrieval: true
       });
       await pool.getConnection();
       throw new Error('must have thrown error');
