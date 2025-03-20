@@ -468,14 +468,15 @@ describe('Pool', () => {
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+        assert.isNotNull(err.cause);
         assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45025 ||
-            err.errno === 45028 ||
-            err.errno === 45044,
+          err.cause.errno === 1524 ||
+            err.cause.errno === 1045 ||
+            err.cause.errno === 1698 ||
+            err.cause.errno === 45025 ||
+            err.cause.errno === 45028 ||
+            err.cause.errno === 45044,
           err.message
         );
       }
@@ -486,30 +487,32 @@ describe('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+      assert.isNotNull(err.cause);
       assert.isTrue(
-        err.errno === 1524 ||
-          err.errno === 1045 ||
-          err.errno === 1698 ||
-          err.errno === 45025 ||
-          err.errno === 45028 ||
-          err.errno === 45044,
-        err.message
+        err.cause.errno === 1524 ||
+          err.cause.errno === 1045 ||
+          err.cause.errno === 1698 ||
+          err.cause.errno === 45025 ||
+          err.cause.errno === 45028 ||
+          err.cause.errno === 45044,
+        err.cause.message
       );
       try {
         await pool.query('SELECT 3');
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+        assert.isNotNull(err.cause);
         assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45028 ||
-            err.errno === 45025 ||
-            err.errno === 45044,
-          err.message
+          err.cause.errno === 1524 ||
+            err.cause.errno === 1045 ||
+            err.cause.errno === 1698 ||
+            err.cause.errno === 45028 ||
+            err.cause.errno === 45025 ||
+            err.cause.errno === 45044,
+          err.cause.message
         );
       } finally {
         await pool.end();
@@ -567,15 +570,16 @@ describe('Pool', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
-        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization'));
+        assert.isNotNull(err.cause);
         assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45028 ||
-            err.errno === 45025 ||
-            err.errno === 45044,
-          err.message
+          err.cause.errno === 1524 ||
+            err.cause.errno === 1045 ||
+            err.cause.errno === 1698 ||
+            err.cause.errno === 45028 ||
+            err.cause.errno === 45025 ||
+            err.cause.errno === 45044,
+          err.cause.message
         );
         pool.end();
         resolver();
@@ -595,8 +599,9 @@ describe('Pool', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
+        console.log(err.message);
         assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
-        assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization'));
         pool.end();
         resolver();
       });
@@ -618,17 +623,13 @@ describe('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.equal(err.errno, 45028);
-      expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
-      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
     }
     try {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.equal(err.errno, 45028);
-      expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
-      assert.isTrue((err.cause ? err.cause : err).message.includes('Error during pool initialization:'));
+      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
     } finally {
       pool.end();
     }

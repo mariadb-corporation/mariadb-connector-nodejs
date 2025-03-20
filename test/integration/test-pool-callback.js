@@ -158,15 +158,16 @@ describe('Pool callback', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization'));
+        assert.isNotNull(err.cause);
         assert.isTrue(
-          err.errno === 1524 ||
-            err.errno === 1045 ||
-            err.errno === 1698 ||
-            err.errno === 45028 ||
-            err.errno === 45025 ||
-            err.errno === 45044,
-          err.message
+          err.cause.errno === 1524 ||
+            err.cause.errno === 1045 ||
+            err.cause.errno === 1698 ||
+            err.cause.errno === 45028 ||
+            err.cause.errno === 45025 ||
+            err.cause.errno === 45044,
+          err.cause.message
         );
         pool.end();
         resolver();
@@ -187,7 +188,7 @@ describe('Pool callback', () => {
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
         assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization:'));
+        assert.isTrue(err.message.includes('Error during pool initialization'));
         pool.end();
         resolver();
       });
