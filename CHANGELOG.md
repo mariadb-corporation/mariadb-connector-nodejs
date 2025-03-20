@@ -1,6 +1,22 @@
 # Change Log
+
+## [3.4.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.1) (Mar 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.0...3.4.1)
+
+## Issues Fixed
+* CONJS-306: Support "zero configuration ssl" for parsec authentication
+* CONJS-315: Fixed issue with incorrect data for result-set rows of exactly 16M of data
+* CONJS-312: Improved pool error messages when failing to create connections
+* CONJS-313: Now allows using question mark parameters even when using namedPlaceholders option (mysql compatibility)
+* CONJS-305: Added Connection close alias for end function in TypeScript definition
+* CONJS-314: Fixed Bulk operations potentially returning unexpected error "Cannot read properties of undefined (reading '0')"
+* CONJS-275: Added capability to return all Bulk insert IDs for MariaDB server 11.5.1+
+* CONJS-304: Fixed bulk operations ending with "Got a packet bigger than 'max_allowed_packet' bytes" error
+* CONJS-316: Enhanced handling of non-bulk batched operations to avoid out-of-memory errors for batches not using bulk
+
+
 ## [3.4.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.0) (Oct 2024)
-[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.2...3.4.0)
 
 ## Notable changes
 * CONJS-299 Parsec authentication implementation
