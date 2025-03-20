@@ -560,7 +560,18 @@ describe('batch callback', function () {
                   done(err);
                 });
               }
-              assert.equal(res.affectedRows, 2);
+              assert.deepEqual(res, [
+                {
+                  affectedRows: 1,
+                  insertId: 0n,
+                  warningStatus: 0
+                },
+                {
+                  affectedRows: 1,
+                  insertId: 0n,
+                  warningStatus: 0
+                }
+              ]);
               conn.query('select * from `batchWithStream`', (err, res) => {
                 if (err) {
                   return conn.end(() => {
@@ -810,7 +821,18 @@ describe('batch callback', function () {
                 conn.end();
                 return done(err);
               }
-              assert.equal(res.affectedRows, 2);
+              assert.deepEqual(res, [
+                {
+                  affectedRows: 1,
+                  insertId: 0n,
+                  warningStatus: 0
+                },
+                {
+                  affectedRows: 1,
+                  insertId: 0n,
+                  warningStatus: 0
+                }
+              ]);
               conn.query('select * from `streamNamedPlaceHolders`', (err, res) => {
                 if (err) {
                   conn.end();

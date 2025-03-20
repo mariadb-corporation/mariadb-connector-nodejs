@@ -10,6 +10,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Conf = require('../conf');
+const { isMaxscale } = require('../base');
+const ColumnDef = require('../../lib/cmd/column-definition');
 const str = base.utf8Collation() ? "abcdefghijkflmn'opqrtuvwx🤘💪" : 'abcdefghijkflmn\'opqrtuvwxyz"';
 
 describe('batch', function () {
@@ -103,8 +105,17 @@ describe('batch', function () {
           }
         ]
       ]);
-      assert.equal(res.length, 2);
-      assert.equal(res[0].affectedRows, 4);
+      if (res[0].affectedRows === 4) {
+        assert.equal(res.length, 2);
+        assert.equal(res[0].affectedRows, 4);
+      } else {
+        assert.deepEqual(res[0], [
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 },
+          { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+        ]);
+      }
       res = await conn.query('select * from `batchMetaAsArray`');
       assert.deepEqual(res[0], [
         {
@@ -553,13 +564,16 @@ describe('batch', function () {
       [10]
     ]);
     assert.deepEqual(res, [['7'], ['8'], ['9'], ['10']]);
-
-    res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [[11]]);
+    res = await conn.query({ sql: 'SELECT id FROM bar WHERE id in (7, 8)', metaAsArray: true });
     assert.deepEqual(res[0], [
       {
-        id: '11'
+        id: '7'
+      },
+      {
+        id: '8'
       }
     ]);
+    assert.isTrue(res[1][0] instanceof ColumnDef);
     res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [[24], [12]]);
     assert.deepEqual(res[0], [
       {
@@ -569,7 +583,14 @@ describe('batch', function () {
         id: '12'
       }
     ]);
-    assert.equal(1, res[1].length);
+    assert.isTrue(res[1][0] instanceof ColumnDef);
+
+    res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [[11]]);
+    assert.deepEqual(res[0], [
+      {
+        id: '11'
+      }
+    ]);
     res = await conn.batch({ sql: 'insert into bar (id) values (?) returning id', metaAsArray: true }, [
       [13],
       [14],
@@ -996,6 +1017,10 @@ describe('batch', function () {
   const batchWithStream = async (useCompression, useBulk) => {
     const stream1 = fs.createReadStream(fileName);
     const stream2 = fs.createReadStream(fileName);
+    const stream3 = fs.createReadStream(fileName);
+    const stream4 = fs.createReadStream(fileName);
+    const stream5 = fs.createReadStream(fileName);
+    const stream6 = fs.createReadStream(fileName);
     const conn = await base.createConnection({
       compress: useCompression,
       bulk: useBulk
@@ -1011,7 +1036,52 @@ describe('batch', function () {
       [1, stream1, 99],
       [2, stream2, 98]
     ]);
-    assert.equal(res.affectedRows, 2);
+    assert.deepEqual(res, [
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      },
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      }
+    ]);
+    assert.isNotNull(res.meta);
+    res = await conn.batch({ sql: 'INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)', metaAsArray: true }, [
+      [3, stream3, 100],
+      [4, stream4, 101]
+    ]);
+    assert.deepEqual(res[0], [
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      },
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      }
+    ]);
+    res = await conn.batch({ sql: 'INSERT INTO `batchWithStream` values (1, ?, 2, ?, ?, 3)', rowsAsArray: true }, [
+      [5, stream5, 100],
+      [6, stream6, 101]
+    ]);
+    assert.deepEqual(res, [
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      },
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      }
+    ]);
+    assert.isNotNull(res.meta);
     res = await conn.query('select * from `batchWithStream`');
     assert.deepEqual(res, [
       {
@@ -1028,6 +1098,38 @@ describe('batch', function () {
         id3: 2,
         t: str,
         id4: 98,
+        id5: 3
+      },
+      {
+        id: 1,
+        id2: 3,
+        id3: 2,
+        id4: 100,
+        id5: 3,
+        t: str
+      },
+      {
+        id: 1,
+        id2: 4,
+        id3: 2,
+        id4: 101,
+        id5: 3,
+        t: str
+      },
+      {
+        id: 1,
+        id2: 5,
+        id3: 2,
+        t: str,
+        id4: 100,
+        id5: 3
+      },
+      {
+        id: 1,
+        id2: 6,
+        id3: 2,
+        t: str,
+        id4: 101,
         id5: 3
       }
     ]);
@@ -1207,7 +1309,18 @@ describe('batch', function () {
       { id1: 1, id3: stream1, id4: null, id5: 6 },
       { id1: 2, id3: stream2, id4: 0 }
     ]);
-    assert.equal(res.affectedRows, 2);
+    assert.deepEqual(res, [
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      },
+      {
+        affectedRows: 1,
+        insertId: 0n,
+        warningStatus: 0
+      }
+    ]);
     const rows = await conn.query('select * from `streamNamedPlaceHolders`');
     assert.deepEqual(rows, [
       {
@@ -1333,7 +1446,7 @@ describe('batch', function () {
         [1],
         [new Date('2001-12-31 23:59:58')]
       ]);
-      if (shareConn.info.hasMinVersion(11, 5, 1)) {
+      if (shareConn.info.hasMinVersion(11, 5, 1) || !shareConn.info.isMariaDB()) {
         assert.deepEqual(res, [
           { affectedRows: 1, insertId: 0n, warningStatus: 0 },
           { affectedRows: 1, insertId: 0n, warningStatus: 0 },
@@ -1559,7 +1672,7 @@ describe('batch', function () {
       if (!base.utf8Collation()) {
         this.skip();
       } else {
-        this.timeout(30000);
+        this.timeout(60000);
         await batchWithStream(useCompression, true);
       }
     });
