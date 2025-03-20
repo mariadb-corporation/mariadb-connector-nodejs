@@ -271,7 +271,8 @@ describe('ssl', function () {
     if (!base.utf8Collation()) this.skip();
     const conn = await base.createConnection({
       user: 'nosslTestUser',
-      password: 'ytoKS@led5'
+      password: 'ytoKS@led5',
+      allowPublicKeyRetrieval: true
     });
     await validConnection(conn);
     conn.end();
