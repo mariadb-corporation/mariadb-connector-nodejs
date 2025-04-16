@@ -82,6 +82,44 @@ describe('basic query', () => {
     conn.end();
   });
 
+  it('namedPlaceholders reuse', async () => {
+    const conn = await base.createConnection({ namedPlaceholders: true });
+
+    let res = await conn.query('select :param2 as a, :param1 as b, :param2 as c', { param1: 2, param2: 3 });
+    assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+    assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+    assert.isTrue(res[0].c === 3 || res[0].c === 3n);
+
+    try {
+      await conn.query('select :param2 as a, :param1 as b', { param1: 2, param3: 3 });
+      throw new Error('must have throw error');
+    } catch (e) {
+      assert.isTrue(e.message.includes("Placeholder 'param2' is not defined"));
+    }
+
+    res = await conn.query('select :param2 as a, :param1 as b, ? as c, :param2 as d', {
+      param1: 2,
+      param2: 3,
+      param3: 4
+    });
+    assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+    assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+    assert.isTrue(res[0].c === 4 || res[0].c === 4n);
+    assert.isTrue(res[0].d === 3 || res[0].d === 3n);
+
+    res = await conn.query('select :param3 as a, ? as b, :param1 as c, :param2 as d', {
+      param1: 2,
+      param2: 3,
+      param3: 4
+    });
+    assert.isTrue(res[0].a === 4 || res[0].a === 4n);
+    assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+    assert.isTrue(res[0].c === 2 || res[0].c === 2n);
+    assert.isTrue(res[0].d === 3 || res[0].d === 3n);
+
+    conn.end();
+  });
+
   it('promise query stack trace', async function () {
     const conn = await base.createConnection({ trace: true });
     try {

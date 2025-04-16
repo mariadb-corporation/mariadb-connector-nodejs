@@ -522,6 +522,24 @@ describe('prepare and execute', () => {
     conn.end();
   });
 
+  it('execution with namedPlaceholders reuse', async () => {
+    const conn = await base.createConnection({ namedPlaceholders: true });
+
+    let res = await conn.execute('select :param2 as a, :param1 as b, :param2 as c', { param1: 2, param2: 3 });
+    assert.isTrue(res[0].a === 3 || res[0].a === 3n);
+    assert.isTrue(res[0].b === 2 || res[0].b === 2n);
+    assert.isTrue(res[0].c === 3 || res[0].c === 3n);
+
+    try {
+      await conn.execute('select :param2 as a, :param1 as b', { param1: 2, param3: 3 });
+      throw new Error('must have throw error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('Parameter named param2 is not set'));
+    }
+
+    conn.end();
+  });
+
   it('execution with namedPlaceholders without cache', async () => {
     const conn = await base.createConnection({ namedPlaceholders: true, prepareCacheLength: 0 });
 
