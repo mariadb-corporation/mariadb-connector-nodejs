@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.2) (Apr 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.1...3.4.2)
+
+## Issues Fixed
+* CONJS-318: Repeated named placeholders causes "Placeholder is not defined"
+
+
 ## [3.4.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.1) (Mar 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.0...3.4.1)
 
