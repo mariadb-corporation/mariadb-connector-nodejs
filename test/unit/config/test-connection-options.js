@@ -271,4 +271,21 @@ describe('test connection options', () => {
       assert.equal(result.jsonStrings, true);
     });
   });
+
+  it('redirection default value', () => {
+    let result = new ConnOptions({});
+    assert.equal(result.permitRedirect, false);
+
+    result = new ConnOptions({ ssl: true });
+    assert.equal(result.permitRedirect, true);
+
+    result = new ConnOptions({ ssl: { rejectUnauthorized: false } });
+    assert.equal(result.permitRedirect, false);
+
+    result = new ConnOptions({ ssl: { rejectUnauthorized: true } });
+    assert.equal(result.permitRedirect, true);
+
+    result = new ConnOptions({ ssl: { rejectUnauthorized: true, permitRedirect: true } });
+    assert.equal(result.permitRedirect, true);
+  });
 });

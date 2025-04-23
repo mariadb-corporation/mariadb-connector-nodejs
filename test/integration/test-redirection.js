@@ -19,7 +19,7 @@ describe('redirection', () => {
     await proxy.start();
     let conn = null;
     try {
-      conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+      conn = await base.createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
       try {
@@ -58,7 +58,7 @@ describe('redirection', () => {
       this.skip();
       return;
     }
-    let conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+    let conn = await base.createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
     try {
       assert.equal(Conf.baseConfig.host, conn.info.host);
       assert.equal(Conf.baseConfig.port, conn.info.port);
@@ -85,7 +85,7 @@ describe('redirection', () => {
       resetAfterUse: false
     });
     await proxy.start();
-    let conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+    let conn = await base.createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
     try {
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
@@ -114,7 +114,7 @@ describe('redirection', () => {
       resetAfterUse: false
     });
     await proxy.start();
-    let conn = await base.createConnection({ host: 'localhost', port: proxy.port() });
+    let conn = await base.createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
     try {
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;

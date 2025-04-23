@@ -10,8 +10,8 @@ const Collations = require('../../../lib/const/collations.js');
 
 describe('test options', () => {
   it('default options', function () {
-    const defaultOpts = basePromise.defaultOptions({ timezone: '+00:00' });
-    const defaultOptsCall = baseCallback.defaultOptions({ timezone: '+00:00' });
+    const defaultOpts = basePromise.defaultOptions({ timezone: '+00:00', ssl: true });
+    const defaultOptsCall = baseCallback.defaultOptions({ timezone: '+00:00', ssl: true });
     const expected = {
       host: 'localhost',
       port: 3306,
@@ -37,7 +37,7 @@ describe('test options', () => {
       bitOneIsBoolean: true,
       socketPath: undefined,
       sessionVariables: undefined,
-      ssl: undefined,
+      ssl: true,
       infileStreamFactory: undefined,
       queryTimeout: 0,
       socketTimeout: 0,
