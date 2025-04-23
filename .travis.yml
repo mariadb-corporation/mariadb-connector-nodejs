@@ -42,6 +42,7 @@ jobs:
       name: "CS 10.11 - node.js 22"
       node_js: 22
     - stage: Benchmarks
+      if: branch = master
       env: srv=mariadb v=10.11 BENCH=1 local=1
       name: "Benchmarks"
 
