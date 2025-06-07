@@ -129,7 +129,7 @@ module.exports.utf8Collation = () => {
 
 module.exports.getHostSuffix = function getHostSuffix() {
   if (process.env.LOCAL_DB === 'local') {
-    return "@localhost";
+    return "@'localhost'";
   }
-  return "@%";
+  return "@'%'";
 };

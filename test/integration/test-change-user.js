@@ -90,7 +90,7 @@ describe('change user', () => {
           } else {
             conn.query('SELECT CURRENT_USER', (err, res) => {
               const user = res[0]['CURRENT_USER'];
-              assert.equal(user, 'ChangeUser' + getHostSuffix());
+              assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
               assert(user !== currUser);
               conn.end();
               done();
@@ -240,7 +240,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser' + getHostSuffix());
+            assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -252,7 +252,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2' + getHostSuffix());
+            assert.equal(user, 'ChangeUser2' + getHostSuffix().replaceAll("'", ''));
             conn.end();
             done();
           })
@@ -278,7 +278,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser' + getHostSuffix());
+            assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -290,7 +290,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2' + getHostSuffix());
+            assert.equal(user, 'ChangeUser2' + getHostSuffix().replaceAll("'", ''));
             conn.end();
             done();
           })
@@ -317,7 +317,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser' + getHostSuffix());
+            assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -329,7 +329,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2' + getHostSuffix());
+            assert.equal(user, 'ChangeUser2' + getHostSuffix().replaceAll("'", ''));
             conn.end();
             done();
           })
@@ -354,7 +354,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser' + getHostSuffix());
+            assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
             assert.equal(conn.__tests.getCollation().name, 'UTF8MB4_PERSIAN_CI');
             conn.end();
             done();
