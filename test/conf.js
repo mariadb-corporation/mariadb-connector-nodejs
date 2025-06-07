@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -24,6 +24,5 @@ if (process.env.TEST_DEBUG_LEN) baseConfig['debugLen'] = process.env.TEST_DEBUG_
 if (process.env.TEST_COLLATION) baseConfig['collation'] = process.env.TEST_COLLATION;
 if (process.env.TEST_LOG_PACKETS) baseConfig['logPackets'] = true;
 if (process.env.TEST_BULK) baseConfig['bulk'] = process.env.TEST_BULK;
-if (process.env.srv === 'xpand') baseConfig['initSql'] = 'SET NAMES UTF8';
-
+if (process.env.DB_TYPE === 'mysql') baseConfig['allowPublicKeyRetrieval'] = true;
 module.exports.baseConfig = baseConfig;
