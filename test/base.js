@@ -126,3 +126,10 @@ module.exports.utf8Collation = () => {
   const collation = Collations.fromName(collationString.toUpperCase());
   return collation.charset === 'utf8' || collation.charset === 'utf8mb4';
 };
+
+module.exports.getHostSuffix = function getHostSuffix() {
+  if (process.env.LOCAL_DB === 'local') {
+    return "@'localhost'";
+  }
+  return "@'%'";
+};
