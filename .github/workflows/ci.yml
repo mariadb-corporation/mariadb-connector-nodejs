@@ -90,5 +90,27 @@ jobs:
           LOCAL_DB: ${{ steps.mariadb-install.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
 
+      - name: Download Codecov uploader
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Windows)
+              powershell -Command Invoke-WebRequest -Uri https://uploader.codecov.io/latest/windows/codecov.exe -Outfile codecov.exe
+              choco install -y --force nodejs-lts
+              # force refresh path
+              export PATH=$(cmd.exe //c "refreshenv > nul & C:\Progra~1\Git\bin\bash -c 'echo \$PATH' ")
+              ;;
+            Linux)
+              curl -Os https://uploader.codecov.io/latest/linux/codecov
+              chmod +x codecov
+              ls -lrt
+              ;;
+            macOS)
+              curl -Os https://uploader.codecov.io/latest/macos/codecov
+              chmod +x codecov
+              ls -lrt
+              ;;
+          esac
+
       - name: Generate Coverage Report
         run: npm run coverage:report
