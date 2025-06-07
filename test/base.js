@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -129,7 +129,7 @@ module.exports.utf8Collation = () => {
 
 module.exports.getHostSuffix = function getHostSuffix() {
   if (process.env.LOCAL_DB === 'local') {
-    return "@'localhost'";
+    return "@localhost";
   }
-  return "@'%'";
+  return "@%";
 };
