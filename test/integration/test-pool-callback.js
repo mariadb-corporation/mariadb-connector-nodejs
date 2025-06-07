@@ -1,12 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
 
 describe('Pool callback', () => {
   before(function () {
@@ -304,10 +303,8 @@ describe('Pool callback', () => {
         );
         assert.equal(err.sqlState, 'HY000');
       } else {
-        if (!isXpand()) {
-          assert(err.message.includes('You have an error in your SQL syntax'));
-          assert.equal(err.sqlState, '42000');
-        }
+        assert(err.message.includes('You have an error in your SQL syntax'));
+        assert.equal(err.sqlState, '42000');
         assert.equal(err.code, 'ER_PARSE_ERROR');
       }
       pool.end((err) => {
@@ -394,7 +391,6 @@ describe('Pool callback', () => {
   });
 
   it('pool getConnection timeout', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     const pool = base.createPoolCallback({
       connectionLimit: 1,
       acquireTimeout: 200
@@ -436,7 +432,6 @@ describe('Pool callback', () => {
   });
 
   it('pool query timeout', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     this.timeout(10000);
     let errorNo = 0;
     const pool = base.createPoolCallback({
@@ -547,7 +542,7 @@ describe('Pool callback', () => {
         setTimeout(() => {
           closed = true;
           pool.end(() => {
-            if (Conf.baseConfig.host === 'localhost' && !isXpand()) {
+            if (Conf.baseConfig.host === 'localhost') {
               assert.equal(pool.activeConnections(), 0);
               assert.equal(pool.totalConnections(), 0);
               assert.equal(pool.idleConnections(), 0);
@@ -585,7 +580,7 @@ describe('Pool callback', () => {
           assert.equal(pool.taskQueueSize(), 0);
 
           conn.query('KILL CONNECTION_ID()', (err) => {
-            assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
+            assert.equal(err.sqlState, '70100');
             assert.equal(pool.activeConnections(), 1);
             assert.equal(pool.totalConnections(), 2);
             assert.equal(pool.idleConnections(), 1);
@@ -616,7 +611,7 @@ describe('Pool callback', () => {
       assert.equal(pool.taskQueueSize(), 0);
 
       pool.query('KILL CONNECTION_ID()', (err) => {
-        assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
+        assert.equal(err.sqlState, '70100');
         setImmediate(() => {
           assert.equal(pool.taskQueueSize(), 0);
 

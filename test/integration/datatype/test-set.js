@@ -1,17 +1,13 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../../base');
 
 describe('set', () => {
   it('set array', async function () {
-    // https://jira.mariadb.org/browse/XPT-291
-    if (isXpand()) this.skip();
-
     await shareConn.query('DROP TABLE IF EXISTS set_array');
     await shareConn.query("CREATE TABLE set_array(tt SET('v1','v2', 'v3'))");
     await shareConn.beginTransaction();

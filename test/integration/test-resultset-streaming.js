@@ -1,12 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
 const { Writable } = require('stream');
-const { isXpand } = require('../base');
 const Proxy = require('../tools/proxy');
 const Conf = require('../conf');
 
@@ -193,13 +192,8 @@ describe('results-set streaming', () => {
 
   it('Streaming error', function (done) {
     shareConn.queryStream('wrong query').on('error', (err) => {
-      if (!isXpand()) {
-        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-        assert.equal(err.sqlState, 42000);
-      } else {
-        assert.equal(err.errno, 1064);
-        assert.equal(err.code, 'ER_PARSE_ERROR');
-      }
+      assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+      assert.equal(err.sqlState, 42000);
       done();
     });
   });
@@ -344,7 +338,7 @@ describe('results-set streaming', () => {
   it('Streaming error handling', function (done) {
     shareConn.queryStream('SELECT * FROM UnknownTable').on('error', (err) => {
       assert.equal(err.errno, 1146);
-      if (!isXpand()) assert.equal(err.sqlState, '42S02');
+      assert.equal(err.sqlState, '42S02');
       assert.equal(err.code, 'ER_NO_SUCH_TABLE');
       done();
     });

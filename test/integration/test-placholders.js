@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('Placeholder', () => {
   it('query placeholder basic test', async function () {
@@ -63,7 +62,7 @@ describe('Placeholder', () => {
     this.timeout(5000);
     const handleResult = function (err) {
       assert.equal(1146, err.errno);
-      assert.equal(isXpand() ? 'HY000' : '42S02', err.sqlState);
+      assert.equal('42S02', err.sqlState);
       assert(!err.fatal);
       assert(
         err.message.includes(

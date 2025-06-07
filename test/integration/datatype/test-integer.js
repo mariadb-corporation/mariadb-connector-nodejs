@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../../base');
 
 describe('integer with big value', () => {
   before(async () => {
@@ -44,7 +43,6 @@ describe('integer with big value', () => {
   });
 
   it('decimal value without truncation', async function () {
-    if (isXpand()) this.skip();
     await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO floatTest VALUES (-0.1, 128.3, 129), (-0.9999237060546875, 9999237060546875.9999237060546875, 9999237060546875)'
@@ -130,7 +128,6 @@ describe('integer with big value', () => {
   });
 
   it('decimal value without truncation unsigned', async function () {
-    if (isXpand()) this.skip();
     await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO floatTestUnsigned VALUES (0.1, 128.3, 129), (0.9999237060546875, 9999237060546875.9999237060546875, 9999237060546875)'
@@ -218,7 +215,6 @@ describe('integer with big value', () => {
   });
 
   it('int format', async function () {
-    if (isXpand()) this.skip();
     await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO testInt values (127), (128)');
     const rows = await shareConn.query('SELECT * FROM testInt');
@@ -230,8 +226,6 @@ describe('integer with big value', () => {
   });
 
   it('bigint format', async function () {
-    // https://jira.mariadb.org/browse/XPT-290
-    if (isXpand()) this.skip();
     await shareConn.beginTransaction();
     let rows = await shareConn.query('INSERT INTO testBigint values (127), (128)');
     assert.strictEqual(rows.insertId, BigInt(128));

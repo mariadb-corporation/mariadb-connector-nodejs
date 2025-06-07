@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('ok packet', () => {
   it('insertId', function (done) {
@@ -66,7 +65,6 @@ describe('ok packet', () => {
   });
 
   it('negative insertId', function (done) {
-    if (isXpand()) this.skip();
     shareConn
       .query('DROP TABLE IF EXISTS negAutoInc')
       .then(() => {
@@ -196,7 +194,7 @@ describe('ok packet', () => {
       .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
-        assert.strictEqual(res.insertId, isXpand() ? 1n : 0n);
+        assert.strictEqual(res.insertId, 0n);
         assert.strictEqual(res.affectedRows, 4);
         assert.strictEqual(res.warningStatus, 0);
         return shareConn.query('UPDATE updateResultSet1 set id = 1');
@@ -204,7 +202,7 @@ describe('ok packet', () => {
       .then((res) => {
         assert.ok(!Array.isArray(res));
         assert.strictEqual(typeof res, 'object');
-        assert.strictEqual(res.insertId, isXpand() ? 1n : 0n);
+        assert.strictEqual(res.insertId, 0n);
         assert.strictEqual(res.affectedRows, 4);
         assert.strictEqual(res.warningStatus, 0);
         done();
@@ -231,7 +229,7 @@ describe('ok packet', () => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
             assert.strictEqual(res.insertId, 0n);
-            if (!isXpand()) assert.strictEqual(res.affectedRows, 2);
+            assert.strictEqual(res.affectedRows, 2);
             assert.strictEqual(res.warningStatus, 0);
             return conn.query('UPDATE updateResultSet1 set id = 1');
           })
@@ -239,7 +237,7 @@ describe('ok packet', () => {
             assert.ok(!Array.isArray(res));
             assert.strictEqual(typeof res, 'object');
             assert.strictEqual(res.insertId, 0n);
-            if (!isXpand()) assert.strictEqual(res.affectedRows, 0);
+            assert.strictEqual(res.affectedRows, 0);
             assert.strictEqual(res.warningStatus, 0);
             conn.end();
             done();

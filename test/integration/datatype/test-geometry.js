@@ -1,18 +1,16 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../../base');
 const Capabilities = require('../../../lib/const/capabilities');
 
 describe('geometry data type', () => {
   it('Point format', async function () {
     //MySQL 5.5 doesn't have ST_PointFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-    if (isXpand()) this.skip();
     const serverPermitExtendedInfos =
       (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
 
@@ -203,7 +201,6 @@ describe('geometry data type', () => {
   });
 
   it('Point Insert', async function () {
-    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
@@ -243,7 +240,6 @@ describe('geometry data type', () => {
   });
 
   it('LineString format', async function () {
-    if (isXpand()) this.skip();
     //MySQL 5.5 doesn't have ST_LineFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_line');
@@ -352,7 +348,6 @@ describe('geometry data type', () => {
   });
 
   it('LineString insert', async function () {
-    if (isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
       (shareConn.info.serverCapabilities & Capabilities.MARIADB_CLIENT_EXTENDED_TYPE_INFO) > 0;
@@ -426,7 +421,6 @@ describe('geometry data type', () => {
   });
 
   it('Polygon format', async function () {
-    if (isXpand()) this.skip();
     //MySQL 5.5 doesn't have ST_PolygonFromText function
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     await shareConn.query('DROP TABLE IF EXISTS gis_polygon');
@@ -572,7 +566,6 @@ describe('geometry data type', () => {
   });
 
   it('Polygon insert', async function () {
-    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
@@ -748,7 +741,6 @@ describe('geometry data type', () => {
   });
 
   it('MultiPoint insert', async function () {
-    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
@@ -885,7 +877,6 @@ describe('geometry data type', () => {
   });
 
   it('Multi-line insert', async function () {
-    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
@@ -1092,8 +1083,6 @@ describe('geometry data type', () => {
   });
 
   it('Multi-polygon insert', async function () {
-    if (isXpand()) this.skip();
-
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB()) this.skip();
     const serverPermitExtendedInfos =
@@ -1389,7 +1378,6 @@ describe('geometry data type', () => {
   });
 
   it('Geometry collection insert', async function () {
-    if (isXpand()) this.skip();
     //mysql < 8 doesn't permit sending empty data
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 

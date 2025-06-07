@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('initial connection commands', () => {
   describe('session variables', () => {
@@ -28,7 +27,7 @@ describe('initial connection commands', () => {
     it('with one session variables', async function () {
       const conn = await base.createConnection({ sessionVariables: { wait_timeout: 10000 } });
       const rows = await conn.query('SELECT @@wait_timeout');
-      assert.deepEqual(rows, [{ '@@wait_timeout': isXpand() ? 10000 : BigInt(10000) }]);
+      assert.deepEqual(rows, [{ '@@wait_timeout': BigInt(10000) }]);
       conn.end();
     });
 
@@ -39,8 +38,8 @@ describe('initial connection commands', () => {
       const rows = await conn.query('SELECT @@wait_timeout, @@interactive_timeout');
       assert.deepEqual(rows, [
         {
-          '@@wait_timeout': isXpand() ? 10000 : BigInt(10000),
-          '@@interactive_timeout': isXpand() ? 2540 : BigInt(2540)
+          '@@wait_timeout': BigInt(10000),
+          '@@interactive_timeout': BigInt(2540)
         }
       ]);
       conn.end();

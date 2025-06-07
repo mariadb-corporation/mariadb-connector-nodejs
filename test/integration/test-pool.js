@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -11,9 +11,9 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const Proxy = require('../tools/proxy');
-const { isXpand } = require('../base');
 const { baseConfig } = require('../conf');
 const winston = require('winston');
+const { isMaxscale } = require('../base');
 
 describe('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
@@ -800,10 +800,8 @@ describe('Pool', () => {
         );
         assert.equal(err.sqlState, 'HY000');
       } else {
-        if (!isXpand()) {
-          assert(err.message.includes('You have an error in your SQL syntax'));
-          assert.equal(err.sqlState, '42000');
-        }
+        assert(err.message.includes('You have an error in your SQL syntax'));
+        assert.equal(err.sqlState, '42000');
         assert.equal(err.code, 'ER_PARSE_ERROR');
       }
       pool.end();
@@ -934,8 +932,6 @@ describe('Pool', () => {
   });
 
   it('pool reset validation', async function () {
-    // xpand doesn't support timeout
-    if (isXpand()) this.skip();
     const conf = { connectionLimit: 5, timezone: 'Z', initSql: 'set @aa= 1' };
     if (shareConn.info.isMariaDB()) {
       conf['queryTimeout'] = 10000;
@@ -1162,7 +1158,7 @@ describe('Pool', () => {
         done(new Error('must have thrown error'));
       } catch (err) {
         try {
-          assert.equal(err.sqlState, isXpand() ? 'HY000' : '70100');
+          assert.equal(err.sqlState, '70100');
           assert.equal(pool.activeConnections(), 1);
           assert.equal(pool.totalConnections(), 2);
           assert.equal(pool.idleConnections(), 1);
@@ -1181,8 +1177,7 @@ describe('Pool', () => {
 
   it('query fail handling', function (done) {
     this.timeout(20000);
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (isMaxscale()) this.skip();
     const pool = base.createPool({
       connectionLimit: 2,
       minDelayValidation: 200

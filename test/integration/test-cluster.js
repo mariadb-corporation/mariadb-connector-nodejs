@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -11,7 +11,7 @@ const Proxy = require('../tools/proxy');
 const base = require('../base.js');
 
 const { assert } = require('chai');
-const { isXpand } = require('../base');
+const { isMaxscale } = require('../base');
 
 describe('cluster', function () {
   before(async function () {
@@ -601,13 +601,7 @@ describe('cluster', function () {
     });
 
     it('server close connection during query', function (done) {
-      if (
-        process.env.srv === 'maxscale' ||
-        process.env.srv === 'skysql' ||
-        process.env.srv === 'skysql-ha' ||
-        isXpand()
-      )
-        this.skip();
+      if (isMaxscale()) this.skip();
       this.timeout(20000);
       const cluster = basePromise.createPoolCluster({});
 
@@ -836,11 +830,9 @@ describe('cluster', function () {
         } else {
           assert.equal(err.errno, 1064);
           assert.equal(err.code, 'ER_PARSE_ERROR');
-          if (!isXpand()) {
-            assert.equal(err.sqlState, 42000);
-            assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-            assert.isTrue(err.message.includes('wrong query'));
-          }
+          assert.equal(err.sqlState, 42000);
+          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+          assert.isTrue(err.message.includes('wrong query'));
         }
       }
     });
@@ -892,9 +884,7 @@ describe('cluster', function () {
           });
         })
         .catch((err) => {
-          if (isXpand()) {
-            expect(err.message).to.have.string('Relation not found:');
-          } else expect(err.message).to.have.string("notexistingtable' doesn't exist");
+          expect(err.message).to.have.string("notexistingtable' doesn't exist");
           cluster.end().then(() => {
             done();
           });

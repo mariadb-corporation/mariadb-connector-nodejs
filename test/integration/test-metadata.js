@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -8,7 +8,6 @@ const { assert } = require('chai');
 const Collations = require('../../lib/const/collations.js');
 const FieldType = require('../../lib/const/field-type');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
 
 describe('metadata', () => {
   it('result metadata values', async function () {
@@ -70,7 +69,7 @@ const validateResults = function (rows) {
   assert.equal(rows.meta[1].orgTable(), 'metadatatable');
   assert.equal(rows.meta[1].name(), 't1');
   assert.equal(rows.meta[1].orgName(), 't');
-  if (base.utf8Collation() && !isXpand()) {
+  if (base.utf8Collation()) {
     assert.equal(rows.meta[1].collation.maxLength, 4);
     assert.equal(rows.meta[1].columnLength, 128);
   }
@@ -83,7 +82,7 @@ const validateResults = function (rows) {
   assert.equal(rows.meta[2].name(), 'd1');
   assert.equal(rows.meta[2].orgName(), 'd');
   assert.equal(rows.meta[2].collation, Collations.fromName('BINARY'));
-  if (!isXpand()) assert.equal(rows.meta[2].columnLength, 11);
+  assert.equal(rows.meta[2].columnLength, 11);
   assert.equal(rows.meta[2].columnType, FieldType.NEWDECIMAL);
 
   assert.equal(rows.meta[3].db(), Conf.baseConfig.database);

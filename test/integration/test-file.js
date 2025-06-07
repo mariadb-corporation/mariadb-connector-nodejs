@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -9,7 +9,7 @@ require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
 const base = require('../base');
-const { isXpand } = require('../base');
+const { isMaxscale } = require('../base');
 
 describe('sql file import', () => {
   let maxAllowedSize;
@@ -54,7 +54,7 @@ describe('sql file import', () => {
       });
 
       it('big file import with direct connection options', async function () {
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+        if (isMaxscale()) this.skip();
         this.timeout(300000);
         if (maxAllowedSize <= 32000000) return this.skip();
         await basePromise.importFile(
@@ -251,7 +251,7 @@ describe('sql file import', () => {
 
       it('big file import with direct connection options', function (done) {
         // skipping if it takes too long
-        if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+        if (isMaxscale()) this.skip();
         this.timeout(300000);
         if (maxAllowedSize <= 32000000) return this.skip();
         baseCallback.importFile(

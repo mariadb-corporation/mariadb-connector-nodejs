@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../../base');
 
 describe('string', () => {
   it('String escape', async function () {
@@ -74,7 +73,6 @@ describe('string', () => {
   };
 
   it('connection encoding', async function () {
-    if (isXpand()) this.skip();
     this.timeout(10000);
     const value = '©°';
     const encodings = ['KOI8R_GENERAL_CI', 'UTF8_GENERAL_CI', 'CP850_BIN', 'CP1251_GENERAL_CI'];
@@ -90,7 +88,6 @@ describe('string', () => {
   });
 
   it('table encoding not affecting query', async function () {
-    if (isXpand()) this.skip();
     if (!base.utf8Collation()) this.skip();
     const str = '財團法人資訊工業策進會';
     await shareConn.query('DROP TABLE IF EXISTS utf8_encoding_table');

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,6 @@ const os = require('os');
 const path = require('path');
 const util = require('util');
 const winston = require('winston');
-const { isXpand } = require('../base');
 const Conf = require('../conf');
 
 describe('debug', () => {
@@ -22,21 +21,19 @@ describe('debug', () => {
   let setNameAddition = 0;
 
   before(async function () {
-    if (!isXpand()) {
-      try {
-        fs.unlinkSync(tmpLogFile);
-      } catch (e) {}
-      const rows = await shareConn.query('select @@local_infile');
-      permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
-      fs.writeFileSync(smallFileName, '1,hello\n2,world\n', 'utf8');
-      await new Promise(function (resolve, reject) {
-        //ensure that debug from previous test are written to console
-        setTimeout(resolve, 1000);
-      });
-      const defaultCharset = await shareConn.query('select @@global.character_set_client as a');
-      if (defaultCharset[0].a != 'utf8mb4') {
-        setNameAddition = 1221;
-      }
+    try {
+      fs.unlinkSync(tmpLogFile);
+    } catch (e) {}
+    const rows = await shareConn.query('select @@local_infile');
+    permitLocalInfile = rows[0]['@@local_infile'] === 1 || rows[0]['@@local_infile'] === 1n;
+    fs.writeFileSync(smallFileName, '1,hello\n2,world\n', 'utf8');
+    await new Promise(function (resolve, reject) {
+      //ensure that debug from previous test are written to console
+      setTimeout(resolve, 1000);
+    });
+    const defaultCharset = await shareConn.query('select @@global.character_set_client as a');
+    if (defaultCharset[0].a != 'utf8mb4') {
+      setNameAddition = 1221;
     }
   });
 
@@ -56,10 +53,8 @@ describe('debug', () => {
   });
 
   after(async function () {
-    if (!isXpand()) {
-      fs.unlinkSync(smallFileName);
-      await shareConn.query('DROP TABLE IF EXISTS debugVoid');
-    }
+    fs.unlinkSync(smallFileName);
+    await shareConn.query('DROP TABLE IF EXISTS debugVoid');
   });
 
   it('select request debug', function (done) {
@@ -67,7 +62,6 @@ describe('debug', () => {
   });
 
   it('select request debug compress', function (done) {
-    if (isXpand()) this.skip();
     testQueryDebug(true, done);
   });
 
@@ -190,8 +184,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (process.env.srv === 'maxscale') this.skip();
 
     const buf = Buffer.alloc(5000, 'z');
     base
@@ -234,13 +227,11 @@ describe('debug', () => {
 
   it('load local infile debug', function (done) {
     if (!permitLocalInfile) this.skip();
-    if (isXpand()) this.skip();
     testLocalInfileDebug(false, done);
   });
 
   it('load local infile debug compress', function (done) {
     if (!permitLocalInfile) this.skip();
-    if (isXpand()) this.skip();
     testLocalInfileDebug(true, done);
   });
 
@@ -324,12 +315,10 @@ describe('debug', () => {
   }
 
   it('fast path command debug', async function () {
-    if (isXpand()) this.skip();
     await testPingDebug(false);
   });
 
   it('fast path commanddebug compress', async function () {
-    if (isXpand()) this.skip();
     await testPingDebug(true);
   });
 

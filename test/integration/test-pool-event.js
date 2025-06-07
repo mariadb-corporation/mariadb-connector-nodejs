@@ -1,16 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const Conf = require('../conf');
-const stream = require('stream');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const { isXpand } = require('../base');
 
 describe('Pool event', () => {
   before(function () {

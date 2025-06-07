@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('multi-results', () => {
   let multiStmtConn;
@@ -29,7 +28,6 @@ describe('multi-results', () => {
   });
 
   it('simple do 1', function (done) {
-    if (isXpand()) this.skip();
     shareConn
       .query('DO 1')
       .then((rows) => {
@@ -120,7 +118,6 @@ describe('multi-results', () => {
   });
 
   it('simple do 1 with callback', function (done) {
-    if (isXpand()) this.skip();
     const callbackConn = base.createCallbackConnection();
     callbackConn.connect((err) => {
       if (err) {
@@ -285,7 +282,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result type', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     multiStmtConn
       .query("SELECT '1' as t; DO 1")
       .then((rows) => {
@@ -302,7 +298,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result type with callback', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     const callbackConn = base.createCallbackConnection({
       multipleStatements: true
     });
@@ -346,7 +341,6 @@ describe('multi-results', () => {
   });
 
   it('multiple result from procedure', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     shareConn.query("CREATE PROCEDURE myProc () BEGIN  SELECT '1'; SELECT '2'; END");
     shareConn
       .query('call myProc()')

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -8,7 +8,6 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isXpand } = require('../base');
 
 describe('prepare and execute callback', () => {
   let bigVal;
@@ -45,11 +44,9 @@ describe('prepare and execute callback', () => {
       if (err) return done(err);
       conn.prepare('wrong query', (err, prepare) => {
         if (!err) return done(new Error('Expect error'));
-        if (!isXpand()) {
-          assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
-          assert.isTrue(err.message.includes('sql: wrong query'));
-          assert.equal(err.sqlState, 42000);
-        }
+        assert.isTrue(err.message.includes('You have an error in your SQL syntax'));
+        assert.isTrue(err.message.includes('sql: wrong query'));
+        assert.equal(err.sqlState, 42000);
         assert.equal(err.errno, 1064);
         assert.equal(err.code, 'ER_PARSE_ERROR');
         conn.end();

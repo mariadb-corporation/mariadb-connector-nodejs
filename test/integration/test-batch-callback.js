@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
+
 describe('batch callback', function () {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempBatchFile.txt');
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
@@ -351,11 +351,9 @@ describe('batch callback', function () {
           assert.isTrue(err != null);
           assert.equal(err.errno, 1146);
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-          if (!isXpand()) {
-            assert.equal(err.sqlState, '42S02');
-            assert.isTrue(err.message.includes(" doesn't exist"));
-            assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
-          }
+          assert.equal(err.sqlState, '42S02');
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.isTrue(err.message.includes('sql: INSERT INTO simpleBatchErrorMsg values (1, ?, 2, ?, 3)'));
           conn.end(() => {
             done();
           });
@@ -614,11 +612,9 @@ describe('batch callback', function () {
           assert.isTrue(err != null);
           assert.equal(err.errno, 1146);
           assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-          if (!isXpand()) {
-            assert.isTrue(err.message.includes(" doesn't exist"));
-            assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
-            assert.equal(err.sqlState, '42S02');
-          }
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
+          assert.equal(err.sqlState, '42S02');
           conn.end(() => {
             done();
           });
@@ -708,13 +704,11 @@ describe('batch callback', function () {
             });
           }
           assert.isTrue(err != null);
-          if (!isXpand()) {
-            assert.equal(err.errno, 1146);
-            assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-            assert.isTrue(err.message.includes(" doesn't exist"));
-            assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
-            assert.equal(err.sqlState, '42S02');
-          }
+          assert.equal(err.errno, 1146);
+          assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, 3)'));
+          assert.equal(err.sqlState, '42S02');
           conn.end(() => {
             done();
           });
@@ -851,13 +845,11 @@ describe('batch callback', function () {
             return done(new Error('must have thrown error !'));
           }
           assert.isTrue(err != null);
-          if (!isXpand()) {
-            assert.equal(err.errno, 1146);
-            assert.equal(err.code, 'ER_NO_SUCH_TABLE');
-            assert.equal(err.sqlState, '42S02');
-            assert.isTrue(err.message.includes(" doesn't exist"));
-            assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, ?, 3)'));
-          }
+          assert.equal(err.errno, 1146);
+          assert.equal(err.code, 'ER_NO_SUCH_TABLE');
+          assert.equal(err.sqlState, '42S02');
+          assert.isTrue(err.message.includes(" doesn't exist"));
+          assert.isTrue(err.message.includes('sql: INSERT INTO blabla values (1, ?, 2, ?, ?, 3)'));
           conn.end();
           done();
         }
@@ -868,9 +860,7 @@ describe('batch callback', function () {
   describe('standard question mark using bulk', () => {
     const useCompression = false;
     it('simple batch, local date', function (done) {
-      // xpand doesn't support geometry
-      // https://jira.mariadb.org/browse/XPT-12
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
@@ -918,16 +908,12 @@ describe('batch callback', function () {
     });
 
     it('simple batch offset date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
 
     it('simple batch encoding CP1251', function (done) {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand()) {
-        this.skip();
-        return;
-      }
       simpleBatchEncodingCP1251(useCompression, true, 'local', done);
     });
 
@@ -942,9 +928,6 @@ describe('batch callback', function () {
 
     it('simple batch error message packet split', function (done) {
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
-      // xpand doesn't support geometry
-      // https://jira.mariadb.org/browse/XPT-12
-      if (isXpand()) this.skip();
       simpleBatchErrorSplit(useCompression, true, 'local', done);
     });
 
@@ -973,13 +956,13 @@ describe('batch callback', function () {
     const useCompression = true;
 
     it('simple batch, local date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, 'local', done);
     });
 
     it('simple batch offset date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, true, timezoneParam, done);
     });
@@ -1054,7 +1037,7 @@ describe('batch callback', function () {
       );
     }
     it('simple batch, local date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
@@ -1125,7 +1108,7 @@ describe('batch callback', function () {
     });
 
     it('simple batch offset date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });
@@ -1157,13 +1140,13 @@ describe('batch callback', function () {
     const useCompression = true;
 
     it('simple batch, local date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, 'local', done);
     });
 
     it('simple batch offset date', function (done) {
-      if (!base.utf8Collation() || isXpand()) this.skip();
+      if (!base.utf8Collation()) this.skip();
       if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
       simpleBatch(useCompression, false, timezoneParam, done);
     });

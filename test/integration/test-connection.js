@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,7 @@ const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
-const { isXpand } = require('../base');
+const { isMaxscale, getHostSuffix } = require('../base');
 const dns = require('dns');
 
 describe('connection', () => {
@@ -23,7 +23,6 @@ describe('connection', () => {
   });
 
   it('with basic connection attributes non node.js encoding', function (done) {
-    if (isXpand()) this.skip();
     connectWithAttributes(true, done, 'big5');
   });
 
@@ -55,7 +54,6 @@ describe('connection', () => {
   }
 
   it('connection attributes with encoding not supported by node.js', function (done) {
-    if (isXpand()) this.skip();
     const mediumAttribute = Buffer.alloc(500, 'a').toString();
     base
       .createConnection({
@@ -193,7 +191,7 @@ describe('connection', () => {
   });
 
   it('connection error event', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     base
       .createConnection()
@@ -214,7 +212,6 @@ describe('connection', () => {
   });
 
   it('connection error event socket failed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     base
       .createConnection({ socketTimeout: 100 })
       .then((conn) => {
@@ -402,7 +399,7 @@ describe('connection', () => {
   });
 
   it('connection.destroy() during query execution', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
 
     this.timeout(10000);
 
@@ -491,6 +488,11 @@ describe('connection', () => {
         conn.end();
       })
       .catch((err) => {
+        if (err.code === 'ENOTFOUND' || err.code === 'ENETUNREACH') {
+          // if no network access or IP¨v6 not allowed, just skip error
+          done();
+          return;
+        }
         assert.isTrue(
           err.message.includes('socket timeout') || err.message.includes('Connection timeout'),
           err.message
@@ -564,11 +566,13 @@ describe('connection', () => {
       .catch(done);
   });
 
-  it('connection timeout connect (wrong url) with promise', (done) => {
+  it('connection timeout connect (wrong url) with promise', function (done) {
     const initTime = Date.now();
-    dns.resolve4('www.google.com', (err, res) => {
-      if (err) done(err);
-      else if (res.length > 0) {
+    dns.resolve4('www.google.com', function (err, res) {
+      if (err) {
+        // skipping since DNS not available
+        done();
+      } else if (res.length > 0) {
         const host = res[0];
         base
           .createConnection({ host: host, connectTimeout: 1000 })
@@ -587,7 +591,7 @@ describe('connection', () => {
             if (err.code === 'ER_CONNECTION_TIMEOUT') {
               assert.isTrue(
                 err.message.includes(
-                  '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                  '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
                 )
               );
             }
@@ -617,7 +621,7 @@ describe('connection', () => {
           if (err.code === 'ER_CONNECTION_TIMEOUT') {
             assert.isTrue(
               err.message.includes(
-                '(conn=-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
+                '(conn:-1, no: 45012, SQLState: 08S01) Connection timeout: failed to create socket after'
               )
             );
           }
@@ -633,9 +637,7 @@ describe('connection', () => {
     if (
       (shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 2, 2)) ||
       (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 4)) ||
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
+      isMaxscale()
     ) {
       //session tracking not implemented
       this.skip();
@@ -683,17 +685,24 @@ describe('connection', () => {
   }
 
   it('connection.connect() error code validation callback', function (done) {
+    this.timeout(10000);
     const conn = base.createCallbackConnection({
       user: 'fooUser',
       password: 'myPwd',
-      allowPublicKeyRetrieval: true
+      allowPublicKeyRetrieval: true,
+      connectTimeout: 1000
     });
+
     conn.on('error', (err) => {});
     conn.connect((err) => {
       if (!err) {
         done(new Error('must have thrown error'));
       } else {
         switch (err.errno) {
+          case 45012:
+            assert.equal(err.sqlState, '08S01');
+            break;
+
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');
@@ -710,7 +719,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
+            assert.equal(err.sqlState, '28000');
             break;
 
           case 1044:
@@ -732,6 +741,7 @@ describe('connection', () => {
   });
 
   it('connection.connect() error code validation promise', function (done) {
+    this.timeout(10000);
     base
       .createConnection({ user: 'fooUser', password: 'myPwd', allowPublicKeyRetrieval: true })
       .then(() => {
@@ -739,6 +749,10 @@ describe('connection', () => {
       })
       .catch((err) => {
         switch (err.errno) {
+          case 45012:
+            //Client does not support authentication protocol
+            assert.equal(err.sqlState, '08S01');
+            break;
           case 45025:
             //Client does not support authentication protocol
             assert.equal(err.sqlState, '08004');
@@ -755,7 +769,7 @@ describe('connection', () => {
             break;
 
           case 1045:
-            assert.equal(err.sqlState, isXpand() ? 'HY000' : '28000');
+            assert.equal(err.sqlState, '28000');
             break;
 
           case 1044:
@@ -827,9 +841,7 @@ describe('connection', () => {
         if (
           ((shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2)) ||
             (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 7))) &&
-          process.env.srv !== 'maxscale' &&
-          process.env.srv !== 'skysql' &&
-          process.env.srv !== 'skysql-ha'
+          !isMaxscale()
         ) {
           //ok packet contain meta change
           assert.equal(shareConn.info.database, 'changedb');
@@ -885,7 +897,7 @@ describe('connection', () => {
   });
 
   it('charset change', async function () {
-    if (!shareConn.info.isMariaDB() || isXpand()) {
+    if (!shareConn.info.isMariaDB()) {
       //session tracking not implemented
       this.skip();
     }
@@ -897,8 +909,7 @@ describe('connection', () => {
 
   it('error reaching max connection', async function () {
     // error occurs on handshake packet, with old error format
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || isXpand())
-      this.skip();
+    if (isMaxscale()) this.skip();
     this.timeout(10000);
 
     const res = await shareConn.query('select @@max_connections as a');
@@ -997,21 +1008,17 @@ describe('connection', () => {
   });
 
   it('connection error if user expired', function (done) {
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale()) {
       //session tracking not implemented
       this.skip();
     }
     if (!base.utf8Collation()) this.skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
+    shareConn.query(
+      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(
       'update mysql.global_priv set\n' +
@@ -1037,21 +1044,17 @@ describe('connection', () => {
   });
 
   it('connection with expired user', function (done) {
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(10, 4, 3) ||
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale()) {
       //session tracking not implemented
       this.skip();
     }
     if (!base.utf8Collation()) this.skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
+    shareConn.query(
+      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(
       'update mysql.global_priv set\n' +
@@ -1080,7 +1083,7 @@ describe('connection', () => {
   });
 
   it('collation index > 255', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
+    if (isMaxscale()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
     const conn = await base.createConnection({ collation: 'UTF8MB4_UNICODE_520_NOPAD_CI' });
     const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');

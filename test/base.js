@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
 'use strict';
 
@@ -43,6 +43,68 @@ module.exports.createConnection = function createConnection(opts) {
   return basePromise.createConnection(connOptionTemp);
 };
 
+module.exports.isMaxscale = function isMaxscale() {
+  if (!global.maxscaleVersion) {
+    const maxscaleVersion = global.shareConn.info.maxscaleVersion;
+    if (!maxscaleVersion) {
+      // maxscale before 23.08
+      return process.env.srv === 'maxscale';
+    }
+  }
+  return true;
+};
+
+module.exports.isMaxscaleMinVersion = function isMaxscaleMinVersion(major, minor, patch) {
+  if (!global.maxscaleVersion) {
+    const maxscaleVersion = global.shareConn.info.maxscaleVersion;
+    if (!maxscaleVersion) {
+      // maxscale before 23.08
+      return false;
+    }
+    let car;
+    let offset = 0;
+    let type = 0;
+    let val = 0;
+    let maxscaleMajor = 0;
+    let maxscaleMinor = 0;
+    let maxscalePatch = 0;
+    for (; offset < maxscaleVersion.length; offset++) {
+      car = maxscaleVersion.charCodeAt(offset);
+      if (car < 48 || car > 57) {
+        switch (type) {
+          case 0:
+            maxscaleMajor = val;
+            break;
+          case 1:
+            maxscaleMinor = val;
+            break;
+          case 2:
+            maxscalePatch = val;
+            return;
+        }
+        type++;
+        val = 0;
+      } else {
+        val = val * 10 + car - 48;
+      }
+    }
+    //serverVersion finished by number like "5.5.57", assign patchVersion
+    if (type === 2) maxscalePatch = val;
+    global.maxscaleVersion = {
+      major: maxscaleMajor,
+      minor: maxscaleMinor,
+      patch: maxscalePatch
+    };
+  }
+
+  let ver = global.maxscaleVersion;
+  return (
+    ver.major > major ||
+    (ver.major === major && ver.minor > minor) ||
+    (ver.major === major && ver.minor === minor && ver.patch >= patch)
+  );
+};
+
 module.exports.createPool = (opts) => {
   const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return basePromise.createPool(poolOptionTemp);
@@ -65,7 +127,9 @@ module.exports.utf8Collation = () => {
   return collation.charset === 'utf8' || collation.charset === 'utf8mb4';
 };
 
-const isXpandFct = () => {
-  return process.env.srv === 'xpand' || global.shareConn.serverVersion().includes('Xpand');
+module.exports.getHostSuffix = function getHostSuffix() {
+  if (process.env.LOCAL_DB === 'local') {
+    return "@'localhost'";
+  }
+  return "@'%'";
 };
-module.exports.isXpand = isXpandFct;

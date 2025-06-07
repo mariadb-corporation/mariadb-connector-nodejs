@@ -1,11 +1,10 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isXpand } = require('../base');
 
 describe('TypeCast', () => {
   const changeCaseCast = (column, next) => {
@@ -75,7 +74,7 @@ describe('TypeCast', () => {
   it('cast fields', async function () {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      if (!isXpand()) assert.equal(field.columnLength, shareConn.info.collation.maxLength * 6);
+      assert.equal(field.columnLength, shareConn.info.collation.maxLength * 6);
       return next();
     };
     const rows = await shareConn.query({
@@ -88,7 +87,7 @@ describe('TypeCast', () => {
   it('cast fields execute', async function () {
     const checkCaseType = (field, next) => {
       assert.equal(field.type, 'VAR_STRING');
-      if (!isXpand()) assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
+      assert.equal(field.columnLength, base.utf8Collation() ? 24 : 6);
       return next();
     };
     const rows = await shareConn.execute({
@@ -203,7 +202,6 @@ describe('TypeCast', () => {
   });
 
   it('geometry cast', async function () {
-    if (isXpand()) this.skip();
     this.timeout(5000);
     const longCast = (column, next) => {
       if (column.type == 'BINARY') {

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -8,7 +8,6 @@ const { assert } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isXpand } = require('../base');
 
 describe('local-infile', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfile.txt');
@@ -49,10 +48,8 @@ describe('local-infile', () => {
                 assert.equal(err.sqlState, 'HY000');
                 break;
               default:
-                if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
-                  assert.equal(err.sqlState, '42000');
-                }
+                assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                assert.equal(err.sqlState, '42000');
                 break;
             }
             assert(!err.fatal);
@@ -83,10 +80,8 @@ describe('local-infile', () => {
                 assert.equal(err.sqlState, 'HY000');
                 break;
               default:
-                if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
-                  assert.equal(err.sqlState, '42000');
-                }
+                assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                assert.equal(err.sqlState, '42000');
                 break;
             }
             assert(!err.fatal);
@@ -135,10 +130,8 @@ describe('local-infile', () => {
                 assert.equal(err.sqlState, 'HY000');
                 break;
               default:
-                if (!isXpand()) {
-                  assert.isTrue(err.errno == 1148 || err.errno == 3948);
-                  assert.equal(err.sqlState, '42000');
-                }
+                assert.isTrue(err.errno == 1148 || err.errno == 3948);
+                assert.equal(err.sqlState, '42000');
                 break;
             }
             assert(!err.fatal);
@@ -150,7 +143,6 @@ describe('local-infile', () => {
   });
 
   it('file error missing', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -180,7 +172,6 @@ describe('local-infile', () => {
   });
 
   it('small local infile', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -215,7 +206,6 @@ describe('local-infile', () => {
   });
 
   it('small infileStreamFactory connection lvl', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -253,7 +243,6 @@ describe('local-infile', () => {
   });
 
   it('infileStreamFactory Error', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -289,7 +278,6 @@ describe('local-infile', () => {
   });
 
   it('small infileStreamFactory query lvl', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -325,7 +313,6 @@ describe('local-infile', () => {
   });
 
   it('small local infile with parameter', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -365,7 +352,6 @@ describe('local-infile', () => {
   });
 
   it('small local infile with non supported node.js encoding', async function () {
-    if (isXpand()) this.skip();
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
     if (
@@ -402,7 +388,7 @@ describe('local-infile', () => {
 
   it('non readable local infile', function (done) {
     //on windows, fs.chmodSync doesn't remove read access.
-    if (process.platform === 'win32' || isXpand()) this.skip();
+    if (process.platform === 'win32') this.skip();
 
     const self = this;
     shareConn
@@ -459,7 +445,6 @@ describe('local-infile', () => {
   });
 
   it('big local infile', async function () {
-    if (isXpand()) this.skip();
     this.timeout(180000);
     let size;
     const self = this;

@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -7,7 +7,7 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const ServerStatus = require('../../lib/const/server-status');
 const Conf = require('../conf');
-const { isXpand } = require('../base');
+const { isMaxscale, getHostSuffix } = require('../base');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -15,25 +15,27 @@ const winston = require('winston');
 
 describe('change user', () => {
   before(async () => {
-    if (process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha') {
-      await shareConn.query("DROP USER ChangeUser@'%'").catch((e) => {});
-      await shareConn.query("DROP USER ChangeUser2@'%'").catch((e) => {});
-      await shareConn.query('CREATE DATABASE IF NOT EXISTS test');
-      await shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-      await shareConn.query('GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'");
-      await shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
-      await shareConn.query(
-        'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser2@'%' with grant option"
-      );
-      await shareConn.query('FLUSH PRIVILEGES');
-    }
+    await shareConn.query('DROP USER ChangeUser' + getHostSuffix()).catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser2' + getHostSuffix()).catch((e) => {});
+    await shareConn.query('CREATE DATABASE IF NOT EXISTS test');
+    await shareConn.query('CREATE USER ChangeUser' + getHostSuffix() + " IDENTIFIED BY 'm1P4ssw0@rd'");
+    await shareConn.query(
+      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + '`.* TO ChangeUser' + getHostSuffix()
+    );
+    await shareConn.query('CREATE USER ChangeUser2' + getHostSuffix() + " IDENTIFIED BY 'm1SecondP@rd'");
+    await shareConn.query(
+      'GRANT SELECT,EXECUTE ON `' +
+        Conf.baseConfig.database +
+        '`.* TO ChangeUser2' +
+        getHostSuffix() +
+        ' with grant option'
+    );
+    await shareConn.query('FLUSH PRIVILEGES');
   });
 
   after(async () => {
-    if (process.env.srv !== 'maxscale' && process.env.srv !== 'skysql-ha') {
-      await shareConn.query("DROP USER ChangeUser@'%'").catch((e) => {});
-      await shareConn.query("DROP USER ChangeUser2@'%'").catch((e) => {});
-    }
+    await shareConn.query('DROP USER ChangeUser' + getHostSuffix()).catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser2' + getHostSuffix()).catch((e) => {});
   });
 
   it('mysql change user error', async function () {
@@ -75,7 +77,6 @@ describe('change user', () => {
   });
 
   it('basic change user using callback', function (done) {
-    if (process.env.srv == 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -89,7 +90,7 @@ describe('change user', () => {
           } else {
             conn.query('SELECT CURRENT_USER', (err, res) => {
               const user = res[0]['CURRENT_USER'];
-              assert.equal(user, 'ChangeUser@%');
+              assert.equal(user, 'ChangeUser' + getHostSuffix());
               assert(user !== currUser);
               conn.end();
               done();
@@ -101,7 +102,6 @@ describe('change user', () => {
   });
 
   it('wrong charset', function (done) {
-    if (process.env.srv == 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then((conn) => {
       conn
@@ -122,7 +122,6 @@ describe('change user', () => {
   });
 
   it('wrong collation in charset', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const tmpLogFile = path.join(os.tmpdir(), 'wrongCollation.txt');
     try {
@@ -167,7 +166,6 @@ describe('change user', () => {
   });
 
   it('wrong collation', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base.createConnection().then((conn) => {
       conn
@@ -188,7 +186,6 @@ describe('change user', () => {
   });
 
   it('basic change user using callback no function', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -208,7 +205,6 @@ describe('change user', () => {
   });
 
   it('callback change user without option', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     const conn = base.createCallbackConnection();
     conn.connect((err) => {
@@ -228,7 +224,6 @@ describe('change user', () => {
   });
 
   it('basic change user using promise', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
@@ -245,7 +240,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -257,7 +252,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -267,7 +262,6 @@ describe('change user', () => {
   });
 
   it('change user using connection attributes', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
@@ -284,7 +278,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -296,7 +290,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -306,7 +300,6 @@ describe('change user', () => {
   });
 
   it('basic change user using promise non node.js encoding', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
 
     base
@@ -324,7 +317,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -336,7 +329,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -346,7 +339,6 @@ describe('change user', () => {
   });
 
   it('change user with collation', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
@@ -355,15 +347,15 @@ describe('change user', () => {
           .changeUser({
             user: 'ChangeUser',
             password: 'm1P4ssw0@rd',
-            collation: 'UTF8_PERSIAN_CI'
+            collation: 'UTF8MB4_PERSIAN_CI'
           })
           .then(() => {
             return conn.query('SELECT CURRENT_USER');
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
-            assert.equal(conn.__tests.getCollation().name, 'UTF8_PERSIAN_CI');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
+            assert.equal(conn.__tests.getCollation().name, 'UTF8MB4_PERSIAN_CI');
             conn.end();
             done();
           })
@@ -386,7 +378,6 @@ describe('change user', () => {
   });
 
   it('autocommit state after changing user', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip();
     base
       .createConnection()
@@ -405,12 +396,7 @@ describe('change user', () => {
           })
           .then(() => {
             assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
-            if (
-              shareConn.info.isMariaDB() &&
-              shareConn.info.hasMinVersion(10, 2, 2) &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql-ha'
-            ) {
+            if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 2, 2) && !isMaxscale()) {
               assert.equal(conn.info.database, 'test');
             }
             return conn.changeUser({
@@ -430,7 +416,6 @@ describe('change user', () => {
   });
 
   it('collation index > 255', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha' || isXpand()) this.skip();
     if (!shareConn.info.isMariaDB()) this.skip(); // requires mariadb 10.2+
     const conn = await base.createConnection();
     const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');
