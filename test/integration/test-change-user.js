@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -7,7 +7,7 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const ServerStatus = require('../../lib/const/server-status');
 const Conf = require('../conf');
-const { isMaxscale } = require('../base');
+const { isMaxscale, getHostSuffix } = require('../base');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -15,21 +15,27 @@ const winston = require('winston');
 
 describe('change user', () => {
   before(async () => {
-    await shareConn.query("DROP USER ChangeUser@'%'").catch((e) => {});
-    await shareConn.query("DROP USER ChangeUser2@'%'").catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser' + getHostSuffix()).catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser2' + getHostSuffix()).catch((e) => {});
     await shareConn.query('CREATE DATABASE IF NOT EXISTS test');
-    await shareConn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'm1P4ssw0@rd'");
-    await shareConn.query('GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser@'%'");
-    await shareConn.query("CREATE USER ChangeUser2@'%' IDENTIFIED BY 'm1SecondP@rd'");
+    await shareConn.query('CREATE USER ChangeUser' + getHostSuffix() + " IDENTIFIED BY 'm1P4ssw0@rd'");
     await shareConn.query(
-      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + "`.* TO ChangeUser2@'%' with grant option"
+      'GRANT SELECT,EXECUTE ON `' + Conf.baseConfig.database + '`.* TO ChangeUser' + getHostSuffix()
+    );
+    await shareConn.query('CREATE USER ChangeUser2' + getHostSuffix() + " IDENTIFIED BY 'm1SecondP@rd'");
+    await shareConn.query(
+      'GRANT SELECT,EXECUTE ON `' +
+        Conf.baseConfig.database +
+        '`.* TO ChangeUser2' +
+        getHostSuffix() +
+        ' with grant option'
     );
     await shareConn.query('FLUSH PRIVILEGES');
   });
 
   after(async () => {
-    await shareConn.query("DROP USER ChangeUser@'%'").catch((e) => {});
-    await shareConn.query("DROP USER ChangeUser2@'%'").catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser' + getHostSuffix()).catch((e) => {});
+    await shareConn.query('DROP USER ChangeUser2' + getHostSuffix()).catch((e) => {});
   });
 
   it('mysql change user error', async function () {
@@ -84,7 +90,7 @@ describe('change user', () => {
           } else {
             conn.query('SELECT CURRENT_USER', (err, res) => {
               const user = res[0]['CURRENT_USER'];
-              assert.equal(user, 'ChangeUser@%');
+              assert.equal(user, 'ChangeUser' + getHostSuffix());
               assert(user !== currUser);
               conn.end();
               done();
@@ -234,7 +240,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -246,7 +252,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -272,7 +278,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -284,7 +290,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -311,7 +317,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             return conn.changeUser({
               user: 'ChangeUser2',
               password: 'm1SecondP@rd',
@@ -323,7 +329,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser2@%');
+            assert.equal(user, 'ChangeUser2' + getHostSuffix());
             conn.end();
             done();
           })
@@ -348,7 +354,7 @@ describe('change user', () => {
           })
           .then((res) => {
             const user = res[0]['CURRENT_USER'];
-            assert.equal(user, 'ChangeUser@%');
+            assert.equal(user, 'ChangeUser' + getHostSuffix());
             assert.equal(conn.__tests.getCollation().name, 'UTF8MB4_PERSIAN_CI');
             conn.end();
             done();
