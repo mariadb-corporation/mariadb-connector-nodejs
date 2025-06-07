@@ -8,7 +8,7 @@ const { assert } = require('chai');
 const fs = require('fs');
 const Conf = require('../conf');
 const tls = require('tls');
-const { isMaxscale, isMaxscaleMinVersion } = require('../base');
+const { isMaxscale, isMaxscaleMinVersion, getHostSuffix } = require('../base');
 const crypto = require('crypto');
 const errors = require('../../lib/misc/errors');
 
@@ -61,16 +61,18 @@ describe('ssl', function () {
     if (clientCertFileName) clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
     if (clientKeystoreFileName) clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
 
-    await shareConn.query("DROP USER IF EXISTS 'sslTestUser'@'%'");
-    await shareConn.query("DROP USER IF EXISTS 'X509testUser'@'%'");
-    await shareConn.query("DROP USER IF EXISTS 'nosslTestUser'@'%'");
+    await shareConn.query("DROP USER IF EXISTS 'sslTestUser'" + getHostSuffix());
+    await shareConn.query("DROP USER IF EXISTS 'X509testUser'" + getHostSuffix());
+    await shareConn.query("DROP USER IF EXISTS 'nosslTestUser'" + getHostSuffix());
 
-    await shareConn.query("CREATE USER 'sslTestUser'@'%' IDENTIFIED BY 'ytoKS@led5' REQUIRE SSL");
-    await shareConn.query("CREATE USER 'nosslTestUser'@'%' IDENTIFIED BY 'ytoKS@led5'");
-    await shareConn.query("GRANT SELECT ON *.* TO 'sslTestUser'@'%'");
-    await shareConn.query("GRANT SELECT ON *.* TO 'nosslTestUser'@'%'");
-    await shareConn.query("CREATE USER 'X509testUser'@'%' IDENTIFIED BY 'éà@d684SQpl¨^' REQUIRE X509");
-    await shareConn.query("GRANT SELECT ON *.* TO 'X509testUser'@'%'");
+    await shareConn.query("CREATE USER 'sslTestUser'" + getHostSuffix() + " IDENTIFIED BY 'ytoKS@led5' REQUIRE SSL");
+    await shareConn.query("CREATE USER 'nosslTestUser'" + getHostSuffix() + " IDENTIFIED BY 'ytoKS@led5'");
+    await shareConn.query("GRANT SELECT ON *.* TO 'sslTestUser'" + getHostSuffix());
+    await shareConn.query("GRANT SELECT ON *.* TO 'nosslTestUser'" + getHostSuffix());
+    await shareConn.query(
+      "CREATE USER 'X509testUser'" + getHostSuffix() + " IDENTIFIED BY 'éà@d684SQpl¨^' REQUIRE X509"
+    );
+    await shareConn.query("GRANT SELECT ON *.* TO 'X509testUser'" + getHostSuffix());
 
     await shareConn.query('FLUSH PRIVILEGES');
     const rows = await shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
@@ -594,10 +596,10 @@ describe('ssl', function () {
       ssl: { rejectUnauthorized: false },
       port: sslPort
     });
-    conn.query("DROP USER ChangeUser@'%'").catch((err) => {});
+    conn.query('DROP USER ChangeUser' + getHostSuffix()).catch((err) => {});
     conn.query('FLUSH PRIVILEGES');
-    conn.query("CREATE USER ChangeUser@'%' IDENTIFIED BY 'mySupPassw@rd2'");
-    conn.query("GRANT SELECT ON *.* TO ChangeUser@'%' with grant option");
+    conn.query('CREATE USER ChangeUser' + getHostSuffix() + " IDENTIFIED BY 'mySupPassw@rd2'");
+    conn.query('GRANT SELECT ON *.* TO ChangeUser' + getHostSuffix() + ' with grant option');
     await conn.query('FLUSH PRIVILEGES');
     let res = await conn.query('SELECT CURRENT_USER');
     currUser = res[0]['CURRENT_USER'];
@@ -608,9 +610,9 @@ describe('ssl', function () {
     });
     res = await conn.query('SELECT CURRENT_USER');
     const user = res[0]['CURRENT_USER'];
-    assert.equal(user, 'ChangeUser@%');
+    assert.equal(user, 'ChangeUser' + getHostSuffix());
     assert(user !== currUser);
-    conn.query("DROP USER ChangeUser@'%'");
+    conn.query('DROP USER ChangeUser' + getHostSuffix());
     conn.end();
   });
 
@@ -625,11 +627,15 @@ describe('ssl', function () {
       await shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
     } catch (error) {}
     try {
-      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'@'%'");
+      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'" + getHostSuffix());
     } catch (error) {}
 
-    await shareConn.query("CREATE USER '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam USING 'mariadb'");
-    await shareConn.query("GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'@'%' IDENTIFIED VIA pam");
+    await shareConn.query(
+      "CREATE USER '" + process.env.TEST_PAM_USER + "'" + getHostSuffix() + " IDENTIFIED VIA pam USING 'mariadb'"
+    );
+    await shareConn.query(
+      "GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'" + getHostSuffix() + ' IDENTIFIED VIA pam'
+    );
     await shareConn.query('FLUSH PRIVILEGES');
 
     const conn = await base.createConnection({

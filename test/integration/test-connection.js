@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,7 @@ const Conf = require('../conf');
 const Connection = require('../../lib/connection');
 const ConnOptions = require('../../lib/config/connection-options');
 const Net = require('net');
-const { isMaxscale } = require('../base');
+const { isMaxscale, getHostSuffix } = require('../base');
 const dns = require('dns');
 
 describe('connection', () => {
@@ -1013,10 +1013,12 @@ describe('connection', () => {
       this.skip();
     }
     if (!base.utf8Collation()) this.skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
+    shareConn.query(
+      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(
       'update mysql.global_priv set\n' +
@@ -1047,10 +1049,12 @@ describe('connection', () => {
       this.skip();
     }
     if (!base.utf8Collation()) this.skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'@'%'");
+    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
     shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query("CREATE USER 'jeffrey'@'%' IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY");
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'@'%'");
+    shareConn.query(
+      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+    );
+    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
     shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
     shareConn.query(
       'update mysql.global_priv set\n' +

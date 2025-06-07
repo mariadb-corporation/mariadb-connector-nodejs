@@ -7,7 +7,7 @@
 # MariaDB Node.js connector
 
 [![npm package][npm-image]][npm-url] 
-[![Test Build][travis-image]][travis-url]
+[![CI Tests][ci-image]][ci-url]
 [![License (LGPL version 2.1)][licence-image]][licence-url]
 [![codecov][codecov-image]][codecov-url]
 
@@ -18,13 +18,13 @@ MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the 
 
 ## Documentation
 
-See [promise documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API. 
+See [promise documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API.
 
 [Callback documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
 
 See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) for migration from mysql/mysql2 or from 2.x version.
 
-   
+
 ## Why a New Client?
 
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
@@ -41,7 +41,7 @@ Connector is production grade quality, with multiple features:
 
 see some of those features:
 
-### Insert Streaming 
+### Insert Streaming
 
 Using a Readable stream in your application, you can stream `INSERT` statements to MariaDB through the Connector.
 
@@ -52,7 +52,7 @@ Using a Readable stream in your application, you can stream `INSERT` statements 
         connection.query("INSERT INTO myTable VALUE (?)", [readableStream]);
     });
 ```
- 
+
 ### Pipelining
 
 With Pipelining, the Connector sends commands without waiting for server results, preserving order.  For instance, consider the use of executing two `INSERT`  statements.
@@ -64,7 +64,7 @@ With Pipelining, the Connector sends commands without waiting for server results
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
 
 For more information, see the [Pipelining](/documentation/pipelining.md) documentation.
- 
+
 ### Bulk insert
 
 Some use cases require a large amount of data to be inserted into a database table. By using batch processing, these queries can be sent to the database in one call, thus improving performance.
@@ -74,7 +74,7 @@ For more information, see the [Batch](/documentation/batch.md) documentation.
 
 ## Benchmarks
 
-MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including: 
+MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including:
 
 * [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.2.0 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
 * [`mysql2`](https://www.npmjs.com/package/mysql2) version 3.1.0
@@ -139,15 +139,15 @@ A big thanks to all contributors
   <img src="https://contrib.rocks/image?repo=mariadb-corporation/mariadb-connector-nodejs&max=180&columns=15"  alt="contributors list"/>
 </a>
 
-## Contributing 
+## Contributing
 
 If you would like to contribute to the MariaDB Node.js Connector, please follow the instructions given in the [contributing guide.](/CONTRIBUTING.md)
 
 To file an issue or follow the development, see [JIRA](https://jira.mariadb.org/projects/CONJS/issues/).
 
 
-[travis-image]:https://travis-ci.com/mariadb-corporation/mariadb-connector-nodejs.svg?branch=master
-[travis-url]:https://app.travis-ci.com/github/mariadb-corporation/mariadb-connector-nodejs
+[ci-image]:https://github.com/mariadb-corporation/mariadb-connector-nodejs/actions/workflows/ci.yml/badge.svg?branch=master
+[ci-url]:https://github.com/mariadb-corporation/mariadb-connector-nodejs/actions/workflows/ci.yml
 [npm-image]:https://img.shields.io/npm/v/mariadb.svg
 [npm-url]:http://npmjs.org/package/mariadb
 [licence-image]:https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-green.svg?style=flat-square
