@@ -1,0 +1,94 @@
+---
+name: Run CI Tests
+
+on:
+  push:
+    branches: ['master', 'develop', 'feature/**', 'maintenance/**']
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TEST_DB_HOST: mariadb.example.com
+  TEST_DB_PORT: 3306
+  TEST_DB_USER: root
+  TEST_DB_PASSWORD: "heyPassw-!*20oRd"
+  TEST_DB_DATABASE: testn
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.final-matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        name: build matrix
+        uses: rusher/mariadb-test-build-matrix@main
+        with:
+          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}]'
+
+  ci:
+    name: ${{ matrix.name }}${{ matrix.node != 22 && format(' - node {0}', matrix.node) || '' }}
+    needs: setup
+    timeout-minutes: 50
+    strategy:
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.continue-on-error || false }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add hosts entry
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "127.0.0.1 mariadb.example.com" >> /c/Windows/System32/drivers/etc/hosts
+          else
+            echo "127.0.0.1 mariadb.example.com" | sudo tee -a /etc/hosts
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Setup MariaDB
+        id: mariadb-install
+        if: matrix.db-type != 'mysql'
+        uses: rusher/action-setup-mariadb@master
+        with:
+          tag: ${{ matrix.db-tag }}
+          root-password: ${{ env.TEST_DB_PASSWORD }}
+          database: ${{ env.TEST_DB_DATABASE }}
+          registry: ${{ matrix.db-type == 'enterprise' && 'docker.mariadb.com/enterprise-server' || (matrix.db-type == 'dev' && 'quay.io/mariadb-foundation/mariadb-devel' || '') }}
+          registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || '' }}
+          registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || '' }}
+          additional-conf: ${{ matrix.additional-conf || '' }}
+
+      - name: Setup MySQL
+        if: matrix.db-type == 'mysql'
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: ${{ matrix.db-tag }}
+          mysql database: ${{ env.TEST_DB_DATABASE }}
+          mysql root password: ${{ env.TEST_DB_PASSWORD }}
+
+      - name: Install dependencies
+        run: npm install
+        env:
+          LOCAL_DB: ${{ steps.mariadb-install.outputs.database-type }}
+
+      - name: Run Tests
+        run: npm run coverage:test
+        env:
+          LOCAL_DB: ${{ steps.mariadb-install.outputs.database-type }}
+          DB_TYPE: ${{ matrix.db-type }}
+
+      - name: Generate Coverage Report
+        run: npm run coverage:report
