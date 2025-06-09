@@ -531,6 +531,7 @@ describe('Pool callback', () => {
           assert.equal(pool.activeConnections(), 10);
           assert.equal(pool.totalConnections(), 10);
           assert.equal(pool.idleConnections(), 0);
+          console.log(pool.taskQueueSize());
           assert.isOk(pool.taskQueueSize() > 9950);
         }
 

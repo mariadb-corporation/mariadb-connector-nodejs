@@ -610,7 +610,7 @@ describe('ssl', function () {
     });
     res = await conn.query('SELECT CURRENT_USER');
     const user = res[0]['CURRENT_USER'];
-    assert.equal(user, 'ChangeUser' + getHostSuffix());
+    assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
     assert(user !== currUser);
     conn.query('DROP USER ChangeUser' + getHostSuffix());
     conn.end();
