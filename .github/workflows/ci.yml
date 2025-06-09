@@ -54,6 +54,13 @@ jobs:
           else
             echo "127.0.0.1 mariadb.example.com" | sudo tee -a /etc/hosts
           fi
+
+      - name: Generate self-signed certificates
+        shell: bash
+        run: |
+          chmod +x .github/workflows/generate-certs.sh
+          ./.github/workflows/generate-certs.sh
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
@@ -69,7 +76,13 @@ jobs:
           registry: ${{ matrix.db-type == 'enterprise' && 'docker.mariadb.com/enterprise-server' || (matrix.db-type == 'dev' && 'quay.io/mariadb-foundation/mariadb-devel' || '') }}
           registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || '' }}
           registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || '' }}
-          additional-conf: ${{ matrix.additional-conf || '' }}
+          additional-conf: |
+            ${{ matrix.additional-conf || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && '--ssl-ca=/etc/mysql/conf.d/ca.crt' || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && '--ssl-cert=/etc/mysql/conf.d/server.crt' || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && '--ssl-key=/etc/mysql/conf.d/server.key' || '' }}
+          conf-script-folder: ${{ github.workspace }}/.github/workflows/certs
+          port: ${{ env.TEST_DB_PORT }}
 
       - name: Setup MySQL
         if: matrix.db-type == 'mysql'
@@ -82,11 +95,38 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Debug - Check MariaDB connection
+        shell: bash
+        run: |
+          echo "=== Network and Port Information ==="
+          echo "Checking if MariaDB port is accessible..."
+          netstat -tuln | grep :3306 || echo "Port 3306 not found in netstat"
+          echo ""
+          echo "Testing connection to mariadb.example.com:3306..."
+          timeout 10 bash -c 'cat < /dev/null > /dev/tcp/mariadb.example.com/3306' && echo "✅ Connection successful" || echo "❌ Connection failed"
+          echo ""
+          echo "Testing connection to 127.0.0.1:3306..."
+          timeout 10 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/3306' && echo "✅ Connection successful" || echo "❌ Connection failed"
+          echo ""
+          echo "=== Environment Variables ==="
+          echo "TEST_DB_HOST: $TEST_DB_HOST"
+          echo "TEST_DB_PORT: $TEST_DB_PORT"
+          echo "TEST_DB_USER: $TEST_DB_USER"
+          echo "LOCAL_DB: $LOCAL_DB"
+          echo "DB_TYPE: $DB_TYPE"
+        env:
+          TEST_DB_HOST: ${{ env.TEST_DB_HOST }}
+          TEST_DB_PORT: ${{ env.TEST_DB_PORT }}
+          TEST_DB_USER: ${{ env.TEST_DB_USER }}
+          LOCAL_DB: ${{ steps.mariadb-install.outputs.database-type }}
+          DB_TYPE: ${{ matrix.db-type }}
+
       - name: Run Tests
         run: npm run coverage:test
         env:
           LOCAL_DB: ${{ steps.mariadb-install.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
+          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
 
       - name: Download Codecov uploader
         shell: bash
