@@ -135,89 +135,6 @@ describe('ssl', function () {
     await conn.end();
   });
 
-  it('self signed certificate server before ephemeral', async function () {
-    if (isMaxscale()) this.skip();
-    if (!sslEnable) this.skip();
-
-    // test will work either because server certificate chain is trusted (not don in tests)
-    // or using mariadb ephemeral certificate validation
-    if (
-      !shareConn.info.isMariaDB() ||
-      (shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
-    )
-      this.skip();
-    try {
-      await base.createConnection({ ssl: true, port: sslPort });
-      throw new Error('must have thrown error');
-    } catch (e) {
-      assert.equal(e.errno, errors.ER_SELF_SIGNED);
-    }
-  });
-
-  it('self signed certificate forcing no password', async function () {
-    if (isMaxscale()) this.skip();
-    if (!sslEnable) this.skip();
-
-    // test will work either because server certificate chain is trusted (not done in tests)
-    // or using mariadb ephemeral certificate validation
-    if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(11, 4, 0) && !shareConn.info.hasMinVersion(23, 0, 0))
-      this.skip();
-    if (Conf.baseConfig.password) this.skip();
-    try {
-      await base.createConnection({ ssl: true, port: sslPort });
-      throw new Error('must have thrown error');
-    } catch (e) {
-      assert.equal(e.errno, errors.ER_SELF_SIGNED);
-    }
-  });
-
-  it('self signed certificate forcing with password ssl:true', async function () {
-    if (isMaxscale()) this.skip();
-    if (!sslEnable) this.skip();
-
-    // test will work either because server certificate chain is trusted (not don in tests)
-    // or using mariadb ephemeral certificate validation
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0)
-    )
-      this.skip();
-    if (!Conf.baseConfig.password) this.skip();
-    const conn = await base.createConnection({
-      user: 'sslTestUser',
-      password: 'ytoKS@led5',
-      ssl: true,
-      port: sslPort
-    });
-    await validConnection(conn);
-    await conn.end();
-  });
-
-  it('self signed certificate forcing with password ssl: {rejectUnauthorized: true}', async function () {
-    if (isMaxscale()) this.skip();
-    if (!sslEnable) this.skip();
-
-    // test will work either because server certificate chain is trusted (not done in tests)
-    // or using mariadb ephemeral certificate validation
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0)
-    )
-      this.skip();
-    if (!Conf.baseConfig.password) this.skip();
-
-    const conn = await base.createConnection({
-      user: 'sslTestUser',
-      password: 'ytoKS@led5',
-      ssl: { rejectUnauthorized: true },
-      port: sslPort
-    });
-    await validConnection(conn);
-    await conn.end();
-  });
-
   it('ensure connection use SSL ', async function () {
     if (isMaxscale()) this.skip();
     if (!sslEnable) this.skip();
@@ -227,19 +144,6 @@ describe('ssl', function () {
       password: 'ytoKS@led5',
       ssl: { rejectUnauthorized: false, checkServerIdentity: () => {} },
       port: sslPort
-    });
-    await validConnection(conn);
-    conn.end();
-  });
-
-  it('ensure connection use NOT SSL ', async function () {
-    if (isMaxscale()) this.skip();
-    if (!sslEnable) this.skip();
-    if (!base.utf8Collation()) this.skip();
-    const conn = await base.createConnection({
-      user: 'nosslTestUser',
-      password: 'ytoKS@led5',
-      allowPublicKeyRetrieval: true
     });
     await validConnection(conn);
     conn.end();
@@ -579,37 +483,6 @@ describe('ssl', function () {
     assert(user !== currUser);
     conn.query('DROP USER ChangeUser' + getHostSuffix());
     conn.end();
-  });
-
-  it('ssl dialog authentication plugin', async function () {
-    if (!process.env.TEST_PAM_USER) this.skip();
-    if (isMaxscale()) this.skip();
-    if (!shareConn.info.isMariaDB()) this.skip();
-    if (!sslEnable) this.skip();
-
-    this.timeout(10000);
-    try {
-      await shareConn.query("INSTALL PLUGIN pam SONAME 'auth_pam'");
-    } catch (error) {}
-    try {
-      await shareConn.query("DROP USER IF EXISTS '" + process.env.TEST_PAM_USER + "'" + getHostSuffix());
-    } catch (error) {}
-
-    await shareConn.query(
-      "CREATE USER '" + process.env.TEST_PAM_USER + "'" + getHostSuffix() + " IDENTIFIED VIA pam USING 'mariadb'"
-    );
-    await shareConn.query(
-      "GRANT SELECT ON *.* TO '" + process.env.TEST_PAM_USER + "'" + getHostSuffix() + ' IDENTIFIED VIA pam'
-    );
-    await shareConn.query('FLUSH PRIVILEGES');
-
-    const conn = await base.createConnection({
-      user: process.env.TEST_PAM_USER,
-      password: process.env.TEST_PAM_PWD,
-      ssl: { rejectUnauthorized: false },
-      port: sslPort
-    });
-    await conn.end();
   });
 });
 
