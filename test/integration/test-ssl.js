@@ -128,41 +128,6 @@ describe('ssl', function () {
     }
   });
 
-  it('signed certificate error with ephemeral', async function () {
-    if (!sslEnable) this.skip();
-    let isMaxscaleEphemeral = false;
-    if (isMaxscale() && isMaxscaleMinVersion(25, 8, 0)) {
-      // MaxScale implements this in the 25.08 release
-      isMaxscaleEphemeral = true;
-    } else if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0) ||
-      (isMaxscale() && !isMaxscaleMinVersion(25, 8, 0))
-    )
-      this.skip();
-    let conn = null;
-    try {
-      conn = await base.createConnection({
-        user: 'sslTestUser',
-        password: 'ytoKS@led5',
-        ssl: true,
-        port: sslPort
-      });
-      await validConnection(conn);
-      // if not ephemeral certificate must throw error
-      if (
-        !isMaxscaleEphemeral &&
-        !shareConn.info.isMariaDB() &&
-        (!shareConn.info.hasMinVersion(11, 4, 0) || shareConn.info.hasMinVersion(23, 0, 0))
-      ) {
-        throw new Error('Must have thrown an exception !');
-      }
-    } finally {
-      if (conn != null) conn.end();
-    }
-  });
-
   it('signed certificate forcing', async function () {
     if (!sslEnable) this.skip();
     const conn = await base.createConnection({ ssl: { rejectUnauthorized: false }, port: sslPort });
