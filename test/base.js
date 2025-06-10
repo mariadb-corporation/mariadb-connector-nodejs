@@ -48,7 +48,7 @@ module.exports.isMaxscale = function isMaxscale() {
     const maxscaleVersion = global.shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
-      return process.env.srv === 'maxscale';
+      return process.env.DB_TYPE === 'maxscale' || process.env.srv === 'maxscale';
     }
   }
   return true;

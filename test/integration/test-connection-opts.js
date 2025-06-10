@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -21,7 +21,7 @@ describe('connection option', () => {
   });
 
   it('collation with no id', async function () {
-    if (process.env.srv === 'mariadb-es' || process.env.srv === 'mariadb-es-test') this.skip();
+    if (process.env.DB_TYPE === 'enterprise') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 2, 0)) this.skip();
     const conn = await base.createConnection();
     await conn.query('set NAMES utf8mb4 COLLATE uca1400_vietnamese_ai_ci');
