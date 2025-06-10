@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -47,11 +47,7 @@ describe('datetime', () => {
     //using distant server, time might be different
     // if local socket not available, this means using distant / docker server that might have other default
     if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
-    if (
-      (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
-      isMaxscale() ||
-      process.env.srv === 'skysql-ha'
-    )
+    if ((Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') || isMaxscale())
       this.skip();
 
     let res = await shareConn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01 UTC')]);
