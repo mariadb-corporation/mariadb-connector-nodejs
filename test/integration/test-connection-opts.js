@@ -1,14 +1,14 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isMaxscale } = require('../base');
 
 describe('connection option', () => {
   it('with undefined collation', function (done) {
-    if (process.env.srv === 'xpand') this.skip();
     base
       .createConnection({ charset: 'unknown' })
       .then(() => {
@@ -21,8 +21,7 @@ describe('connection option', () => {
   });
 
   it('collation with no id', async function () {
-    if (process.env.srv === 'xpand' || process.env.srv === 'mariadb-es' || process.env.srv === 'mariadb-es-test')
-      this.skip();
+    if (process.env.DB_TYPE === 'enterprise') this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 2, 0)) this.skip();
     const conn = await base.createConnection();
     await conn.query('set NAMES utf8mb4 COLLATE uca1400_vietnamese_ai_ci');
@@ -163,7 +162,7 @@ describe('connection option', () => {
     // node.js before v13 doesn't permit to set TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) this.skip();
 
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     //MySQL 5.5 doesn't have milliseconds
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) this.skip();
     const defaultTz = process.env.TZ;
@@ -306,7 +305,6 @@ describe('connection option', () => {
   });
 
   it('connection timeout', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       base
@@ -349,7 +347,6 @@ describe('connection option', () => {
   });
 
   it('connection timeout superseded', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(10000);
 
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 2)) {

@@ -502,7 +502,6 @@ describe('prepare and execute', () => {
   });
 
   it('execute stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.execute('wrong query');
@@ -515,7 +514,6 @@ describe('prepare and execute', () => {
   });
 
   it('execute wrong param stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.execute('SELECT ?', []);

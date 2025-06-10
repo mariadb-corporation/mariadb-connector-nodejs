@@ -11,6 +11,7 @@ const path = require('path');
 const util = require('util');
 const winston = require('winston');
 const Conf = require('../conf');
+const { isMaxscale } = require('../base');
 
 describe('debug', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfileDebug.txt');
@@ -80,12 +81,7 @@ describe('debug', () => {
         conn
           .query('CREATE TABLE debugVoid (val int)')
           .then(() => {
-            if (
-              compress &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql' &&
-              process.env.srv !== 'skysql-ha'
-            ) {
+            if (compress && !isMaxscale()) {
               conn.debugCompress((msg) => logger.info(msg));
             } else {
               conn.debug((msg) => logger.info(msg));
@@ -93,12 +89,7 @@ describe('debug', () => {
             return conn.query('SELECT 2');
           })
           .then(() => {
-            if (
-              compress &&
-              process.env.srv !== 'maxscale' &&
-              process.env.srv !== 'skysql' &&
-              process.env.srv !== 'skysql-ha'
-            ) {
+            if (compress && !isMaxscale()) {
               conn.debugCompress(false);
             } else {
               conn.debug(false);
@@ -121,8 +112,7 @@ describe('debug', () => {
             //wait 100ms to ensure stream has been written
             setTimeout(() => {
               const serverVersion = conn.serverVersion();
-              if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-                compress = false;
+              if (isMaxscale()) compress = false;
               const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
               const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
               const data = fs.readFileSync(tmpLogFile, 'utf8');
@@ -140,9 +130,7 @@ describe('debug', () => {
               if (
                 ((conn.info.isMariaDB() && conn.info.hasMinVersion(10, 2, 2)) ||
                   (!conn.info.isMariaDB() && conn.info.hasMinVersion(5, 7, 5))) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql' &&
-                process.env.srv !== 'skysql-ha'
+                !isMaxscale()
               ) {
                 assert(
                   data.length > rangeWithoutEOF[0] && data.length < rangeWithoutEOF[1],
@@ -184,7 +172,7 @@ describe('debug', () => {
   }
 
   it('select big request (compressed data) debug', function (done) {
-    if (process.env.srv === 'maxscale') this.skip();
+    if (isMaxscale()) this.skip();
 
     const buf = Buffer.alloc(5000, 'z');
     base
@@ -339,8 +327,7 @@ describe('debug', () => {
       setTimeout(resolve, 100);
     });
     const serverVersion = conn.serverVersion();
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-      compress = false;
+    if (isMaxscale()) compress = false;
     const range = compress ? [60, 180] : [60, 170];
     const data = fs.readFileSync(tmpLogFile, 'utf8');
     assert.isTrue(data.includes('PING'));

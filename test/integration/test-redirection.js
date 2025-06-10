@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,6 @@ const Conf = require('../conf');
 const { assert } = require('chai');
 describe('redirection', () => {
   it('basic redirection', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -37,7 +36,6 @@ describe('redirection', () => {
   });
 
   it('redirection during pipelining', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -65,7 +63,6 @@ describe('redirection', () => {
   });
 
   it('redirection during transaction', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,

@@ -81,7 +81,6 @@ describe('pipelining', () => {
   });
 
   it('500 insert test speed', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(60000);
     let diff, pipelineDiff;
     conn1

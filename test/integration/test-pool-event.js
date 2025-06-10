@@ -7,10 +7,6 @@ const base = require('../base.js');
 const { assert } = require('chai');
 
 describe('Pool event', () => {
-  before(function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
-  });
-
   it('pool connection creation', function (done) {
     this.timeout(5000);
     const pool = base.createPool();

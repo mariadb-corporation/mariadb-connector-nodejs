@@ -78,7 +78,6 @@ describe('basic query', () => {
   });
 
   it('query stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.query('wrong query', (err) => {
@@ -94,7 +93,6 @@ describe('basic query', () => {
   });
 
   it('query parameter error stack trace', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = base.createCallbackConnection({ trace: true });
     conn.connect((err) => {
       conn.query('SELECT ?', [], (err) => {

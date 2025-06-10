@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -12,10 +12,6 @@ const path = require('path');
 const os = require('os');
 
 describe('Pool callback event', () => {
-  before(function () {
-    if ((process.env.srv === 'skysql') != null || (process.env.srv === 'skysql-ha') != null) this.skip();
-  });
-
   it('pool connection creation', function (done) {
     this.timeout(10000);
     const pool = base.createPoolCallback();
@@ -50,7 +46,6 @@ describe('Pool callback event', () => {
   });
 
   it('pool connection enqueue', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     this.timeout(20000);
     const pool = base.createPoolCallback({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;

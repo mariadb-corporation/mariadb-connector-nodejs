@@ -5,6 +5,7 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
+const { isMaxscale } = require('../base');
 
 describe('TypeCast', () => {
   const changeCaseCast = (column, next) => {
@@ -238,10 +239,7 @@ describe('TypeCast', () => {
       },
       {
         b1:
-          shareConn.info.isMariaDB() &&
-          shareConn.info.hasMinVersion(10, 5, 2) &&
-          process.env.srv !== 'maxscale' &&
-          process.env.srv !== 'skysql-ha'
+          shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
             ? { type: 'Point' }
             : null
       }

@@ -9,7 +9,6 @@ const { assert } = require('chai');
 
 describe('stored procedure', () => {
   before(async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     if (shareConn.serverVersion().includes('maxScale-6.2.0')) this.skip();
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');

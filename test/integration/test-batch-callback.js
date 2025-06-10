@@ -918,11 +918,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
@@ -968,11 +963,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleBatchErrorMsg(useCompression, true, done);
     });
 
@@ -1114,11 +1104,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
@@ -1152,11 +1137,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error message ', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleBatchErrorMsg(useCompression, false, done);
     });
 
@@ -1180,11 +1160,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleNamedPlaceHoldersErr(true, done);
     });
 
@@ -1209,11 +1184,6 @@ describe('batch callback', function () {
     });
 
     it('simple batch error', function (done) {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       simpleNamedPlaceHoldersErr(false, done);
     });
 

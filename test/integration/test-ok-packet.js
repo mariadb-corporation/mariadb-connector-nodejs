@@ -138,7 +138,6 @@ describe('ok packet', () => {
   });
 
   it('multiple insert result', function (done) {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     base
       .createConnection({ multipleStatements: true })
       .then((conn) => {

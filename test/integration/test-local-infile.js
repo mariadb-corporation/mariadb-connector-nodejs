@@ -93,7 +93,6 @@ describe('local-infile', () => {
   });
 
   it('local infile and init functions', function (done) {
-    if (process.env.srv === 'xpand') this.skip();
     base
       .createConnection({ permitLocalInfile: true, initSql: "set time_zone='+00:00'" })
       .then((conn) => {
@@ -145,12 +144,7 @@ describe('local-infile', () => {
   it('file error missing', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
     const conn = await base.createConnection({ permitLocalInfile: true });
@@ -174,12 +168,7 @@ describe('local-infile', () => {
   it('small local infile', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
     await new Promise(function (resolve, reject) {
@@ -208,12 +197,7 @@ describe('local-infile', () => {
   it('small infileStreamFactory connection lvl', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
     await new Promise(function (resolve, reject) {
@@ -245,12 +229,7 @@ describe('local-infile', () => {
   it('infileStreamFactory Error', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
 
@@ -280,12 +259,7 @@ describe('local-infile', () => {
   it('small infileStreamFactory query lvl', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
     await new Promise(function (resolve, reject) {
@@ -315,12 +289,7 @@ describe('local-infile', () => {
   it('small local infile with parameter', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
     await new Promise(function (resolve, reject) {
@@ -354,12 +323,7 @@ describe('local-infile', () => {
   it('small local infile with non supported node.js encoding', async function () {
     const self = this;
     const rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
 
@@ -394,12 +358,7 @@ describe('local-infile', () => {
     shareConn
       .query('select @@local_infile')
       .then((rows) => {
-        if (
-          rows[0]['@@local_infile'] === 0 ||
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-          process.env.srv === 'skysql' ||
-          process.env.srv === 'skysql-ha'
-        ) {
+        if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
           return self.skip();
         }
 
@@ -449,12 +408,7 @@ describe('local-infile', () => {
     let size;
     const self = this;
     let rows = await shareConn.query('select @@local_infile');
-    if (
-      rows[0]['@@local_infile'] === 0 ||
-      (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ||
-      process.env.srv === 'skysql' ||
-      process.env.srv === 'skysql-ha'
-    ) {
+    if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {
       return self.skip();
     }
 

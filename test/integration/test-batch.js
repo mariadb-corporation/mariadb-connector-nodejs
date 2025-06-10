@@ -10,6 +10,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Conf = require('../conf');
+const { isMaxscale } = require('../base');
 const str = base.utf8Collation() ? "abcdefghijkflmn'opqrtuvwx🤘💪" : 'abcdefghijkflmn\'opqrtuvwxyz"';
 
 describe('batch', function () {
@@ -1193,7 +1194,6 @@ describe('batch', function () {
   };
 
   it('pool batch stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.batch('WRONG COMMAND', [[1], [1]]);
@@ -1206,7 +1206,6 @@ describe('batch', function () {
   });
 
   it('pool batch wrong param stack trace', async function () {
-    if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
     const conn = await base.createConnection({ trace: true });
     try {
       await conn.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
@@ -1396,11 +1395,6 @@ describe('batch', function () {
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchErrorMsg(useCompression, true);
     });
@@ -1422,7 +1416,7 @@ describe('batch', function () {
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
       // // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, true);
@@ -1430,7 +1424,7 @@ describe('batch', function () {
 
     it('16M+ batch with 16M max_allowed_packet big insert', async function () {
       // // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacketBig(useCompression, true);
@@ -1446,11 +1440,7 @@ describe('batch', function () {
     });
 
     it('16M+ error batch', async function () {
-      if (process.env.srv === 'skysql' || process.env.srv === 'skysql-ha' || maxAllowedSize <= testSize) {
-        this.skip();
-      } else {
-        await bigBatchError(useCompression, true);
-      }
+      await bigBatchError(useCompression, true);
     });
 
     it('batch with streams', async function () {
@@ -1494,11 +1484,6 @@ describe('batch', function () {
     });
 
     it('simple batch error message ', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleBatchErrorMsg(useCompression, true);
     });
@@ -1517,7 +1502,7 @@ describe('batch', function () {
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
       // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST) this.skip();
       if (maxAllowedSize <= testSize) this.skip();
       this.timeout(180000);
@@ -1696,7 +1681,7 @@ describe('batch', function () {
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
       // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, false);
@@ -1799,7 +1784,7 @@ describe('batch', function () {
 
     it('16M+ batch with 16M max_allowed_packet', async function () {
       // skipping in maxscale due to a bug: https://jira.mariadb.org/browse/MXS-3588
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(380000);
       await bigBatchWith16mMaxAllowedPacket(useCompression, false);
@@ -1842,18 +1827,12 @@ describe('batch', function () {
     });
 
     it('simple batch error', async function () {
-      if (process.env.srv === 'skysql-ha') {
-        // due to https://jira.mariadb.org/browse/MXS-3196
-        this.skip();
-        return;
-      }
       this.timeout(30000);
       await simpleNamedPlaceHoldersErr(true);
     });
 
     it('16M+ batch', async function () {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-        this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(true);
@@ -1883,8 +1862,7 @@ describe('batch', function () {
     });
 
     it('16M+ batch', async function () {
-      if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha')
-        this.skip();
+      if (isMaxscale()) this.skip();
       if (!RUN_LONG_TEST || maxAllowedSize <= testSize) return this.skip();
       this.timeout(320000);
       await more16MNamedPlaceHolders(false);

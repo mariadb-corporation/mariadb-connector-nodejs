@@ -436,7 +436,7 @@ describe('Error', () => {
   });
 
   it('server close connection during query', function (done) {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     this.timeout(20000);
     base
       .createConnection()
@@ -448,7 +448,7 @@ describe('Error', () => {
             done(new Error('must have thrown error !'));
           })
           .catch((err) => {
-            if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') {
+            if (isMaxscale()) {
               assert.isTrue(err.message.includes('Lost connection to backend server'), err.message);
               assert.equal(err.sqlState, 'HY000');
             } else {
@@ -466,7 +466,7 @@ describe('Error', () => {
   });
 
   it('end connection query error', async function () {
-    if (process.env.srv === 'maxscale' || process.env.srv === 'skysql-ha') this.skip();
+    if (isMaxscale()) this.skip();
     const conn = await base.createConnection();
     setTimeout(() => {
       conn.__tests.getSocket().destroy(new Error('close forced'));

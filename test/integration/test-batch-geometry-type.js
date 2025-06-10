@@ -7,6 +7,7 @@ const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
 const Capabilities = require('../../lib/const/capabilities');
+const { isMaxscale } = require('../base');
 
 describe('batch geometry type', () => {
   let supportBulk;
@@ -427,9 +428,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPoint',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPoint' }
               : null
         },
@@ -439,9 +438,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPoint',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPoint' }
               : null
         }
@@ -556,9 +553,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: [[]]
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiLineString' }
               : null
         },
@@ -568,9 +563,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiLineString' }
               : null
         },
@@ -580,9 +573,7 @@ describe('batch geometry type', () => {
                 type: 'MultiLineString',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiLineString' }
               : null
         }
@@ -784,9 +775,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: [[[]]]
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -796,9 +785,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: [[]]
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -808,9 +795,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPolygon' }
               : null
         },
@@ -820,9 +805,7 @@ describe('batch geometry type', () => {
                 type: 'MultiPolygon',
                 coordinates: []
               }
-            : shareConn.info.hasMinVersion(10, 5, 2) &&
-                process.env.srv !== 'maxscale' &&
-                process.env.srv !== 'skysql-ha'
+            : shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
               ? { type: 'MultiPolygon' }
               : null
         }

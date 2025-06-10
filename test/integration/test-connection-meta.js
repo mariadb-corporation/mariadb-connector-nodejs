@@ -1,25 +1,19 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
 const base = require('../base.js');
+const { isMaxscale } = require('../base');
 const assert = require('chai').assert;
 
 describe('Connection meta', function () {
   it('server version', () => {
     const serverVersion = shareConn.serverVersion();
-    if (process.env.srv) {
-      if (
-        process.env.srv !== 'skysql' &&
-        process.env.srv !== 'skysql-ha' &&
-        process.env.srv !== 'maxscale' &&
-        process.env.srv !== 'xpand'
-      ) {
-        const version = process.env.v;
-        if (version) {
-          assert(serverVersion.startsWith(version), serverVersion + '/' + version);
-        }
+    if (!isMaxscale()) {
+      const version = process.env.DB_VERSION;
+      if (version) {
+        assert(serverVersion.startsWith(version), serverVersion + '/' + version);
       }
     }
   });
@@ -38,8 +32,8 @@ describe('Connection meta', function () {
 
   it('isMariaDB', () => {
     const isMariadb = shareConn.info.isMariaDB();
-    if (process.env.srv) {
-      assert.equal(isMariadb, !process.env.srv.startsWith('mysql'));
+    if (process.env.DB_TYPE) {
+      assert.equal(isMariadb, !process.env.DB_TYPE.startsWith('mysql'));
     }
   });
 

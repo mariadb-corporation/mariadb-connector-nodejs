@@ -6,6 +6,7 @@
 const base = require('../../base');
 const { assert } = require('chai');
 const Conf = require('../../conf');
+const { isMaxscale } = require('../../base');
 
 describe('datetime', () => {
   const date = new Date('2001-12-31 00:00:00');
@@ -46,11 +47,7 @@ describe('datetime', () => {
     //using distant server, time might be different
     // if local socket not available, this means using distant / docker server that might have other default
     if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
-    if (
-      (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') ||
-      process.env.srv === 'maxscale' ||
-      process.env.srv === 'skysql-ha'
-    )
+    if ((Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') || isMaxscale())
       this.skip();
 
     let res = await shareConn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01 UTC')]);

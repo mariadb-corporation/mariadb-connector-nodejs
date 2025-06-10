@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2023 MariaDB Corporation Ab
+//  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
 
@@ -10,7 +10,6 @@ const Collations = require('../../../lib/const/collations.js');
 
 describe('test options', () => {
   it('default options', function () {
-    if (process.env.srv === 'xpand') this.skip();
     const defaultOpts = basePromise.defaultOptions({ timezone: '+00:00' });
     const defaultOptsCall = baseCallback.defaultOptions({ timezone: '+00:00' });
     const expected = {
