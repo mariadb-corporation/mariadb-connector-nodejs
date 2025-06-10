@@ -173,6 +173,7 @@ JSON object:
 
 |option|description|type|default| 
 |---:|---|:---:|:---:| 
+|**servername**| A string with the host name to use with SNI if different to host | *string*|
 |**checkServerIdentity**| `function(servername, cert)` to replace SNI default function| *Function*|
 |**minDHSize**| Minimum size of the DH parameter in bits to accept a TLS connection | *number*|1024|
 |**pfx**| Optional PFX or PKCS12 encoded private key and certificate chain. Encrypted PFX will be decrypted with `passphrase` if provided| *string / string[] / Buffer / Buffer[] / *Object[]*|
