@@ -20,7 +20,6 @@ env:
   TEST_DB_USER: root
   TEST_DB_PASSWORD: "heyPassw-!*20oRd"
   TEST_DB_DATABASE: testn
-
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -31,8 +30,6 @@ jobs:
       - id: set-matrix
         name: build matrix
         uses: rusher/mariadb-test-build-matrix@main
-        with:
-          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}]'
 
   ci:
     name: ${{ matrix.name }}${{ matrix.node != 22 && format(' - node {0}', matrix.node) || '' }}
@@ -57,8 +54,8 @@ jobs:
           test-db-database: ${{ env.TEST_DB_DATABASE }}
           test-db-port: ${{ env.TEST_DB_PORT }}
           additional-conf: ${{ matrix.additional-conf || '' }}
-          registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || '' }}
-          registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || '' }}
+          registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || (secrets.DOCKER_PWD != '' && 'mariadbtest' || '') }}
+          registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || secrets.DOCKER_PWD }}
           os: ${{ matrix.os }}
 
       - uses: actions/setup-node@v4
