@@ -3,7 +3,6 @@ name: Run CI Tests
 
 on:
   push:
-    branches: ['master', 'develop', 'feature/**', 'maintenance/**']
   pull_request:
   workflow_dispatch:
   schedule:
@@ -23,6 +22,12 @@ env:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' ||
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/maintenance/3.2' ||
+      github.ref == 'refs/heads/maintenance/3.3'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.final-matrix }}
     steps:
