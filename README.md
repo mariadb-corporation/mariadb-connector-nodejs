@@ -20,7 +20,7 @@ MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the 
 
 See [promise documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api) for detailed API.
 
-[Callback documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-callback-api) describe the callback wrapper for compatibility with existing drivers.
+[Callback documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-callback-api) describes the callback wrapper for compatibility with existing drivers.
 
 See [dedicated part](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api#migrating-from-2.x-or-mysql-mysql2-to-3.x) for migration from mysql/mysql2 or from 2.x version.
 
@@ -29,7 +29,7 @@ See [dedicated part](https://mariadb.com/docs/connectors/mariadb-connector-nodej
 
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
 
-Connector is production grade quality, with multiple features:
+The Connector is production grade quality, with multiple features:
 * [zero configuration ssl](https://mariadb.org/mission-impossible-zero-configuration-ssl/)
 * superfast batching
 * fast pool
