@@ -18,18 +18,19 @@ MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the 
 
 ## Documentation
 
-See [promise documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md) for detailed API.
+See [promise documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api) for detailed API.
 
-[Callback documentation](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/callback-api.md) describe the callback wrapper for compatibility with existing drivers.
+[Callback documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-callback-api) describes the callback wrapper for compatibility with existing drivers.
 
-See [dedicated part](https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/promise-api.md#migrating-from-2x-or-mysqlmysql2-to-3x) for migration from mysql/mysql2 or from 2.x version.
+See [dedicated part](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api#migrating-from-2.x-or-mysql-mysql2-to-3.x) for migration from mysql/mysql2 or from 2.x version.
 
 
-## Why a New Client?
+## Why a specific MariaDB Client?
 
 While there are existing MySQL clients that work with MariaDB, (such as the [`mysql`](https://www.npmjs.com/package/mysql) and [`mysql2`](https://www.npmjs.com/package/mysql2) clients), the MariaDB Node.js Connector offers new functionality, like [Insert Streaming](#insert-streaming), [Pipelining](#pipelining), [ed25519 plugin authentication](https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/) while making no compromises on performance.
 
-Connector is production grade quality, with multiple features:
+The Connector is production grade quality, with multiple features:
+* [zero configuration ssl](https://mariadb.org/mission-impossible-zero-configuration-ssl/)
 * superfast batching
 * fast pool
 * easy debugging, trace pointing to code line on error
@@ -63,13 +64,13 @@ With Pipelining, the Connector sends commands without waiting for server results
 
 The Connector doesn't wait for query results before sending the next `INSERT` statement. Instead, it sends queries one after the other, avoiding much of the network latency.
 
-For more information, see the [Pipelining](/documentation/pipelining.md) documentation.
+For more information, see the [Pipelining](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-pipelining) documentation.
 
 ### Bulk insert
 
 Some use cases require a large amount of data to be inserted into a database table. By using batch processing, these queries can be sent to the database in one call, thus improving performance.
 
-For more information, see the [Batch](/documentation/batch.md) documentation.
+For more information, see the [Batch](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-batch-api) documentation.
 
 
 ## Benchmarks

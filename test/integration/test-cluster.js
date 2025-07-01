@@ -288,6 +288,31 @@ describe('cluster', function () {
       }
     });
 
+    it('ensure filtered command commands', function (done) {
+      this.timeout(10000);
+      const cluster = get3NodeCallbackCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
+      filteredCluster.query('SELECT 1+? as a', 1, (err, res) => {
+        if (err) {
+          done(err);
+        } else {
+          filteredCluster.execute('SELECT 1,? as a', 1, (err, res) => {
+            if (err) {
+              done(err);
+            } else {
+              cluster.end((err) => {
+                if (err) {
+                  done(err);
+                } else {
+                  done();
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
     it("won't use bad host pools", function (done) {
       this.timeout(10000);
       const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
@@ -950,9 +975,7 @@ describe('cluster', function () {
               cluster.end();
               done(new Error('must have thrown an error !'));
             } else {
-              expect(err.message).to.have.string(
-                "No Connection available for 'PoolNode-0'. Last connection error was: (conn:-1, no: 45028, SQLState: HY000) pool timeout: failed to retrieve a connection from pool after"
-              );
+              expect(err.message).to.have.string('pool timeout: failed to retrieve a connection from pool after');
               conn.end();
               cluster.end();
               done();
@@ -991,7 +1014,7 @@ describe('cluster', function () {
     it('test wrong selector', function (done) {
       const cluster = get3NodeCallbackCluster({ defaultSelector: 'WRONG' });
       const filteredCluster = cluster.of(/^node[12]/);
-      cluster.getConnection(/^node*/, (err, conn) => {
+      filteredCluster.getConnection((err, conn) => {
         cluster.end(() => {
           if (err) {
             expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");

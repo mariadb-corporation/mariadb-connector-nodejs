@@ -1,9 +1,15 @@
 {
   "name": "mariadb",
-  "version": "3.4.2",
+  "version": "3.4.3",
   "description": "fast mariadb or mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "callback": ["types/callback.d.ts"],
+      "*": ["types/index.d.ts"]
+    }
+  },
   "directories": {
     "lib": "lib",
     "test": "test"
@@ -48,13 +54,13 @@
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1-or-later",
   "dependencies": {
-    "@types/geojson": "^7946.0.14",
-    "@types/node": "^22.5.4",
     "denque": "^2.1.0",
     "iconv-lite": "^0.6.3",
     "lru-cache": "^10.3.0"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.14",
+    "@types/node": "^22.5.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "benchmark": "^2.1.4",

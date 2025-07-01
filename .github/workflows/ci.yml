@@ -3,7 +3,6 @@ name: Run CI Tests
 
 on:
   push:
-    branches: ['master', 'develop', 'feature/**', 'maintenance/**']
   pull_request:
   workflow_dispatch:
   schedule:
@@ -20,10 +19,15 @@ env:
   TEST_DB_USER: root
   TEST_DB_PASSWORD: "heyPassw-!*20oRd"
   TEST_DB_DATABASE: testn
-
 jobs:
   setup:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'schedule' ||
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/maintenance/3.2' ||
+      github.ref == 'refs/heads/maintenance/3.3'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.final-matrix }}
     steps:
@@ -57,8 +61,8 @@ jobs:
           test-db-database: ${{ env.TEST_DB_DATABASE }}
           test-db-port: ${{ env.TEST_DB_PORT }}
           additional-conf: ${{ matrix.additional-conf || '' }}
-          registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || '' }}
-          registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || '' }}
+          registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || (secrets.DOCKER_PWD != '' && 'mariadbtest' || '') }}
+          registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || secrets.DOCKER_PWD }}
           os: ${{ matrix.os }}
 
       - uses: actions/setup-node@v4
