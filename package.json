@@ -4,6 +4,12 @@
   "description": "fast mariadb or mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "callback": ["types/callback.d.ts"],
+      "*": ["types/index.d.ts"]
+    }
+  },
   "directories": {
     "lib": "lib",
     "test": "test"

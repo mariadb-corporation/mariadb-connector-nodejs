@@ -11,14 +11,21 @@
         "strictFunctionTypes": true,
         "baseUrl": "../",
         "typeRoots": [
+            "../node_modules/@types",
             "../"
         ],
         "types": ["node", "geojson"],
         "noEmit": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "allowJs": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true
     },
     "files": [
         "./index.d.ts",
-        "mariadb-tests.ts"
+        "./callback.d.ts",
+        "mariadb-tests.ts",
+        "mariadb-tests-callback.ts"
     ]
 }

@@ -1,8 +1,25 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
-
-import mariadb = require('..');
-import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlError, Types, TypeNumbers } from '..';
+import {
+  Connection,
+  FieldInfo,
+  ConnectionConfig,
+  PoolConfig,
+  UpsertResult,
+  SqlError,
+  Types,
+  TypeNumbers,
+  importFile,
+  defaultOptions,
+  Pool,
+  version,
+  TypeCastResult,
+  TypeCastNextFunction,
+  createPoolCluster,
+  createPool,
+  createConnection,
+  StreamCallback
+} from '..';
 import { Stream } from 'stream';
 import { createReadStream } from 'fs';
 
@@ -10,33 +27,33 @@ import { createReadStream } from 'fs';
 const { baseConfig } = require('../test/conf.js');
 
 function importSqlFile(): Promise<void> {
-  return mariadb.importFile({
+  return importFile({
     host: baseConfig.host,
     user: 'test',
     password: baseConfig.password,
     file: '/somefile'
   });
 }
-function createConnection(option?: ConnectionConfig): Promise<mariadb.Connection> {
-  return mariadb.createConnection({
+function createConn(option?: ConnectionConfig): Promise<Connection> {
+  return createConnection({
     host: baseConfig.host,
     user: option.user,
     password: baseConfig.password,
     logger: {
-      network: (msg) => console.log(msg),
-      query: (msg) => console.log(msg),
-      error: (err) => console.log(err)
+      network: (msg: string) => console.log(msg),
+      query: (msg: string) => console.log(msg),
+      error: (err: Error) => console.log(err)
     },
-    stream: (callback) => {
+    stream: (callback: typeof StreamCallback) => {
       console.log('test');
       callback(null, null);
     },
-    infileStreamFactory: (filepath) => createReadStream(filepath),
+    infileStreamFactory: (filepath: string) => createReadStream(filepath),
     metaEnumerable: true
   });
 }
 
-function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
+function createPoolConfig(options?: PoolConfig): PoolConfig {
   return Object.assign(
     {
       host: baseConfig.host,
@@ -48,7 +65,7 @@ function createPoolConfig(options?: PoolConfig): mariadb.PoolConfig {
   );
 }
 
-function createPoolConfigWithSSl(options?: PoolConfig): mariadb.PoolConfig {
+function createPoolConfigWithSSl(options?: PoolConfig): PoolConfig {
   Object.assign(
     {
       host: baseConfig.host,
@@ -69,23 +86,23 @@ function createPoolConfigWithSSl(options?: PoolConfig): mariadb.PoolConfig {
   );
 }
 
-function createPool(options?: unknown): mariadb.Pool {
-  mariadb.createPool(createPoolConfig(options));
-  return mariadb.createPool(createPoolConfigWithSSl(options));
+function newPool(options?: unknown): Pool {
+  createPool(createPoolConfig(options));
+  return createPool(createPoolConfigWithSSl(options));
 }
 
 async function testMisc(): Promise<void> {
   let rows;
-  const defaultOptions = mariadb.defaultOptions();
-  const defaultOptionsWithTz = mariadb.defaultOptions({
+  const defOptions = defaultOptions();
+  const defaultOptionsWithTz = defaultOptions({
     timezone: '+00:00',
     debugLen: 1024,
     logParam: true,
     queryTimeout: 2000
   });
-  console.log(defaultOptions);
+  console.log(defOptions);
   console.log(defaultOptionsWithTz);
-  const connection = await createConnection();
+  const connection = await createConn();
 
   rows = await connection.query('INSERT INTO myTable VALUE (1)');
   console.log(rows.insertId === 1);
@@ -110,7 +127,7 @@ async function testMisc(): Promise<void> {
     {
       namedPlaceholders: true,
       sql: 'SELECT :val as t',
-      infileStreamFactory: (filepath) => createReadStream(filepath)
+      infileStreamFactory: (filepath: string) => createReadStream(filepath)
     },
     { val: 2 }
   );
@@ -124,7 +141,7 @@ async function testMisc(): Promise<void> {
   console.log(insRes.affectedRows === 2);
 
   let currRow = 0;
-  const stream = prepare.queryStream([1]);
+  const stream = prepare.executeStream([1]);
   for await (const row of stream) {
     console.log(row);
     currRow++;
@@ -180,11 +197,11 @@ async function testMisc(): Promise<void> {
     .on('error', (err: Error) => {
       throw err;
     })
-    .on('fields', (meta) => {
+    .on('fields', (meta: FieldInfo[]) => {
       console.log(meta);
       metaReceived = true;
     })
-    .on('data', (row) => {
+    .on('data', (row: unknown[]) => {
       console.log(row.length > 1);
       currRow++;
     })
@@ -248,7 +265,7 @@ async function testMisc(): Promise<void> {
 }
 
 async function testChangeUser(): Promise<void> {
-  const connection = await createConnection();
+  const connection = await createConnection({});
   try {
     await connection.changeUser({ user: 'this is a bogus user name' });
   } catch (err) {
@@ -257,7 +274,7 @@ async function testChangeUser(): Promise<void> {
 }
 
 async function testTypeCast(): Promise<void> {
-  const changeCaseCast = (column: FieldInfo, next: mariadb.TypeCastNextFunction): mariadb.TypeCastResult => {
+  const changeCaseCast = (column: FieldInfo, next: TypeCastNextFunction): TypeCastResult => {
     const name = column.name();
 
     if (name.startsWith('upp')) {
@@ -327,7 +344,7 @@ async function metaAsArray(): Promise<void> {
 async function testPool(): Promise<void> {
   let pool;
 
-  pool = createPool({
+  pool = newPool({
     connectionLimit: 10
   });
   await pool.importFile({ file: '/path' });
@@ -351,9 +368,9 @@ async function testPool(): Promise<void> {
   const rows = await pool.query('SELECT 1 + 1 AS solution');
   console.log(rows[0].solution === 2);
 
-  pool = createPool('mariadb://root:pwd@localhost:3306/db?connectionLimit=10');
+  pool = newPool('mariadb://root:pwd@localhost:3306/db?connectionLimit=10');
   await pool.end();
-  pool = createPool();
+  pool = newPool();
 
   const connection = await pool.getConnection();
   pool.escape('test');
@@ -374,8 +391,7 @@ async function testPool(): Promise<void> {
 
 async function testPoolCluster(): Promise<void> {
   let connection;
-  const poolCluster = mariadb.createPoolCluster();
-
+  const poolCluster = createPoolCluster();
   const poolConfig = createPoolConfig({
     connectionLimit: 10
   });
@@ -383,6 +399,9 @@ async function testPoolCluster(): Promise<void> {
   poolCluster.add('MASTER', poolConfig);
   poolCluster.add('SLAVE1', poolConfig);
   poolCluster.add('SLAVE2', poolConfig);
+
+  const sub = poolCluster.of('test');
+  sub.query('SELECT 1');
 
   // Target Group : ALL(anonymous, MASTER, SLAVE1-2), Selector : round-robin(default)
   connection = await poolCluster.getConnection();
@@ -412,7 +431,7 @@ async function testPoolCluster(): Promise<void> {
   await filtered.query('SELECT 1 + 1 AS solution');
   await filtered.execute('SELECT 1 + 1 AS solution');
   await connection.release();
-  mariadb.createPoolCluster({
+  createPoolCluster({
     canRetry: true,
     removeNodeErrorCount: 3,
     restoreNodeTimeout: 1000,
@@ -444,4 +463,4 @@ async function runTests(): Promise<void> {
 
 runTests();
 
-mariadb.version;
+console.log(version);

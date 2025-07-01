@@ -64,6 +64,19 @@ describe('results-set streaming', () => {
     });
   });
 
+  it('Streaming using queryStream result-set for-await-of callback', async function () {
+    let currRow = 0;
+    const conn = base.createCallbackConnection();
+    conn.connect(async (err) => {
+      const stream = conn.queryStream('SELECT * FROM testStreamResult');
+      for await (const row of stream) {
+        assert.equal(currRow++, row.v);
+      }
+      assert.equal(10000, currRow);
+      conn.end();
+    });
+  });
+
   it('Streaming execute result-set for-await-of', async function () {
     let currRow = 0;
     const prepare = await shareConn.prepare('SELECT * FROM testStreamResult');
@@ -129,6 +142,33 @@ describe('results-set streaming', () => {
     const conn = base.createCallbackConnection();
     conn.connect(async (err) => {
       const stream = conn.query('SELECT * FROM testStreamResult').stream();
+      stream
+        .on('error', (err) => {
+          done(new Error('must not have thrown any error !'));
+        })
+        .on('fields', (meta) => {
+          assert.equal(meta.length, 1);
+          metaReceived = true;
+        })
+        .on('data', (row) => {
+          assert.equal(currRow++, row.v);
+        })
+        .on('end', () => {
+          assert.equal(0, currRow);
+          assert.isOk(metaReceived);
+          conn.end();
+          done();
+        });
+      stream.close();
+    });
+  });
+
+  it('Streaming result-set close callback queryStream', function (done) {
+    let currRow = 0;
+    let metaReceived = false;
+    const conn = base.createCallbackConnection();
+    conn.connect(async (err) => {
+      const stream = conn.queryStream('SELECT * FROM testStreamResult');
       stream
         .on('error', (err) => {
           done(new Error('must not have thrown any error !'));
