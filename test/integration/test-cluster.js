@@ -288,6 +288,31 @@ describe('cluster', function () {
       }
     });
 
+    it('ensure filtered command commands', function (done) {
+      this.timeout(10000);
+      const cluster = get3NodeCallbackCluster();
+      const filteredCluster = cluster.of(/^node[12]/);
+      filteredCluster.query('SELECT 1+? as a', 1, (err, res) => {
+        if (err) {
+          done(err);
+        } else {
+          filteredCluster.execute('SELECT 1,? as a', 1, (err, res) => {
+            if (err) {
+              done(err);
+            } else {
+              cluster.end((err) => {
+                if (err) {
+                  done(err);
+                } else {
+                  done();
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
     it("won't use bad host pools", function (done) {
       this.timeout(10000);
       const cluster = basePromise.createPoolCluster({ removeNodeErrorCount: 5 });
@@ -991,7 +1016,7 @@ describe('cluster', function () {
     it('test wrong selector', function (done) {
       const cluster = get3NodeCallbackCluster({ defaultSelector: 'WRONG' });
       const filteredCluster = cluster.of(/^node[12]/);
-      cluster.getConnection(/^node*/, (err, conn) => {
+      filteredCluster.getConnection(/^node*/, (err, conn) => {
         cluster.end(() => {
           if (err) {
             expect(err.message).to.equal("Wrong selector value 'WRONG'. Possible values are 'RR','RANDOM' or 'ORDER'");
