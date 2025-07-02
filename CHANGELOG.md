@@ -1,5 +1,18 @@
 # Change Log
 
+
+## [3.4.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.2) (Jul 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.2...3.4.3)
+
+## Notable changes
+* CONJS-309: Enhanced TypeScript support by adding mariadb/callback type definitions
+
+## Issues Fixed
+* CONJS-319: Resolved SSL identity verification issue where servername parameter wasn't being properly validated
+* CONJS-320: Fixed cluster filtering problems in query/execute operations when using the callback API
+* CONJS-321: Moved @types/geojson and @types/node packages to development dependencies for cleaner production builds
+
+
 ## [3.4.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.2) (Apr 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.1...3.4.2)
 
