@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "3.4.3",
+  "version": "3.4.4",
   "description": "fast mariadb or mysql connector.",
   "main": "promise.js",
   "types": "types/index.d.ts",
@@ -17,9 +17,9 @@
   "private": false,
   "scripts": {
     "test": "npm run test:types-prettier && npm run test:prettier && npm run test:types && npm run test:lint && npm run test:base",
-    "test:base": "mocha --no-parallel --timeout 5000 \"test/**/*.js\" ",
-    "test:lint": "eslint \"*.js\" \"{lib,test}/**/*.js\" ",
-    "test:types": "eslint \"types/*.ts\" ",
+    "test:base": "mocha --no-parallel --timeout 5000 \"test/**/*.js\"",
+    "test:lint": "eslint \"*.js\" \"{lib,test}/**/*.js\"",
+    "test:types": "eslint \"types/*.ts\"",
     "test:types-prettier": "prettier --write \"types/*.ts\"",
     "test:prettier": "prettier --write \"*.js\" \"{tools,lib,test,benchmarks}/**/*.js\"",
     "coverage": "npm run coverage:test && npm run coverage:create && npm run coverage:send",
@@ -44,6 +44,8 @@
   "files": [
     "lib",
     "types/index.d.ts",
+    "types/callback.d.ts",
+    "types/share.d.ts",
     "promise.js",
     "check-node.js",
     "callback.js"
