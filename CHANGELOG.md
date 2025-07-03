@@ -1,7 +1,14 @@
 # Change Log
 
 
-## [3.4.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.2) (Jul 2025)
+## [3.4.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.4) (Jul 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.3...3.4.4)
+
+## Issues Fixed
+* CONJS-322: TypeScript types/share.d.ts and types/callback.d.ts are not published
+
+
+## [3.4.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.3) (Jul 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.2...3.4.3)
 
 ## Notable changes
