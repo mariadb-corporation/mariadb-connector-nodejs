@@ -468,7 +468,7 @@ describe('ssl', function () {
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) this.skip();
     if (Conf.baseConfig.host !== 'localhost') this.skip();
 
-    const conn = await base.createConnection({
+    let conn = await base.createConnection({
       ssl: {
         ca: ca,
         checkServerIdentity: (servername, cert) => {}
@@ -477,6 +477,27 @@ describe('ssl', function () {
     });
     await validConnection(conn);
     conn.end();
+
+    let success = false;
+    try {
+      conn = await base.createConnection({
+        ssl: {
+          ca: ca,
+          checkServerIdentity: (servername, cert) => {
+            throw new Error('test identity');
+          }
+        },
+        port: sslPort
+      });
+      await validConnection(conn);
+      conn.end();
+      success = true;
+    } catch (e) {
+      // eat
+    }
+    if (success && (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0))) {
+      throw new Error('Must have thrown an exception, since server identity must not have been verified !');
+    }
   });
 
   it('CA name verification error', async function () {
