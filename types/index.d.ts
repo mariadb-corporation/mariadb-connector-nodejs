@@ -8,8 +8,8 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.1
 
-import stream = require('stream');
-import events = require('events');
+import { Readable } from 'stream';
+import { EventEmitter } from 'events';
 
 import type {
   ConnectionConfig,
@@ -37,11 +37,11 @@ export interface Prepare {
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream(values?: any): stream.Readable;
+  executeStream(values?: any): Readable;
   close(): void;
 }
 
-export interface Connection extends events.EventEmitter {
+export interface Connection extends EventEmitter {
   /**
    * Connection information
    */
@@ -98,7 +98,7 @@ export interface Connection extends events.EventEmitter {
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  queryStream(sql: string | QueryOptions, values?: any): stream.Readable;
+  queryStream(sql: string | QueryOptions, values?: any): Readable;
 
   /**
    * Send an empty MySQL packet to ensure the connection is active, and reset @@wait_timeout

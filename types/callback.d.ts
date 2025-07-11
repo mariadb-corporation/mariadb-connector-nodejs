@@ -12,8 +12,9 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import stream = require('stream');
-import events = require('events');
+import { Readable } from 'stream';
+import { EventEmitter } from 'events';
+
 import type {
   ConnectionConfig,
   ImportFileConfig,
@@ -41,11 +42,11 @@ export interface Prepare {
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream(values: any): stream.Readable;
+  executeStream(values: any): Readable;
   close(): void;
 }
 
-export interface Connection extends events.EventEmitter {
+export interface Connection extends EventEmitter {
   /** Connection information */
   info: ConnectionInfo | null;
   /** Alias of info.threadId for compatibility */
@@ -83,7 +84,7 @@ export interface Connection extends events.EventEmitter {
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
-  queryStream(sql: string | QueryOptions, values?: any): stream.Readable;
+  queryStream(sql: string | QueryOptions, values?: any): Readable;
   ping(callback: (err: SqlError | null) => void): void;
   reset(callback: (err: SqlError | null) => void): void;
   importFile(config: SqlImportOptions, callback: (err: SqlError | null) => void): void;

@@ -1,11 +1,11 @@
-import geojson = require('geojson');
-import stream = require('stream');
-import tls = require('tls');
+import { Geometry } from 'geojson';
+import { Duplex, Readable } from 'stream';
+import { SecureContextOptions } from 'tls';
 
-export type TypeCastResult = boolean | number | string | symbol | null | Date | geojson.Geometry | Buffer;
+export type TypeCastResult = boolean | number | string | symbol | null | Date | Geometry | Buffer;
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
-export function StreamCallback(err?: Error, stream?: stream.Duplex): void;
+export function StreamCallback(err?: Error, stream?: Duplex): void;
 
 export interface LoggerConfig {
   network?: (msg: string) => void;
@@ -42,7 +42,7 @@ export interface FieldInfo {
   long(): number | null;
   decimal(): number | null;
   date(): Date | null;
-  geometry(): geojson.Geometry | null;
+  geometry(): Geometry | null;
 }
 
 export interface ImportFileConfig extends ConnectionConfig {
@@ -593,7 +593,7 @@ export interface QueryConfig {
    * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
    * @param filepath
    */
-  infileStreamFactory?: (filepath: string) => stream.Readable;
+  infileStreamFactory?: (filepath: string) => Readable;
 }
 
 export interface QueryOptions extends QueryConfig {
@@ -679,7 +679,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
    * https://github.com/mariadb-corporation/mariadb-connector-nodejs/blob/master/documentation/connection-options.md#ssl
    * for more information
    */
-  ssl?: boolean | (tls.SecureContextOptions & { rejectUnauthorized?: boolean });
+  ssl?: boolean | (SecureContextOptions & { rejectUnauthorized?: boolean });
 
   /**
    * Compress exchanges using gzip.
@@ -797,8 +797,8 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   rowsAsArray?: boolean;
 
   /**
-   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * Permit to defined function calling for LOAD LOCAL command, for extra verification like path restriction.
    * @param filepath
    */
-  infileStreamFactory?: (filepath: string) => stream.Readable;
+  infileStreamFactory?: (filepath: string) => Readable;
 }

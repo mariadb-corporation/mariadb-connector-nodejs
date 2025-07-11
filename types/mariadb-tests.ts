@@ -24,7 +24,7 @@ import { Stream } from 'stream';
 import { createReadStream } from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { baseConfig } = require('../test/conf.js');
+import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(): Promise<void> {
   return importFile({
@@ -178,6 +178,7 @@ async function testMisc(): Promise<void> {
     throw new Error('Should have thrown error!' + rows);
   } catch (err) {
     // Received expected error
+    console.log(err);
   }
 
   try {
@@ -269,7 +270,7 @@ async function testChangeUser(): Promise<void> {
   try {
     await connection.changeUser({ user: 'this is a bogus user name' });
   } catch (err) {
-    console.log('Correctly threw an error when changing user');
+    console.log('Correctly threw an error when changing user' + err.message);
   }
 }
 

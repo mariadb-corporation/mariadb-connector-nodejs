@@ -22,7 +22,7 @@ import {
 import { createReadStream } from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { baseConfig } = require('../test/conf.js');
+import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(cb: (err?: Error) => void) {
   importFile(
