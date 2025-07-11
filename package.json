@@ -6,8 +6,12 @@
   "types": "types/index.d.ts",
   "typesVersions": {
     "*": {
-      "callback": ["types/callback.d.ts"],
-      "*": ["types/index.d.ts"]
+      "callback": [
+        "types/callback.d.ts"
+      ],
+      "*": [
+        "types/index.d.ts"
+      ]
     }
   },
   "directories": {
@@ -56,9 +60,11 @@
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1-or-later",
   "dependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^24.0.13",
     "denque": "^2.1.0",
     "iconv-lite": "^0.6.3",
-    "lru-cache": "^10.3.0"
+    "lru-cache": "^10.4.3"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.14",
