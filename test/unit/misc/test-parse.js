@@ -15,85 +15,85 @@ describe('parse', () => {
 
   describe('split', () => {
     it('EOF', () => {
-      const res = Parse.splitQuery(Buffer.from('select ? // comment ? \n , ?', 'utf8'));
+      const res = Parse.splitQuery(Buffer.from('select ? -- comment ? \n , ?', 'utf8'));
       assert.deepEqual(res, [7, 8, 26, 27]);
     });
   });
 
   describe('split queries', () => {
     it('Normal', () => {
-      const sqlBytes = Buffer.from('select ? // comment ? \n , ?;\nINSERT 1\n;', 'utf8');
+      const sqlBytes = Buffer.from('select ? -- comment ? \n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ['select ? // comment ? \n , ?', '\nINSERT 1\n']);
+      assert.deepEqual(res, ['select ? -- comment ? \n , ?', '\nINSERT 1\n']);
     });
     it('Normal ending semicolon', () => {
-      const sqlBytes = Buffer.from('select ? // comment ? \n , ?;\nINSERT 1;', 'utf8');
+      const sqlBytes = Buffer.from('select ? -- comment ? \n , ?;\nINSERT 1;', 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ['select ? // comment ? \n , ?', '\nINSERT 1']);
+      assert.deepEqual(res, ['select ? -- comment ? \n , ?', '\nINSERT 1']);
     });
     it('EOF', () => {
-      const sqlBytes = Buffer.from('select ? // comment ; \n , ?;\nINSERT 1\n;', 'utf8');
+      const sqlBytes = Buffer.from('select ? -- comment ; \n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ['select ? // comment ; \n , ?', '\nINSERT 1\n']);
+      assert.deepEqual(res, ['select ? -- comment ; \n , ?', '\nINSERT 1\n']);
     });
 
     it('EOF in comment', () => {
-      const sqlBytes = Buffer.from('select ? "// comment ; "\n , ?;\nINSERT 1\n;', 'utf8');
+      const sqlBytes = Buffer.from('select ? "-- comment ; "\n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ['select ? "// comment ; "\n , ?', '\nINSERT 1\n']);
+      assert.deepEqual(res, ['select ? "-- comment ; "\n , ?', '\nINSERT 1\n']);
     });
 
     it('EOF in comment 2', () => {
-      const sqlBytes = Buffer.from("select ? '// comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
+      const sqlBytes = Buffer.from("select ? '-- comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ["select ? '// comment ; '\n , ?", '\nINSERT 1\n']);
+      assert.deepEqual(res, ["select ? '-- comment ; '\n , ?", '\nINSERT 1\n']);
     });
 
     it('EOF in comment 3', () => {
-      const sqlBytes = Buffer.from("select ? \\'// comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
+      const sqlBytes = Buffer.from("select ? \\'-- comment ; '\n , ?;\nINSERT 1\n;", 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ["select ? \\'// comment ; '\n , ?", '\nINSERT 1\n']);
+      assert.deepEqual(res, ["select ? \\'-- comment ; '\n , ?", '\nINSERT 1\n']);
     });
 
     it('escape quotes', () => {
-      const sqlBytes = Buffer.from('select ? "// comment \\"; "\n , ?;\nINSERT 1\n;', 'utf8');
+      const sqlBytes = Buffer.from('select ? "-- comment \\"; "\n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
         buffer: sqlBytes,
         offset: 0,
         end: sqlBytes.length
       };
       const res = Parse.parseQueries(buf);
-      assert.deepEqual(res, ['select ? "// comment \\"; "\n , ?', '\nINSERT 1\n']);
+      assert.deepEqual(res, ['select ? "-- comment \\"; "\n , ?', '\nINSERT 1\n']);
     });
 
     it('Hash', () => {
@@ -129,15 +129,15 @@ describe('parse', () => {
     });
 
     it('EOF', () => {
-      const res = Parse.searchPlaceholder('select :id1 // comment :id2 \n , :id3');
+      const res = Parse.searchPlaceholder('select :id1 -- comment :id2 \n , :id3');
       assert.deepEqual(res, {
-        placeHolderIndex: ['id1', 'id2', 'id3'],
-        sql: 'select ? // comment ? \n , ?'
+        placeHolderIndex: ['id1', 'id3'],
+        sql: 'select ? -- comment :id2 \n , ?'
       });
     });
 
     it('question mark along with placeholder', () => {
-      const sql = 'select :id1 // comment :id2 \n , ?';
+      const sql = 'select :id1 -- comment :id2 \n , ?';
       const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2, id3: 3 }, () => sql);
       assert.deepEqual(res, {
         paramPositions: [7, 11, 32, 33],
@@ -146,7 +146,7 @@ describe('parse', () => {
     });
 
     it('question mark only', () => {
-      const sql = 'select ? // comment :id2 \n , ?';
+      const sql = 'select ? -- comment :id2 \n , ?';
       const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2, id3: 3 }, () => sql);
       assert.deepEqual(res, {
         paramPositions: [7, 8, 29, 30],
