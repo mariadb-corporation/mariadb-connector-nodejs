@@ -1,5 +1,12 @@
 # Change Log
 
+## [3.4.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.5) (Jul 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.4...3.4.5)
+
+## Issues Fixed
+* CONJS-323: Fixed SSL connection error with custom CA certificates causing "TypeError: validationFunction is not a function"
+* CONJS-324: Added missing TypeScript type definitions (@types/geojson, @types/node) to dependencies
+
 
 ## [3.4.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.4) (Jul 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.3...3.4.4)
