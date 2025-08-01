@@ -3,7 +3,9 @@
 
 'use strict';
 
-const hasMinVersion = function (nodeVersionStr, connectorRequirement) {
+import packageJson from './package.json' with { type: 'json' };
+
+export function hasMinVersion(nodeVersionStr, connectorRequirement) {
   const versNode = nodeVersionStr.split('.');
   const versReq = connectorRequirement.split('.');
 
@@ -17,11 +19,9 @@ const hasMinVersion = function (nodeVersionStr, connectorRequirement) {
   const minorNode = Number(versNode[1]);
   const minorReq = Number(versReq[1]);
   return minorNode >= minorReq;
-};
+}
 
-module.exports.hasMinVersion = hasMinVersion;
-
-const requirement = require('./package.json').engines.node;
+const requirement = packageJson.engines.node;
 const connectorRequirement = requirement.replace('>=', '').trim();
 const currentNodeVersion = process.version.replace('v', '');
 if (!hasMinVersion(currentNodeVersion, connectorRequirement)) {

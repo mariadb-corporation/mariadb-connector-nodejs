@@ -1,6 +1,7 @@
 import { Geometry } from 'geojson';
-import { Duplex, Readable } from 'stream';
-import { SecureContextOptions } from 'tls';
+import { Buffer } from 'node:buffer';
+import { Duplex, Readable } from 'node:stream';
+import { SecureContextOptions } from 'node:tls';
 
 export type TypeCastResult = boolean | number | string | symbol | null | Date | Geometry | Buffer;
 export type TypeCastNextFunction = () => TypeCastResult;
@@ -14,9 +15,7 @@ export interface LoggerConfig {
   warning?: (msg: string) => void;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export interface FieldInfo {
   collation: Collation;
@@ -242,24 +241,22 @@ export interface UserConnectionConfig {
    *
    * If JSON is set, add JSON key/value to those values.
    *
-   * When Performance Schema is enabled, server can display client information on each connection.
+   * When Performance Schema is enabled, the server can display client information on each connection.
    */
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   connectAttributes?: any;
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   /**
    * Protocol character set used with the server.
    * Connection collation will be the default collation associated with charset.
-   * It's mainly used for micro-optimizations. The default is often sufficient.
-   * example 'UTF8MB4', 'CP1250'.
+   * It's mainly used for micro-optimizations. The default is often enough.
+   * for example, 'UTF8MB4', 'CP1250'.
    * (default 'UTF8MB4')
    */
   charset?: string;
 
   /**
-   * Permit to defined collation used for connection.
-   * This will defined the charset encoding used for exchanges with database and defines the order used when
+   * Permit defined collation used for connection.
+   * This will define the charset encoding used for exchanges with database and defines the order used when
    * comparing strings. It's mainly used for micro-optimizations
    * (Default: 'UTF8MB4_UNICODE_CI')
    */
@@ -302,7 +299,7 @@ export interface SqlError extends Error {
   sqlMessage: string | null;
 
   /**
-   * The sql command associate
+   * The SQL command associate
    */
   sql: string | null;
 
@@ -312,7 +309,7 @@ export interface SqlError extends Error {
   errno: number;
 
   /**
-   * The sql state
+   * The SQL state
    */
   sqlState?: string | null;
 
@@ -339,7 +336,7 @@ interface SqlErrorConstructor extends ErrorConstructor {
 
 declare const SqlError: SqlErrorConstructor;
 
-export const enum TypeNumbers {
+export enum TypeNumbers {
   DECIMAL = 0,
   TINY = 1,
   SHORT = 2,
@@ -406,7 +403,7 @@ export const enum Flags {
   NUM_FLAG = 1 << 14
 }
 
-export const enum Types {
+export enum Types {
   DECIMAL = 'DECIMAL',
   TINY = 'TINY',
   SHORT = 'SHORT',
@@ -499,7 +496,7 @@ export interface QueryConfig {
    * Compatibility option to permit setting multiple value by a JSON object to replace one question mark.
    * key values will replace the question mark with format like key1=val,key2='val2'.
    * Since it doesn't respect the usual prepared statement format that one value is for one question mark,
-   * this can lead to incomprehension, even if badly use to possible injection.
+   * this can lead to incomprehension, even if you badly use to possible injection.
    */
   permitSetMultiParamEntries?: boolean;
 
@@ -535,17 +532,17 @@ export interface QueryConfig {
   timeout?: number;
 
   /**
-   * indicate if JSON fields for MariaDB server 10.5.2+ results in JSON format (or String if disabled)
+   * indicate if JSON fields for MariaDB server 10.5.2+ result in JSON format (or String if disabled)
    */
   autoJsonMap?: boolean;
 
   /**
-   * Indicate if array are included in parenthesis. This option permit compatibility with version < 2.5
+   * Indicate if an array is included in parentheses. This option permits compatibility with the connector version < 2.5
    */
   arrayParenthesis?: boolean;
 
   /**
-   * indicate to throw an exception if result-set will not contain some data due to having duplicate identifier
+   * indicate to throw an exception if a result-set does not contain some data due to having duplicate identifier
    * (Default: true)
    */
   checkDuplicate?: boolean;
@@ -590,7 +587,7 @@ export interface QueryConfig {
   logger?: LoggerConfig;
 
   /**
-   * Permit to defined function to call for LOAD LOCAL command, for extra verification like path restriction.
+   * Permit to defined function calling for LOAD LOCAL command, for extra verification like path restriction.
    * @param filepath
    */
   infileStreamFactory?: (filepath: string) => Readable;
@@ -615,7 +612,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   port?: number;
 
   /**
-   * The path to an unix domain socket to connect to. When used host and port are ignored
+   * The path to a unix domain socket to connect to. When used host and port are ignored
    */
   socketPath?: string;
 
@@ -647,7 +644,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   debugCompress?: boolean;
 
   /**
-   * When debugging, maximum packet length to write to console.
+   * When debugging, maximum packet length to write to the console.
    * (Default: 256)
    */
   debugLen?: number;
@@ -689,7 +686,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   compress?: boolean;
 
   /**
-   * Debug option: permit to save last exchanged packet.
+   * Debug option: permit saving last exchanged packet.
    * Error messages will display those last exchanged packet.
    *
    * (Default: false)
@@ -717,19 +714,17 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
    * Permit setting session variables when connecting.
    * Example: sessionVariables:{'idle_transaction_timeout':10000}
    */
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   sessionVariables?: any;
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   /**
-   * permit to indicate server global variable max_allowed_packet value to ensure efficient batching.
+   * permit indicating server global variable max_allowed_packet value to ensure efficient batching.
    * default is 4Mb. see batch documentation
    */
   maxAllowedPacket?: number;
 
   /**
    * permit enabling socket keeping alive, setting delay. 0 means aren't enabled.
-   * Keep in mind that this don't reset server
+   * Keep in mind that this doesn't reset server
    * [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout)
    * (use pool option idleTimeout for that).
    * in ms
@@ -776,7 +771,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
    * @param err error is any error occurs during stream creation
    * @param stream if wanting to set a special stream (Standard socket will be created if not set)
    */
-  stream?: (callback?: typeof StreamCallback) => void;
+  stream?: (callback: typeof StreamCallback) => void;
 
   /**
    * make result-set metadata property enumerable.

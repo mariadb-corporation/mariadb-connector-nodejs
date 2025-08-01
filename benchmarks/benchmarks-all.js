@@ -1,11 +1,11 @@
 'use strict';
 
-const fs = require('fs');
-const createBenchSuite = require('./common-bench');
+import fs from 'node:fs';
+import createBenchSuite from './common-bench.js';
 
 const launchBench = async function (path, list) {
   const elem = list.pop();
-  const bench = require('./benchs/' + elem);
+  const bench = await import('./benchs/' + elem);
   const suite = await createBenchSuite(bench);
   if (list.length > 0) {
     suite.on('complete', () => launchBench(path, list));

@@ -9,12 +9,12 @@ for (let i = 1; i < 10; i++) {
   sqlCol += ',t' + i;
   sqlTable += ',t' + i + ' DATETIME(6)';
 }
-sqlInsert = 'INSERT INTO perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
+const sqlInsert = 'INSERT INTO perfTestText(' + sqlCol + ') VALUES (?' + sqlParam + ')';
 sqlTable += ', PRIMARY KEY (id))';
 
-module.exports.title = 'insert 10 Dates';
-module.exports.displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
-module.exports.benchFct = async function (conn, type, deferred) {
+export const title = 'insert 10 Dates';
+export const displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
+export const benchFct = async function (conn, type, deferred) {
   const params = [];
   for (let i = 0; i < 10; i++) {
     params.push(new Date());
@@ -23,8 +23,7 @@ module.exports.benchFct = async function (conn, type, deferred) {
   const rows = await conn.query(sqlInsert, params);
   deferred.resolve(rows);
 };
-
-module.exports.initFct = async function (conn) {
+export const initFct = async function (conn) {
   try {
     await Promise.all([
       conn.query('DROP TABLE IF EXISTS perfTestText'),
@@ -38,7 +37,6 @@ module.exports.initFct = async function (conn) {
     ]);
   }
 };
-
-module.exports.onComplete = async function (conn) {
+export const onComplete = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestText');
 };

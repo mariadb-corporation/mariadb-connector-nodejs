@@ -3,21 +3,21 @@
 
 'use strict';
 
-require('./check-node');
+import './check-node.js';
+import ConnectionCallback from './lib/connection-callback.js';
+import ClusterCallback from './lib/cluster-callback.js';
+import PoolCallback from './lib/pool-callback.js';
+import ConnOptions from './lib/config/connection-options.js';
+import PoolOptions from './lib/config/pool-options.js';
+import ClusterOptions from './lib/config/cluster-options.js';
+import Connection from './lib/connection.js';
+import * as SqlError from './lib/misc/errors.js';
+import packageJson from './package.json' with { type: 'json' };
 
-const ConnectionCallback = require('./lib/connection-callback');
-const ClusterCallback = require('./lib/cluster-callback');
-const PoolCallback = require('./lib/pool-callback');
+export const version = packageJson.version;
+export { SqlError };
 
-const ConnOptions = require('./lib/config/connection-options');
-const PoolOptions = require('./lib/config/pool-options');
-const ClusterOptions = require('./lib/config/cluster-options');
-const Connection = require('./lib/connection');
-
-module.exports.version = require('./package.json').version;
-module.exports.SqlError = require('./lib/misc/errors').SqlError;
-
-module.exports.defaultOptions = function defaultOptions(opts) {
+export function defaultOptions(opts) {
   const connOpts = new ConnOptions(opts);
   const res = {};
   for (const [key, value] of Object.entries(connOpts)) {
@@ -26,9 +26,9 @@ module.exports.defaultOptions = function defaultOptions(opts) {
     }
   }
   return res;
-};
+}
 
-module.exports.createConnection = function createConnection(opts) {
+export function createConnection(opts) {
   const conn = new Connection(new ConnOptions(opts));
   const connCallback = new ConnectionCallback(conn);
   conn
@@ -40,22 +40,22 @@ module.exports.createConnection = function createConnection(opts) {
     )
     .catch(conn.emit.bind(conn, 'connect'));
   return connCallback;
-};
+}
 
-exports.createPool = function createPool(opts) {
+export function createPool(opts) {
   const options = new PoolOptions(opts);
   const pool = new PoolCallback(options);
   // adding a default error handler to avoid exiting application on connection error.
   pool.on('error', (err) => {});
   return pool;
-};
+}
 
-exports.createPoolCluster = function createPoolCluster(opts) {
+export function createPoolCluster(opts) {
   const options = new ClusterOptions(opts);
   return new ClusterCallback(options);
-};
+}
 
-module.exports.importFile = function importFile(opts, callback) {
+export function importFile(opts, callback) {
   const cb = callback ? callback : () => {};
   try {
     const options = new ConnOptions(opts);
@@ -73,4 +73,4 @@ module.exports.importFile = function importFile(opts, callback) {
   } catch (err) {
     cb(err);
   }
-};
+}

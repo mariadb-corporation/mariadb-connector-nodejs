@@ -8,18 +8,20 @@
  * change <i> version </i> to indicate mariadb source files.
  */
 
-const https = require('https');
-const fs = require('fs');
-const readline = require('readline');
-const os = require('os');
-const path = require('path');
+import https from 'node:https';
+import fs from 'node:fs';
+import readline from 'node:readline';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { join, dirname } from 'node:path';
 
-const version = '10.9';
-const extendedUrl = 'https://raw.githubusercontent.com/MariaDB/server/' + version + '/sql/share/errmsg-utf8.txt';
-const baseUrl = 'https://raw.githubusercontent.com/MariaDB/server/' + version + '/include/my_base.h';
-const fileName = path.join(os.tmpdir(), 'mariadb_errmsg.txt');
-const fileNameBase = path.join(os.tmpdir(), 'my_base.h');
-const destFileName = path.join(__dirname, '/../lib/const/error-code.js');
+const version = '12.0';
+const extendedUrl = 'https://raw.githubusercontent.com/MariaDB/server/main/sql/share/errmsg-utf8.txt';
+const baseUrl = 'https://raw.githubusercontent.com/MariaDB/server/main/include/my_base.h';
+const fileName = join(os.tmpdir(), 'mariadb_errmsg.txt');
+const fileNameBase = join(os.tmpdir(), 'my_base.h');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const destFileName = join(__dirname, '/../lib/const/error-code.js');
 
 const download = function (url, dest, cb) {
   const file = fs.createWriteStream(dest);
@@ -48,7 +50,7 @@ const writeFile = function () {
   const header =
     "'use strict';\n\n" +
     '/**\n' +
-    ' * File generated using test/tools/generate-mariadb.js\n' +
+    ' * File generated using tools/generate-mariadb.js\n' +
     ' * from MariaDB ' +
     version +
     '\n' +
@@ -61,7 +63,7 @@ const writeFile = function () {
   for (let i = 0; i < maria_errors.length; i++) {
     if (maria_errors[i]) writer.write('codes[' + i + "] = '" + maria_errors[i] + "';\n");
   }
-  writer.end('\nmodule.exports.codes = codes;\n');
+  writer.end('\nexport default codes;\n');
   console.log('finished');
 };
 

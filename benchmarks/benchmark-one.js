@@ -3,11 +3,11 @@
 
 'use strict';
 
-const fs = require('fs');
-const createBenchSuite = require('./common-bench');
+import fs from 'fs';
+import createBenchSuite from './common-bench.js';
+import * as bench from './benchs/do_1_pool.js';
 
 const launchBench = async function (path) {
-  const bench = require('./benchs/select_1000_rows.js');
   const suite = await createBenchSuite(bench);
   suite.run();
 };

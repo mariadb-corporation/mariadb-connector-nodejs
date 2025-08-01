@@ -1,30 +1,27 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2024 MariaDB Corporation Ab
 
-const Benchmark = require('benchmark');
-const chalk = require('chalk');
+import Benchmark from 'benchmark';
+import chalk from 'chalk';
 
 //************************************************
 // LOAD DRIVERS
 //************************************************
-const mariadb = require('../promise');
+import * as mariadb from '../promise.js';
 let mysql, mysql2;
 try {
-  mysql = require('promise-mysql');
+  mysql = await import('promise-mysql');
 } catch (e) {}
 try {
-  mysql2 = require('mysql2/promise');
+  mysql2 = await import('mysql2/promise');
 } catch (e) {}
 
 //************************************************
 // COMMON CONFIGURATION.
-// Mysql and Mysql2 doesn't use server collation, but fixed collation UTF8_GENERAL_CI.
-// setting it to default utf8mb4 collation, to be fair
 //************************************************
-const conf = require('../test/conf');
-const logUtility = require('./log-utility');
+import conf from '../test/conf.js';
+import { displayReport } from './log-utility.js';
 const config = Object.assign({}, conf.baseConfig);
-
 let configWithCharset = null;
 const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMPLES) : 200;
 
@@ -63,7 +60,7 @@ const createBenchSuite = async (bench) => {
   }
 
   suite.on('cycle', function (event) {
-    //console.log(chalk.grey('    ' + String(event.target)));
+    // console.log(chalk.grey('    ' + String(event.target)));
     const type = event.target.name;
     const iteration = 1 / event.target.times.period;
     const variation = event.target.stats.rme;
@@ -77,7 +74,7 @@ const createBenchSuite = async (bench) => {
   });
 
   suite.on('complete', async function () {
-    logUtility.displayReport(reportData, bench.title, bench.displaySql);
+    displayReport(reportData, bench.title, bench.displaySql);
     if (bench.end) {
       const conn = await mariadb.createConnection(config);
       await bench.end(conn);
@@ -93,14 +90,15 @@ const createBenchSuite = async (bench) => {
 //************************************************
 const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   const sources = {};
-  sources['mariadb'] = await mariadb.createConnection(Object.assign({}, config));
-  if (!configWithCharset && sources['mariadb'].info.collation) {
-    const collation = sources['mariadb'].info.collation.name;
+  const mariadbConn = await mariadb.createConnection(Object.assign({}, config));
+  if (!configWithCharset && mariadbConn.info.collation) {
+    const collation = mariadbConn.info.collation.name;
     configWithCharset = Object.assign({}, conf.baseConfig, { charset: collation });
     console.log(configWithCharset);
   }
 
   if (requiresPool == undefined || requiresPool === false) {
+    sources['mariadb'] = mariadbConn;
     if (mysql) {
       if (!mariadbOnly && (requireExecute == undefined || requireExecute === false)) {
         sources['mysql'] = await mysql.createConnection(Object.assign({}, configWithCharset));
@@ -110,11 +108,13 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
       sources['mysql2'] = await mysql2.createConnection(Object.assign({}, configWithCharset));
     }
   } else {
+    await mariadbConn.end();
+    sources['mariadb'] = await mariadb.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     if (!mariadbOnly && mysql) {
       sources['mysql'] = await mysql.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     }
     if (!mariadbOnly && mysql2) {
-      sources['mysql2'] = mysql2.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
+      sources['mysql2'] = await mysql2.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     }
   }
 
@@ -132,4 +132,4 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   return sources;
 };
 
-module.exports = createBenchSuite;
+export default createBenchSuite;

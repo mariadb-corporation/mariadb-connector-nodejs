@@ -3,21 +3,22 @@
 
 'use strict';
 
-require('./check-node');
+import './check-node.js';
+import Connection from './lib/connection.js';
+import ConnectionPromise from './lib/connection-promise.js';
+import PoolPromise from './lib/pool-promise.js';
+import Cluster from './lib/cluster.js';
+import ConnOptions from './lib/config/connection-options.js';
+import PoolOptions from './lib/config/pool-options.js';
+import ClusterOptions from './lib/config/cluster-options.js';
+import * as SqlError from './lib/misc/errors.js';
+import packageJson from './package.json' with { type: 'json' };
 
-const Connection = require('./lib/connection');
-const ConnectionPromise = require('./lib/connection-promise');
-const PoolPromise = require('./lib/pool-promise');
-const Cluster = require('./lib/cluster');
+export const version = packageJson.version;
 
-const ConnOptions = require('./lib/config/connection-options');
-const PoolOptions = require('./lib/config/pool-options');
-const ClusterOptions = require('./lib/config/cluster-options');
+export { SqlError };
 
-module.exports.version = require('./package.json').version;
-module.exports.SqlError = require('./lib/misc/errors').SqlError;
-
-module.exports.defaultOptions = function defaultOptions(opts) {
+export function defaultOptions(opts) {
   const connOpts = new ConnOptions(opts);
   const res = {};
   for (const [key, value] of Object.entries(connOpts)) {
@@ -26,9 +27,9 @@ module.exports.defaultOptions = function defaultOptions(opts) {
     }
   }
   return res;
-};
+}
 
-module.exports.createConnection = function createConnection(opts) {
+export function createConnection(opts) {
   try {
     const options = new ConnOptions(opts);
     const conn = new Connection(options);
@@ -38,22 +39,22 @@ module.exports.createConnection = function createConnection(opts) {
   } catch (err) {
     return Promise.reject(err);
   }
-};
+}
 
-module.exports.createPool = function createPool(opts) {
+export function createPool(opts) {
   const options = new PoolOptions(opts);
   const pool = new PoolPromise(options);
   // adding a default error handler to avoid exiting application on connection error.
   pool.on('error', (err) => {});
   return pool;
-};
+}
 
-module.exports.createPoolCluster = function createPoolCluster(opts) {
+export function createPoolCluster(opts) {
   const options = new ClusterOptions(opts);
   return new Cluster(options);
-};
+}
 
-module.exports.importFile = function importFile(opts) {
+export function importFile(opts) {
   try {
     const options = new ConnOptions(opts);
     const conn = new Connection(options);
@@ -69,4 +70,4 @@ module.exports.importFile = function importFile(opts) {
   } catch (err) {
     return Promise.reject(err);
   }
-};
+}

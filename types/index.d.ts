@@ -1,15 +1,14 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Type definitions for mariadb 2.5
+// Type definitions for mariadb
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
 // Definitions by: Diego Dupin <https://github.com/rusher>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.1
 
-import { Readable } from 'stream';
-import { EventEmitter } from 'events';
+import { Readable } from 'node:stream';
+import { EventEmitter } from 'node:events';
 
 import type {
   ConnectionConfig,
@@ -22,11 +21,12 @@ import type {
   SqlImportOptions,
   ConnectionInfo,
   UserConnectionConfig
-} from './share';
+} from './share.d.ts';
 
-export * from './share';
+export * from './share.d.ts';
 
 export const version: string;
+
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function importFile(config: ImportFileConfig): Promise<void>;
 

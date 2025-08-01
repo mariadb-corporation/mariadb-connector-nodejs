@@ -1,7 +1,7 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
-const net = require('net');
+import net from 'node:net';
 
 function Proxy(args) {
   const REMOTE_PORT = args.port;
@@ -141,4 +141,4 @@ function Proxy(args) {
   };
 }
 
-module.exports = Proxy;
+export default Proxy;

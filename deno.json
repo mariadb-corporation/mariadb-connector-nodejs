@@ -1,0 +1,21 @@
+{
+  "imports": {
+    "denque": "npm:denque@2.1.0",
+    "iconv-lite": "npm:iconv-lite@0.6.3",
+    "lru-cache": "npm:lru-cache@10.4.3",
+    "winston": "npm:winston@3.17.0",
+    "benchmark": "npm:benchmark@2.1.4",
+    "chai": "npm:chai@4.5.0",
+    "chalk": "npm:chalk@5.4.1",
+    "error-stack-parser": "npm:error-stack-parser@2.1.4",
+    "vitest": "npm:vitest@3.2.4"
+  },
+  "tasks": {
+    "test": "deno run -A npm:vitest  test/integration/query.test.js"
+  },
+  "fmt": {
+    "files": {
+      "include": ["src/"]
+    }
+  }
+}

@@ -12,11 +12,11 @@ function randomString(length) {
 }
 
 let sqlTable = 'CREATE TABLE perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
-sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
+const sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 
-module.exports.title = '3 * insert 100 characters pipelining';
-module.exports.displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
-module.exports.benchFct = async function (conn, type, deferred) {
+export const title = '3 * insert 100 characters pipelining';
+export const displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
+export const benchFct = async function (conn, type, deferred) {
   const params = [randomString(100)];
   conn.query(sqlInsert, params);
   conn.query(sqlInsert, params);
@@ -25,8 +25,7 @@ module.exports.benchFct = async function (conn, type, deferred) {
   // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
   deferred.resolve(rows);
 };
-
-module.exports.initFct = async function (conn) {
+export const initFct = async function (conn) {
   try {
     await Promise.all([
       conn.query('DROP TABLE IF EXISTS perfTestTextPipe'),
@@ -40,7 +39,6 @@ module.exports.initFct = async function (conn) {
     ]);
   }
 };
-
-module.exports.onComplete = async function (conn) {
+export const onComplete = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestTextPipe');
 };

@@ -10,12 +10,11 @@
  *
  * All types are reused from share.d.ts where possible.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Readable } from 'stream';
-import { EventEmitter } from 'events';
+import { Readable } from 'node:stream';
+import { EventEmitter } from 'node:events';
 
-import type {
+import {
   ConnectionConfig,
   ImportFileConfig,
   SqlError,
@@ -27,11 +26,12 @@ import type {
   SqlImportOptions,
   ConnectionInfo,
   UserConnectionConfig
-} from './share';
+} from './share.d.ts';
 
-export * from './share';
+export * from './share.d.ts';
 
 export const version: string;
+
 export function createConnection(connectionUri: string | ConnectionConfig): Connection;
 export function importFile(config: ImportFileConfig, callback: (err: SqlError | null) => void): void;
 

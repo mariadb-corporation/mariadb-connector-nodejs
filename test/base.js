@@ -3,60 +3,33 @@
 
 'use strict';
 
-const basePromise = require('../promise');
-const baseCallback = require('../callback');
-const Conf = require('./conf');
-const Collations = require('../lib/const/collations.js');
-const { assert } = require('chai');
-
-//*****************************************************************
-// initialize share connection
-//*****************************************************************
-before('share initialization', async () => {
-  if (!global.shareConn) {
-    try {
-      global.shareConn = await basePromise.createConnection(Conf.baseConfig);
-    } catch (e) {
-      // retry
-      global.shareConn = await basePromise.createConnection(Conf.baseConfig);
-    }
-  }
-});
-
-after('share destroy', async () => {
-  if (shareConn) {
-    try {
-      await shareConn.end();
-      global.shareConn = undefined;
-    } catch (err) {
-      global.shareConn = undefined;
-      console.log('Error when ending shared connection : ' + err.message);
-    }
-  }
-});
+import * as basePromise from '../promise.js';
+import * as baseCallback from '../callback.js';
+import Conf from './conf.js';
+import Collation from '../lib/const/collations.js';
 
 //*****************************************************************
 // create test connection with default test options + param
 //*****************************************************************
-module.exports.createConnection = function createConnection(opts) {
+export function createConnection(opts) {
   const connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return basePromise.createConnection(connOptionTemp);
-};
+}
 
-module.exports.isMaxscale = function isMaxscale() {
-  if (!global.maxscaleVersion) {
-    const maxscaleVersion = global.shareConn.info.maxscaleVersion;
+export function isMaxscale(shareConn) {
+  if (!globalThis.maxscaleVersion) {
+    globalThis.maxscaleVersion = shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
-      return process.env.DB_TYPE === 'maxscale' || process.env.srv === 'maxscale';
+      return getEnv('DB_TYPE') === 'maxscale' || getEnv('srv') === 'maxscale';
     }
   }
   return true;
-};
+}
 
-module.exports.isMaxscaleMinVersion = function isMaxscaleMinVersion(major, minor, patch) {
-  if (!global.maxscaleVersion) {
-    const maxscaleVersion = global.shareConn.info.maxscaleVersion;
+export function isMaxscaleMinVersion(shareConn, major, minor, patch) {
+  if (!globalThis.maxscaleVersion) {
+    const maxscaleVersion = shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
       return false;
@@ -90,46 +63,65 @@ module.exports.isMaxscaleMinVersion = function isMaxscaleMinVersion(major, minor
     }
     //serverVersion finished by number like "5.5.57", assign patchVersion
     if (type === 2) maxscalePatch = val;
-    global.maxscaleVersion = {
+    globalThis.maxscaleVersion = {
       major: maxscaleMajor,
       minor: maxscaleMinor,
       patch: maxscalePatch
     };
   }
 
-  let ver = global.maxscaleVersion;
+  let ver = globalThis.maxscaleVersion;
   return (
     ver.major > major ||
     (ver.major === major && ver.minor > minor) ||
     (ver.major === major && ver.minor === minor && ver.patch >= patch)
   );
-};
+}
 
-module.exports.createPool = (opts) => {
+export function createPool(opts) {
   const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return basePromise.createPool(poolOptionTemp);
-};
+}
 
-module.exports.createCallbackConnection = function createConnection(opts) {
+export function createCallbackConnection(opts) {
   let connOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return baseCallback.createConnection(connOptionTemp);
-};
+}
 
-module.exports.createPoolCallback = (opts) => {
+export function createPoolCallback(opts) {
   const poolOptionTemp = Object.assign({}, Conf.baseConfig, opts);
   return baseCallback.createPool(poolOptionTemp);
-};
+}
 
-module.exports.utf8Collation = () => {
+export function utf8Collation() {
   const collationString = Conf.baseConfig.collation;
   if (!collationString) return true;
-  const collation = Collations.fromName(collationString.toUpperCase());
+  const collation = Collation.fromName(collationString.toUpperCase());
   return collation.charset === 'utf8' || collation.charset === 'utf8mb4';
-};
+}
 
-module.exports.getHostSuffix = function getHostSuffix() {
-  if (process.env.LOCAL_DB === 'local') {
+export function getHostSuffix() {
+  if (getEnv('LOCAL_DB') === 'local') {
     return "@'localhost'";
   }
   return "@'%'";
-};
+}
+
+// Cross-platform environment variable getter
+export function getEnv(key) {
+  if (typeof Deno !== 'undefined' && Deno.env && Deno.env.get) {
+    try {
+      return Deno.env.get(key);
+    } catch (e) {
+      return undefined;
+    }
+  } else if (typeof process !== 'undefined' && process.env) {
+    return process.env[key];
+  }
+  return undefined;
+}
+
+export function isLocalDb() {
+  const localEnv = getEnv('LOCAL_DB');
+  return localEnv === 'local' || localEnv === undefined;
+}

@@ -20,10 +20,9 @@ import {
   createConnection,
   StreamCallback
 } from '..';
-import { Stream } from 'stream';
-import { createReadStream } from 'fs';
+import { Stream } from 'node:stream';
+import { createReadStream } from 'node:fs';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(): Promise<void> {
@@ -35,9 +34,10 @@ function importSqlFile(): Promise<void> {
   });
 }
 function createConn(option?: ConnectionConfig): Promise<Connection> {
+  const usr = option && option.user ? option.user : baseConfig.user;
   return createConnection({
     host: baseConfig.host,
-    user: option.user,
+    user: usr,
     password: baseConfig.password,
     logger: {
       network: (msg: string) => console.log(msg),
@@ -46,7 +46,7 @@ function createConn(option?: ConnectionConfig): Promise<Connection> {
     },
     stream: (callback: typeof StreamCallback) => {
       console.log('test');
-      callback(null, null);
+      callback(undefined, undefined);
     },
     infileStreamFactory: (filepath: string) => createReadStream(filepath),
     metaEnumerable: true
@@ -86,7 +86,10 @@ function createPoolConfigWithSSl(options?: PoolConfig): PoolConfig {
   );
 }
 
-function newPool(options?: unknown): Pool {
+function newPool(options?: PoolConfig | string): Pool {
+  if (typeof options === 'string') {
+    return createPool(options as string);
+  }
   createPool(createPoolConfig(options));
   return createPool(createPoolConfigWithSSl(options));
 }
@@ -185,10 +188,11 @@ async function testMisc(): Promise<void> {
     rows = await connection.query('Wrong SQL');
     throw new Error('must have throw error!' + rows);
   } catch (err) {
-    console.log(err.message != null);
-    console.log(err.errno === 12);
-    console.log(err.sqlState === '');
-    console.log(err.fatal === true);
+    const error = err as SqlError;
+    console.log(error.message != null);
+    console.log(error.errno === 12);
+    console.log(error.sqlState === '');
+    console.log(error.fatal === true);
   }
 
   let metaReceived = false;
@@ -225,11 +229,9 @@ async function testMisc(): Promise<void> {
 
   const writable = new Stream.Writable({
     objectMode: true,
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     write(this: any, _chunk: any, _encoding: string, callback: (error?: Error | null) => void): void {
       callback(null);
     }
-    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
   connection.queryStream('SELECT * FROM mysql.user').pipe(writable);
 
@@ -270,7 +272,8 @@ async function testChangeUser(): Promise<void> {
   try {
     await connection.changeUser({ user: 'this is a bogus user name' });
   } catch (err) {
-    console.log('Correctly threw an error when changing user' + err.message);
+    const error = err as Error;
+    console.log('Correctly threw an error when changing user' + error.message);
   }
 }
 
@@ -279,7 +282,8 @@ async function testTypeCast(): Promise<void> {
     const name = column.name();
 
     if (name.startsWith('upp')) {
-      return column.string().toUpperCase();
+      const v = column.string();
+      return v == null ? null : v.toUpperCase();
     }
 
     if (column.type === Types.BIGINT) {
@@ -371,7 +375,7 @@ async function testPool(): Promise<void> {
 
   pool = newPool('mariadb://root:pwd@localhost:3306/db?connectionLimit=10');
   await pool.end();
-  pool = newPool();
+  pool = newPool({});
 
   const connection = await pool.getConnection();
   pool.escape('test');

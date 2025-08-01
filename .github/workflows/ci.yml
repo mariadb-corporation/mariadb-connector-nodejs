@@ -79,6 +79,7 @@ jobs:
           DB_TYPE: ${{ matrix.db-type }}
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
+          TEST_TRACE: 'true'
 
       - name: Download Codecov uploader
         shell: bash

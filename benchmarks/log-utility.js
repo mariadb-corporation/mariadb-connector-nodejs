@@ -3,7 +3,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
+import chalk from 'chalk';
+import pjson from '../package-lock.json' with { type: 'json' };
 const defaultImgJson = {
   type: 'horizontalBar',
   data: {
@@ -77,7 +78,6 @@ const getVersion = function (pjson, drv) {
 };
 
 const getImg = (data) => {
-  const pjson = require('../package-lock.json');
   const mysql2Version = getVersion(pjson, 'mysql2');
   const mysqlVersion = getVersion(pjson, 'mysql');
   const mariadbVersion = pjson.packages
@@ -117,7 +117,7 @@ const getImg = (data) => {
 //************************************************
 // display results
 //************************************************
-module.exports.displayReport = function (data, title, displaySql) {
+export function displayReport(data, title, displaySql) {
   const simpleFormat = new Intl.NumberFormat('en-EN', {
     maximumFractionDigits: 1
   });
@@ -180,7 +180,7 @@ module.exports.displayReport = function (data, title, displaySql) {
   console.log('```');
   console.log(`![${title} benchmark results](${getImg(res)})`);
   console.log('');
-};
+}
 
 const fillBlank = function (val, length, right) {
   if (right) {

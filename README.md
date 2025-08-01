@@ -15,14 +15,15 @@
 
 MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the Promise API, distributed under the LGPL license version 2.1 or later (LGPL-2.1-or-later)
 
+Since 3.5, this requires node.js 18 or later. 
 
 ## Documentation
 
-See [promise documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api) for detailed API.
+See [promise documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api) for a detailed API.
 
 [Callback documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-callback-api) describes the callback wrapper for compatibility with existing drivers.
 
-See [dedicated part](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api#migrating-from-2.x-or-mysql-mysql2-to-3.x) for migration from mysql/mysql2 or from 2.x version.
+See [dedicated part](https://mariadb.com/docs/connectors/mariadb-connector-nodejs/connector-nodejs-promise-api#migrating-from-2.x-or-mysql-mysql2-to-3.x) for migration from mysql/mysql2 or from the 2.x version.
 
 
 ## Why a specific MariaDB Client?

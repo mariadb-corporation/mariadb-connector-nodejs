@@ -265,7 +265,7 @@ prepare.close();
             at Object.module.exports.createError (errors.js:57:10)
             at ...
           From event:
-            at Function._PARAM (\integration\test-pool.js:60:18)
+            at Function._PARAM (\integration\pool.test.js:60:18)
             at …
           text: "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'wrong query' at line 1",
           sql: 'wrong query - parameters:[]',

@@ -17,14 +17,13 @@ import {
   createPool,
   createConnection,
   StreamCallback
-} from './callback';
+} from './callback.d.ts';
 
-import { createReadStream } from 'fs';
+import { createReadStream } from 'node:fs';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { baseConfig } from '../test/conf.js';
 
-function importSqlFile(cb: (err?: Error) => void) {
+function importSqlFile(cb: (err: SqlError | null) => void) {
   importFile(
     {
       host: baseConfig.host,
@@ -51,9 +50,9 @@ function createConn(option?: ConnectionConfig): Connection {
       query: (msg: string) => console.log(msg),
       error: (err: Error) => console.log(err)
     },
-    stream: (callback?: typeof StreamCallback) => {
+    stream: (callback: typeof StreamCallback) => {
       console.log('test');
-      if (callback) callback(null, null);
+      callback(undefined, undefined);
     },
     infileStreamFactory: (filepath: string) => createReadStream(filepath),
     metaEnumerable: true
@@ -88,7 +87,10 @@ function createPoolConfigWithSSl(options?: PoolConfig): PoolConfig {
 }
 
 // Pool type is not used at runtime, so we can use 'any' for now for pools
-function newPool(options?: unknown): Pool {
+function newPool(options?: PoolConfig | string): Pool {
+  if (typeof options === 'string') {
+    return createPool(options as string);
+  }
   createPool(createPoolConfig(options));
   return createPool(createPoolConfigWithSSl(options));
 }
@@ -106,19 +108,23 @@ function testMisc(next: (err?: Error) => void) {
   const connection = createConn({});
   connection.query('DROP TABLE IF EXISTS myTable', () => {});
   connection.query('CREATE TABLE myTable(id int)', () => {});
-  connection.query('INSERT INTO myTable VALUE (1)', (err: Error, rows: UpsertResult) => {
+  connection.query('INSERT INTO myTable VALUE (1)', (err: SqlError | null, rows?: UpsertResult) => {
     if (err) return next(err);
+    if (rows === undefined) return next(new Error('rows is undefined'));
     console.log(rows.insertId === 1);
     console.log(rows.affectedRows === 1);
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    connection.query('SELECT 1 + 1 AS solution', (err: Error, rows: any[]) => {
+
+    connection.query('SELECT 1 + 1 AS solution', (err: SqlError | null, rows?: any[]) => {
       if (err) return next(err);
+      if (rows === undefined) return next(new Error('rows is undefined'));
       console.log(rows[0].solution === 2);
-      connection.query('SELECT ? as t', 1, (err: Error, rows: any[]) => {
+      connection.query('SELECT ? as t', 1, (err: SqlError | null, rows?: any[]) => {
         if (err) return next(err);
+        if (rows === undefined) return next(new Error('rows is undefined'));
         console.log(rows[0].t === 1);
-        connection.query('SELECT ? as t', [1], (err: Error, rows: any[]) => {
+        connection.query('SELECT ? as t', [1], (err: SqlError | null, rows?: any[]) => {
           if (err) return next(err);
+          if (rows === undefined) return next(new Error('rows is undefined'));
           console.log(rows[0].t === 1);
           connection.importFile({ file: '/path' }, () => {
             connection.importFile({ file: '/path', database: baseConfig.database }, () => {
@@ -129,13 +135,15 @@ function testMisc(next: (err?: Error) => void) {
                   infileStreamFactory: (filepath: string) => createReadStream(filepath)
                 },
                 { val: 2 },
-                (err: Error, rows: any[]) => {
+                (err: SqlError | null, rows?: any[]) => {
                   if (err) return next(err);
+                  if (rows === undefined) return next(new Error('rows is undefined'));
                   console.log(rows[0].t === 2);
-                  connection.prepare('INSERT INTO myTable VALUES (?)', (err: Error, prepare: Prepare) => {
+                  connection.prepare('INSERT INTO myTable VALUES (?)', (err: SqlError | null, prepare?: Prepare) => {
                     if (err) return next(err);
+                    if (prepare === undefined) return next(new Error('prepare is undefined'));
                     console.log(prepare.id);
-                    prepare.execute([1], (err: Error, insRes: any) => {
+                    prepare.execute([1], (err: SqlError | null, insRes?: any) => {
                       if (err) return next(err);
                       console.log(insRes.insertId === 2);
                       console.log(insRes.affectedRows === 2);
@@ -148,69 +156,76 @@ function testMisc(next: (err?: Error) => void) {
                       console.log(currRow);
                       stream.on('end', () => {
                         prepare.close();
-                        connection.execute('INSERT INTO myTable VALUE (1)', (err: Error, rows: UpsertResult) => {
-                          if (err) return next(err);
-                          console.log(rows.insertId === 1);
-                          console.log(rows.affectedRows === 1);
-                          connection.execute('SELECT 1 + 1 AS solution', (err: Error, rows: any[]) => {
+                        connection.execute(
+                          'INSERT INTO myTable VALUE (1)',
+                          (err: SqlError | null, rows?: UpsertResult) => {
                             if (err) return next(err);
-                            console.log(rows[0].solution === 2);
-                            connection.execute('SELECT ? as t', 1, (err: Error, rows: any[]) => {
+                            if (rows === undefined) return next(new Error('rows is undefined'));
+                            console.log(rows.insertId === 1);
+                            console.log(rows.affectedRows === 1);
+                            connection.execute('SELECT 1 + 1 AS solution', (err: SqlError | null, rows?: any[]) => {
                               if (err) return next(err);
-                              console.log(rows[0].t === 1);
-                              connection.execute('SELECT ? as t', [1], (err: Error, rows: any[]) => {
+                              if (rows === undefined) return next(new Error('rows is undefined'));
+                              console.log(rows[0].solution === 2);
+                              connection.execute('SELECT ? as t', 1, (err: SqlError | null, rows?: any[]) => {
                                 if (err) return next(err);
+                                if (rows === undefined) return next(new Error('rows is undefined'));
                                 console.log(rows[0].t === 1);
-                                connection.execute(
-                                  { sql: 'SELECT ? as t', timeout: 1000 },
-                                  [1],
-                                  (err: Error, rows: any) => {
-                                    if (err) return next(err);
-                                    console.log(rows[0].t === 1);
-                                    connection.execute(
-                                      {
-                                        namedPlaceholders: true,
-                                        sql: 'SELECT :val as t'
-                                      },
-                                      { val: 2 },
-                                      (err: Error, rows: any) => {
-                                        if (err) return next(err);
-                                        console.log(rows[0].t === 2);
-                                        // Error test
-                                        connection.query({ sql: 'SELECT 1', nestTables: '_' }, () => {
-                                          connection.query('Wrong SQL', (err: SqlError, rows: any) => {
-                                            if (!err) return next(new Error('must have throw error!' + rows));
-                                            console.log(err.message != null);
-                                            console.log(err.errno === 12);
-                                            console.log(err.sqlState === '');
-                                            console.log(err.fatal === true);
-                                            let metaReceived = false;
-                                            let currRow = 0;
-                                            connection
-                                              .queryStream('SELECT * from mysql.user')
-                                              .on('error', (err: Error) => next(err))
-                                              .on('fields', (meta: FieldInfo[]) => {
-                                                console.log(meta);
-                                                metaReceived = true;
-                                              })
-                                              .on('data', (row: unknown[]) => {
-                                                console.log(row.length > 1);
-                                                currRow++;
-                                              })
-                                              .on('end', () => {
-                                                console.log(currRow + ' ' + metaReceived);
-                                                next();
-                                              });
+                                connection.execute('SELECT ? as t', [1], (err: SqlError | null, rows?: any[]) => {
+                                  if (err) return next(err);
+                                  if (rows === undefined) return next(new Error('rows is undefined'));
+                                  console.log(rows[0].t === 1);
+                                  connection.execute(
+                                    { sql: 'SELECT ? as t', timeout: 1000 },
+                                    [1],
+                                    (err: SqlError | null, rows?: any) => {
+                                      if (err) return next(err);
+                                      console.log(rows[0].t === 1);
+                                      connection.execute(
+                                        {
+                                          namedPlaceholders: true,
+                                          sql: 'SELECT :val as t'
+                                        },
+                                        { val: 2 },
+                                        (err: SqlError | null, rows?: any) => {
+                                          if (err) return next(err);
+                                          console.log(rows[0].t === 2);
+                                          // Error test
+                                          connection.query({ sql: 'SELECT 1', nestTables: '_' }, () => {
+                                            connection.query('Wrong SQL', (err: SqlError | null, rows?: any) => {
+                                              if (!err) return next(new Error('must have throw error!' + rows));
+                                              console.log(err.message != null);
+                                              console.log(err.errno === 12);
+                                              console.log(err.sqlState === '');
+                                              console.log(err.fatal === true);
+                                              let metaReceived = false;
+                                              let currRow = 0;
+                                              connection
+                                                .queryStream('SELECT * from mysql.user')
+                                                .on('error', (err: Error) => next(err))
+                                                .on('fields', (meta: FieldInfo[]) => {
+                                                  console.log(meta);
+                                                  metaReceived = true;
+                                                })
+                                                .on('data', (row: unknown[]) => {
+                                                  console.log(row.length > 1);
+                                                  currRow++;
+                                                })
+                                                .on('end', () => {
+                                                  console.log(currRow + ' ' + metaReceived);
+                                                  next();
+                                                });
+                                            });
                                           });
-                                        });
-                                      }
-                                    );
-                                  }
-                                );
+                                        }
+                                      );
+                                    }
+                                  );
+                                });
                               });
                             });
-                          });
-                        });
+                          }
+                        );
                       });
                     });
                   });
@@ -221,7 +236,6 @@ function testMisc(next: (err?: Error) => void) {
         });
       });
     });
-    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
 }
 
@@ -257,13 +271,15 @@ function testPool(next: (err?: Error) => void) {
           console.log('enqueue');
         });
       pool.on('release', displayConn).on('release', displayConn);
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      pool.query('SELECT 1 + 1 AS solution', (err: SqlError | null, rows: any[]) => {
+      pool.query('SELECT 1 + 1 AS solution', (err: SqlError | null, rows?: any[]) => {
         if (err) return next(err);
+        if (rows === undefined) return next(new Error('rows is undefined'));
         console.log(rows[0].solution === 2);
         pool.end(() => {
           pool = createPool(
-            `mariadb://${baseConfig.user}${baseConfig.password ? ':' + baseConfig.password : ''}@${baseConfig.host}:${baseConfig.port}/${baseConfig.database}?connectionLimit=10`
+            `mariadb://${baseConfig.user}${baseConfig.password ? ':' + baseConfig.password : ''}@${
+              baseConfig.host
+            }:${baseConfig.port}/${baseConfig.database}?connectionLimit=10`
           );
           pool.end(() => {
             pool = newPool();
@@ -273,6 +289,7 @@ function testPool(next: (err?: Error) => void) {
               pool.escape(true);
               pool.escape(5);
               pool.escapeId('myColumn');
+              if (connection === undefined) return next(new Error('connection is undefined'));
               connection.query('DROP TABLE IF EXISTS myTable2', () => {});
               pool.query('CREATE TABLE myTable2(id int, id2 int)', () => {
                 pool.batch(
@@ -281,7 +298,7 @@ function testPool(next: (err?: Error) => void) {
                     [1, 2],
                     [4, 3]
                   ],
-                  (err: SqlError | null, res: any) => {
+                  (err: SqlError | null, res?: any) => {
                     if (err) return next(err);
                     console.log(res.affectedRows);
                     console.log(connection!.threadId != null);
@@ -306,24 +323,24 @@ function testPool(next: (err?: Error) => void) {
           });
         });
       });
-      /* eslint-disable @typescript-eslint/no-explicit-any */
     });
   });
 }
 
 function testRowsAsArray(next: (err?: Error) => void) {
   const connection = createConn({ rowsAsArray: true });
-  connection.query(`SELECT 'upper' as upper, 'lower' as lower`, (err: SqlError | null, rows: any[][]) => {
+  connection.query(`SELECT 'upper' as upper, 'lower' as lower`, (err: SqlError | null, rows?: any[][]) => {
     if (err) return next(err);
-    console.log(rows);
+    if (rows === undefined) return next(new Error('rows is undefined'));
     if (rows[0][0] !== 'upper') return next(new Error('wrong value'));
     connection.query(
       {
         sql: `SELECT 'upper' as upper, 'lower' as lower`,
         rowsAsArray: true
       },
-      (err: SqlError | null, rows2: any[][]) => {
+      (err: SqlError | null, rows2?: any[][]) => {
         if (err) return next(err);
+        if (rows2 === undefined) return next(new Error('rows is undefined'));
         if (rows2[0][0] !== 'upper') return next(new Error('wrong value'));
         next();
       }
@@ -344,6 +361,7 @@ function testPoolCluster(next: (err?: Error) => void) {
 
   poolCluster.getConnection((err, conn?) => {
     if (err) return next(err);
+    if (conn === undefined) return next(new Error('conn is undefined'));
     connection = conn;
     if (!connection) return next(new Error('No connection'));
     console.log(connection.threadId != null);
@@ -364,7 +382,7 @@ function testPoolCluster(next: (err?: Error) => void) {
           if (!conn) return next(new Error('No connection'));
           console.log(conn.threadId != null);
           conn.release(() => {});
-          poolCluster.of(null, 'RR').getConnection((err: SqlError | null, conn) => {
+          poolCluster.of(null, 'RR').getConnection((err: SqlError | null, conn?) => {
             if (err) return next(err);
             if (!conn) return next(new Error('No connection'));
             console.log(conn.threadId != null);
@@ -376,7 +394,7 @@ function testPoolCluster(next: (err?: Error) => void) {
                 [1, 2],
                 [4, 3]
               ],
-              (err: SqlError | null, res: any) => {
+              (err: SqlError | null, res?: any) => {
                 if (err) return next(err);
                 console.log(res.affectedRows);
                 filtered.query('SELECT 1 + 1 AS solution', (err: SqlError | null) => {
