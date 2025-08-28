@@ -485,7 +485,7 @@ describe('authentication plugin', () => {
   });
 
   it('cachingsha256 authentication plugin', async function () {
-    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!cachingRsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
 
     const self = this;
 
@@ -503,7 +503,7 @@ describe('authentication plugin', () => {
     }
 
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
-    fs.writeFileSync(filePath, rsaPublicKey);
+    fs.writeFileSync(filePath, cachingRsaPublicKey);
     try {
       const conn = await base.createConnection({
         user: 'cachingSha256User4',
@@ -522,7 +522,7 @@ describe('authentication plugin', () => {
     try {
       const conn = await base.createConnection({
         user: 'cachingSha256User',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey
       });
       conn.end();
       throw new Error('must have thrown exception');
@@ -535,7 +535,7 @@ describe('authentication plugin', () => {
       const conn = await base.createConnection({
         user: 'cachingSha256User',
         password: 'password',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey
       });
       conn.end();
     } catch (e) {
@@ -546,7 +546,7 @@ describe('authentication plugin', () => {
       const conn = await base.createConnection({
         user: 'cachingSha256User',
         password: 'password',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey
       });
       conn.end();
     } catch (e) {
