@@ -41,6 +41,7 @@ describe('authentication plugin', () => {
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User2'" + getHostSuffix()).catch((e) => {});
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User3'" + getHostSuffix()).catch((e) => {});
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User4'" + getHostSuffix()).catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User5'" + getHostSuffix()).catch((e) => {});
 
     if (!shareConn.info.isMariaDB()) {
       if (shareConn.info.hasMinVersion(8, 0, 0)) {
@@ -65,6 +66,10 @@ describe('authentication plugin', () => {
           "CREATE USER 'cachingSha256User4'" + getHostSuffix() + "  IDENTIFIED WITH caching_sha2_password BY 'password'"
         );
         await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User4'" + getHostSuffix());
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User5'" + getHostSuffix() + "  IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User5'" + getHostSuffix());
       } else {
         await shareConn.query("CREATE USER 'sha256User'" + getHostSuffix());
         await shareConn.query(
@@ -628,6 +633,47 @@ describe('authentication plugin', () => {
         }
       })
       .catch(done);
+  });
+
+  it('cachingsha256 authentication plugin via named pipe', async function () {
+    if (process.platform !== 'win32') this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale()) this.skip();
+    if (!cachingRsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
+
+    const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User5',
+        password: 'password',
+        socketPath: '\\\\.\\pipe\\' + res[0].soc,
+        cachingRsaPublicKey
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
+  });
+
+  it('cachingsha256 authentication plugin via Unix socket', async function () {
+    if (process.platform === 'win32') this.skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
+
+    const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    try {
+      const conn = await base.createConnection({
+        user: 'cachingSha256User5',
+        password: 'password',
+        socketPath: res[0].soc
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
   });
 
   it('parsec authentication plugin', async function () {
