@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         name: build matrix
-        uses: rusher/mariadb-test-build-matrix@main
+        uses: mariadb-corporation/connector-ci-build-matrix@main
         with:
           additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}]'
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Setup Test Environment
         id: setup-env
-        uses: rusher/mariadb-test-setup@master
+        uses: mariadb-corporation/connector-ci-setup@master
         with:
           node-version: ${{ matrix.node }}
           db-type: ${{ matrix.db-type }}
