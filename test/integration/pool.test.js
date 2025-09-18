@@ -1592,6 +1592,10 @@ describe.concurrent('Pool', () => {
       minimumIdle: 4,
       idleTimeout: 2
     });
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+
     await new Promise((resolve) => setTimeout(resolve, 4000));
     //minimumIdle-1 is possible after reaching idleTimeout and connection
     // is still not recreated
@@ -1599,6 +1603,30 @@ describe.concurrent('Pool', () => {
     assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
     await pool.end();
   }, 5000);
+
+  test('test minimum idle 0', async ({ skip }) => {
+    if (isMaxscale(shareConn)) return skip();
+    const pool = createPool({
+      connectionLimit: 10,
+      minimumIdle: 0,
+      idleTimeout: 2
+    });
+
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+
+    await new Promise((accept, reject) => {
+      setTimeout(() => {
+        assert.isTrue(pool.totalConnections() === 0);
+        assert.isTrue(pool.idleConnections() === 0);
+        pool
+          .end()
+          .then(() => accept())
+          .catch(reject);
+      }, 4000);
+    });
+  }, 10000);
 
   test('pool immediate error', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
