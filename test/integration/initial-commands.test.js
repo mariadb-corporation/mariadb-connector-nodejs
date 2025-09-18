@@ -6,8 +6,8 @@
 import { createConnection } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('initial connection commands', () => {
-  describe('session variables', () => {
+describe.concurrent('initial connection commands', () => {
+  describe.concurrent('session variables', () => {
     test('with empty session variables', async () => {
       const conn = await createConnection({ sessionVariables: {} });
       const rows = await conn.query("SELECT '1'");
@@ -48,7 +48,7 @@ describe('initial connection commands', () => {
     });
   });
 
-  describe('initial SQL', function () {
+  describe.concurrent('initial SQL', function () {
     test('with empty initial SQL', async () => {
       const conn = await createConnection({ initSql: '' });
       const rows = await conn.query("SELECT '1'");

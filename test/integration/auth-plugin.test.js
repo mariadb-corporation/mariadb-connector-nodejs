@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { isMaxscale, getHostSuffix, getEnv, createConnection, isLocalDb } from '../base.js';
 
-describe('authentication plugin', () => {
+describe.concurrent('authentication plugin', () => {
   let rsaPublicKey = getEnv('TEST_RSA_PUBLIC_KEY');
   let cachingRsaPublicKey = getEnv('TEST_CACHING_RSA_PUBLIC_KEY');
   let shareConn;
@@ -203,19 +203,28 @@ describe('authentication plugin', () => {
       return;
     }
 
-    const unixUser = getEnv('USER');
-    if (!unixUser || unixUser === 'root') {
+    const userInfo = os.userInfo();
+    const unixUser = userInfo.username;
+    console.log(unixUser);
+    if (!unixUser || unixUser === 'root' || unixUser !== '') {
       skip();
       return;
     }
     const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    const socketPath = res[0].soc;
+
+    if (!socketPath || socketPath === '') {
+      skip();
+      return;
+    }
+
     await shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch(() => {});
     await shareConn.query('DROP USER IF EXISTS ' + unixUser);
     await shareConn
-      .query("CREATE USER '" + unixUser + "'@'" + Conf.baseConfig.host + "' IDENTIFIED VIA unix_socket")
+      .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
       .catch(() => {});
-    await shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'");
-    const conn = await base.createConnection({ user: null, socketPath: res[0].soc });
+    await shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix());
+    const conn = await base.createConnection({ user: null, socketPath: socketPath });
     await conn.end();
   });
 
@@ -483,7 +492,7 @@ describe('authentication plugin', () => {
       assert.isTrue(err.message.includes('wrongPath'));
     }
 
-    const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
+    const filePath = path.join(os.tmpdir(), 'RSA_tmp_file2.txt');
     fs.writeFileSync(filePath, rsaPublicKey);
     try {
       const conn = await base.createConnection({

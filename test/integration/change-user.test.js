@@ -13,7 +13,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 import winston from 'winston';
 
-describe('change user', () => {
+describe.concurrent('change user', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

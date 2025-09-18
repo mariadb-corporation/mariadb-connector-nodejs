@@ -7,7 +7,7 @@ import Conf from '../../conf.js';
 import { createConnection, getEnv, isLocalDb, isMaxscale } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('datetime', () => {
+describe.concurrent('datetime', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

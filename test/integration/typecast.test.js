@@ -9,7 +9,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('TypeCast', () => {
+describe.concurrent('TypeCast', () => {
   let serverPermitExtendedMetas;
   let shareConn;
   beforeAll(async () => {
@@ -188,23 +188,23 @@ describe('TypeCast', () => {
       return next();
     };
     const conn = await base.createConnection({ typeCast: longCast });
-    await conn.query('DROP TABLE IF EXISTS stupidCast');
-    await conn.query('CREATE TABLE stupidCast(b1 DATETIME default null,b2 DATE default null)');
+    await conn.query('DROP TABLE IF EXISTS stupidCast2');
+    await conn.query('CREATE TABLE stupidCast2(b1 DATETIME default null,b2 DATE default null)');
     await conn.beginTransaction();
     await conn.query(
-      'INSERT INTO stupidCast VALUES ' +
+      'INSERT INTO stupidCast2 VALUES ' +
         "('1999-01-31 12:13:14.000', '1999-01-31'), " +
         "('1999-01-31 12:16:15', '1999-02-15')" +
         ', (null, null)'
     );
-    let rows = await conn.query('SELECT * from stupidCast');
+    let rows = await conn.query('SELECT * from stupidCast2');
     const expected = [
       { b1: 13, b2: 1 },
       { b1: 16, b2: 2 },
       { b1: null, b2: null }
     ];
     assert.deepEqual(rows, expected);
-    rows = await conn.execute('SELECT * from stupidCast');
+    rows = await conn.execute('SELECT * from stupidCast2');
     assert.deepEqual(rows, expected);
     await conn.end();
   }, 5000);
@@ -217,10 +217,10 @@ describe('TypeCast', () => {
       return next();
     };
     const conn = await base.createConnection({ typeCast: longCast });
-    await conn.query('DROP TABLE IF EXISTS stupidCast');
+    await conn.query('DROP TABLE IF EXISTS stupidCast3');
     await conn.beginTransaction();
-    await conn.query('CREATE TABLE stupidCast(b1 POINT)');
-    await conn.query('INSERT INTO stupidCast VALUES (?), (?),(null)', [
+    await conn.query('CREATE TABLE stupidCast3(b1 POINT)');
+    await conn.query('INSERT INTO stupidCast3 VALUES (?), (?),(null)', [
       {
         type: 'Point',
         coordinates: [10, 10]
@@ -247,9 +247,9 @@ describe('TypeCast', () => {
         b1: serverPermitExtendedMetas ? { type: 'Point' } : null
       }
     ];
-    let rows = await conn.query('SELECT * from stupidCast');
+    let rows = await conn.query('SELECT * from stupidCast3');
     assert.deepEqual(rows, expected);
-    rows = await conn.execute('SELECT * from stupidCast');
+    rows = await conn.execute('SELECT * from stupidCast3');
     assert.deepEqual(rows, expected);
     await conn.end();
   }, 5000);

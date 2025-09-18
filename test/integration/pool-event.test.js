@@ -6,7 +6,7 @@
 import * as base from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('Pool event', () => {
+describe.concurrent('Pool event', () => {
   test('pool connection creation', async () => {
     const pool = base.createPool();
     let connectionNumber = 0;
@@ -30,7 +30,7 @@ describe('Pool event', () => {
     assert.equal(acquireNumber, 1);
     const conn = await pool.getConnection();
     assert.equal(acquireNumber, 2);
-    conn.release();
+    await conn.release();
     await pool.end();
   });
 

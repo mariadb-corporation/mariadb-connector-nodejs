@@ -7,7 +7,7 @@ import * as Capabilities from '../../../lib/const/capabilities';
 import { createConnection } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
-describe('geometry data type', () => {
+describe.concurrent('geometry data type', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

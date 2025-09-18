@@ -6,7 +6,7 @@
 import Collations from '../../../lib/const/collations.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('collations', () => {
+describe.concurrent('collations', () => {
   test('fromCharset wrong charset', () => {
     assert.strictEqual(Collations.fromCharset('unknown'), undefined);
   });

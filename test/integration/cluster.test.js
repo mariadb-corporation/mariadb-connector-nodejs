@@ -9,9 +9,8 @@ import * as baseCallback from '../../callback';
 import Proxy from '../tools/proxy';
 import { createConnection, isMaxscale } from '../base.js';
 import { assert, expect, describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
-import { rejects } from 'node:assert';
 
-describe('cluster', function () {
+describe.sequential('cluster', function () {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -24,7 +23,7 @@ describe('cluster', function () {
     shareConn = null;
   });
 
-  describe('promise', function () {
+  describe.sequential('promise', function () {
     beforeEach(async function () {
       await shareConn.query('TRUNCATE TABLE clusterInsert');
     });
@@ -854,7 +853,7 @@ describe('cluster', function () {
     }, 5000);
   });
 
-  describe('callback', () => {
+  describe.sequential('callback', () => {
     beforeEach(async function () {
       await shareConn.query('TRUNCATE TABLE clusterInsert');
     });

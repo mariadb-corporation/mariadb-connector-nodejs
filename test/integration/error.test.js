@@ -7,7 +7,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, isMaxscale, createCallbackConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('Error', () => {
+describe.concurrent('Error', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

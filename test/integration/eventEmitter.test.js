@@ -9,7 +9,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 const basicListener = function basicListener(err) {
   console.log(err);
 };
-describe('EventEmitter', () => {
+describe.concurrent('EventEmitter', () => {
   test('event testing promise', async function () {
     const conn = await createConnection();
     testEvent(conn);

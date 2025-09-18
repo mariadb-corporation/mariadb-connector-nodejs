@@ -8,7 +8,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('Big query', function () {
+describe.concurrent('Big query', function () {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
   let maxAllowedSize, buf;
   let shareConn;
@@ -79,7 +79,7 @@ describe('Big query', function () {
               '162636465666768696a6162636465666768696a6162636465666768696a6162636465666768696a616263646566676869' +
               '6a61626364656667...'
           )
-      );
+      , 'message was :' + e.sql);
     }
 
     try {
@@ -113,21 +113,22 @@ describe('Big query', function () {
   test('buffer growing', async ({ skip }) => {
     if (maxAllowedSize <= 11 * 1024 * 1024) return skip();
     const conn = await base.createConnection({ compress: true });
-    await bufferGrowing(conn);
+    await bufferGrowing(conn, 'growbigParameter2');
   }, 10000);
 
   test('buffer growing compression', async ({ skip }) => {
     if (maxAllowedSize <= 11 * 1024 * 1024) return skip();
     const conn = await base.createConnection({ compress: true });
-    await bufferGrowing(conn);
+    await bufferGrowing(conn, 'growbigParameter1');
   }, 10000);
 
-  async function bufferGrowing(conn) {
+  async function bufferGrowing(conn, tableName) {
     const st = Buffer.alloc(65536, '0').toString();
     const st2 = Buffer.alloc(1048576, '0').toString();
     const params = [st];
-    let sql = 'CREATE TABLE bigParameter (a0 MEDIUMTEXT ';
-    let sqlInsert = 'insert into bigParameter values (?';
+    await conn.query('DROP TABLE IF EXISTS ' + tableName);
+    let sql = 'CREATE TABLE ' + tableName + ' (a0 MEDIUMTEXT ';
+    let sqlInsert = 'insert into ' + tableName + ' values (?';
     for (let i = 1; i < 10; i++) {
       sql += ',a' + i + ' MEDIUMTEXT ';
       sqlInsert += ',?';
@@ -135,13 +136,13 @@ describe('Big query', function () {
     }
     sql += ')';
     sqlInsert += ')';
-    conn.query('DROP TABLE IF EXISTS bigParameter');
+    conn.query('DROP TABLE IF EXISTS ' + tableName);
     conn.query(sql);
     await conn.query('FLUSH TABLES');
     conn.beginTransaction();
     await conn.beginTransaction();
     conn.query(sqlInsert, params);
-    const rows = await conn.query('SELECT * from bigParameter');
+    const rows = await conn.query('SELECT * from ' + tableName);
     for (let i = 0; i < 10; i++) {
       assert.deepEqual(rows[0]['a' + i], params[i]);
     }

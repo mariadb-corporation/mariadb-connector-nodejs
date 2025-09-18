@@ -8,7 +8,7 @@ import Conf from '../conf.js';
 import { isMaxscale, isMaxscaleMinVersion, createConnection } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('redirection', () => {
+describe.concurrent('redirection', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

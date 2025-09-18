@@ -622,7 +622,7 @@ describe.sequential(
             assert.equal(err.errno, 1146);
             assert.equal(err.code, 'ER_NO_SUCH_TABLE');
             assert.isTrue(err.message.includes(" doesn't exist"));
-            assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorWithStream values (1, ?, 2, ?, ?, 3)'));
+            assert.isTrue(err.message.includes('sql: INSERT INTO batchErrorCallWithStream values (1, ?, 2, ?, ?, 3)'));
             assert.equal(err.sqlState, '42S02');
             conn.end(() => {
               resolve();
@@ -988,14 +988,14 @@ describe.sequential(
         });
       });
 
-      test('batch error with streams', async ({ skip }) => {
+      test('batch error with streams', async () => {
         await new Promise((resolve, reject) => {
           batchErrorWithStream(useCompression, true, resolve, reject);
         });
       });
     });
 
-    describe('standard question mark and compress with bulk', function () {
+    describe.sequential('standard question mark and compress with bulk', function () {
       const useCompression = true;
 
       test('simple batch, local date', async ({ skip }) => {

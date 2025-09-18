@@ -5,7 +5,7 @@
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../../base.js';
 import Conf from '../../conf.js';
-describe('mapping', () => {
+describe.concurrent('mapping', () => {
   const dateNoMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));
   const dateMillis = new Date(Date.UTC(2018, 2, 1, 15, 20, 10));
   dateMillis.setUTCMilliseconds(556);

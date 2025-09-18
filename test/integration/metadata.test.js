@@ -9,7 +9,7 @@ import Conf from '../conf.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, utf8Collation } from '../base.js';
 
-describe('metadata', () => {
+describe.concurrent('metadata', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -43,16 +43,16 @@ describe('metadata', () => {
   });
 
   test('metadata limit', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS metadatatable');
+    await shareConn.query('DROP TABLE IF EXISTS metadatatable2');
     let name = '';
     for (let i = 0; i < 64; i++) name += 'a';
 
     let alias = '';
     for (let i = 0; i < 255; i++) alias += 'b';
 
-    await shareConn.query(`CREATE TABLE metadatatable (${name} int)`);
+    await shareConn.query(`CREATE TABLE metadatatable2 (${name} int)`);
     await shareConn.query('FLUSH TABLES');
-    const rows = await shareConn.query(`SELECT ${name} as ${alias} FROM metadatatable`);
+    const rows = await shareConn.query(`SELECT ${name} as ${alias} FROM metadatatable2`);
     assert.equal(rows.meta[0].name(), alias);
     assert.equal(rows.meta[0].orgName(), name);
   });

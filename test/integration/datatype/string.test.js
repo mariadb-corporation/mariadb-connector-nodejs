@@ -6,7 +6,7 @@
 import { createConnection, utf8Collation } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
-describe('string', () => {
+describe.concurrent('string', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

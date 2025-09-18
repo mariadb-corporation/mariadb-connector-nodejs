@@ -6,7 +6,7 @@
 import * as base from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('Compression', function () {
+describe.concurrent('Compression', function () {
   const testSize = 16 * 1024 * 1024 + 800; // more than one packet
   let maxAllowedSize, buf, randomBuf;
   let conn;
@@ -100,23 +100,25 @@ describe('Compression', function () {
 
   test('parameter bigger than 16M packet size', async ({ skip }) => {
     if (maxAllowedSize <= testSize) return skip();
-    conn.query('DROP TABLE IF EXISTS bigParameter');
-    conn.query('CREATE TABLE bigParameter (b longblob)');
+    conn.query('DROP TABLE IF EXISTS comp_bigParameter');
+    conn.query('CREATE TABLE comp_bigParameter (b longblob)');
     await conn.query('FLUSH TABLES');
     await conn.beginTransaction();
-    conn.query('insert into bigParameter(b) values(?)', [buf]);
-    const rows = await conn.query('SELECT * from bigParameter');
+    conn.query('insert into comp_bigParameter(b) values(?)', [buf]);
+    const rows = await conn.query('SELECT * from comp_bigParameter');
     assert.deepEqual(rows[0].b, buf);
+    conn.query('DROP TABLE IF EXISTS comp_bigParameter');
   }, 20000);
 
   test('multi compression packet size', async ({ skip }) => {
     if (maxAllowedSize <= testSize) return skip();
-    conn.query('DROP TABLE IF EXISTS bigParameter2');
-    conn.query('CREATE TABLE bigParameter2 (b longblob)');
+    conn.query('DROP TABLE IF EXISTS comp_bigParameter2');
+    conn.query('CREATE TABLE comp_bigParameter2 (b longblob)');
     await conn.query('FLUSH TABLES');
     await conn.beginTransaction();
-    conn.query('insert into bigParameter2(b) values(?)', [randomBuf]);
-    const rows = await conn.query('SELECT * from bigParameter2');
+    conn.query('insert into comp_bigParameter2(b) values(?)', [randomBuf]);
+    const rows = await conn.query('SELECT * from comp_bigParameter2');
     assert.deepEqual(rows[0].b, randomBuf);
+    conn.query('DROP TABLE IF EXISTS comp_bigParameter2');
   }, 20000);
 });

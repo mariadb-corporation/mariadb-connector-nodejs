@@ -5,7 +5,7 @@
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../../base.js';
 import Conf from '../../conf.js';
-describe('enum', async () => {
+describe.concurrent('enum', async () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

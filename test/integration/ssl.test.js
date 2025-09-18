@@ -11,7 +11,7 @@ import Conf from '../conf.js';
 import { isMaxscale, isMaxscaleMinVersion, getHostSuffix, getEnv, createConnection, utf8Collation } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('ssl', function () {
+describe.concurrent('ssl', function () {
   let ca = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? Conf.baseConfig.ssl.ca : null;
   let clientKey = null;
   let clientCert = null;

@@ -7,7 +7,7 @@ import { isMaxscale, createConnection, createCallbackConnection, createPool, cre
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 
-describe('sql template strings', () => {
+describe.concurrent('sql template strings', () => {
   const value = "'`\\";
   let shareConn;
   beforeAll(async () => {

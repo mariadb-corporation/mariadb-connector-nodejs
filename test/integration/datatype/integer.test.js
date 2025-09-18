@@ -6,7 +6,7 @@
 import { createConnection } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
-describe('integer with big value', () => {
+describe.concurrent('integer with big value', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

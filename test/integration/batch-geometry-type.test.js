@@ -9,7 +9,7 @@ import * as Capabilities from '../../lib/const/capabilities';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 
-describe('batch geometry type', () => {
+describe.concurrent('batch geometry type', () => {
   let supportBulk;
   let serverPermitExtendedMetas;
   let shareConn;

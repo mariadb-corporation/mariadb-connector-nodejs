@@ -9,7 +9,7 @@ import ConnOptions from '../../../lib/config/connection-options.js';
 import Collations from '../../../lib/const/collations.js';
 import ConnectionInformation from '../../../lib/misc/connection-information.js';
 
-describe('utils', () => {
+describe.concurrent('utils', () => {
   const head = Buffer.from([0xaa, 0xbb, 0xcc, 0x33]);
   const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
   const longbuf = Buffer.from([

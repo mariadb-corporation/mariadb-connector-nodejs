@@ -6,7 +6,7 @@
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import ConnOptions from '../../../lib/config/connection-options';
 
-describe('test connection options', () => {
+describe.concurrent('test connection options', () => {
   test('charset option', () => {
     let opt = new ConnOptions();
     assert.equal(opt.collation, null);
@@ -144,7 +144,7 @@ describe('test connection options', () => {
     assert.isUndefined(result.charsetNumber);
   });
 
-  describe('parsing', () => {
+  describe.concurrent('parsing', () => {
     test('error', () => {
       try {
         ConnOptions.parse('mariadb://localhost/');

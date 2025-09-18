@@ -7,7 +7,7 @@ import { createConnection, utf8Collation } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
 
-describe('buffer', () => {
+describe.concurrent('buffer', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -55,14 +55,14 @@ describe('buffer', () => {
       shareConn.escape(buf),
       utf8Collation() ? "_binary'let\\'s r\\0cks\\n😊 🤘'" : "_binary'let\\'s r\\0cks\\nmore simple'"
     );
-    await shareConn.query('DROP TABLE IF EXISTS BufEscape');
-    await shareConn.query('CREATE TABLE BufEscape(b blob)');
+    await shareConn.query('DROP TABLE IF EXISTS BufEscape2');
+    await shareConn.query('CREATE TABLE BufEscape2(b blob)');
     let rows = await shareConn.query(' SELECT ' + shareConn.escape(buf) + ' t');
     assert.deepEqual(rows, [{ t: buf }]);
     await shareConn.beginTransaction();
-    await shareConn.execute('INSERT INTO BufEscape VALUE (' + shareConn.escape(buf) + ')');
-    await shareConn.execute('INSERT INTO BufEscape VALUE (?)', buf);
-    rows = await shareConn.execute('SELECT * FROM BufEscape');
+    await shareConn.execute('INSERT INTO BufEscape2 VALUE (' + shareConn.escape(buf) + ')');
+    await shareConn.execute('INSERT INTO BufEscape2 VALUE (?)', buf);
+    rows = await shareConn.execute('SELECT * FROM BufEscape2');
     assert.deepEqual(rows, [{ b: buf }, { b: buf }]);
     shareConn.commit();
   });
@@ -94,13 +94,13 @@ describe('buffer', () => {
     const toInsert1 = '\u00D8bbcdefgh\njklmn"';
     const toInsert2 = '\u00D8abcdefgh\njklmn"';
 
-    await shareConn.query('DROP TABLE IF EXISTS BlobTeststreamtest2');
+    await shareConn.query('DROP TABLE IF EXISTS BlobTeststreamtest3');
     await shareConn.query(
-      'CREATE TABLE BlobTeststreamtest2 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
+      'CREATE TABLE BlobTeststreamtest3 (id int primary key not null, st varchar(20), strm text) CHARSET utf8'
     );
     await shareConn.beginTransaction();
-    await shareConn.execute('insert into BlobTeststreamtest2 values(?, ?, ?)', [2, toInsert1, toInsert2]);
-    let rows = await shareConn.execute('select * from BlobTeststreamtest2');
+    await shareConn.execute('insert into BlobTeststreamtest3 values(?, ?, ?)', [2, toInsert1, toInsert2]);
+    let rows = await shareConn.execute('select * from BlobTeststreamtest3');
     assert.deepEqual(rows, [{ id: 2, st: toInsert1, strm: toInsert2 }]);
     shareConn.commit();
   });
@@ -132,13 +132,13 @@ describe('buffer', () => {
   });
 
   test('blobs to buffer type binary', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS blobToBuff');
+    await shareConn.query('DROP TABLE IF EXISTS blobToBuff2');
     await shareConn.query(
-      'CREATE TABLE blobToBuff (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
+      'CREATE TABLE blobToBuff2 (id int not null primary key auto_increment, test longblob, test2 blob, test3 text)'
     );
     await shareConn.beginTransaction();
-    await shareConn.execute("insert into blobToBuff values(null, 'a','b','c')");
-    const rows = await shareConn.execute('SELECT * FROM blobToBuff', [buf]);
+    await shareConn.execute("insert into blobToBuff2 values(null, 'a','b','c')");
+    const rows = await shareConn.execute('SELECT * FROM blobToBuff2', [buf]);
     assert.strictEqual(rows.length, 1);
     assert.strictEqual(rows[0].id, 1);
     assert.deepStrictEqual(rows[0].test, Buffer.from('a'));
@@ -160,13 +160,13 @@ describe('buffer', () => {
   });
 
   test('blob empty and null binary', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS blobEmpty');
-    await shareConn.query('CREATE TABLE blobEmpty (val LONGBLOB)');
+    await shareConn.query('DROP TABLE IF EXISTS blobEmpty2');
+    await shareConn.query('CREATE TABLE blobEmpty2 (val LONGBLOB)');
     await shareConn.beginTransaction();
-    await shareConn.execute('insert into blobEmpty values (?)', ['']);
-    await shareConn.execute('insert into blobEmpty values (?)', ['hello']);
-    await shareConn.execute('insert into blobEmpty values (?)', [null]);
-    const rows = await shareConn.execute('select * from blobEmpty');
+    await shareConn.execute('insert into blobEmpty2 values (?)', ['']);
+    await shareConn.execute('insert into blobEmpty2 values (?)', ['hello']);
+    await shareConn.execute('insert into blobEmpty2 values (?)', [null]);
+    const rows = await shareConn.execute('select * from blobEmpty2');
     assert.deepEqual(rows, [{ val: Buffer.from('') }, { val: Buffer.from('hello') }, { val: null }]);
     shareConn.commit();
   });

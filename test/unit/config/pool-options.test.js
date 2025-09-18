@@ -6,7 +6,7 @@
 import PoolOptions from '../../../lib/config/pool-options';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('test pool options', () => {
+describe.concurrent('test pool options', () => {
   test('with options', () => {
     const result = new PoolOptions(
       'mariadb://root:pass@example.com:3307/db?metaAsArray=false&ssl=true&dateStrings=true&resetAfterUse=false' +

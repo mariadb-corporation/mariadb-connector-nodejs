@@ -7,7 +7,7 @@ import { createConnection, createCallbackConnection, utf8Collation } from '../ba
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 
-describe('basic query callback', () => {
+describe.concurrent('basic query callback', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

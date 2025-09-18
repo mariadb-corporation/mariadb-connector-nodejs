@@ -6,7 +6,7 @@
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import * as CheckNode from '../../check-node.js';
 
-describe('test Check-node version', () => {
+describe.concurrent('test Check-node version', () => {
   test('hasMinVersion check', () => {
     assert.isTrue(CheckNode.hasMinVersion('12.1.0', '11'));
     assert.isTrue(CheckNode.hasMinVersion('12.1.0', '11.1'));

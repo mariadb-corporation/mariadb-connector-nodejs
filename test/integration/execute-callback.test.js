@@ -7,7 +7,7 @@ import { assert, describe, test, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createConnection, createCallbackConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('prepare and execute callback', () => {
+describe.concurrent('prepare and execute callback', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

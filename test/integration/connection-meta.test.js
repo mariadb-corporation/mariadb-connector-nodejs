@@ -10,7 +10,7 @@ import { getEnv } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 
-describe('Connection meta', function () {
+describe.concurrent('Connection meta', function () {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

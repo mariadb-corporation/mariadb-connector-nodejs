@@ -7,7 +7,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, createCallbackConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('multi-results', () => {
+describe.concurrent('multi-results', () => {
   let multiStmtConn;
   let shareConn;
   beforeAll(async () => {
@@ -32,13 +32,13 @@ describe('multi-results', () => {
 
   test('duplicate column', async function () {
     const conn = await createConnection();
-    await conn.query('DROP TABLE IF EXISTS t');
-    await conn.query('CREATE TABLE t (i int)');
+    await conn.query('DROP TABLE IF EXISTS dupp_col');
+    await conn.query('CREATE TABLE dupp_col (i int)');
     await conn.beginTransaction();
-    await conn.query('INSERT INTO t(i) VALUES (1)');
-    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+    await conn.query('INSERT INTO dupp_col(i) VALUES (1)');
+    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM dupp_col' });
     try {
-      await conn.query('SELECT i, i FROM t');
+      await conn.query('SELECT i, i FROM dupp_col');
       throw new Error('must have thrown an error');
     } catch (err) {
       assert.isTrue(err.message.includes('Error in results, duplicate field name `i`'));
@@ -52,12 +52,12 @@ describe('multi-results', () => {
 
   test('duplicate column disabled', async function () {
     const conn = await createConnection({ checkDuplicate: false });
-    await conn.query('DROP TABLE IF EXISTS t');
-    await conn.query('CREATE TABLE t (i int)');
+    await conn.query('DROP TABLE IF EXISTS dupp_col_dis');
+    await conn.query('CREATE TABLE dupp_col_dis (i int)');
     await conn.beginTransaction();
-    await conn.query('INSERT INTO t(i) VALUES (1)');
-    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
-    const res = await conn.query('SELECT i, i FROM t');
+    await conn.query('INSERT INTO dupp_col_dis(i) VALUES (1)');
+    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM dupp_col_dis' });
+    const res = await conn.query('SELECT i, i FROM dupp_col_dis');
     assert.deepEqual(res, [
       {
         i: 1
@@ -68,17 +68,17 @@ describe('multi-results', () => {
 
   test('duplicate column nestTables', async function () {
     const conn = await createConnection({ nestTables: true });
-    await conn.query('DROP TABLE IF EXISTS t');
-    await conn.query('CREATE TABLE t (i int)');
+    await conn.query('DROP TABLE IF EXISTS dupp_col_nested');
+    await conn.query('CREATE TABLE dupp_col_nested (i int)');
     await conn.beginTransaction();
 
-    await conn.query('INSERT INTO t(i) VALUES (1)');
-    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
+    await conn.query('INSERT INTO dupp_col_nested(i) VALUES (1)');
+    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM dupp_col_nested' });
     try {
-      await conn.query('SELECT i, i FROM t');
+      await conn.query('SELECT i, i FROM dupp_col_nested');
       throw new Error('must have thrown an error');
     } catch (err) {
-      assert.isTrue(err.message.includes('Error in results, duplicate field name `t`.`i`'));
+      assert.isTrue(err.message.includes('Error in results, duplicate field name `dupp_col_nested`.`i`'));
       assert.equal(err.errno, 45040);
       assert.equal(err.sqlState, 42000);
       assert.equal(err.code, 'ER_DUPLICATE_FIELD');
@@ -103,16 +103,16 @@ describe('multi-results', () => {
 
   test('duplicate column disabled nestTables', async function () {
     const conn = await createConnection({ checkDuplicate: false, nestTables: true });
-    await conn.query('DROP TABLE IF EXISTS t');
-    await conn.query('CREATE TABLE t (i int)');
+    await conn.query('DROP TABLE IF EXISTS dupp_col_dis_nested');
+    await conn.query('CREATE TABLE dupp_col_dis_nested (i int)');
     await conn.beginTransaction();
 
-    await conn.query('INSERT INTO t(i) VALUES (1)');
-    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM t' });
-    const res = await conn.query('SELECT i, i FROM t');
+    await conn.query('INSERT INTO dupp_col_dis_nested(i) VALUES (1)');
+    await conn.query({ rowsAsArray: true, sql: 'SELECT i, i FROM dupp_col_dis_nested' });
+    const res = await conn.query('SELECT i, i FROM dupp_col_dis_nested');
     assert.deepEqual(res, [
       {
-        t: {
+        dupp_col_dis_nested: {
           i: 1
         }
       }

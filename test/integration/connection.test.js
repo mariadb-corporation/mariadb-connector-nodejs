@@ -14,7 +14,7 @@ import dns from 'node:dns';
 import Net from 'node:net';
 import { rejects } from 'node:assert';
 
-describe('connection', () => {
+describe.concurrent('connection', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -906,66 +906,70 @@ describe('connection', () => {
       conn.end();
     }
   });
+  describe.sequential('expiration', () => {
+    test('connection error if user expired', async ({ skip }) => {
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale(shareConn)) {
+        //session tracking not implemented
+        return skip();
+      }
+      if (!utf8Collation()) return skip();
+      await shareConn.query('set global disconnect_on_expired_password= ON');
 
-  test('connection error if user expired', async ({ skip }) => {
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale(shareConn)) {
-      //session tracking not implemented
-      return skip();
-    }
-    if (!utf8Collation()) return skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
-    shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query(
-      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
-    );
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
-    shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
-    shareConn.query(
-      'update mysql.global_priv set\n' +
-        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
-        "    where user='jeffrey'"
-    );
-    await shareConn.query('flush privileges');
-    try {
-      await createConnection({
-        user: 'jeffrey',
-        password: '5$?kLOPµ€rd'
-      });
-      throw new Error('must have thrown error !');
-    } catch (err) {
-      shareConn.query('set global disconnect_on_expired_password= OFF');
-      assert.equal(err.sqlState, 'HY000');
-      assert.equal(err.code, 'ER_MUST_CHANGE_PASSWORD_LOGIN');
-    }
-  });
-
-  test('connection with expired user', async ({ skip }) => {
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale(shareConn)) {
-      //session tracking not implemented
-      return skip();
-    }
-    if (!utf8Collation()) return skip();
-    shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
-    shareConn.query('set global disconnect_on_expired_password= ON');
-    shareConn.query(
-      "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
-    );
-    shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
-    shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
-    shareConn.query(
-      'update mysql.global_priv set\n' +
-        "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
-        "    where user='jeffrey'"
-    );
-    await shareConn.query('flush privileges');
-    const conn = await createConnection({
-      user: 'jeffrey',
-      password: '5$?tuiHLKyklµ€rd',
-      permitConnectionWhenExpired: true
+      await shareConn.query("DROP USER IF EXISTS 'jeffrey2'" + getHostSuffix());
+      await shareConn.query(
+        "CREATE USER 'jeffrey2'" + getHostSuffix() + " IDENTIFIED BY '5$?kLOPµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+      );
+      await shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey2'" + getHostSuffix());
+      await shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
+      await shareConn.query(
+        'update mysql.global_priv set\n' +
+          "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+          "    where user='jeffrey2'"
+      );
+      await shareConn.query('flush privileges');
+      try {
+        await createConnection({
+          user: 'jeffrey2',
+          password: '5$?kLOPµ€rd'
+        });
+        throw new Error('must have thrown error !');
+      } catch (err) {
+        console.log(err);
+        assert.equal(err.sqlState, 'HY000', err.message);
+        assert.equal(err.code, 'ER_MUST_CHANGE_PASSWORD_LOGIN');
+      } finally {
+        await shareConn.query('set global disconnect_on_expired_password= OFF');
+      }
     });
-    await conn.query("SET PASSWORD = PASSWORD('5$?tuiHLKyklµ€rdssss')");
-    shareConn.query('set global disconnect_on_expired_password= OFF');
-    await conn.end();
+
+    test('connection with expired user', async ({ skip }) => {
+      if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 4, 3) || isMaxscale(shareConn)) {
+        //session tracking not implemented
+        return skip();
+      }
+      if (!utf8Collation()) return skip();
+      shareConn.query("DROP USER IF EXISTS 'jeffrey'" + getHostSuffix());
+      shareConn.query('set global disconnect_on_expired_password= ON');
+      shareConn.query(
+        "CREATE USER 'jeffrey'" + getHostSuffix() + " IDENTIFIED BY '5$?tuiHLKyklµ€rd' PASSWORD EXPIRE INTERVAL 1 DAY"
+      );
+      shareConn.query('GRANT ALL ON `' + Conf.baseConfig.database + "`.* TO 'jeffrey'" + getHostSuffix());
+      shareConn.query('set @tstamp_expired= UNIX_TIMESTAMP(NOW() - INTERVAL 3 DAY)');
+      shareConn.query(
+        'update mysql.global_priv set\n' +
+          "    priv=json_set(priv, '$.password_last_changed', @tstamp_expired)\n" +
+          "    where user='jeffrey'"
+      );
+      await shareConn.query('flush privileges');
+      const conn = await createConnection({
+        user: 'jeffrey',
+        password: '5$?tuiHLKyklµ€rd',
+        permitConnectionWhenExpired: true
+      });
+      await conn.query("SET PASSWORD = PASSWORD('5$?tuiHLKyklµ€rdssss')");
+      shareConn.query('set global disconnect_on_expired_password= OFF');
+      await conn.end();
+    });
   });
 
   test('collation index > 255', async ({ skip }) => {

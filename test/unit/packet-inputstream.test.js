@@ -14,7 +14,7 @@ import EventEmitter from 'node:events';
 import Collations from '../../lib/const/collations.js';
 import * as base from '../base.js';
 
-describe('test PacketInputStream data', () => {
+describe.concurrent('test PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
   const info = new ConnectionInformation({});

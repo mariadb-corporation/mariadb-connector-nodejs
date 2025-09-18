@@ -10,8 +10,12 @@ import path from 'node:path';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 
-describe('local-infile', () => {
+describe.concurrent('local-infile', () => {
   const smallFileName = path.join(os.tmpdir(), 'smallLocalInfile.txt');
+  const smallFileName2 = path.join(os.tmpdir(), 'smallLocalInfile2.txt');
+  const smallFileName3 = path.join(os.tmpdir(), 'smallLocalInfile3.txt');
+  const smallFileName4 = path.join(os.tmpdir(), 'smallLocalInfile4.txt');
+  const smallFileName5 = path.join(os.tmpdir(), 'smallLocalInfile5.txt');
   const nonReadableFile = path.join(os.tmpdir(), 'nonReadableFile.txt');
   const bigFileName = path.join(os.tmpdir(), 'bigLocalInfile.txt');
   let shareConn;
@@ -22,6 +26,10 @@ describe('local-infile', () => {
     await shareConn.end();
     shareConn = null;
     fs.unlink(smallFileName, (err) => {});
+    fs.unlink(smallFileName2, (err) => {});
+    fs.unlink(smallFileName3, (err) => {});
+    fs.unlink(smallFileName4, (err) => {});
+    fs.unlink(smallFileName5, (err) => {});
     fs.unlink(nonReadableFile, (err) => {});
     fs.unlink(bigFileName, (err) => {});
   });
@@ -145,15 +153,15 @@ describe('local-infile', () => {
       });
     });
     const conn = await createConnection({ permitLocalInfile: true });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile7');
+    await conn.query('CREATE TABLE smallLocalInfile7(id int, test varchar(100))');
     await conn.beginTransaction();
     await conn.query(
       "LOAD DATA LOCAL INFILE '" +
         smallFileName.replace(/\\/g, '\\\\') +
-        "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+        "' INTO TABLE smallLocalInfile7 FIELDS TERMINATED BY ',' (id, test)"
     );
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile7');
     assert.deepEqual(rows2, [
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' }
@@ -167,7 +175,7 @@ describe('local-infile', () => {
       return skip();
     }
     await new Promise(function (resolve, reject) {
-      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+      fs.writeFile(smallFileName2, '1,hello\n2,world\n', 'utf8', function (err) {
         if (err) reject(err);
         else resolve();
       });
@@ -175,16 +183,16 @@ describe('local-infile', () => {
     const conn = await createConnection({
       permitLocalInfile: true,
       infileStreamFactory: () => {
-        return fs.createReadStream(smallFileName);
+        return fs.createReadStream(smallFileName2);
       }
     });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile2');
+    await conn.query('CREATE TABLE smallLocalInfile2(id int, test varchar(100))');
     await conn.beginTransaction();
     await conn.query(
-      "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+      "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile2 FIELDS TERMINATED BY ',' (id, test)"
     );
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile2');
     assert.deepEqual(rows2, [
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' }
@@ -204,19 +212,19 @@ describe('local-infile', () => {
         throw new Error('Expect to throw Error');
       }
     });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile3');
+    await conn.query('CREATE TABLE smallLocalInfile3(id int, test varchar(100))');
     await conn.beginTransaction();
     try {
       await conn.query(
-        "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+        "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile3 FIELDS TERMINATED BY ',' (id, test)"
       );
       throw new Error('Expect to have thrown an error');
     } catch (err) {
       assert.equal(err.errno, 45022);
       assert.equal(err.sqlState, '22000');
     }
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile3');
     assert.deepEqual(rows2, []);
     await conn.end();
   });
@@ -227,22 +235,22 @@ describe('local-infile', () => {
       return skip();
     }
     await new Promise(function (resolve, reject) {
-      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+      fs.writeFile(smallFileName3, '1,hello\n2,world\n', 'utf8', function (err) {
         if (err) reject(err);
         else resolve();
       });
     });
     const conn = await createConnection({ permitLocalInfile: true });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile4');
+    await conn.query('CREATE TABLE smallLocalInfile4(id int, test varchar(100))');
     await conn.beginTransaction();
     await conn.query({
-      sql: "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
+      sql: "LOAD DATA LOCAL INFILE 'no_file' INTO TABLE smallLocalInfile4 FIELDS TERMINATED BY ',' (id, test)",
       infileStreamFactory: () => {
-        return fs.createReadStream(smallFileName);
+        return fs.createReadStream(smallFileName3);
       }
     });
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile4');
     assert.deepEqual(rows2, [
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' }
@@ -256,24 +264,24 @@ describe('local-infile', () => {
       return skip();
     }
     await new Promise(function (resolve, reject) {
-      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+      fs.writeFile(smallFileName4, '1,hello\n2,world\n', 'utf8', function (err) {
         if (err) reject(err);
         else resolve();
       });
     });
     const conn = await createConnection({ permitLocalInfile: true });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile5');
+    await conn.query('CREATE TABLE smallLocalInfile5(id int, test varchar(100))');
     await conn.beginTransaction();
     await conn.query(
-      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)",
-      smallFileName
+      "LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile5 FIELDS TERMINATED BY ',' (id, test)",
+      smallFileName4
     );
-    await conn.query("LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)", [
-      smallFileName
+    await conn.query("LOAD DATA LOCAL INFILE ? INTO TABLE smallLocalInfile5 FIELDS TERMINATED BY ',' (id, test)", [
+      smallFileName4
     ]);
 
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile5');
     assert.deepEqual(rows2, [
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' },
@@ -290,21 +298,21 @@ describe('local-infile', () => {
     }
 
     await new Promise(function (resolve, reject) {
-      fs.writeFile(smallFileName, '1,hello\n2,world\n', 'utf8', function (err) {
+      fs.writeFile(smallFileName5, '1,hello\n2,world\n', 'utf8', function (err) {
         if (err) reject(err);
         else resolve();
       });
     });
     const conn = await createConnection({ permitLocalInfile: true, charset: 'big5' });
-    await conn.query('DROP TABLE IF EXISTS smallLocalInfile');
-    await conn.query('CREATE TABLE smallLocalInfile(id int, test varchar(100))');
+    await conn.query('DROP TABLE IF EXISTS smallLocalInfile6');
+    await conn.query('CREATE TABLE smallLocalInfile6(id int, test varchar(100))');
     await conn.beginTransaction();
     await conn.query(
       "LOAD DATA LOCAL INFILE '" +
-        smallFileName.replace(/\\/g, '/') +
-        "' INTO TABLE smallLocalInfile FIELDS TERMINATED BY ',' (id, test)"
+        smallFileName5.replace(/\\/g, '/') +
+        "' INTO TABLE smallLocalInfile6 FIELDS TERMINATED BY ',' (id, test)"
     );
-    const rows2 = await conn.query('SELECT * FROM smallLocalInfile');
+    const rows2 = await conn.query('SELECT * FROM smallLocalInfile6');
     assert.deepEqual(rows2, [
       { id: 1, test: 'hello' },
       { id: 2, test: 'world' }

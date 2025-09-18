@@ -14,7 +14,7 @@ import ConnectionInformation from '../../lib/misc/connection-information.js';
 import EventEmitter from 'node:events';
 import ZLib from 'node:zlib';
 
-describe('test compress PacketInputStream data', () => {
+describe.concurrent('test compress PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
   const info = new ConnectionInformation({});

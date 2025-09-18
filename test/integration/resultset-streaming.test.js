@@ -8,7 +8,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, createCallbackConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('results-set streaming', () => {
+describe.concurrent('results-set streaming', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

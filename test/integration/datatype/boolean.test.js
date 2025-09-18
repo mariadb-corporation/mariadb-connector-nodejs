@@ -6,7 +6,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../../base.js';
 import Conf from '../../conf.js';
 
-describe('boolean type', () => {
+describe.concurrent('boolean type', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

@@ -6,21 +6,21 @@
 import * as Parse from '../../../lib/misc/parse';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('parse', () => {
+describe.concurrent('parse', () => {
   const values = [
     { id1: 1, id2: 2 },
     { id3: 3, id2: 4 },
     { id2: 5, id1: 6 }
   ];
 
-  describe('split', () => {
+  describe.concurrent('split', () => {
     test('EOF', () => {
       const res = Parse.splitQuery(Buffer.from('select ? -- comment ? \n , ?', 'utf8'));
       assert.deepEqual(res, [7, 8, 26, 27]);
     });
   });
 
-  describe('split queries', () => {
+  describe.concurrent('split queries', () => {
     test('Normal', () => {
       const sqlBytes = Buffer.from('select ? -- comment ? \n , ?;\nINSERT 1\n;', 'utf8');
       const buf = {
@@ -119,7 +119,7 @@ describe('parse', () => {
     });
   });
 
-  describe('basic placeholder', () => {
+  describe.concurrent('basic placeholder', () => {
     test('select', () => {
       const res = Parse.searchPlaceholder('select \'\\\'\' as a, :id2 as b, "\\"" as c, :id1 as d', null, values);
       assert.deepEqual(res, {
@@ -334,7 +334,7 @@ describe('parse', () => {
     });
   });
 
-  describe('validate file name', () => {
+  describe.concurrent('validate file name', () => {
     test('error', () => {
       assert.isTrue(Parse.validateFileName("LOAD DATA LOCAL INFILE 'C:/Temp/myFile.txt'", [], 'C:/Temp/myFile.txt'));
       assert.isFalse(Parse.validateFileName("LOAD DATA LOCAL INFILE 'C:/Temp/myFile.txt'", [], 'C:/myFile.txt'));

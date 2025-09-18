@@ -8,7 +8,7 @@ import { createConnection, isLocalDb, isMaxscale } from '../base.js';
 import { getEnv } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('test socket', () => {
+describe.concurrent('test socket', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

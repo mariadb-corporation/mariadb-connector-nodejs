@@ -9,7 +9,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('transaction', () => {
+describe.concurrent('transaction', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -21,7 +21,7 @@ describe('transaction', () => {
     shareConn = null;
   });
 
-  test('transaction rollback', async () => {
+  test.sequential('transaction rollback', async () => {
     const conn = await base.createConnection();
     await conn.rollback();
     await conn.query('SET autocommit=0');
@@ -89,11 +89,11 @@ describe('transaction', () => {
     await new Promise((resolve, reject) => {
       conn.connect(function (err) {
         if (err) return reject(err);
-        conn.query('DROP TABLE IF EXISTS testTransaction2', (err) => {
+        conn.query('DROP TABLE IF EXISTS testTransaction5', (err) => {
           if (err) {
             return reject(err);
           } else {
-            conn.query('CREATE TABLE testTransaction2 (v varchar(10))', (err) => {
+            conn.query('CREATE TABLE testTransaction5 (v varchar(10))', (err) => {
               if (err) return reject(err);
               conn.rollback();
               conn.query('SET autocommit=0', (err) => {
@@ -101,9 +101,9 @@ describe('transaction', () => {
                 assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
                 assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
                 conn.beginTransaction();
-                conn.query("INSERT INTO testTransaction2 values ('test')");
+                conn.query("INSERT INTO testTransaction5 values ('test')");
                 conn.rollback();
-                conn.query('SELECT count(*) as nb FROM testTransaction2', (err, rows) => {
+                conn.query('SELECT count(*) as nb FROM testTransaction5', (err, rows) => {
                   if (err) return reject(err);
                   assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
                   assert.equal(rows[0].nb, 0);
@@ -179,20 +179,20 @@ describe('transaction', () => {
           if (err) {
             reject(err);
           } else {
-            conn.query('DROP TABLE IF EXISTS testTransaction2', (err) => {
+            conn.query('DROP TABLE IF EXISTS testTransaction22', (err) => {
               if (err) {
                 reject(err);
               } else {
-                conn.query('CREATE TABLE testTransaction2 (v varchar(10))', (err) => {
+                conn.query('CREATE TABLE testTransaction22 (v varchar(10))', (err) => {
                   if (err) {
                     reject(err);
                   } else {
-                    conn.query("INSERT INTO testTransaction2 values ('test')", (err) => {
+                    conn.query("INSERT INTO testTransaction22 values ('test')", (err) => {
                       process.nextTick(
                         conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced'))
                       );
                       conn.commit();
-                      resolve();
+                      conn.end(resolve);
                     });
                   }
                 });
@@ -252,42 +252,44 @@ describe('transaction', () => {
 
   test('transaction commit with callback', async () => {
     const conn = base.createCallbackConnection();
-    conn.connect((err) => {
-      if (err) return reject(err);
-      conn.query('DROP TABLE IF EXISTS testTransaction4', (err) => {
-        if (err) {
-          return reject(err);
-        } else {
-          conn.query('CREATE TABLE testTransaction4 (v varchar(10))', (err) => {
-            if (err) return reject(err);
-            conn.commit((err) => {
+    await new Promise((resolve, reject) => {
+      conn.connect((err) => {
+        if (err) return reject(err);
+        conn.query('DROP TABLE IF EXISTS testTransaction4', (err) => {
+          if (err) {
+            return reject(err);
+          } else {
+            conn.query('CREATE TABLE testTransaction4 (v varchar(10))', (err) => {
               if (err) return reject(err);
-              conn.query('SET autocommit=0', (err) => {
+              conn.commit((err) => {
                 if (err) return reject(err);
-                assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-                assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
-                conn.beginTransaction((err) => {
+                conn.query('SET autocommit=0', (err) => {
                   if (err) return reject(err);
-                  assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
-                  conn.query("INSERT INTO testTransaction4 values ('test')", (err) => {
+                  assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+                  assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 0);
+                  conn.beginTransaction((err) => {
                     if (err) return reject(err);
                     assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
-                    conn.commit((err) => {
+                    conn.query("INSERT INTO testTransaction4 values ('test')", (err) => {
                       if (err) return reject(err);
-                      assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
-                      conn.query('SELECT count(*) as nb FROM testTransaction4', (err, rows) => {
+                      assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+                      conn.commit((err) => {
                         if (err) return reject(err);
-                        assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
-                        assert.equal(rows[0].nb, 1);
-                        conn.end(resolve);
+                        assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 0);
+                        conn.query('SELECT count(*) as nb FROM testTransaction4', (err, rows) => {
+                          if (err) return reject(err);
+                          assert.equal(conn.info.status & ServerStatus.STATUS_IN_TRANS, 1);
+                          assert.equal(rows[0].nb, 1);
+                          conn.end(resolve);
+                        });
                       });
                     });
                   });
                 });
               });
             });
-          });
-        }
+          }
+        });
       });
     });
   }, 5000);

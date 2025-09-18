@@ -7,7 +7,7 @@ import { createConnection } from '../../base.js';
 import * as Capabilities from '../../../lib/const/capabilities';
 import { assert, describe, test, it, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
-describe('json', () => {
+describe.concurrent('json', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

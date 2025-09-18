@@ -6,14 +6,18 @@
 import base, { createConnection } from '../../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
-describe('float', () => {
+describe.concurrent('float', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
     await shareConn.query('DROP TABLE IF EXISTS testBigfloat');
+    await shareConn.query('DROP TABLE IF EXISTS testBigfloat2');
     await shareConn.query('CREATE TABLE testBigfloat (a FLOAT, b DOUBLE)');
+    await shareConn.query('CREATE TABLE testBigfloat2 (a FLOAT, b DOUBLE)');
   });
   afterAll(async () => {
+    await shareConn.query('DROP TABLE IF EXISTS testBigfloat');
+    await shareConn.query('DROP TABLE IF EXISTS testBigfloat2');
     await shareConn.end();
     shareConn = null;
   });
@@ -29,7 +33,6 @@ describe('float', () => {
   });
 
   test('bigint format', async () => {
-    await shareConn.query('TRUNCATE testBigfloat');
     await shareConn.beginTransaction();
     await shareConn.query(
       'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
@@ -46,12 +49,11 @@ describe('float', () => {
   });
 
   test('bigint format exec', async () => {
-    await shareConn.query('TRUNCATE testBigfloat');
     await shareConn.beginTransaction();
     await shareConn.query(
-      'INSERT INTO testBigfloat values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
+      'INSERT INTO testBigfloat2 values (-127.1, -128.2), (19925.0991, 900719925.4740991), (null, null)'
     );
-    const rows = await shareConn.execute('SELECT * FROM testBigfloat');
+    const rows = await shareConn.execute('SELECT * FROM testBigfloat2');
     assert.equal(rows.length, 3);
     assert.closeTo(rows[0].a, -127.1, 0.1);
     assert.equal(rows[0].b, -128.2);

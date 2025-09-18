@@ -6,7 +6,7 @@
 import { createPoolCallback } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('Pool callback event', () => {
+describe.concurrent('Pool callback event', () => {
   test('pool connection creation', async () => {
     const pool = createPoolCallback();
     await new Promise((resolve, reject) => {

@@ -7,7 +7,7 @@ import Conf from '../conf.js';
 import { createConnection, createPoolCallback, utf8Collation, isMaxscale } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('Pool callback', () => {
+describe.concurrent('Pool callback', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

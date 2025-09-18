@@ -7,7 +7,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('ok packet', () => {
+describe.concurrent('ok packet', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
@@ -131,16 +131,16 @@ describe('ok packet', () => {
 
   test('update result text changedRows', async () => {
     const conn = await createConnection({ foundRows: false });
-    await conn.query('DROP TABLE IF EXISTS updateResultSet1');
-    await conn.query('CREATE TABLE updateResultSet1(id int(11))');
-    await conn.query('INSERT INTO updateResultSet1 values (1), (1), (2), (3)');
-    let res = await conn.query('UPDATE updateResultSet1 set id = 1');
+    await conn.query('DROP TABLE IF EXISTS updateResultSet2');
+    await conn.query('CREATE TABLE updateResultSet2(id int(11))');
+    await conn.query('INSERT INTO updateResultSet2 values (1), (1), (2), (3)');
+    let res = await conn.query('UPDATE updateResultSet2 set id = 1');
     assert.ok(!Array.isArray(res));
     assert.strictEqual(typeof res, 'object');
     assert.strictEqual(res.insertId, 0n);
     assert.strictEqual(res.affectedRows, 2);
     assert.strictEqual(res.warningStatus, 0);
-    res = await conn.query('UPDATE updateResultSet1 set id = 1');
+    res = await conn.query('UPDATE updateResultSet2 set id = 1');
     assert.ok(!Array.isArray(res));
     assert.strictEqual(typeof res, 'object');
     assert.strictEqual(res.insertId, 0n);

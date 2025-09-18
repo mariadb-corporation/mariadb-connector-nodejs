@@ -6,7 +6,7 @@
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, createCallbackConnection } from '../base.js';
 
-describe('pipelining', () => {
+describe.concurrent('pipelining', () => {
   let conn1, conn2;
   const iterations = 500;
 

@@ -9,14 +9,13 @@ import path from 'node:path';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
-import https from 'https';
 
-describe('streaming', () => {
+describe.sequential('streaming', () => {
   const fileName = path.join(os.tmpdir(), 'tempBigFile.txt');
   const halfFileName = path.join(os.tmpdir(), 'tempHalfFile.txt');
   const size = 20 * 1024 * 1024;
-  const buf = Buffer.alloc(size);
-  const buf2 = Buffer.alloc(size / 2);
+  let buf = Buffer.alloc(size);
+  let buf2 = Buffer.alloc(size / 2);
   let maxAllowedSize;
   let shareConn;
   beforeAll(async () => {
@@ -39,6 +38,8 @@ describe('streaming', () => {
     } catch (e) {
       // eat
     }
+    buf = null;
+    buf2 = null;
   });
 
   test('Streaming url content', async () => {

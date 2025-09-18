@@ -8,7 +8,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';
 
-describe('stored procedure', () => {
+describe.concurrent('stored procedure', () => {
   let shareConn;
   beforeAll(async ({ skip }) => {
     shareConn = await createConnection(Conf.baseConfig);

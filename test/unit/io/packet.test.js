@@ -7,7 +7,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 import Packet from '../../../lib/io/packet.js';
 
-describe('packet', () => {
+describe.concurrent('packet', () => {
   const head = Buffer.from([0xaa, 0xbb, 0xcc, 0x33]);
   const buf = Buffer.from([0xf0, 0x9f, 0xa4, 0x98, 0xf0, 0x9f, 0x92, 0xaa]); // 🤘💪
   const longbuf = Buffer.from([

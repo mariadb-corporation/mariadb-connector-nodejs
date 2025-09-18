@@ -8,7 +8,7 @@ import * as ServerStatus from '../../lib/const/server-status';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 
-describe('reset connection', () => {
+describe.concurrent('reset connection', () => {
   let shareConn;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);

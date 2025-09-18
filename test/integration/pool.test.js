@@ -14,7 +14,7 @@ import winston from 'winston';
 import * as basePromise from '../../promise';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('Pool', () => {
+describe.concurrent('Pool', () => {
   const fileName = path.join(os.tmpdir(), Math.random() + 'tempStream.txt');
   let shareConn;
   beforeAll(async () => {

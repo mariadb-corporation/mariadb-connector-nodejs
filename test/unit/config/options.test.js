@@ -7,7 +7,7 @@ import * as basePromise from '../../../promise.js';
 import * as baseCallback from '../../../callback.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
-describe('test options', () => {
+describe.concurrent('test options', () => {
   test('default options', function () {
     const defaultOpts = basePromise.defaultOptions({ timezone: '+00:00', ssl: true });
     const defaultOptsCall = baseCallback.defaultOptions({ timezone: '+00:00', ssl: true });
