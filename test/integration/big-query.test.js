@@ -66,6 +66,7 @@ describe.concurrent('Big query', function () {
       await conn.batch('insert into bigParameterBigParam(b) values(?)', [['test'], [buf], ['test2']]);
       throw Error('must have thrown error');
     } catch (e) {
+      console.log(e);
       assert.isTrue(
         e.sql.includes(
           'insert into bigParameterBigParam(b) values(?) ' +
