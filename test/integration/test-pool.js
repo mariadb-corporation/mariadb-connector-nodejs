@@ -1631,7 +1631,7 @@ describe('Pool', () => {
     waitServerConnections(10);
   });
 
-  it('test minimum idle', function (done) {
+  it('test minimum idle', async function () {
     if (isMaxscale()) this.skip();
     this.timeout(5000);
     const pool = base.createPool({
@@ -1640,16 +1640,46 @@ describe('Pool', () => {
       idleTimeout: 2
     });
 
-    setTimeout(() => {
-      //minimumIdle-1 is possible after reaching idleTimeout and connection
-      // is still not recreated
-      assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
-      assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
-      pool
-        .end()
-        .then(() => done())
-        .catch(done);
-    }, 4000);
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+
+    await new Promise((accept, reject) => {
+      setTimeout(() => {
+        //minimumIdle-1 is possible after reaching idleTimeout and connection
+        // is still not recreated
+        assert.isTrue(pool.totalConnections() === 4 || pool.totalConnections() === 3);
+        assert.isTrue(pool.idleConnections() === 4 || pool.idleConnections() === 3);
+        pool
+          .end()
+          .then(() => accept())
+          .catch(reject);
+      }, 4000);
+    });
+  });
+
+  it('test minimum idle 0', async function () {
+    if (isMaxscale()) this.skip();
+    const pool = base.createPool({
+      connectionLimit: 10,
+      minimumIdle: 0,
+      idleTimeout: 2
+    });
+
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+
+    await new Promise((accept, reject) => {
+      setTimeout(() => {
+        assert.isTrue(pool.totalConnections() === 0);
+        assert.isTrue(pool.idleConnections() === 0);
+        pool
+          .end()
+          .then(() => accept())
+          .catch(reject);
+      }, 4000);
+    });
   });
 
   it('pool immediate error', function (done) {
