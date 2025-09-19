@@ -3,14 +3,13 @@
 
 'use strict';
 
-import * as base from '../base.js';
 import Conf from '../conf.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { isMaxscale, getHostSuffix, getEnv, createConnection, isLocalDb } from '../base.js';
+import { isMaxscale, getHostSuffix, getEnv, createConnection, isLocalDb, isWindows } from '../base.js';
 
 describe.concurrent('authentication plugin', () => {
   let rsaPublicKey = getEnv('TEST_RSA_PUBLIC_KEY');
@@ -157,7 +156,7 @@ describe.concurrent('authentication plugin', () => {
 
   test('name pipe authentication plugin', async ({ skip }) => {
     if (
-      process.platform !== 'win32' ||
+      !isWindows() ||
       isMaxscale(shareConn) ||
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 1, 11) ||
@@ -193,7 +192,7 @@ describe.concurrent('authentication plugin', () => {
   test('unix socket authentication plugin', async ({ skip }) => {
     if (
       isMaxscale(shareConn) ||
-      process.platform === 'win32' ||
+      isWindows() ||
       !shareConn.info.isMariaDB() ||
       !shareConn.info.hasMinVersion(10, 1, 11) ||
       !isLocalDb() ||

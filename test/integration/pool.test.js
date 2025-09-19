@@ -7,11 +7,11 @@ import stream from 'node:stream';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import Proxy from '../tools/proxy';
+import Proxy from '../tools/proxy.js';
 import { createConnection, createPool, isMaxscale, utf8Collation } from '../base.js';
 import { baseConfig } from '../conf.js';
 import winston from 'winston';
-import * as basePromise from '../../promise';
+import * as basePromise from '../../promise.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 describe.concurrent('Pool', () => {
@@ -273,10 +273,10 @@ describe.concurrent('Pool', () => {
       trace: true
     });
     await new Promise((res) => setTimeout(() => res(), 100));
-    const start = process.hrtime();
+    const start = performance.now();
     await new Promise((res) => setTimeout(() => res(), 100));
     await pool.end();
-    assert.equal(process.hrtime(start)[0], 0);
+    assert.equal(Math.round((performance.now() - start) / 1000), 0);
   }, 15000);
 
   test('ending pool with active connection', async function () {
@@ -287,11 +287,11 @@ describe.concurrent('Pool', () => {
       trace: true
     });
     await new Promise((res) => setTimeout(() => res(), 100));
-    const start = process.hrtime();
+    const start = performance.now();
     pool.query('SELECT SLEEP(3)');
     await new Promise((res) => setTimeout(() => res(), 100));
     await pool.end();
-    assert.equal(process.hrtime(start)[0], 3);
+    assert.equal(Math.round((performance.now() - start) / 1000), 3);
   }, 15000);
 
   test('ending pool with active connection reaching end', async function () {
@@ -302,13 +302,14 @@ describe.concurrent('Pool', () => {
       trace: true
     });
     await new Promise((res) => setTimeout(() => res(), 100));
-    const start = process.hrtime();
+    const start = performance.now();
     pool.query('SELECT SLEEP(15)').catch(() => {});
     await new Promise((res) => setTimeout(() => res(), 100));
     await pool.end();
 
+    const seconds = Math.round((performance.now() - start) / 1000)
     // on windows, less accurate, such needs to have 11 too
-    assert.isTrue(process.hrtime(start)[0] === 10 || process.hrtime(start)[0] === 11);
+    assert.isTrue(seconds === 10 || seconds === 11);
   }, 15000);
 
   test('pool escape', async ({ skip }) => {
@@ -1444,6 +1445,7 @@ describe.concurrent('Pool', () => {
   });
 
   test("ensure pipe ending doesn't stall connection", async ({ skip }) => {
+    if (!process) return skip();
     if (isMaxscale(shareConn) || !shareConn.info.isMariaDB()) return skip();
     const ver = process.version.substring(1).split('.');
     //stream.pipeline doesn't exist before node.js 8

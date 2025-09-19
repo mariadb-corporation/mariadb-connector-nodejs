@@ -3,7 +3,7 @@
 
 'use strict';
 
-import Proxy from '../tools/proxy';
+import Proxy from '../tools/proxy.js';
 import Conf from '../conf.js';
 import { isMaxscale, isMaxscaleMinVersion, createConnection } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';

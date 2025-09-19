@@ -4,9 +4,9 @@
 'use strict';
 
 import Conf from '../conf.js';
-import * as basePromise from '../../promise';
-import * as baseCallback from '../../callback';
-import Proxy from '../tools/proxy';
+import * as basePromise from '../../promise.js';
+import * as baseCallback from '../../callback.js';
+import Proxy from '../tools/proxy.js';
 import { createConnection, isMaxscale } from '../base.js';
 import { assert, expect, describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 

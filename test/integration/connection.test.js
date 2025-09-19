@@ -5,8 +5,8 @@
 
 import Collations from '../../lib/const/collations.js';
 import Conf from '../conf.js';
-import Connection from '../../lib/connection';
-import ConnOptions from '../../lib/config/connection-options';
+import Connection from '../../lib/connection.js';
+import ConnOptions from '../../lib/config/connection-options.js';
 import { isMaxscale, getHostSuffix, createConnection, createCallbackConnection, utf8Collation } from '../base.js';
 import { expect, assert, describe, test, beforeAll, afterAll } from 'vitest';
 
@@ -114,7 +114,9 @@ describe.concurrent('connection', () => {
         assert.isTrue(err.message.includes('close forced'));
         resolve();
       });
-      process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket(), new Error('close forced')));
+      setTimeout(() => {
+        conn.__tests.getSocket().destroy(new Error('close forced'));
+      }, 0);
     });
   });
 
@@ -126,7 +128,9 @@ describe.concurrent('connection', () => {
         assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
         resolve();
       });
-      process.nextTick(conn.__tests.getSocket().destroy.bind(conn.__tests.getSocket()));
+      setTimeout(() => {
+        conn.__tests.getSocket().destroy();
+      }, 0);
     });
   });
 
@@ -760,17 +764,17 @@ describe.concurrent('connection', () => {
   test('pause socket', async () => {
     const conn = await createConnection();
     conn.pause();
-    const startTime = process.hrtime();
+    const startTime = performance.now();
     setTimeout(() => {
       conn.resume();
     }, 500);
 
     const rows = await conn.query("SELECT '1'");
     assert.deepEqual(rows, [{ 1: '1' }]);
-    const diff = process.hrtime(startTime);
+    const diff = performance.now() - startTime;
     await conn.end();
     //query has taken more than 500ms
-    assert.isTrue(diff[1] > 499000000, ' diff[1]:' + diff[1] + ' expected to be more than 500000000');
+    assert.isTrue(diff > 499, ' diff:' + diff + ' expected to be more than 500');
   });
 
   test('pause socket callback', async () => {
@@ -778,7 +782,7 @@ describe.concurrent('connection', () => {
     await new Promise((resolve, reject) => {
       conn.connect((err) => {
         conn.pause();
-        const startTime = process.hrtime();
+        const startTime = performance.now();
         setTimeout(() => {
           conn.resume();
         }, 500);
@@ -788,9 +792,9 @@ describe.concurrent('connection', () => {
             reject(err);
           } else {
             assert.deepEqual(rows, [{ 1: '1' }]);
-            const diff = process.hrtime(startTime);
+            const diff = performance.now() - startTime;
             //query has taken more than 500ms
-            assert.isTrue(diff[1] > 499000000, ' diff[1]:' + diff[1] + ' expected to be more than 500000000');
+            assert.isTrue(diff > 499, ' diff:' + diff + ' expected to be more than 500');
             conn.end();
             resolve();
           }
@@ -934,7 +938,7 @@ describe.concurrent('connection', () => {
         });
         throw new Error('must have thrown error !');
       } catch (err) {
-        console.log(err);
+        // console.log(err);
         assert.equal(err.sqlState, 'HY000', err.message);
         assert.equal(err.code, 'ER_MUST_CHANGE_PASSWORD_LOGIN');
       } finally {

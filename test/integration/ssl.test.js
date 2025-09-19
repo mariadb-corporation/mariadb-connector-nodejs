@@ -8,7 +8,15 @@ import tls from 'node:tls';
 import crypto from 'node:crypto';
 
 import Conf from '../conf.js';
-import { isMaxscale, isMaxscaleMinVersion, getHostSuffix, getEnv, createConnection, utf8Collation } from '../base.js';
+import {
+  isMaxscale,
+  isMaxscaleMinVersion,
+  getHostSuffix,
+  getEnv,
+  createConnection,
+  utf8Collation,
+  isWindows
+} from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 describe.concurrent('ssl', function () {
@@ -24,7 +32,7 @@ describe.concurrent('ssl', function () {
     if (getEnv('TEST_MAXSCALE_TLS_PORT')) sslPort = parseInt(getEnv('TEST_MAXSCALE_TLS_PORT'));
     if (
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
-      ((process.platform === 'win32' && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
+      ((isWindows() && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
     ) {
       //TLSv1.2 is supported on windows only since MariaDB 10.4
@@ -426,8 +434,7 @@ describe.concurrent('ssl', function () {
     if (!sslEnable) return skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
-    const isWin = process.platform === 'win32';
-    if (isWin || !shareConn.info.isMariaDB()) return skip();
+    if (isWindows() || !shareConn.info.isMariaDB()) return skip();
 
     const conn = await createConnection({
       ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_2_method' },
@@ -442,8 +449,7 @@ describe.concurrent('ssl', function () {
     if (!sslEnable) return skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
-    const isWin = process.platform === 'win32';
-    if (!shareConn.info.isMariaDB() || (isWin && !shareConn.info.hasMinVersion(10, 4, 2))) {
+    if (!shareConn.info.isMariaDB() || (isWindows() && !shareConn.info.hasMinVersion(10, 4, 2))) {
       return skip();
     }
 
@@ -526,10 +532,10 @@ describe.concurrent('ssl', function () {
     if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) return skip();
 
     const conn = await createConnection({ host: 'mariadb.example.com', ssl: { ca: ca }, port: sslPort });
-    const isWin = process.platform === 'win32';
+
     let expectedProtocol = ['TLSv1.2', 'TLSv1.3'];
     if (shareConn.info.isMariaDB()) {
-      if (isWin && !shareConn.info.hasMinVersion(10, 4, 0)) {
+      if (isWindows() && !shareConn.info.hasMinVersion(10, 4, 0)) {
         expectedProtocol = 'TLSv1.1';
       }
     } else if (!shareConn.info.hasMinVersion(5, 7, 28)) {
@@ -589,9 +595,11 @@ describe.concurrent('ssl', function () {
     if (!ca || !clientKeystore) return skip();
     if (!utf8Collation()) return skip();
 
-    const ver = process.version.substring(1).split('.');
-    //on node.js 17+ client keystore won't be supported until installing openssl 3.0
-    if (parseInt(ver[0]) >= 17) return skip();
+    if (process) {
+      const ver = process.version.substring(1).split('.');
+      //on node.js 17+ client keystore won't be supported until installing openssl 3.0
+      if (parseInt(ver[0]) >= 17) return skip();
+    }
 
     const conn = await createConnection({
       user: 'X509testUser',
@@ -669,20 +677,17 @@ describe.concurrent('ssl', function () {
 });
 
 function checkProtocol(conn, protocol) {
-  const ver = process.version.substring(1).split('.');
   const currentProtocol = conn.__tests.getSocket().getProtocol();
 
-  if (ver[0] > 5 || (ver[0] === '5' && ver[1] === '7')) {
-    if (Array.isArray(protocol)) {
-      for (let i = 0; i < protocol.length; i++) {
-        if (currentProtocol === protocol[i]) return;
-      }
-      //throw error
-      assert.equal(currentProtocol, protocol);
-      return;
+  if (Array.isArray(protocol)) {
+    for (let i = 0; i < protocol.length; i++) {
+      if (currentProtocol === protocol[i]) return;
     }
+    //throw error
     assert.equal(currentProtocol, protocol);
+    return;
   }
+  assert.equal(currentProtocol, protocol);
 }
 
 async function validConnection(conn) {

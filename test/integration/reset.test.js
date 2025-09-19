@@ -4,7 +4,7 @@
 'use strict';
 
 import { createConnection } from '../base.js';
-import * as ServerStatus from '../../lib/const/server-status';
+import * as ServerStatus from '../../lib/const/server-status.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
 

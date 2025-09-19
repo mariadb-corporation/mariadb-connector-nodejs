@@ -121,6 +121,13 @@ export function getEnv(key) {
   return undefined;
 }
 
+export function isWindows() {
+  if (typeof Deno !== 'undefined') {
+    return 'windows' === Deno.build.os;
+  }
+  return process.platform === 'win32';
+}
+
 export function isLocalDb() {
   const localEnv = getEnv('LOCAL_DB');
   return localEnv === 'local' || localEnv === undefined;

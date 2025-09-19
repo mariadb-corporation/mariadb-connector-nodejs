@@ -36,10 +36,10 @@ jobs:
         name: build matrix
         uses: mariadb-corporation/connector-ci-build-matrix@main
         with:
-          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}]'
+          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}, {"name": "MariaDB 11.4 - DENO", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "deno": "lts"}]'
 
   ci:
-    name: ${{ matrix.name }}${{ matrix.node != 22 && format(' - node {0}', matrix.node) || '' }}
+    name: ${{ matrix.name }}${{ !matrix.deno && matrix.node != 22 && format(' - node {0}', matrix.node) || '' }}
     needs: setup
     timeout-minutes: 50
     strategy:
@@ -66,13 +66,22 @@ jobs:
           os: ${{ matrix.os }}
 
       - uses: actions/setup-node@v4
+        if: ${{ !matrix.deno }}
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        if: ${{ matrix.deno }}
+        with:
+          deno-version: ${{ matrix.deno }}
+
       - name: Install dependencies
+        if: ${{ !matrix.deno }}
         run: npm install
 
-      - name: Run Tests
+      - name: Run Tests node
+        if: ${{ !matrix.deno }}
         run: npm run coverage:test
         env:
           LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
@@ -81,7 +90,19 @@ jobs:
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
 
+      - name: Run Tests deno
+        if: ${{ matrix.deno }}
+        run: |
+          deno task test
+        env:
+          LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
+          DB_TYPE: ${{ matrix.db-type }}
+          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
+          DB_VERSION: ${{ matrix.db-tag }}
+          TEST_TRACE: 'true'
+
       - name: Download Codecov uploader
+        if: ${{ !matrix.deno }}
         shell: bash
         run: |
           case "$RUNNER_OS" in
@@ -105,6 +126,7 @@ jobs:
 
       - name: Generate Coverage Report
         shell: bash
+        if: ${{ !matrix.deno }}
         run: |
           npm run coverage:create
           case "$RUNNER_OS" in

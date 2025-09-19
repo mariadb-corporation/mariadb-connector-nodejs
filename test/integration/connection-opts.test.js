@@ -64,6 +64,7 @@ describe.sequential('connection option', () => {
   });
 
   test.sequential('timezone Z', async ({ skip }) => {
+    if (!process) return skip();
     // node.js before v13 doesn't permit setting TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) return skip();
 
@@ -93,6 +94,7 @@ describe.sequential('connection option', () => {
   });
 
   test.sequential('timezone +10h00', async ({ skip }) => {
+    if (!process) return;
     // node.js before v13 doesn't permit setting TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) return skip();
 
@@ -111,6 +113,7 @@ describe.sequential('connection option', () => {
   });
 
   test.sequential('timezone Etc/GMT-10', async ({ skip }) => {
+    if (!process) return skip();
     // node.js before v13 doesn't permit setting TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) return skip();
 
@@ -129,6 +132,7 @@ describe.sequential('connection option', () => {
   });
 
   test.sequential('timezone GMT+10', async ({ skip }) => {
+    if (!process) return skip();
     // node.js before v13 doesn't permit setting TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) return skip();
 
@@ -159,6 +163,7 @@ describe.sequential('connection option', () => {
   });
 
   test.sequential('Server with different tz', async ({ skip }) => {
+    if (!process) return skip();
     // node.js before v13 doesn't permit setting TZ value repeatedly
     if (parseInt(process.versions.node.split('.')[0]) <= 12) return skip();
     if (isMaxscale(shareConn)) return skip();

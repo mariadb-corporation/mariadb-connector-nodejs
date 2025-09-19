@@ -3,7 +3,7 @@
 
 'use strict';
 
-import PoolOptions from '../../../lib/config/pool-options';
+import PoolOptions from '../../../lib/config/pool-options.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 describe.concurrent('test pool options', () => {

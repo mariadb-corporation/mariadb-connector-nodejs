@@ -360,9 +360,9 @@ describe.concurrent('results-set streaming', () => {
         write: (row, encoding, callback) => {
           assert.equal(currRow++, row.v);
           callback();
-          if (process.versions.node.startsWith('6.') && currRow === 10000) {
+          if (currRow === 10000) {
             //final was implemented in v8
-            resolve();
+            if (!process || process.versions.node.startsWith('6.')) resolve();
           }
         },
         writev: (rows, callback) => {

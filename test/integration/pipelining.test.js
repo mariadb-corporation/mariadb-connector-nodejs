@@ -75,12 +75,12 @@ describe.concurrent('pipelining', () => {
     if (conn1.info.hasMinVersion(10, 2, 0)) {
       //before 10.1, speed is sometime nearly equivalent using pipelining or not
       //remove speed test then to avoid random error in CIs
-      if (diff[0] < pipelineDiff[0] || (diff[0] === pipelineDiff[0] && diff[1] < pipelineDiff[1])) {
+      if (diff < pipelineDiff) {
         console.log(
           'time to insert 1000 : std=' +
-            Math.floor(diff[0] * 1000 + diff[1] / 1000000) +
+            diff +
             'ms pipelining=' +
-            Math.floor(pipelineDiff[0] * 1000 + pipelineDiff[1] / 1000000) +
+            pipelineDiff +
             'ms'
         );
       }
@@ -88,7 +88,7 @@ describe.concurrent('pipelining', () => {
   }, 60000);
 
   function insertBulk(conn, tableName) {
-    const startTime = process.hrtime();
+    const startTime = performance.now();
     let ended = 0;
     return new Promise(function (resolve, reject) {
       for (let i = 0; i < iterations; i++) {
@@ -96,7 +96,7 @@ describe.concurrent('pipelining', () => {
           .query('INSERT INTO ' + tableName + ' VALUES(?)', [i])
           .then(() => {
             if (++ended === iterations) {
-              resolve(process.hrtime(startTime));
+              resolve(performance.now() - startTime);
             }
           })
           .catch(reject);

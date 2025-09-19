@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as Parse from '../../../lib/misc/parse';
+import * as Parse from '../../../lib/misc/parse.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 describe.concurrent('parse', () => {

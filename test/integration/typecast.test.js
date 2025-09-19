@@ -4,7 +4,7 @@
 'use strict';
 
 import * as base from '../base.js';
-import * as Capabilities from '../../lib/const/capabilities';
+import * as Capabilities from '../../lib/const/capabilities.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
 import Conf from '../conf.js';

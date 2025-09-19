@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { createConnection } from '../base.js';
+import { createConnection, isWindows } from '../base.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -322,7 +322,7 @@ describe.concurrent('local-infile', () => {
 
   test('non readable local infile', async ({ skip }) => {
     //on windows, fs.chmodSync doesn't remove read access.
-    if (process.platform === 'win32') return skip();
+    if (isWindows()) return skip();
 
     const rows = await shareConn.query('select @@local_infile');
     if (rows[0]['@@local_infile'] === 0 || (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0))) {

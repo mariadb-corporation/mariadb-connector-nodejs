@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
-import ConnOptions from '../../../lib/config/connection-options';
+import ConnOptions from '../../../lib/config/connection-options.js';
 
 describe.concurrent('test connection options', () => {
   test('charset option', () => {

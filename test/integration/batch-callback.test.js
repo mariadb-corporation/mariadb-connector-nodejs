@@ -4,7 +4,7 @@
 'use strict';
 
 import * as base from '../base.js';
-import * as Capabilities from '../../lib/const/capabilities';
+import * as Capabilities from '../../lib/const/capabilities.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

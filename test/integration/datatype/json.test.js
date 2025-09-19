@@ -4,7 +4,7 @@
 'use strict';
 
 import { createConnection } from '../../base.js';
-import * as Capabilities from '../../../lib/const/capabilities';
+import * as Capabilities from '../../../lib/const/capabilities.js';
 import { assert, describe, test, it, beforeAll, afterAll } from 'vitest';
 import Conf from '../../conf.js';
 describe.concurrent('json', () => {

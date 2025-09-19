@@ -279,7 +279,7 @@ describe.concurrent('Error', () => {
 
   test('server close connection - no connection error event', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
-
+    if (!process) return skip();
     const conn = await createConnection();
     await new Promise((resolve, reject) => {
       const originalException = process.listeners('uncaughtException').pop();

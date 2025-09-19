@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as ServerStatus from '../../lib/const/server-status';
+import * as ServerStatus from '../../lib/const/server-status.js';
 import * as base from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection } from '../base.js';
@@ -135,7 +135,8 @@ describe.concurrent('transaction', () => {
     await conn.end();
   });
 
-  test('transaction commit error handling', async () => {
+  test('transaction commit error handling', async ({ skip }) => {
+    if (!process) return skip();
     let conn;
     await new Promise((resolve, reject) => {
       base.createConnection().then((con) => {

@@ -6,6 +6,7 @@
 import * as basePromise from '../../../promise.js';
 import * as baseCallback from '../../../callback.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
+import { getEnv } from '../../base.js';
 
 describe.concurrent('test options', () => {
   test('default options', function () {
@@ -15,7 +16,7 @@ describe.concurrent('test options', () => {
       host: 'localhost',
       port: 3306,
       fullResult: undefined,
-      user: process.env.USERNAME,
+      user: getEnv('USERNAME'),
       password: undefined,
       database: undefined,
       prepareCacheLength: 256,

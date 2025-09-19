@@ -4,7 +4,7 @@
 'use strict';
 
 import Conf from '../conf.js';
-import { createConnection, isLocalDb, isMaxscale } from '../base.js';
+import { createConnection, isLocalDb, isMaxscale, isWindows } from '../base.js';
 import { getEnv } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
@@ -18,7 +18,7 @@ describe.concurrent('test socket', () => {
     shareConn = null;
   });
   test('named pipe', async ({ skip }) => {
-    if (process.platform !== 'win32') return skip();
+    if (!isWindows()) return skip();
     if (!isLocalDb() || isMaxscale(shareConn)) return skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
 
@@ -39,7 +39,7 @@ describe.concurrent('test socket', () => {
   });
 
   test('named pipe error', async ({ skip }) => {
-    if (process.platform !== 'win32') return skip();
+    if (!isWindows()) return skip();
     if (!isLocalDb()) return skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
 
@@ -54,7 +54,7 @@ describe.concurrent('test socket', () => {
 
   test('unix socket', async ({ skip }) => {
     if (!isLocalDb()) return skip();
-    if (process.platform === 'win32') return skip();
+    if (isWindows()) return skip();
     if (
       Conf.baseConfig.host &&
       !(Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')

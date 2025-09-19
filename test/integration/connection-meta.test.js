@@ -2,8 +2,8 @@
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 'use strict';
-import * as basePromise from '../../promise';
-import * as baseCallback from '../../callback';
+import * as basePromise from '../../promise.js';
+import * as baseCallback from '../../callback.js';
 import * as base from '../base.js';
 import { createConnection, isMaxscale } from '../base.js';
 import { getEnv } from '../base.js';

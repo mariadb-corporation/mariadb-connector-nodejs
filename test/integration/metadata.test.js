@@ -4,7 +4,7 @@
 'use strict';
 
 import Collations from '../../lib/const/collations.js';
-import * as FieldType from '../../lib/const/field-type';
+import * as FieldType from '../../lib/const/field-type.js';
 import Conf from '../conf.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, utf8Collation } from '../base.js';
