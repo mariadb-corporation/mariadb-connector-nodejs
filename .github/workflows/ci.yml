@@ -88,6 +88,7 @@ jobs:
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
+          LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
 
       - name: Run Tests deno
         if: ${{ matrix.deno }}
@@ -99,6 +100,7 @@ jobs:
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
+          LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
 
       - name: Download Codecov uploader
         if: ${{ !matrix.deno }}

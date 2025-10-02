@@ -41,6 +41,7 @@ describe.concurrent('authentication plugin', () => {
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User2'" + getHostSuffix()).catch((e) => {});
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User3'" + getHostSuffix()).catch((e) => {});
     await shareConn.query("DROP USER IF EXISTS 'cachingSha256User4'" + getHostSuffix()).catch((e) => {});
+    await shareConn.query("DROP USER IF EXISTS 'cachingSha256User5'" + getHostSuffix()).catch((e) => {});
 
     if (!shareConn.info.isMariaDB()) {
       if (shareConn.info.hasMinVersion(8, 0, 0)) {
@@ -65,6 +66,10 @@ describe.concurrent('authentication plugin', () => {
           "CREATE USER 'cachingSha256User4'" + getHostSuffix() + "  IDENTIFIED WITH caching_sha2_password BY 'password'"
         );
         await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User4'" + getHostSuffix());
+        await shareConn.query(
+          "CREATE USER 'cachingSha256User5'" + getHostSuffix() + "  IDENTIFIED WITH caching_sha2_password BY 'password'"
+        );
+        await shareConn.query("GRANT ALL PRIVILEGES ON *.* TO 'cachingSha256User5'" + getHostSuffix());
       } else {
         await shareConn.query("CREATE USER 'sha256User'" + getHostSuffix());
         await shareConn.query(
@@ -470,7 +475,7 @@ describe.concurrent('authentication plugin', () => {
   });
 
   test('cachingsha256 authentication plugin', async ({ skip }) => {
-    if (!rsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) {
+    if (!cachingRsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) {
       skip();
       return;
     }
@@ -492,7 +497,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file2.txt');
-    fs.writeFileSync(filePath, rsaPublicKey);
+    fs.writeFileSync(filePath, cachingRsaPublicKey);
     try {
       const conn = await createConnection({
         user: 'cachingSha256User4',
@@ -514,7 +519,7 @@ describe.concurrent('authentication plugin', () => {
     try {
       const conn = await createConnection({
         user: 'cachingSha256User',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey: cachingRsaPublicKey
       });
       await conn.end();
       throw new Error('must have thrown exception');
@@ -530,7 +535,7 @@ describe.concurrent('authentication plugin', () => {
       const conn = await createConnection({
         user: 'cachingSha256User',
         password: 'password',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey: cachingRsaPublicKey
       });
       await conn.end();
     } catch (e) {
@@ -541,7 +546,7 @@ describe.concurrent('authentication plugin', () => {
       const conn = await createConnection({
         user: 'cachingSha256User',
         password: 'password',
-        cachingRsaPublicKey: rsaPublicKey
+        cachingRsaPublicKey: cachingRsaPublicKey
       });
       await conn.end();
     } catch (e) {
@@ -551,15 +556,6 @@ describe.concurrent('authentication plugin', () => {
 
   test('cachingsha256 authentication plugin with public key retrieval', async ({ skip }) => {
     if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) {
-      skip();
-      return;
-    }
-    // request files since 5.7.40 / 8.0.31 fails when requesting public key
-    if (
-      !shareConn.info.isMariaDB() &&
-      ((!shareConn.info.hasMinVersion(8, 0, 0) && shareConn.info.hasMinVersion(5, 7, 40)) ||
-        shareConn.info.hasMinVersion(8, 0, 31))
-    ) {
       skip();
       return;
     }
@@ -702,6 +698,47 @@ describe.concurrent('authentication plugin', () => {
         ssl: true
       });
       await conn.end();
+    }
+  });
+
+  test('cachingsha256 authentication plugin via named pipe', async ({ skip }) => {
+    if (process.platform !== 'win32') return skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale()) return skip();
+    if (!cachingRsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) return skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
+
+    const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    try {
+      const conn = await createConnection({
+        user: 'cachingSha256User5',
+        password: 'password',
+        socketPath: '\\\\.\\pipe\\' + res[0].soc,
+        cachingRsaPublicKey
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
+    }
+  });
+
+  test('cachingsha256 authentication plugin via Unix socket', async ({ skip }) => {
+    if (process.platform === 'win32') return skip();
+    if (shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) return skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) return skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
+
+    const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    try {
+      const conn = await createConnection({
+        user: 'cachingSha256User5',
+        password: 'password',
+        socketPath: res[0].soc
+      });
+      conn.end();
+    } catch (err) {
+      if (err.message.includes('caching_sha2_password authentication plugin require node 11.6+')) self.skip();
+      throw err;
     }
   });
 });
