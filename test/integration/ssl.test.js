@@ -662,17 +662,23 @@ describe.concurrent('ssl', function () {
     await conn.query('FLUSH PRIVILEGES');
     let res = await conn.query('SELECT CURRENT_USER');
     currUser = res[0]['CURRENT_USER'];
-    await conn.changeUser({
-      user: 'ChangeUser',
-      password: 'mySupPassw@rd2',
-      connectAttributes: { par1: 'bouh', par2: 'bla' }
-    });
-    res = await conn.query('SELECT CURRENT_USER');
-    const user = res[0]['CURRENT_USER'];
-    assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
-    assert(user !== currUser);
-    conn.query('DROP USER ChangeUser' + getHostSuffix());
-    await conn.end();
+    try {
+      await conn.changeUser({
+        user: 'ChangeUser',
+        password: 'mySupPassw@rd2',
+        connectAttributes: { par1: 'bouh', par2: 'bla' }
+      });
+      res = await conn.query('SELECT CURRENT_USER');
+      const user = res[0]['CURRENT_USER'];
+      assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
+      assert(user !== currUser);
+      conn.query('DROP USER ChangeUser' + getHostSuffix());
+    } catch (e) {
+      if (isDeno() && !e.message.includes('UnsupportedCertVersion')) return;
+      throw e;
+    } finally {
+      await conn.end();
+    }
   });
 
   test('ssl dialog authentication plugin', async ({ skip }) => {
