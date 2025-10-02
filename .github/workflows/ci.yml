@@ -77,7 +77,6 @@ jobs:
           deno-version: ${{ matrix.deno }}
 
       - name: Install dependencies
-        if: ${{ !matrix.deno }}
         run: npm install
 
       - name: Run Tests node

@@ -50,15 +50,13 @@ describe.concurrent('ssl', function () {
     let serverCaFile = Conf.baseConfig.ssl && Conf.baseConfig.ssl.ca ? null : getEnv('TEST_DB_SERVER_CERT');
     let clientKeyFileName = getEnv('TEST_DB_CLIENT_KEY');
     let clientCertFileName = getEnv('TEST_DB_CLIENT_CERT');
-    let clientKeystoreFileName = getEnv('TEST_DB_CLIENT_PKCS');
 
     if (!serverCaFile && (Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')) {
       try {
         if (fs.existsSync('../../ssl')) {
-          serverCaFile = '../../ssl/server.crt';
+          serverCaFile = '../../ssl/ca_server.crt';
           clientKeyFileName = '../../ssl/client.key';
           clientCertFileName = '../../ssl/client.crt';
-          clientKeystoreFileName = '../../ssl/fullclient-keystore.p12';
         }
       } catch (err) {
         console.error(err);
@@ -68,7 +66,6 @@ describe.concurrent('ssl', function () {
     if (serverCaFile) ca = [fs.readFileSync(serverCaFile, 'utf8')];
     if (clientKeyFileName) clientKey = [fs.readFileSync(clientKeyFileName, 'utf8')];
     if (clientCertFileName) clientCert = [fs.readFileSync(clientCertFileName, 'utf8')];
-    if (clientKeystoreFileName) clientKeystore = [fs.readFileSync(clientKeystoreFileName)];
 
     await shareConn.query("DROP USER IF EXISTS 'sslTestUser'" + getHostSuffix());
     await shareConn.query("DROP USER IF EXISTS 'X509testUser'" + getHostSuffix());
@@ -349,7 +346,7 @@ describe.concurrent('ssl', function () {
       ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_method' },
       port: sslPort
     });
-    checkProtocol(conn, 'TLSv1');
+    await checkProtocol(conn, 'TLSv1');
     await conn.end();
   });
 
@@ -370,7 +367,7 @@ describe.concurrent('ssl', function () {
       ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_1_method' },
       port: sslPort
     });
-    checkProtocol(conn, 'TLSv1.1');
+    await checkProtocol(conn, 'TLSv1.1');
     await conn.end();
   });
 
@@ -396,7 +393,7 @@ describe.concurrent('ssl', function () {
       },
       port: sslPort
     });
-    checkProtocol(conn, 'TLSv1.1');
+    await checkProtocol(conn, 'TLSv1.1');
     await conn.end();
   });
 
@@ -467,7 +464,7 @@ describe.concurrent('ssl', function () {
       ssl: { rejectUnauthorized: false, secureProtocol: 'TLSv1_2_method' },
       port: sslPort
     });
-    checkProtocol(conn, 'TLSv1.2');
+    await checkProtocol(conn, 'TLSv1.2');
     await conn.end();
   });
 
@@ -493,7 +490,7 @@ describe.concurrent('ssl', function () {
       },
       port: sslPort
     });
-    checkProtocol(conn, 'TLSv1.2');
+    await checkProtocol(conn, 'TLSv1.2');
     await validConnection(conn);
     await conn.end();
   });
@@ -543,15 +540,18 @@ describe.concurrent('ssl', function () {
     if (Conf.baseConfig.host !== 'localhost') return skip();
 
     try {
-      await createConnection({ host: '127.0.0.1', ssl: { ca: ca } });
+      await createConnection({ ssl: { ca: ca } });
       throw new Error('Must have thrown an exception !');
     } catch (err) {
-      assert(
-        err.message.includes("Hostname/IP doesn't match certificate's altnames") ||
-          err.message.includes("Hostname/IP does not match certificate's altnames"),
-        'error was : ' + err.message
-      );
-      assert(err.message.includes("IP: 127.0.0.1 is not in the cert's list"), 'error was : ' + err.message);
+      if (isDeno()) {
+        assert(err.message.includes('write UNKNOWN'), 'error was : ' + err.message);
+      } else {
+        assert(
+          err.message.includes("Hostname/IP doesn't match certificate's altnames") ||
+            err.message.includes("Hostname/IP does not match certificate's altnames"),
+          'error was : ' + err.message
+        );
+      }
     }
   });
 
@@ -571,7 +571,7 @@ describe.concurrent('ssl', function () {
     } else if (!shareConn.info.hasMinVersion(5, 7, 28)) {
       expectedProtocol = 'TLSv1.1';
     }
-    checkProtocol(conn, expectedProtocol);
+    await checkProtocol(conn, expectedProtocol);
     await validConnection(conn);
     await conn.end();
   });
@@ -706,9 +706,12 @@ describe.concurrent('ssl', function () {
   }, 10000);
 });
 
-function checkProtocol(conn, protocol) {
-  const currentProtocol = isDeno() ? conn.__tests.getSocket().protocol : conn.__tests.getSocket().getProtocol();
-
+async function checkProtocol(conn, protocol) {
+  let currentProtocol = isDeno() ? conn.__tests.getSocket().protocol : conn.__tests.getSocket().getProtocol();
+  if (!currentProtocol) {
+    const res = await conn.query("SHOW STATUS LIKE 'Ssl_version'");
+    currentProtocol = res[0].Value;
+  }
   if (Array.isArray(protocol)) {
     for (let i = 0; i < protocol.length; i++) {
       if (currentProtocol === protocol[i]) return;

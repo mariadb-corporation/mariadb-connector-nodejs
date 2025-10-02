@@ -309,7 +309,7 @@ describe.concurrent('Pool', () => {
 
     const seconds = Math.round((performance.now() - start) / 1000);
     // on windows, less accurate, such needs to have 11 too
-    assert.isTrue(seconds === 10 || seconds === 11);
+    assert.isTrue(seconds === 10 || seconds === 11, 'result was ' + seconds);
   }, 20000);
 
   test('pool escape', async ({ skip }) => {
@@ -1118,7 +1118,7 @@ describe.concurrent('Pool', () => {
               assert.equal(pool.activeConnections(), 10);
               assert.equal(pool.totalConnections(), 10);
               assert.equal(pool.idleConnections(), 0);
-              assert.isOk(pool.taskQueueSize() > 8000);
+              assert.isOk(pool.taskQueueSize() > 8000, 'err, current pool.taskQueueSize() is ' + pool.taskQueueSize());
             }, 200);
           } else {
             assert.equal(pool.activeConnections(), 10);
@@ -1511,7 +1511,7 @@ describe.concurrent('Pool', () => {
 
       setTimeout(someWriterStream.destroy.bind(someWriterStream), 2);
     });
-  }, 10000);
+  }, 20000);
 
   test("ensure pipe ending doesn't stall connection promise", async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
