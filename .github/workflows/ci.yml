@@ -36,7 +36,7 @@ jobs:
         name: build matrix
         uses: mariadb-corporation/connector-ci-build-matrix@main
         with:
-          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}, {"name": "MariaDB 11.4 - DENO", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "deno": "lts"}]'
+          additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}, {"name": "MariaDB 11.4 - DENO", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "deno": "v2.x"}]'
 
   ci:
     name: ${{ matrix.name }}${{ !matrix.deno && matrix.node != 22 && format(' - node {0}', matrix.node) || '' }}

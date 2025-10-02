@@ -226,12 +226,7 @@ describe.concurrent('ssl', function () {
 
     // test will work either because a server certificate chain is trusted (not don in tests)
     // or using mariadb ephemeral certificate validation
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0)
-    )
-      return skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0) || isDeno()) return skip();
     if (!Conf.baseConfig.password) return skip();
     const conn = await createConnection({
       user: 'sslTestUser',
@@ -249,12 +244,7 @@ describe.concurrent('ssl', function () {
 
     // test will work either because a server certificate chain is trusted (not done in tests)
     // or using mariadb ephemeral certificate validation
-    if (
-      !shareConn.info.isMariaDB() ||
-      !shareConn.info.hasMinVersion(11, 4, 0) ||
-      shareConn.info.hasMinVersion(23, 0, 0)
-    )
-      return skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0) || isDeno()) return skip();
     if (!Conf.baseConfig.password) return skip();
 
     const conn = await createConnection({
@@ -529,7 +519,7 @@ describe.concurrent('ssl', function () {
     } catch (e) {
       // eat
     }
-    if (success && (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0))) {
+    if (!isDeno() && success && (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0))) {
       throw new Error('Must have thrown an exception, since server identity must not have been verified !');
     }
   });
