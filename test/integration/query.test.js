@@ -224,6 +224,7 @@ describe.concurrent('basic query', () => {
         val: 'a'
       }
     ]);
+    await conn.commit();
     await conn.end();
   });
 
@@ -245,6 +246,7 @@ describe.concurrent('basic query', () => {
         val: 'a'
       }
     ]);
+    await conn.commit();
     await conn.end();
   });
 

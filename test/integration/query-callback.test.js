@@ -149,28 +149,30 @@ describe.concurrent('basic query callback', () => {
         if (err) {
           reject(err);
         } else {
-          conn.query('DROP TABLE IF EXISTS arrayParamNull');
-          conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
+          conn.query('DROP TABLE IF EXISTS callarrayParamNull');
+          conn.query('CREATE TABLE callarrayParamNull (id int, val varchar(10))');
           conn.beginTransaction();
-          conn.query('INSERT INTO arrayParamNull VALUES (?)', [[1, null]]);
-          conn.query('INSERT INTO arrayParamNull VALUES (?)', [[2, 'a']]);
-          conn.query('SELECT * FROM arrayParamNull', null, (err, rows) => {
-            conn.end(() => {
-              if (err) {
-                reject(err);
-              } else {
-                assert.deepEqual(rows, [
-                  {
-                    id: 1,
-                    val: null
-                  },
-                  {
-                    id: 2,
-                    val: 'a'
-                  }
-                ]);
-                resolve();
-              }
+          conn.query('INSERT INTO callarrayParamNull VALUES (?)', [[1, null]]);
+          conn.query('INSERT INTO callarrayParamNull VALUES (?)', [[2, 'a']]);
+          conn.query('SELECT * FROM callarrayParamNull', null, (err, rows) => {
+            conn.commit(() => {
+              conn.end(() => {
+                if (err) {
+                  reject(err);
+                } else {
+                  assert.deepEqual(rows, [
+                    {
+                      id: 1,
+                      val: null
+                    },
+                    {
+                      id: 2,
+                      val: 'a'
+                    }
+                  ]);
+                  resolve();
+                }
+              });
             });
           });
         }
@@ -185,28 +187,30 @@ describe.concurrent('basic query callback', () => {
         if (err) {
           reject(err);
         } else {
-          conn.query('DROP TABLE IF EXISTS arrayParamNullParen');
-          conn.query('CREATE TABLE arrayParamNullParen (id int, val varchar(10))');
+          conn.query('DROP TABLE IF EXISTS callarrayParamNullParen');
+          conn.query('CREATE TABLE callarrayParamNullParen (id int, val varchar(10))');
           conn.beginTransaction();
-          conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[1, null]]);
-          conn.query('INSERT INTO arrayParamNullParen VALUES ?', [[2, 'a']]);
-          conn.query('SELECT * FROM arrayParamNullParen', null, (err, rows) => {
-            conn.end(() => {
-              if (err) {
-                reject(err);
-              } else {
-                assert.deepEqual(rows, [
-                  {
-                    id: 1,
-                    val: null
-                  },
-                  {
-                    id: 2,
-                    val: 'a'
-                  }
-                ]);
-                resolve();
-              }
+          conn.query('INSERT INTO callarrayParamNullParen VALUES ?', [[1, null]]);
+          conn.query('INSERT INTO callarrayParamNullParen VALUES ?', [[2, 'a']]);
+          conn.query('SELECT * FROM callarrayParamNullParen', null, (err, rows) => {
+            conn.commit(() => {
+              conn.end(() => {
+                if (err) {
+                  reject(err);
+                } else {
+                  assert.deepEqual(rows, [
+                    {
+                      id: 1,
+                      val: null
+                    },
+                    {
+                      id: 2,
+                      val: 'a'
+                    }
+                  ]);
+                  resolve();
+                }
+              });
             });
           });
         }

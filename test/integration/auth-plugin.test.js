@@ -703,7 +703,7 @@ describe.concurrent('authentication plugin', () => {
 
   test('cachingsha256 authentication plugin via named pipe', async ({ skip }) => {
     if (process.platform !== 'win32') return skip();
-    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale()) return skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale(shareConn)) return skip();
     if (!cachingRsaPublicKey || shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(8, 0, 0)) return skip();
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
 
