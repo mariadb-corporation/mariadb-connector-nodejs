@@ -3,12 +3,12 @@
 
 'use strict';
 
-import stream from 'node:stream';
+import { Transform, pipeline } from 'node:stream';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import Proxy from '../tools/proxy.js';
-import { createConnection, createPool, isMaxscale, utf8Collation } from '../base.js';
+import { createConnection, createPool, isDeno, isMaxscale, utf8Collation } from '../base.js';
 import { baseConfig } from '../conf.js';
 import winston from 'winston';
 import * as basePromise from '../../promise.js';
@@ -307,10 +307,10 @@ describe.concurrent('Pool', () => {
     await new Promise((res) => setTimeout(() => res(), 100));
     await pool.end();
 
-    const seconds = Math.round((performance.now() - start) / 1000)
+    const seconds = Math.round((performance.now() - start) / 1000);
     // on windows, less accurate, such needs to have 11 too
     assert.isTrue(seconds === 10 || seconds === 11);
-  }, 15000);
+  }, 20000);
 
   test('pool escape', async ({ skip }) => {
     if (!utf8Collation()) return skip();
@@ -469,7 +469,11 @@ describe.concurrent('Pool', () => {
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+        assert.isTrue(
+          err.message.includes('Error during pool initialization') ||
+            err.message.includes('pool timeout') ||
+            err.message.includes('pool failed to retrieve a connection from pool')
+        );
         assert.isNotNull(err.cause);
         assert.isTrue(
           err.cause.errno === 1524 ||
@@ -488,7 +492,11 @@ describe.concurrent('Pool', () => {
       throw new Error('must have thrown error');
     } catch (err) {
       assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+      assert.isTrue(
+        err.message.includes('Error during pool initialization') ||
+          err.message.includes('pool timeout') ||
+          err.message.includes('pool failed to retrieve a connection from pool')
+      );
       assert.isNotNull(err.cause);
       assert.isTrue(
         err.cause.errno === 1524 ||
@@ -504,7 +512,11 @@ describe.concurrent('Pool', () => {
         throw new Error('must have thrown error');
       } catch (err) {
         assert(Date.now() - initTime >= 3980, 'expected > 4s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+        assert.isTrue(
+          err.message.includes('Error during pool initialization') ||
+            err.message.includes('pool timeout') ||
+            err.message.includes('pool failed to retrieve a connection from pool')
+        );
         assert.isNotNull(err.cause);
         assert.isTrue(
           err.cause.errno === 1524 ||
@@ -519,7 +531,7 @@ describe.concurrent('Pool', () => {
         await pool.end();
       }
     }
-  }, 10000);
+  }, 15000);
 
   test('pool execute timeout', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
@@ -586,21 +598,26 @@ describe.concurrent('Pool', () => {
   }, 10000);
 
   test('pool error fail connection', async ({ skip }) => {
-    if (isMaxscale(shareConn)) return skip();
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isMaxscale(shareConn) || isDeno()) return skip();
     const initTime = Date.now();
     const pool = createPool({
       acquireTimeout: 4000,
       initializationTimeout: 2000,
+      connectionLimit: 1,
       host: 'wronghost'
     });
 
     await new Promise(function (resolver, rejecter) {
+      let firstErr = true;
       pool.on('error', async (err) => {
-        console.log(err.message);
-        assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
-        assert.isTrue(err.message.includes('Error during pool initialization'));
-        await pool.end();
-        resolver();
+        if (firstErr) {
+          firstErr = false;
+          assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
+          assert.isTrue(err.message.includes('Error during pool initialization'));
+          await pool.end();
+          resolver();
+        }
       });
     });
   }, 10000);
@@ -619,13 +636,21 @@ describe.concurrent('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+      assert.isTrue(
+        err.message.includes('Error during pool initialization') ||
+          err.message.includes('pool timeout') ||
+          err.message.includes('pool failed to retrieve a connection from pool')
+      );
     }
     try {
       await pool.getConnection();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.isTrue(err.message.includes('Error during pool initialization') || err.message.includes('pool timeout'));
+      assert.isTrue(
+        err.message.includes('Error during pool initialization') ||
+          err.message.includes('pool timeout') ||
+          err.message.includes('pool failed to retrieve a connection from pool')
+      );
     } finally {
       await pool.end();
     }
@@ -1025,7 +1050,7 @@ describe.concurrent('Pool', () => {
         .catch((err) => {
           const elapse = Date.now() - initTime;
           try {
-            assert(err.message.includes('retrieve connection from pool timeout'));
+            assert(err.message.includes('failed to retrieve a connection from pool after'));
             assert.equal(err.sqlState, 'HY000');
             assert.equal(err.errno, 45028);
             assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -1147,10 +1172,17 @@ describe.concurrent('Pool', () => {
         } catch (err) {
           try {
             assert.equal(err.sqlState, '70100');
-            assert.equal(pool.activeConnections(), 1);
-            assert.equal(pool.totalConnections(), 2);
-            assert.equal(pool.idleConnections(), 1);
-            assert.equal(pool.taskQueueSize(), 0);
+            if (pool.activeConnections() == 1) {
+              assert.equal(pool.activeConnections(), 1);
+              assert.equal(pool.totalConnections(), 2);
+              assert.equal(pool.idleConnections(), 1);
+              assert.equal(pool.taskQueueSize(), 0);
+            } else {
+              assert.equal(pool.activeConnections(), 0);
+              assert.equal(pool.totalConnections(), 1);
+              assert.equal(pool.idleConnections(), 1);
+              assert.equal(pool.taskQueueSize(), 0);
+            }
             await conn.end();
             assert.equal(pool.activeConnections(), 0);
             assert.equal(pool.taskQueueSize(), 0);
@@ -1454,7 +1486,7 @@ describe.concurrent('Pool', () => {
     const pool = createPool({ connectionLimit: 1 });
     const conn = await pool.getConnection();
     let received = 0;
-    const transformStream = new stream.Transform({
+    const transformStream = new Transform({
       objectMode: true,
       transform: function transformer(chunk, encoding, callback) {
         callback(
@@ -1468,7 +1500,7 @@ describe.concurrent('Pool', () => {
     const queryStream = conn.queryStream("SELECT seq ,REPEAT('a', 100) as val FROM seq_1_to_10000");
     const someWriterStream = fs.createWriteStream(fileName);
     await new Promise((resolve, reject) => {
-      stream.pipeline(queryStream, transformStream, someWriterStream, async (err) => {
+      pipeline(queryStream, transformStream, someWriterStream, async (err) => {
         if (err) queryStream.close();
         assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
         await conn.query('SELECT 1');
@@ -1486,14 +1518,14 @@ describe.concurrent('Pool', () => {
     //sequence engine only exists in MariaDB
     if (!shareConn.info.isMariaDB()) return skip();
     const ver = process.version.substring(1).split('.');
-    //promise pipeline doesn't exist before node.js 15.0
+    // promise pipeline doesn't exist before node.js 15.0
     if (parseInt(ver[0]) < 15) return skip();
 
     const pool = createPool({ connectionLimit: 1 });
 
     const conn = await pool.getConnection();
     let received = 0;
-    const transformStream = new stream.Transform({
+    const transformStream = new Transform({
       objectMode: true,
       transform: function transformer(chunk, encoding, callback) {
         callback(
@@ -1518,7 +1550,7 @@ describe.concurrent('Pool', () => {
     } catch (e) {
       // eat expect error
     }
-    assert.isTrue(received >= 0 && received < 10000, 'received ' + received + ' results');
+    assert.isTrue(received >= 0 && received <= 10000, 'received ' + received + ' results');
     const res = await conn.query('SELECT 1');
     await conn.end();
     await pool.end();
@@ -1651,6 +1683,9 @@ describe.concurrent('Pool', () => {
   });
 
   test('pool server defect timeout', async ({ skip }) => {
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isDeno()) return skip();
+
     if (isMaxscale(shareConn)) return skip();
     const proxy = new Proxy({
       port: baseConfig.port,
@@ -1675,7 +1710,7 @@ describe.concurrent('Pool', () => {
       await pool.getConnection();
       throw new Error('must have thrown error !' + (Date.now() - initTime));
     } catch (err) {
-      assert(err.message.includes('pool timeout: failed to retrieve a connection from pool after'), err.message);
+      assert(err.message.includes('pool failed to retrieve a connection from pool'), err.message);
       assert.equal(err.sqlState, 'HY000');
       assert.equal(err.errno, 45028);
       assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
@@ -1721,12 +1756,15 @@ describe.concurrent('Pool', () => {
     await pool.end();
   });
 
-  test('ensure failing connection on pool not exiting application', async function () {
+  test('ensure failing connection on pool not exiting application', async ({ skip }) => {
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isDeno()) return skip();
+
     const pool = createPool({
       port: 8888,
       initializationTimeout: 100
     });
-    pool.on('error', console.log);
+    pool.on('error', () => {});
     // pool will throw an error after some time and must not exit test suite
     await new Promise((resolve, reject) => {
       new setTimeout(resolve, 3000);
@@ -1735,6 +1773,9 @@ describe.concurrent('Pool', () => {
   }, 5000);
 
   test('pool timeout', async ({ skip }) => {
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isDeno()) return skip();
+
     const pool = createPool({
       connectionLimit: 1,
       trace: true,

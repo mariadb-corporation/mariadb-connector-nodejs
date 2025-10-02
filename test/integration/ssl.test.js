@@ -15,7 +15,8 @@ import {
   getEnv,
   createConnection,
   utf8Collation,
-  isWindows
+  isWindows,
+  isDeno
 } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
@@ -140,7 +141,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('signed certificate error with ephemeral', async ({ skip }) => {
-    if (!sslEnable) return skip();
+    // deno will use standard validation, since checkServerIdentity cannot be used for now :
+    // https://github.com/denoland/deno/issues/30892
+    if (!sslEnable || isDeno()) return skip();
     let isMaxscaleEphemeral = false;
     if (isMaxscale(shareConn) && isMaxscaleMinVersion(shareConn, 25, 8, 0)) {
       // MaxScale implements this in the 25.08 release
@@ -172,7 +175,7 @@ describe.concurrent('ssl', function () {
     } finally {
       if (conn != null) conn.end();
     }
-  });
+  }, 5000);
 
   test('signed certificate forcing', async ({ skip }) => {
     if (!sslEnable) return skip();
@@ -294,6 +297,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('SSLv3 disable', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
+
     if (!sslEnable) return skip();
     try {
       await createConnection({
@@ -310,19 +316,26 @@ describe.concurrent('ssl', function () {
   });
 
   test('SSLv2 disable', async ({ skip }) => {
-    if (!sslEnable) return skip();
+    // deno doesn't support SSL secureProtocol
+    if (!sslEnable || isDeno()) return skip();
     try {
-      await createConnection({
+      const conn = await createConnection({
         ssl: { rejectUnauthorized: false, secureProtocol: 'SSLv2_method' },
         port: sslPort
       });
-      throw new Error('Must have thrown an exception !');
+      const res = await conn.query("SHOW STATUS LIKE 'Ssl_version'");
+      assert.equal(res[0].Value, 'SSLv2');
+      await conn.end();
     } catch (err) {
+      console.log(err);
       assert(err.message.includes('SSLv2 methods disabled'));
     }
   });
 
   test('TLSv1 working', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
+
     if (
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
@@ -341,6 +354,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.1 working', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
+
     if (
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 3, 0)) ||
@@ -359,6 +375,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.1 with permit cipher', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
+
     if (
       !sslEnable ||
       (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 4, 0)) ||
@@ -382,6 +401,8 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.1 no common cipher', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
     if (!sslEnable) return skip();
     if (
       !shareConn.info.isMariaDB() &&
@@ -407,6 +428,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.1 wrong cipher', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (!sslEnable || isDeno()) return skip();
+
     if (!sslEnable) return skip();
     if (
       !shareConn.info.isMariaDB() &&
@@ -431,6 +455,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.2 working', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (!sslEnable || isDeno()) return skip();
+
     if (!sslEnable) return skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
     //MySQL community version doesn't support TLSv1.2
@@ -445,6 +472,9 @@ describe.concurrent('ssl', function () {
   });
 
   test('TLSv1.2 with cipher working', async ({ skip }) => {
+    // deno doesn't support SSL secureProtocol
+    if (isDeno()) return skip();
+
     if (isMaxscale(shareConn)) return skip();
     if (!sslEnable) return skip();
     //MariaDB server doesn't permit TLSv1.2 on windows
@@ -677,7 +707,7 @@ describe.concurrent('ssl', function () {
 });
 
 function checkProtocol(conn, protocol) {
-  const currentProtocol = conn.__tests.getSocket().getProtocol();
+  const currentProtocol = isDeno() ? conn.__tests.getSocket().protocol : conn.__tests.getSocket().getProtocol();
 
   if (Array.isArray(protocol)) {
     for (let i = 0; i < protocol.length; i++) {

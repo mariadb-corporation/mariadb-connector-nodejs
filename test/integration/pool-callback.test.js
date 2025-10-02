@@ -4,7 +4,7 @@
 'use strict';
 
 import Conf from '../conf.js';
-import { createConnection, createPoolCallback, utf8Collation, isMaxscale } from '../base.js';
+import { createConnection, createPoolCallback, utf8Collation, isMaxscale, isDeno } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 
 describe.concurrent('Pool callback', () => {
@@ -18,7 +18,8 @@ describe.concurrent('Pool callback', () => {
   });
 
   test('pool with wrong authentication', async ({ skip }) => {
-    if (isMaxscale(shareConn)) return skip();
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isMaxscale(shareConn) || isDeno()) return skip();
     const initTime = Date.now();
     const pool = createPoolCallback({
       acquireTimeout: 4000,
@@ -188,7 +189,8 @@ describe.concurrent('Pool callback', () => {
   }, 10000);
 
   test('pool error fail connection', async ({ skip }) => {
-    if (isMaxscale(shareConn)) return skip();
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isMaxscale(shareConn) || isDeno()) return skip();
     const initTime = Date.now();
     const pool = createPoolCallback({
       acquireTimeout: 4000,
@@ -206,7 +208,8 @@ describe.concurrent('Pool callback', () => {
   }, 10000);
 
   test('pool with wrong authentication connection', async ({ skip }) => {
-    if (isMaxscale(shareConn)) return skip();
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isMaxscale(shareConn) || isDeno()) return skip();
     const pool = createPoolCallback({
       connectionLimit: 3,
       user: 'wrongAuthentication',
@@ -1057,7 +1060,8 @@ describe.concurrent('Pool callback', () => {
   }, 10000);
 
   test('ensure failing connection on pool not exiting application', async ({ skip }) => {
-    if (isMaxscale(shareConn)) return skip();
+    // until https://github.com/denoland/deno/issues/30886 for deno
+    if (isMaxscale(shareConn) || isDeno()) return skip();
 
     const pool = createPoolCallback({
       port: 8888,

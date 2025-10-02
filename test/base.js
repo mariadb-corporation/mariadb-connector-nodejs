@@ -121,6 +121,12 @@ export function getEnv(key) {
   return undefined;
 }
 
+export function isDeno() {
+  if (typeof Deno !== 'undefined') {
+    return true;
+  }
+  return false;
+}
 export function isWindows() {
   if (typeof Deno !== 'undefined') {
     return 'windows' === Deno.build.os;

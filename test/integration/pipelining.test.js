@@ -76,13 +76,7 @@ describe.concurrent('pipelining', () => {
       //before 10.1, speed is sometime nearly equivalent using pipelining or not
       //remove speed test then to avoid random error in CIs
       if (diff < pipelineDiff) {
-        console.log(
-          'time to insert 1000 : std=' +
-            diff +
-            'ms pipelining=' +
-            pipelineDiff +
-            'ms'
-        );
+        console.log('time to insert 1000 : std=' + diff + 'ms pipelining=' + pipelineDiff + 'ms');
       }
     }
   }, 60000);

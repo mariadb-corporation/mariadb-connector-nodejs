@@ -9,7 +9,7 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { isMaxscale, getHostSuffix, getEnv, createConnection, isLocalDb, isWindows } from '../base.js';
+import { isMaxscale, getHostSuffix, getEnv, createConnection, isLocalDb, isWindows, isDeno } from '../base.js';
 
 describe.concurrent('authentication plugin', () => {
   let rsaPublicKey = getEnv('TEST_RSA_PUBLIC_KEY');
@@ -121,7 +121,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      let conn = await base.createConnection({
+      let conn = await createConnection({
         user: 'verificationEd25519AuthPlugin',
         password: 'MySup8%rPassw@ord'
       });
@@ -131,7 +131,7 @@ describe.concurrent('authentication plugin', () => {
       });
       conn.end();
       try {
-        conn = await base.createConnection({
+        conn = await createConnection({
           user: 'verificationEd25519AuthPlugin',
           password: 'MySup8%rPassw@ord',
           restrictedAuth: ''
@@ -178,7 +178,7 @@ describe.concurrent('authentication plugin', () => {
       await shareConn.query('CREATE USER ' + windowsUser + " IDENTIFIED VIA named_pipe using 'test'");
       await shareConn.query('GRANT SELECT on *.* to ' + windowsUser);
       res = await shareConn.query('select @@version_compile_os,@@socket soc');
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: null,
         socketPath: '\\\\.\\pipe\\' + res[0].soc
       });
@@ -223,7 +223,7 @@ describe.concurrent('authentication plugin', () => {
       .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
       .catch(() => {});
     await shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix());
-    const conn = await base.createConnection({ user: null, socketPath: socketPath });
+    const conn = await createConnection({ user: null, socketPath: socketPath });
     await conn.end();
   });
 
@@ -253,7 +253,7 @@ describe.concurrent('authentication plugin', () => {
       testPort = parseInt(getEnv('TEST_PAM_PORT'));
     }
 
-    const conn = await base.createConnection({
+    const conn = await createConnection({
       user: getEnv('TEST_PAM_USER'),
       password: getEnv('TEST_PAM_PWD'),
       port: testPort
@@ -287,7 +287,7 @@ describe.concurrent('authentication plugin', () => {
       testPort = parseInt(getEnv('TEST_PAM_PORT'));
     }
     //password is unix password "myPwd"
-    const conn = await base.createConnection({
+    const conn = await createConnection({
       user: getEnv('TEST_PAM_USER'),
       password: [getEnv('TEST_PAM_PWD'), getEnv('TEST_PAM_PWD')],
       port: testPort
@@ -310,20 +310,20 @@ describe.concurrent('authentication plugin', () => {
     );
 
     await shareConn.query('grant SELECT on `' + Conf.baseConfig.database + '`.*  to mysqltest1' + getHostSuffix());
-    let conn = await base.createConnection({
+    let conn = await createConnection({
       user: 'mysqltest1',
       password: '!Passw0rd3'
     });
     const res = await conn.query("select '1'");
     await conn.end();
-    conn = await base.createConnection({
+    conn = await createConnection({
       user: 'mysqltest1',
       password: '!Passw0rd3Works'
     });
     await conn.query('select 1');
     await conn.end();
     try {
-      conn = await base.createConnection({
+      conn = await createConnection({
         user: 'mysqltest1',
         password: '!Passw0rd3Wrong'
       });
@@ -342,7 +342,7 @@ describe.concurrent('authentication plugin', () => {
 
     const self = this;
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         password: 'password',
         rsaPublicKey: rsaPublicKey
@@ -354,7 +354,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         password: 'password',
         rsaPublicKey: '/wrongPath'
@@ -369,7 +369,7 @@ describe.concurrent('authentication plugin', () => {
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file.txt');
     fs.writeFileSync(filePath, rsaPublicKey);
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         password: 'password',
         rsaPublicKey: filePath
@@ -384,7 +384,7 @@ describe.concurrent('authentication plugin', () => {
     } catch (e) {}
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         rsaPublicKey: rsaPublicKey
       });
@@ -403,7 +403,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         password: 'password',
         allowPublicKeyRetrieval: true
@@ -425,7 +425,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'sha256User',
         password: 'password',
         allowPublicKeyRetrieval: false
@@ -449,7 +449,7 @@ describe.concurrent('authentication plugin', () => {
     const rows = await shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
     if (rows.length === 0 || rows[0].Value === 'YES') {
       try {
-        const conn = await base.createConnection({
+        const conn = await createConnection({
           user: 'sha256User',
           password: 'password',
           ssl: {
@@ -476,7 +476,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User4',
         password: 'password',
         cachingRsaPublicKey: '/wrongPath'
@@ -494,7 +494,7 @@ describe.concurrent('authentication plugin', () => {
     const filePath = path.join(os.tmpdir(), 'RSA_tmp_file2.txt');
     fs.writeFileSync(filePath, rsaPublicKey);
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User4',
         password: 'password',
         cachingRsaPublicKey: filePath
@@ -512,7 +512,7 @@ describe.concurrent('authentication plugin', () => {
     } catch (e) {}
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User',
         cachingRsaPublicKey: rsaPublicKey
       });
@@ -527,7 +527,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User',
         password: 'password',
         cachingRsaPublicKey: rsaPublicKey
@@ -538,7 +538,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User',
         password: 'password',
         cachingRsaPublicKey: rsaPublicKey
@@ -565,7 +565,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User2',
         password: 'password',
         allowPublicKeyRetrieval: true
@@ -578,7 +578,7 @@ describe.concurrent('authentication plugin', () => {
       }
       throw err;
     }
-    const conn = await base.createConnection({
+    const conn = await createConnection({
       user: 'cachingSha256User2',
       password: 'password'
     });
@@ -592,7 +592,7 @@ describe.concurrent('authentication plugin', () => {
     }
 
     try {
-      const conn = await base.createConnection({
+      const conn = await createConnection({
         user: 'cachingSha256User3',
         password: 'password',
         allowPublicKeyRetrieval: false
@@ -616,7 +616,7 @@ describe.concurrent('authentication plugin', () => {
     const rows = await shareConn.query("SHOW VARIABLES LIKE 'have_ssl'");
     if (rows.length === 0 || rows[0].Value === 'YES') {
       try {
-        const conn = await base.createConnection({
+        const conn = await createConnection({
           user: 'cachingSha256User3',
           password: 'password',
           ssl: {
@@ -659,7 +659,7 @@ describe.concurrent('authentication plugin', () => {
     await shareConn.query('CREATE USER verifParsec2' + getHostSuffix() + " IDENTIFIED VIA parsec USING PASSWORD('')");
     await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + '`.* to verifParsec2' + getHostSuffix());
 
-    let conn = await base.createConnection({
+    let conn = await createConnection({
       user: 'verifParsec',
       password: 'MySup8%rPassw@ord'
     });
@@ -668,16 +668,15 @@ describe.concurrent('authentication plugin', () => {
       password: 'MySup8%rPassw@ord'
     });
     await conn.end();
-
     // disable until https://jira.mariadb.org/browse/MDEV-34854
-    // conn = await base.createConnection({
+    // conn = await createConnection({
     //   user: 'verifParsec2',
     //   password: ''
     // });
     // conn.end();
 
     try {
-      conn = await base.createConnection({
+      conn = await createConnection({
         user: 'verifParsec',
         password: 'MySup8%rPassw@ord',
         restrictedAuth: ''
@@ -692,12 +691,17 @@ describe.concurrent('authentication plugin', () => {
       assert.isTrue(err.fatal);
     }
 
-    // adding ssl test, since zero ssl must work automagically
-    conn = await base.createConnection({
-      user: 'verifParsec',
-      password: 'MySup8%rPassw@ord',
-      ssl: true
-    });
-    await conn.end();
+    // skipping test for deno since doesn't use ephemeral for now but standard validation,
+    // since checkServerIdentity cannot be used for now :
+    // https://github.com/denoland/deno/issues/30892
+    if (!isDeno()) {
+      // adding ssl test, since zero ssl must work automagically
+      conn = await createConnection({
+        user: 'verifParsec',
+        password: 'MySup8%rPassw@ord',
+        ssl: true
+      });
+      await conn.end();
+    }
   });
 });

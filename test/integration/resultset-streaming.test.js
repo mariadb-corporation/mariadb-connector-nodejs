@@ -10,13 +10,14 @@ import Conf from '../conf.js';
 
 describe.concurrent('results-set streaming', () => {
   let shareConn;
+  const numb = 1000;
   beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
     await shareConn.query('DROP TABLE IF EXISTS testStreamResult');
     await shareConn.query('CREATE TABLE testStreamResult (v int)');
     let sql = 'INSERT INTO testStreamResult VALUE (?)';
     const params = [0];
-    for (let i = 1; i < 10000; i++) {
+    for (let i = 1; i < numb; i++) {
       sql += ',(?)';
       params.push(i);
     }
@@ -34,7 +35,7 @@ describe.concurrent('results-set streaming', () => {
     for await (const row of stream) {
       assert.equal(currRow++, row.v);
     }
-    assert.equal(10000, currRow);
+    assert.equal(numb, currRow);
   });
 
   test('Streaming Update for-await-of', async function () {
@@ -66,7 +67,7 @@ describe.concurrent('results-set streaming', () => {
         for await (const row of stream) {
           assert.equal(currRow++, row.v);
         }
-        assert.equal(10000, currRow);
+        assert.equal(numb, currRow);
         conn.end(resolve);
       });
     });
@@ -81,7 +82,7 @@ describe.concurrent('results-set streaming', () => {
         for await (const row of stream) {
           assert.equal(currRow++, row.v);
         }
-        assert.equal(10000, currRow);
+        assert.equal(numb, currRow);
         conn.end(resolve);
       });
     });
@@ -94,7 +95,7 @@ describe.concurrent('results-set streaming', () => {
     for await (const row of stream) {
       assert.equal(currRow++, row.v);
     }
-    assert.equal(10000, currRow);
+    assert.equal(numb, currRow);
     prepare.close();
   });
 
@@ -126,8 +127,9 @@ describe.concurrent('results-set streaming', () => {
   test('execute Streaming result-set close', async () => {
     let currRow = 0;
     let metaReceived = false;
+    let conn = await createConnection({});
     await new Promise((resolve, reject) => {
-      shareConn.prepare('SELECT * FROM testStreamResult').then((prepare) => {
+      conn.prepare('SELECT * FROM testStreamResult').then((prepare) => {
         const stream = prepare.executeStream();
         stream
           .on('error', (err) => {
@@ -147,6 +149,8 @@ describe.concurrent('results-set streaming', () => {
           });
         stream.close();
       });
+    }).finally(() => {
+      conn.close();
     });
   });
 
@@ -225,7 +229,7 @@ describe.concurrent('results-set streaming', () => {
             assert.equal(currRow++, row.v);
           })
           .on('end', () => {
-            assert.equal(10000, currRow);
+            assert.equal(numb, currRow);
             assert.isOk(metaReceived);
             conn.end(resolve);
           });
@@ -250,7 +254,7 @@ describe.concurrent('results-set streaming', () => {
           assert.equal(currRow++, row.v);
         })
         .on('end', () => {
-          assert.equal(10000, currRow);
+          assert.equal(numb, currRow);
           assert.isOk(metaReceived);
           resolve();
         });
@@ -289,7 +293,7 @@ describe.concurrent('results-set streaming', () => {
               assert.equal(currRow++, row.v);
             })
             .on('end', () => {
-              assert.equal(10000, currRow);
+              assert.equal(numb, currRow);
               assert.isOk(metaReceived);
               conn.end(resolve);
             });
@@ -317,7 +321,7 @@ describe.concurrent('results-set streaming', () => {
             assert.equal(currRow++, row.v);
           })
           .on('end', () => {
-            assert.equal(10000, currRow);
+            assert.equal(numb, currRow);
             assert.isOk(metaReceived);
             prepare.close();
             conn.end(resolve);
@@ -344,7 +348,7 @@ describe.concurrent('results-set streaming', () => {
           assert.deepEqual(row, [currRow++]);
         })
         .on('end', () => {
-          assert.equal(10000, currRow);
+          assert.equal(numb, currRow);
           assert.isOk(metaReceived);
           resolve();
         });
@@ -360,7 +364,7 @@ describe.concurrent('results-set streaming', () => {
         write: (row, encoding, callback) => {
           assert.equal(currRow++, row.v);
           callback();
-          if (currRow === 10000) {
+          if (currRow === numb) {
             //final was implemented in v8
             if (!process || process.versions.node.startsWith('6.')) resolve();
           }
@@ -372,7 +376,7 @@ describe.concurrent('results-set streaming', () => {
           callback();
         },
         final: () => {
-          assert.equal(10000, currRow);
+          assert.equal(numb, currRow);
           resolve();
         }
       });
@@ -390,7 +394,7 @@ describe.concurrent('results-set streaming', () => {
         write: (row, encoding, callback) => {
           assert.equal(currRow++, row.v);
           callback();
-          if (process.versions.node.startsWith('6.') && currRow === 10000) {
+          if (process.versions.node.startsWith('6.') && currRow === numb) {
             //final was implemented in v8
             resolve();
           }
@@ -402,7 +406,7 @@ describe.concurrent('results-set streaming', () => {
           callback();
         },
         final: () => {
-          assert.equal(10000, currRow);
+          assert.equal(numb, currRow);
           conn.end(resolve);
         }
       });

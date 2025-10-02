@@ -7,7 +7,7 @@ import Conf from '../conf.js';
 import * as basePromise from '../../promise.js';
 import * as baseCallback from '../../callback.js';
 import Proxy from '../tools/proxy.js';
-import { createConnection, isMaxscale } from '../base.js';
+import { createConnection, isDeno, isMaxscale } from '../base.js';
 import { assert, expect, describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 
 describe.sequential('cluster', function () {
@@ -374,6 +374,8 @@ describe.sequential('cluster', function () {
     }, 20000);
 
     test('one node failing', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
       if (isMaxscale(shareConn)) return skip();
       const cluster = basePromise.createPoolCluster({});
 
@@ -447,6 +449,8 @@ describe.sequential('cluster', function () {
     }, 30000);
 
     test('one node failing with blacklisted host', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
       if (isMaxscale(shareConn)) return skip();
 
       const cluster = basePromise.createPoolCluster({});
@@ -529,7 +533,10 @@ describe.sequential('cluster', function () {
       });
     }, 30000);
 
-    test('reusing node after timeout', async () => {
+    test('reusing node after timeout', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
+
       const cl = await get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
       const proxy = cl.proxy;
@@ -837,7 +844,10 @@ describe.sequential('cluster', function () {
       }
     }, 10000);
 
-    test('ensure failing connection on pool not exiting application', async function () {
+    test('ensure failing connection on pool not exiting application', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
+
       const cluster = basePromise.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         port: 8888,
@@ -1092,7 +1102,10 @@ describe.sequential('cluster', function () {
       });
     }, 10000);
 
-    test("won't use bad host pools", async () => {
+    test("won't use bad host pools", async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
+
       const cluster = baseCallback.createPoolCluster({ removeNodeErrorCount: 5 });
       let removedNode = [];
       cluster.on('remove', (node) => {
@@ -1204,7 +1217,10 @@ describe.sequential('cluster', function () {
       });
     }, 20000);
 
-    test('reusing node after timeout', async () => {
+    test('reusing node after timeout', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
+
       await new Promise((resolve, reject) => {
         get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then((cl) => {
           const cluster = cl.cluster;
@@ -1358,7 +1374,10 @@ describe.sequential('cluster', function () {
       });
     });
 
-    test('ensure failing connection on pool not exiting application', async function () {
+    test('ensure failing connection on pool not exiting application', async ({ skip }) => {
+      // until https://github.com/denoland/deno/issues/30886 for deno
+      if (isDeno()) return skip();
+
       const cluster = baseCallback.createPoolCluster();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         port: 8888,

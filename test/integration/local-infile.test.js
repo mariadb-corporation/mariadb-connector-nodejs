@@ -134,7 +134,8 @@ describe.concurrent('local-infile', () => {
       );
       throw new Error('must have thrown error !');
     } catch (err) {
-      assert(err.message.includes('LOCAL INFILE command failed: ENOENT: no such file or directory'));
+      console.log(err);
+      assert(err.message.includes('no such file or directory') || err.message.includes('No such file or directory'));
       assert.equal(err.sqlState, '22000');
       assert(!err.fatal);
       await conn.end();

@@ -11,7 +11,7 @@
     "vitest": "npm:vitest@3.2.4"
   },
   "tasks": {
-    "test": "deno run -A npm:vitest test/**/*.js"
+    "test": "deno run -A npm:vitest --no-file-parallelism --isolate --reporter=verbose test/**/*.test.js"
   },
   "fmt": {
     "files": {
