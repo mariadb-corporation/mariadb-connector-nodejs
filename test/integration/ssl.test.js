@@ -32,6 +32,7 @@ describe.concurrent('ssl', function () {
     shareConn = await createConnection(Conf.baseConfig);
     if (getEnv('TEST_MAXSCALE_TLS_PORT')) sslPort = parseInt(getEnv('TEST_MAXSCALE_TLS_PORT'));
     if (
+      !isDeno() &&
       tls.DEFAULT_MIN_VERSION === 'TLSv1.2' &&
       ((isWindows() && shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(10, 4, 0)) ||
         (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(8, 0, 0)))
