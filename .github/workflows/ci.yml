@@ -85,7 +85,7 @@ jobs:
         env:
           LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
-          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
+          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
 
@@ -96,7 +96,7 @@ jobs:
         env:
           LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
-          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
+          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
 
