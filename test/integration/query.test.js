@@ -3,10 +3,9 @@
 
 'use strict';
 
-import * as base from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import Conf from '../conf.js';
-import { createConnection } from '../base.js';
+import { createConnection, createCallbackConnection, utf8Collation } from '../base.js';
 
 describe.concurrent('basic query', () => {
   let shareConn;
@@ -18,7 +17,7 @@ describe.concurrent('basic query', () => {
     shareConn = null;
   });
   test('query with value without placeholder', async function () {
-    const conn = await base.createConnection({ debug: true });
+    const conn = await createConnection({ debug: true });
     const rows = await conn.query("select '1'", [2]);
     assert.deepEqual(rows, [{ 1: '1' }]);
     await conn.end();
@@ -58,7 +57,7 @@ describe.concurrent('basic query', () => {
 
   test('parameter last', async () => {
     const value = "'`\\";
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query('DROP TABLE IF EXISTS parse');
     await conn.query('CREATE TABLE parse(t varchar(128))');
     await conn.beginTransaction();
@@ -69,7 +68,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('namedPlaceholders parameter', async () => {
-    const conn = await base.createConnection({ namedPlaceholders: true });
+    const conn = await createConnection({ namedPlaceholders: true });
     await conn.query('DROP TABLE IF EXISTS namedPlaceholders1');
     await conn.query('CREATE TABLE namedPlaceholders1(t varchar(128))');
     await conn.query('START TRANSACTION'); // if MAXSCALE ensure using WRITER
@@ -84,7 +83,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('namedPlaceholders reuse', async () => {
-    const conn = await base.createConnection({ namedPlaceholders: true });
+    const conn = await createConnection({ namedPlaceholders: true });
 
     let res = await conn.query('select :param2 as a, :param1 as b, :param2 as c', { param1: 2, param2: 3 });
     assert.isTrue(res[0].a === 3 || res[0].a === 3n);
@@ -122,7 +121,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('promise query stack trace', async function () {
-    const conn = await base.createConnection({ trace: true });
+    const conn = await createConnection({ trace: true });
     try {
       await conn.query('wrong query');
     } catch (err) {
@@ -135,7 +134,7 @@ describe.concurrent('basic query', () => {
 
   test('query stack trace', async function () {
     await new Promise((resolve, reject) => {
-      const conn = base.createCallbackConnection({ trace: true });
+      const conn = createCallbackConnection({ trace: true });
       conn.connect((err) => {
         conn.query('wrong query', (err) => {
           if (!err) {
@@ -152,7 +151,7 @@ describe.concurrent('basic query', () => {
 
   test('query parameter error stack trace', async function () {
     await new Promise((resolve, reject) => {
-      const conn = base.createCallbackConnection({ trace: true });
+      const conn = createCallbackConnection({ trace: true });
       conn.connect((err) => {
         conn.query('SELECT ?', [], (err) => {
           if (!err) {
@@ -167,7 +166,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('array parameter', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query('DROP TABLE IF EXISTS arrayParam');
     await conn.query('CREATE TABLE arrayParam (id int, val varchar(10))');
     await conn.beginTransaction();
@@ -187,7 +186,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('array parameter test', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query('DROP TABLE IF EXISTS testArrayParameter');
     await conn.query('CREATE TABLE testArrayParameter (val1 int, val2 int)');
     await conn.query('START TRANSACTION'); // if MAXSCALE ensure using WRITER
@@ -208,7 +207,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('array parameter with null value', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query('DROP TABLE IF EXISTS arrayParamNull');
     await conn.query('CREATE TABLE arrayParamNull (id int, val varchar(10))');
     await conn.beginTransaction();
@@ -229,7 +228,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('array parameter with null value with parenthesis', async function () {
-    const conn = await base.createConnection({ arrayParenthesis: true });
+    const conn = await createConnection({ arrayParenthesis: true });
     await conn.query('DROP TABLE IF EXISTS arrayParamNullParen');
     await conn.query('CREATE TABLE arrayParamNullParen (id int, val varchar(10))');
     await conn.beginTransaction();
@@ -251,7 +250,7 @@ describe.concurrent('basic query', () => {
 
   test('permitSetMultiParamEntries set', async () => {
     const jsonValue = { id: 1, val: 'test' };
-    const conn = await base.createConnection({ permitSetMultiParamEntries: true });
+    const conn = await createConnection({ permitSetMultiParamEntries: true });
     await conn.query('DROP TABLE IF EXISTS setTable');
     await conn.query('CREATE TABLE setTable (id int, val varchar(128))');
     await conn.beginTransaction();
@@ -262,7 +261,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('query with escape values', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     const rows = await conn.query(
       'select /* \\ ? ` # */ \'\\\\"\\\'?\' as a, \' \' as b, ? as c, "\\\\\'\\"?" as d, " " as e\n' +
         ', ? -- comment \n' +
@@ -283,7 +282,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('query with end of line comment', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     const rows = await conn.query("select /* blabla */ '1' -- test comment\n , ?", ['val']);
     assert.deepEqual(rows, [
       {
@@ -295,7 +294,7 @@ describe.concurrent('basic query', () => {
   });
 
   test('query with # end of line comment', async function () {
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     const rows = await conn.query("select /* blabla */ '1' # test comment\n , ?", ['val']);
     assert.deepEqual(rows, [
       {
@@ -308,7 +307,7 @@ describe.concurrent('basic query', () => {
 
   test('query warning', async function (ctx) {
     if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(8, 0, 0)) ctx.skip();
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query("set @@SQL_MODE = 'ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'");
     await conn.query('DROP TABLE IF EXISTS h');
     await conn.query('create table h (c1 varchar(5))');
@@ -333,7 +332,7 @@ describe.concurrent('basic query', () => {
     table += ')';
     insert += ')';
 
-    const conn = await base.createConnection();
+    const conn = await createConnection();
     await conn.query('DROP TABLE IF EXISTS myTable');
     await conn.query(table);
     await conn.beginTransaction();
@@ -343,14 +342,15 @@ describe.concurrent('basic query', () => {
     await conn.end();
   });
 
-  test.skipIf(!base.utf8Collation(), 'escape validation', async function () {
+  test('escape validation', async ({ skip }) => {
+    if (!utf8Collation) return skip();
     await shareConn.query('DROP TABLE IF EXISTS tt1');
     await shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
     await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
     const res = await shareConn.query('SELECT * FROM tt1');
     assert.equal(res[0].tt, 'jack\nkमस्');
-    shareConn.commtest();
+    shareConn.commit();
   });
 
   test('permitSetMultiParamEntries escape ', async function () {
@@ -365,10 +365,10 @@ describe.concurrent('basic query', () => {
       fctSt: fctStr
     };
 
-    let conn = await base.createConnection({ permitSetMultiParamEntries: true });
+    let conn = await createConnection({ permitSetMultiParamEntries: true });
     assert.equal(conn.escape(arr), "`stg`='let\\'g\\'o😊',`bool`=false,`nullVal`=NULL,`fctSt`='bla\\'bla'");
     await conn.end();
-    conn = await base.createConnection({ permitSetMultiParamEntries: false });
+    conn = await createConnection({ permitSetMultiParamEntries: false });
     assert.equal(
       conn.escape(arr),
       '\'{\\"stg\\":\\"let\\\'g\\\'o😊\\",\\"bool\\":false,\\"nullVal\\":null,\\"fctSt\\":{}}\''
@@ -381,11 +381,11 @@ describe.concurrent('basic query', () => {
     fctStr.toSqlString = () => {
       return "bla'bla";
     };
-    await shareConn.query('DROP TABLE IF EXISTS tt1');
-    await shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+    await shareConn.query('DROP TABLE IF EXISTS toSqlStringesc');
+    await shareConn.query('CREATE TABLE toSqlStringesc (id int, tt varchar(256)) CHARSET utf8mb4');
     await shareConn.beginTransaction();
-    await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, fctStr]);
-    const res = await shareConn.query('SELECT * FROM tt1');
+    await shareConn.query('INSERT INTO toSqlStringesc VALUES (?,?)', [1, fctStr]);
+    const res = await shareConn.query('SELECT * FROM toSqlStringesc');
     assert.equal(res[0].tt, "bla'bla");
     shareConn.commit();
   });
