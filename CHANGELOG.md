@@ -1,5 +1,18 @@
 # Change Log
 
+
+## [3.5.0-rc.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.0-rc.0) (Oct 2025)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.5...3.5.0-rc.0)
+
+## Notable changes
+* CONJS-326 migrate from commonJS to ESM
+* CONJS-325	deno compatibility
+
+## Issues Fixed
+* CONJS-328 Fix minimumIdle option to maintain baseline idle connections		
+* CONJS-330 caching_sha2_password: avoid requiring RSA key pair when connecting via Unix socket
+
+
 ## [3.4.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.5) (Jul 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.4...3.4.5)
 
