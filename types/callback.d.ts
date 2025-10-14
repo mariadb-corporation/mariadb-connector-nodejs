@@ -35,14 +35,14 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Connection;
 export function importFile(config: ImportFileConfig, callback: (err: SqlError | null) => void): void;
 
-export interface Prepare {
+export interface Prepare<V> {
   id: number;
-  execute<T = any, V = any>(values: V, callback: (err: SqlError | null, result?: T, meta?: any) => void): void;
+  execute<T = any>(values: V, callback: (err: SqlError | null, result?: T, meta?: any) => void): void;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream<V = any>(values: V): Readable;
+  executeStream(values: V): Readable;
   close(): void;
 }
 
@@ -65,7 +65,7 @@ export interface Connection extends EventEmitter {
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
-  prepare(sql: string | QueryOptions, callback: (err: SqlError | null, prepare?: Prepare) => void): void;
+  prepare<V = any>(sql: string | QueryOptions, callback: (err: SqlError | null, prepare?: Prepare<V>) => void): void;
   execute<T = any, V = any>(
     sql: string | QueryOptions,
     values: V,

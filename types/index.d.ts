@@ -30,9 +30,9 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function importFile(config: ImportFileConfig): Promise<void>;
 
-export interface Prepare {
+export interface Prepare<V> {
   id: number;
-  execute<T = any, V = any>(values?: V): Promise<T>;
+  execute<T = any>(values?: V): Promise<T>;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
@@ -82,7 +82,7 @@ export interface Connection extends EventEmitter {
   /**
    * Prepare query.
    */
-  prepare(sql: string | QueryOptions): Promise<Prepare>;
+  prepare<V = any>(sql: string | QueryOptions): Promise<Prepare<V>>;
 
   /**
    * Execute query using binary (prepare) protocol
