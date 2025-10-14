@@ -32,12 +32,12 @@ export function importFile(config: ImportFileConfig): Promise<void>;
 
 export interface Prepare {
   id: number;
-  execute<T = any>(values?: any): Promise<T>;
+  execute<T = any, V = any>(values?: V): Promise<T>;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream(values?: any): Readable;
+  executeStream<V = any>(values?: V): Readable;
   close(): void;
 }
 
@@ -77,7 +77,7 @@ export interface Connection extends EventEmitter {
   /**
    * Execute query using text protocol.
    */
-  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  query<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Prepare query.
@@ -87,18 +87,18 @@ export interface Connection extends EventEmitter {
   /**
    * Execute query using binary (prepare) protocol
    */
-  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  execute<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Execute batch. Values are Array of Array.
    */
-  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
+  batch<T = UpsertResult | UpsertResult[], V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  queryStream(sql: string | QueryOptions, values?: any): Readable;
+  queryStream<V = any>(sql: string | QueryOptions, values?: V): Readable;
 
   /**
    * Send an empty MySQL packet to ensure the connection is active, and reset @@wait_timeout
@@ -203,17 +203,17 @@ export interface Pool {
   /**
    * Execute a query on one connection from pool.
    */
-  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  query<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Execute a batch on one connection from pool.
    */
-  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
+  batch<T = UpsertResult | UpsertResult[], V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Execute query using binary (prepare) protocol
    */
-  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  execute<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 
   /**
    * Close all connection in pool
@@ -271,9 +271,9 @@ export interface Pool {
 
 export interface FilteredPoolCluster {
   getConnection(): Promise<PoolConnection>;
-  query<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
-  batch<T = UpsertResult | UpsertResult[]>(sql: string | QueryOptions, values?: any): Promise<T>;
-  execute<T = any>(sql: string | QueryOptions, values?: any): Promise<T>;
+  query<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
+  batch<T = UpsertResult | UpsertResult[], V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
+  execute<T = any, V = any>(sql: string | QueryOptions, values?: V): Promise<T>;
 }
 
 export interface PoolCluster {

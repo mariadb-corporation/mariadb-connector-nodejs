@@ -37,12 +37,12 @@ export function importFile(config: ImportFileConfig, callback: (err: SqlError | 
 
 export interface Prepare {
   id: number;
-  execute<T = any>(values: any, callback: (err: SqlError | null, result?: T, meta?: any) => void): void;
+  execute<T = any, V = any>(values: V, callback: (err: SqlError | null, result?: T, meta?: any) => void): void;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream(values: any): Readable;
+  executeStream<V = any>(values: V): Readable;
   close(): void;
 }
 
@@ -56,9 +56,9 @@ export interface Connection extends EventEmitter {
   beginTransaction(callback: (err: SqlError | null) => void): void;
   commit(callback: (err: SqlError | null) => void): void;
   rollback(callback: (err: SqlError | null) => void): void;
-  query<T = any>(
+  query<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   query<T = any>(
@@ -66,25 +66,25 @@ export interface Connection extends EventEmitter {
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   prepare(sql: string | QueryOptions, callback: (err: SqlError | null, prepare?: Prepare) => void): void;
-  execute<T = any>(
+  execute<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   execute<T = any>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
-  batch<T = UpsertResult | UpsertResult[]>(
+  batch<T = UpsertResult | UpsertResult[], V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
   batch<T = UpsertResult | UpsertResult[]>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
-  queryStream(sql: string | QueryOptions, values?: any): Readable;
+  queryStream<V = any>(sql: string | QueryOptions, values?: V): Readable;
   ping(callback: (err: SqlError | null) => void): void;
   reset(callback: (err: SqlError | null) => void): void;
   importFile(config: SqlImportOptions, callback: (err: SqlError | null) => void): void;
@@ -113,27 +113,27 @@ export interface PoolConnection extends Connection {
 export interface Pool {
   closed: boolean;
   getConnection(callback: (err: SqlError | null, conn?: PoolConnection) => void): void;
-  query<T = any>(
+  query<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   query<T = any>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
-  batch<T = UpsertResult | UpsertResult[]>(
+  batch<T = UpsertResult | UpsertResult[], V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
   batch<T = UpsertResult | UpsertResult[]>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
-  execute<T = any>(
+  execute<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   execute<T = any>(
@@ -156,27 +156,27 @@ export interface Pool {
 
 export interface FilteredPoolCluster {
   getConnection(callback: (err: SqlError | null, conn?: PoolConnection) => void): void;
-  query<T = any>(
+  query<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   query<T = any>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
-  batch<T = UpsertResult | UpsertResult[]>(
+  batch<T = UpsertResult | UpsertResult[], V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
   batch<T = UpsertResult | UpsertResult[]>(
     sql: string | QueryOptions,
     callback: (err: SqlError | null, result?: T) => void
   ): void;
-  execute<T = any>(
+  execute<T = any, V = any>(
     sql: string | QueryOptions,
-    values: any,
+    values: V,
     callback: (err: SqlError | null, result?: T, meta?: FieldInfo[]) => void
   ): void;
   execute<T = any>(
