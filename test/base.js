@@ -28,7 +28,7 @@ export function isMaxscale(shareConn) {
 }
 
 export function isMaxscaleMinVersion(shareConn, major, minor, patch) {
-  if (!globalThis.maxscaleVersion) {
+  if (!globalThis.maxscaleVersionJson) {
     const maxscaleVersion = shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
@@ -63,14 +63,14 @@ export function isMaxscaleMinVersion(shareConn, major, minor, patch) {
     }
     //serverVersion finished by number like "5.5.57", assign patchVersion
     if (type === 2) maxscalePatch = val;
-    globalThis.maxscaleVersion = {
+    globalThis.maxscaleVersionJson = {
       major: maxscaleMajor,
       minor: maxscaleMinor,
       patch: maxscalePatch
     };
   }
 
-  let ver = globalThis.maxscaleVersion;
+  let ver = globalThis.maxscaleVersionJson;
   return (
     ver.major > major ||
     (ver.major === major && ver.minor > minor) ||
