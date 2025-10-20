@@ -712,9 +712,9 @@ describe.concurrent('Pool', () => {
   });
 
   test('pool without control after use', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS ensureCommit');
-    await shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
-    await shareConn.query("INSERT INTO ensureCommit values ('john')");
+    await shareConn.query('DROP TABLE IF EXISTS ensureCommit2');
+    await shareConn.query('CREATE TABLE ensureCommit2(firstName varchar(32))');
+    await shareConn.query("INSERT INTO ensureCommit2 values ('john')");
     const pool = createPool({
       connectionLimit: 1,
       noControlAfterUse: true
@@ -722,10 +722,10 @@ describe.concurrent('Pool', () => {
     const conn = await pool.getConnection();
     await conn.beginTransaction();
     try {
-      await conn.query("UPDATE ensureCommit SET firstName='Tom'");
+      await conn.query("UPDATE ensureCommit2 SET firstName='Tom'");
       await conn.commit();
       await conn.end();
-      const res = await shareConn.query('SELECT * FROM ensureCommit');
+      const res = await shareConn.query('SELECT * FROM ensureCommit2');
       assert.deepEqual(res, [{ firstName: 'Tom' }]);
     } finally {
       conn.rollback();
