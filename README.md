@@ -1,6 +1,6 @@
 <p style="text-align: center;">
   <a href="https://mariadb.com/">
-    <img src="https://mariadb.com/wp-content/themes/mariadb-2025/public/images/logo-dark.4482a1.svg"/>
+    <img src="https://mariadb.com/wp-content/uploads/2019/11/mariadb-horizontal-blue.svg"/>
   </a>
 </p>
 
