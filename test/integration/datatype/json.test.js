@@ -188,19 +188,19 @@ describe.concurrent('json', () => {
     const conn = await createConnection({ autoJsonMap: false });
     const obj = { id: 2, val: 'test' };
     const jsonString = JSON.stringify(obj);
-    await conn.query('DROP TABLE IF EXISTS `test-json-return-type`');
-    await conn.query('CREATE TABLE `test-json-return-type` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
+    await conn.query('DROP TABLE IF EXISTS `test-json-return-type2`');
+    await conn.query('CREATE TABLE `test-json-return-type2` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
     await conn.beginTransaction();
     await conn.query(
       "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );
 
-    let rows = await conn.query('SELECT * FROM `test-json-return-type`');
+    let rows = await conn.query('SELECT * FROM `test-json-return-type2`');
     assert.equal(rows[0].val1, jsonString);
     assert.equal(rows[0].val2, jsonString);
     assert.equal(rows[0].val3, jsonString);
 
-    rows = await conn.execute('SELECT * FROM `test-json-return-type`');
+    rows = await conn.execute('SELECT * FROM `test-json-return-type2`');
     assert.equal(rows[0].val1, jsonString);
     assert.equal(rows[0].val2, jsonString);
     assert.equal(rows[0].val3, jsonString);
