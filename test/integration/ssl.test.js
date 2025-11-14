@@ -315,7 +315,6 @@ describe.concurrent('ssl', function () {
       assert.equal(res[0].Value, 'SSLv2');
       await conn.end();
     } catch (err) {
-      console.log(err);
       assert(err.message.includes('SSLv2 methods disabled'));
     }
   });
