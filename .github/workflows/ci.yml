@@ -27,7 +27,8 @@ jobs:
       github.ref == 'refs/heads/main' ||
       github.ref == 'refs/heads/develop' ||
       github.ref == 'refs/heads/maintenance/3.2' ||
-      github.ref == 'refs/heads/maintenance/3.3'
+      github.ref == 'refs/heads/maintenance/3.3' ||
+      github.ref == 'refs/heads/maintenance/3.4'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.final-matrix }}
     steps:
