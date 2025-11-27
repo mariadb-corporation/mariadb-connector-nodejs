@@ -192,7 +192,7 @@ describe.concurrent('json', () => {
     await conn.query('CREATE TABLE `test-json-return-type2` (val1 JSON, val2 LONGTEXT, val3 LONGBLOB)');
     await conn.beginTransaction();
     await conn.query(
-      "INSERT INTO `test-json-return-type` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
+      "INSERT INTO `test-json-return-type2` values ('" + jsonString + "','" + jsonString + "','" + jsonString + "')"
     );
 
     let rows = await conn.query('SELECT * FROM `test-json-return-type2`');
