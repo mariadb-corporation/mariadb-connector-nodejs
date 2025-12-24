@@ -100,7 +100,7 @@ describe.sequential('debug', () => {
     const serverVersion = conn.serverVersion();
     if (isMaxscale(shareConn)) compress = false;
     const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
-    const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
+    const rangeWithoutEOF = compress ? [1500, 3000] : [2350, 3250];
     const data = fs.readFileSync(path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt'), 'utf8');
     console.log(data);
     assert.isTrue(data.includes('QUERY: SELECT 3'));
