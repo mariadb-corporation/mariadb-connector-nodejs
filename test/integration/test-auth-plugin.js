@@ -9,7 +9,7 @@ const Conf = require('../conf');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isMaxscale, getHostSuffix, isLocalDb } = require('../base');
+const { isMaxscale, getHostSuffix, isLocalDb, isWindows, createConnection } = require('../base');
 
 describe('authentication plugin', () => {
   let rsaPublicKey = process.env.TEST_RSA_PUBLIC_KEY;
@@ -190,40 +190,42 @@ describe('authentication plugin', () => {
       .catch((err) => {});
   });
 
-  it('unix socket authentication plugin', function (done) {
-    if (isMaxscale()) return this.skip();
-    if (process.platform === 'win32') return this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) return this.skip();
-    if (!process.env.LOCAL_SOCKET_AVAILABLE) return this.skip();
-    if (!isLocalDb()) return this.skip();
+  it('unix socket authentication plugin', async function () {
+    if (
+      isMaxscale() ||
+      process.platform === 'win32' ||
+      !shareConn.info.isMariaDB() ||
+      !shareConn.info.hasMinVersion(10, 1, 11) ||
+      !isLocalDb() ||
+      (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com')
+    ) {
+      this.skip();
+      return;
+    }
 
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return this.skip();
+    const userInfo = os.userInfo();
+    const unixUser = userInfo.username;
+    console.log(unixUser);
+    if (!unixUser || unixUser === 'root' || unixUser !== '') {
+      this.skip();
+      return;
+    }
+    const res = await shareConn.query('select @@version_compile_os,@@socket soc');
+    const socketPath = res[0].soc;
 
-    shareConn
-      .query('select @@version_compile_os,@@socket soc')
-      .then((res) => {
-        const unixUser = process.env.USER;
-        if (!unixUser || unixUser === 'root') this.skip();
-        console.log('unixUser:' + unixUser);
-        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch((err) => {});
-        shareConn.query('DROP USER IF EXISTS ' + unixUser);
-        shareConn.query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket');
-        shareConn
-          .query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix())
-          .then(() => {
-            base
-              .createConnection({ user: null, socketPath: res[0].soc })
-              .then((conn) => {
-                return conn.end();
-              })
-              .then(() => {
-                done();
-              })
-              .catch(done);
-          })
-          .catch(done);
-      })
-      .catch(done);
+    if (!socketPath || socketPath === '') {
+      this.skip();
+      return;
+    }
+
+    await shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch(() => {});
+    await shareConn.query('DROP USER IF EXISTS ' + unixUser);
+    await shareConn
+      .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
+      .catch(() => {});
+    await shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix());
+    const conn = await createConnection({ user: null, socketPath: socketPath });
+    await conn.end();
   });
 
   it('dialog authentication plugin', async function () {
