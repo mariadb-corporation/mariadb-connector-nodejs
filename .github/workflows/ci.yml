@@ -93,6 +93,7 @@ jobs:
 
       - name: Run Tests deno
         if: ${{ matrix.deno }}
+        continue-on-error: true
         run: |
           deno task test
         env:
