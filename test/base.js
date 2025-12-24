@@ -135,5 +135,5 @@ module.exports.getHostSuffix = function getHostSuffix() {
 };
 
 module.exports.isLocalDb = function isLocalDb() {
-  return process.env.LOCAL_DB === 'local' || localEnv === undefined;
+  return process.env.LOCAL_DB === 'local' || process.env.LOCAL_DB === undefined;
 };
