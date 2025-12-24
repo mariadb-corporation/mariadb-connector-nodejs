@@ -191,10 +191,11 @@ describe('authentication plugin', () => {
   });
 
   it('unix socket authentication plugin', function (done) {
-    if (process.platform === 'win32') this.skip();
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) this.skip();
-    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
+    if (isMaxscale()) return this.skip();
+    if (process.platform === 'win32') return this.skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) return this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) return this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return this.skip();
 
     shareConn
       .query('select @@version_compile_os,@@socket soc')

@@ -73,13 +73,13 @@ describe('test socket', () => {
   });
 
   it('unix socket', function (done) {
-    if (!process.env.LOCAL_SOCKET_AVAILABLE) this.skip();
-    if (process.platform === 'win32') this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE) return this.skip();
+    if (process.platform === 'win32') return this.skip();
     if (
       Conf.baseConfig.host &&
       !(Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')
     )
-      this.skip();
+      return this.skip();
 
     shareConn
       .query('select @@version_compile_os,@@socket soc')
