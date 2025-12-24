@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         name: build matrix
-        uses: rusher/mariadb-test-build-matrix@main
+        uses: mariadb-corporation/connector-ci-build-matrix@main
         with:
           additional-matrix: '[{"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 24}, {"name": "MariaDB 11.4", "os": "ubuntu-latest", "db-type": "community", "db-tag": "11.4", "node": 20}]'
 
@@ -53,7 +53,7 @@ jobs:
 
       - name: Setup Test Environment
         id: setup-env
-        uses: rusher/mariadb-test-setup@master
+        uses: mariadb-corporation/connector-ci-setup@master
         with:
           node-version: ${{ matrix.node }}
           db-type: ${{ matrix.db-type }}
@@ -73,13 +73,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Tests
+      - name: Run Tests node
         run: npm run coverage:test
         env:
           LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
-          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
+          TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
+          TEST_TRACE: 'true'
+          LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
 
       - name: Download Codecov uploader
         shell: bash
