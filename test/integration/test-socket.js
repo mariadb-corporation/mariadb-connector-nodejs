@@ -6,7 +6,7 @@
 const base = require('../base.js');
 const { assert } = require('chai');
 const Conf = require('../conf');
-const { isMaxscale } = require('../base');
+const { isMaxscale, isLocalDb } = require('../base');
 
 describe('test socket', () => {
   it('named pipe', function (done) {
@@ -80,6 +80,7 @@ describe('test socket', () => {
       !(Conf.baseConfig.host === 'localhost' || Conf.baseConfig.host === 'mariadb.example.com')
     )
       return this.skip();
+    if (!isLocalDb()) return this.skip();
 
     shareConn
       .query('select @@version_compile_os,@@socket soc')

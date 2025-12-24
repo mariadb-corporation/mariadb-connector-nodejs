@@ -9,7 +9,7 @@ const Conf = require('../conf');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isMaxscale, getHostSuffix } = require('../base');
+const { isMaxscale, getHostSuffix, isLocalDb } = require('../base');
 
 describe('authentication plugin', () => {
   let rsaPublicKey = process.env.TEST_RSA_PUBLIC_KEY;
@@ -195,6 +195,8 @@ describe('authentication plugin', () => {
     if (process.platform === 'win32') return this.skip();
     if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(10, 1, 11)) return this.skip();
     if (!process.env.LOCAL_SOCKET_AVAILABLE) return this.skip();
+    if (!isLocalDb()) return this.skip();
+
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return this.skip();
 
     shareConn

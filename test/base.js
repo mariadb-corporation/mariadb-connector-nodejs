@@ -133,3 +133,7 @@ module.exports.getHostSuffix = function getHostSuffix() {
   }
   return "@'%'";
 };
+
+module.exports.isLocalDb = function isLocalDb() {
+  return process.env.LOCAL_DB === 'local' || localEnv === undefined;
+};
