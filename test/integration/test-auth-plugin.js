@@ -207,11 +207,9 @@ describe('authentication plugin', () => {
         console.log('unixUser:' + unixUser);
         shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch((err) => {});
         shareConn.query('DROP USER IF EXISTS ' + unixUser);
+        shareConn.query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket');
         shareConn
-          .query("CREATE USER '" + unixUser + "'@'" + Conf.baseConfig.host + "' IDENTIFIED VIA unix_socket")
-          .catch((err) => {});
-        shareConn
-          .query("GRANT SELECT on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'")
+          .query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix())
           .then(() => {
             base
               .createConnection({ user: null, socketPath: res[0].soc })
