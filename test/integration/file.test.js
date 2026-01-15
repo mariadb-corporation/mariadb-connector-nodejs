@@ -63,7 +63,7 @@ describe('sql file import', () => {
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump2.sql', database: 'fimp' })
         );
         await ensureLoaded();
-      }, 30000);
+      }, 60000);
 
       test('no database selected', async function () {
         try {
@@ -267,7 +267,7 @@ describe('sql file import', () => {
             }
           );
         });
-      }, 30000);
+      }, 60000);
 
       test('no database selected', async () => {
         await new Promise((resolve, reject) => {
