@@ -177,6 +177,12 @@ export interface Connection extends EventEmitter {
    */
   escapeId(identifier: string): string;
 
+  /**
+   * Dispose connection asynchronously.
+   */
+  // @ts-ignore - for backward compatibility
+  [Symbol.asyncDispose](): Promise<void>;
+
   on(ev: 'end', callback: () => void): Connection;
   on(ev: 'error', callback: (err: SqlError) => void): Connection;
   on(eventName: string | symbol, listener: (...args: any[]) => void): this;
