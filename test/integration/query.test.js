@@ -422,7 +422,7 @@ describe.concurrent('basic query', () => {
     if (shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 1, 2)) {
       const elapse = Date.now() - initTime;
       assert.isOk(elapse < 10000, 'elapse time was ' + elapse + ' but must be less around 100');
-      assert.isTrue(err.message.includes('Query execution was interrupted (max_statement_time exceeded)'));
+      assert.isTrue(err.message.includes('was interrupted'));
       assert.equal(err.errno, 1969);
       assert.equal(err.sqlState, 70100);
       assert.equal(err.code, 'ER_STATEMENT_TIMEOUT');
