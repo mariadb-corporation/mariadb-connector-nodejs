@@ -113,6 +113,13 @@ export interface PoolConfig extends ConnectionConfig {
    * A value of 0 (default) meaning Leak detection is disabled
    */
   leakDetectionTimeout?: number;
+
+  /**
+   * Validation timeout (ping) for checking an connection not used recently from pool.
+   * In milliseconds.
+   * Default: 500
+   */
+  pingTimeout?: number;
 }
 
 export interface PoolClusterConfig {
