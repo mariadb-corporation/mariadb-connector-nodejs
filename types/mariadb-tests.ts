@@ -446,6 +446,70 @@ async function testPoolCluster(): Promise<void> {
   await poolCluster.end();
 }
 
+async function testTypedValues(): Promise<void> {
+  const connection = await createConn();
+
+  // query with typed result and typed values
+  type UserRow = { id: number; email: string };
+  const rows = await connection.query<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1]);
+  console.log(rows[0].id);
+  console.log(rows[0].email);
+
+  // execute with typed result and typed values
+  const rows2 = await connection.execute<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1]);
+  console.log(rows2[0].id);
+
+  // batch with typed values
+  type InsertParams = [number, string][];
+  const batchRes = await connection.batch<UpsertResult, InsertParams>('INSERT INTO users VALUE (?,?)', [
+    [1, 'a@b.com'],
+    [2, 'c@d.com']
+  ]);
+  console.log(batchRes.affectedRows);
+
+  // prepare with typed values
+  type PrepareParams = [string, Buffer, Buffer];
+  const stmt = await connection.prepare<PrepareParams>('INSERT INTO users VALUES (?, ?, ?)');
+  console.log(stmt.id);
+  await stmt.execute<UpsertResult>(['email', Buffer.from('hash'), Buffer.from('salt')]);
+  const stream = stmt.executeStream(['email', Buffer.from('hash'), Buffer.from('salt')]);
+  stream.on('data', (row: unknown) => console.log(row));
+  stmt.close();
+
+  // queryStream with typed values
+  connection.queryStream<[number]>('SELECT * FROM users WHERE id = ?', [1]);
+
+  // backward compat: no type argument still works (defaults to any)
+  await connection.query('SELECT 1');
+  await connection.execute('SELECT 1');
+  await connection.batch('INSERT INTO myTable VALUE (?)', [[1], [2]]);
+  const stmtAny = await connection.prepare('SELECT ?');
+  await stmtAny.execute([1]);
+  stmtAny.close();
+
+  await connection.end();
+}
+
+async function testTypedValuesPool(): Promise<void> {
+  const pool = newPool({ connectionLimit: 1 });
+
+  type UserRow = { id: number; email: string };
+  const rows = await pool.query<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1]);
+  console.log(rows[0].id);
+
+  const rows2 = await pool.execute<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1]);
+  console.log(rows2[0].id);
+
+  type InsertParams = [number, string][];
+  const batchRes = await pool.batch<UpsertResult, InsertParams>('INSERT INTO users VALUE (?,?)', [
+    [1, 'a@b.com'],
+    [2, 'c@d.com']
+  ]);
+  console.log(batchRes.affectedRows);
+
+  await pool.end();
+}
+
 async function runTests(): Promise<void> {
   try {
     await importSqlFile();
@@ -456,6 +520,8 @@ async function runTests(): Promise<void> {
     await testPoolCluster();
     await testRowsAsArray();
     await metaAsArray();
+    await testTypedValues();
+    await testTypedValuesPool();
 
     console.log('done');
   } catch (err) {

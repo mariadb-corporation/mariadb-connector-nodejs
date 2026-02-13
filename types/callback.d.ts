@@ -35,7 +35,7 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Connection;
 export function importFile(config: ImportFileConfig, callback: (err: SqlError | null) => void): void;
 
-export interface Prepare<V> {
+export interface Prepare<V = any> {
   id: number;
   execute<T = any>(values: V, callback: (err: SqlError | null, result?: T, meta?: any) => void): void;
   /**

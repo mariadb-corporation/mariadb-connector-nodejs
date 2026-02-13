@@ -30,14 +30,14 @@ export const version: string;
 export function createConnection(connectionUri: string | ConnectionConfig): Promise<Connection>;
 export function importFile(config: ImportFileConfig): Promise<void>;
 
-export interface Prepare<V> {
+export interface Prepare<V = any> {
   id: number;
   execute<T = any>(values?: V): Promise<T>;
   /**
    * Execute query returning a Readable Object that will emit columns/data/end/error events
    * to permit streaming big result-set
    */
-  executeStream<V = any>(values?: V): Readable;
+  executeStream(values?: V): Readable;
   close(): void;
 }
 

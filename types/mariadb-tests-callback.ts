@@ -424,6 +424,96 @@ function testPoolCluster(next: (err?: Error) => void) {
   });
 }
 
+function testTypedValues(next: (err?: Error) => void) {
+  const connection = createConn({});
+
+  // query with typed result and typed values
+  type UserRow = { id: number; email: string };
+  connection.query<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1], (err: SqlError | null, rows?: UserRow[]) => {
+    if (err) return next(err);
+    if (rows === undefined) return next(new Error('rows is undefined'));
+    console.log(rows[0].id);
+    console.log(rows[0].email);
+
+    // execute with typed result and typed values
+    connection.execute<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1], (err: SqlError | null, rows?: UserRow[]) => {
+      if (err) return next(err);
+      if (rows === undefined) return next(new Error('rows is undefined'));
+      console.log(rows[0].id);
+
+      // batch with typed values
+      type InsertParams = [number, string][];
+      connection.batch<UpsertResult, InsertParams>('INSERT INTO users VALUE (?,?)', [
+        [1, 'a@b.com'],
+        [2, 'c@d.com']
+      ], (err: SqlError | null, res?: UpsertResult) => {
+        if (err) return next(err);
+        if (res === undefined) return next(new Error('res is undefined'));
+        console.log(res.affectedRows);
+
+        // prepare with typed values
+        type PrepareParams = [string, Buffer, Buffer];
+        connection.prepare<PrepareParams>('INSERT INTO users VALUES (?, ?, ?)', (err: SqlError | null, stmt?: Prepare<PrepareParams>) => {
+          if (err) return next(err);
+          if (stmt === undefined) return next(new Error('stmt is undefined'));
+          console.log(stmt.id);
+          stmt.execute(['email', Buffer.from('hash'), Buffer.from('salt')], (err: SqlError | null) => {
+            if (err) return next(err);
+            const stream = stmt!.executeStream(['email', Buffer.from('hash'), Buffer.from('salt')]);
+            stream.on('data', (row: unknown) => console.log(row));
+            stmt!.close();
+
+            // queryStream with typed values
+            connection.queryStream<[number]>('SELECT * FROM users WHERE id = ?', [1]);
+
+            // backward compat: no type argument still works (defaults to any)
+            connection.query('SELECT 1', (err: SqlError | null) => {
+              if (err) return next(err);
+              connection.prepare('SELECT ?', (err: SqlError | null, stmtAny?: Prepare) => {
+                if (err) return next(err);
+                if (stmtAny === undefined) return next(new Error('stmtAny is undefined'));
+                stmtAny.execute([1], (err: SqlError | null) => {
+                  if (err) return next(err);
+                  stmtAny!.close();
+                  connection.end(() => next());
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+function testTypedValuesPool(next: (err?: Error) => void) {
+  const pool = newPool(Object.assign({ connectionLimit: 1 }, baseConfig));
+
+  type UserRow = { id: number; email: string };
+  pool.query<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1], (err: SqlError | null, rows?: UserRow[]) => {
+    if (err) return next(err);
+    if (rows === undefined) return next(new Error('rows is undefined'));
+    console.log(rows[0].id);
+
+    type InsertParams = [number, string][];
+    pool.batch<UpsertResult, InsertParams>('INSERT INTO users VALUE (?,?)', [
+      [1, 'a@b.com'],
+      [2, 'c@d.com']
+    ], (err: SqlError | null, res?: UpsertResult) => {
+      if (err) return next(err);
+      if (res === undefined) return next(new Error('res is undefined'));
+      console.log(res.affectedRows);
+
+      pool.execute<UserRow[], [number]>('SELECT * FROM users WHERE id = ?', [1], (err: SqlError | null, rows?: UserRow[]) => {
+        if (err) return next(err);
+        if (rows === undefined) return next(new Error('rows is undefined'));
+        console.log(rows[0].id);
+        pool.end(() => next());
+      });
+    });
+  });
+}
+
 function runTests() {
   importSqlFile(() => {
     testMisc((err?: Error) => {
@@ -436,7 +526,13 @@ function runTests() {
             if (err) return done(err);
             testRowsAsArray((err?: Error) => {
               if (err) return done(err);
-              done();
+              testTypedValues((err?: Error) => {
+                if (err) return done(err);
+                testTypedValuesPool((err?: Error) => {
+                  if (err) return done(err);
+                  done();
+                });
+              });
             });
           });
         });
