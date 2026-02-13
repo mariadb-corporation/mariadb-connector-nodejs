@@ -40,4 +40,18 @@ describe.runIf('asyncDispose' in Symbol).concurrent('Explicit Resource Managemen
 
     await pool.end();
   });
+
+  test('with Pool dispose', async function () {
+    const pool = createPool({
+      connectionLimit: 1
+    });
+
+    const conn = await pool.getConnection();
+    assert.equal(pool.activeConnections(), 1);
+    await conn.release();
+    assert.equal(pool.idleConnections(), 1);
+
+    await pool[Symbol.asyncDispose]();
+    assert.equal(pool.closed, true);
+  });
 });

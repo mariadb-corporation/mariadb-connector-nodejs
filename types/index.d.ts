@@ -269,6 +269,12 @@ export interface Pool {
    */
   escapeId(identifier: string): string;
 
+  /**
+   * Dispose pool asynchronously, closing all connections.
+   */
+  // @ts-ignore - for backward compatibility
+  [Symbol.asyncDispose](): Promise<void>;
+
   on(ev: 'acquire', callback: (conn: Connection) => void): Pool;
   on(ev: 'connection', callback: (conn: Connection) => void): Pool;
   on(ev: 'enqueue', callback: () => void): Pool;
