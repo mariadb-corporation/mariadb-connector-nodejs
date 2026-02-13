@@ -1407,13 +1407,13 @@ describe.sequential(
     test('pool batch wrong param stack trace', async ({ skip }) => {
       const conn = await createConnection({ trace: true });
       try {
-        await conn.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
-        await conn.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
+        await conn.query('CREATE TABLE IF NOT EXISTS batchTestBatch(id int, id2 int)');
+        await conn.batch('INSERT INTO batchTestBatch VALUES (?,?)', [[1], [1]]);
         throw Error('must have thrown error');
       } catch (err) {
         assert.isTrue(err.stack.includes('batch.test.js:'), err.stack);
       } finally {
-        await conn.query('DROP TABLE test_batch');
+        await conn.query('DROP TABLE IF EXISTS batchTestBatch');
         await conn.end();
       }
     });

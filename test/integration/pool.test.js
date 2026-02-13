@@ -254,13 +254,13 @@ describe.concurrent('Pool', () => {
       trace: true
     });
     try {
-      await pool.query('CREATE TABLE IF NOT EXISTS test_batch(id int)');
-      await pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [1]]);
+      await pool.query('CREATE TABLE IF NOT EXISTS poolTestBatch(id int)');
+      await pool.batch('INSERT INTO poolTestBatch VALUES (?,?)', [[1], [1]]);
       throw Error('must have thrown error');
     } catch (err) {
       assert.isTrue(err.stack.includes('pool.test.js:258:18'), err.stack);
     } finally {
-      await pool.query('DROP TABLE test_batch');
+      await pool.query('DROP TABLE IF EXISTS poolTestBatch');
       await pool.end();
     }
   });
@@ -692,18 +692,18 @@ describe.concurrent('Pool', () => {
   }, 5000);
 
   test('ensure commit', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS ensureCommit2');
-    await shareConn.query('CREATE TABLE ensureCommit2(firstName varchar(32))');
-    await shareConn.query("INSERT INTO ensureCommit2 values ('john')");
+    await shareConn.query('DROP TABLE IF EXISTS poolEnsureCommit2');
+    await shareConn.query('CREATE TABLE poolEnsureCommit2(firstName varchar(32))');
+    await shareConn.query("INSERT INTO poolEnsureCommit2 values ('john')");
 
     const pool = createPool({ connectionLimit: 1 });
     const conn = await pool.getConnection();
     await conn.beginTransaction();
     try {
-      await conn.query("UPDATE ensureCommit2 SET firstName='Tom'");
+      await conn.query("UPDATE poolEnsureCommit2 SET firstName='Tom'");
       await conn.commit();
       await conn.end();
-      const res = await shareConn.query('SELECT * FROM ensureCommit2');
+      const res = await shareConn.query('SELECT * FROM poolEnsureCommit2');
       assert.deepEqual(res, [{ firstName: 'Tom' }]);
     } finally {
       conn.rollback();
@@ -712,9 +712,9 @@ describe.concurrent('Pool', () => {
   });
 
   test('pool without control after use', async function () {
-    await shareConn.query('DROP TABLE IF EXISTS ensureCommit');
-    await shareConn.query('CREATE TABLE ensureCommit(firstName varchar(32))');
-    await shareConn.query("INSERT INTO ensureCommit values ('john')");
+    await shareConn.query('DROP TABLE IF EXISTS poolEnsureCommit');
+    await shareConn.query('CREATE TABLE poolEnsureCommit(firstName varchar(32))');
+    await shareConn.query("INSERT INTO poolEnsureCommit values ('john')");
     const pool = createPool({
       connectionLimit: 1,
       noControlAfterUse: true
@@ -722,10 +722,10 @@ describe.concurrent('Pool', () => {
     const conn = await pool.getConnection();
     await conn.beginTransaction();
     try {
-      await conn.query("UPDATE ensureCommit SET firstName='Tom'");
+      await conn.query("UPDATE poolEnsureCommit SET firstName='Tom'");
       await conn.commit();
       await conn.end();
-      const res = await shareConn.query('SELECT * FROM ensureCommit');
+      const res = await shareConn.query('SELECT * FROM poolEnsureCommit');
       assert.deepEqual(res, [{ firstName: 'Tom' }]);
     } finally {
       conn.rollback();
@@ -1388,9 +1388,9 @@ describe.concurrent('Pool', () => {
   test('pool batch', async () => {
     let params = { connectionLimit: 1, resetAfterUse: false };
     const pool = createPool(params);
-    await pool.query('DROP TABLE IF EXISTS parse');
-    await pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)');
-    let res = await pool.batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', [
+    await pool.query('DROP TABLE IF EXISTS poolParseBatch');
+    await pool.query('CREATE TABLE poolParseBatch(id int, id2 int, id3 int, t varchar(128), id4 int)');
+    let res = await pool.batch('INSERT INTO `poolParseBatch` values (1, ?, 2, ?, 3)', [
       [1, 'john'],
       [2, 'jack']
     ]);
@@ -1410,7 +1410,7 @@ describe.concurrent('Pool', () => {
         }
       ]);
     }
-    res = await pool.query('select * from `parse`');
+    res = await pool.query('select * from `poolParseBatch`');
     assert.deepEqual(res, [
       {
         id: 1,

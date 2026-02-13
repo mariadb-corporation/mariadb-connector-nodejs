@@ -148,12 +148,12 @@ describe.concurrent('Pool callback', () => {
       trace: true
     });
     await new Promise(function (resolve, reject) {
-      pool.query('CREATE TABLE IF NOT EXISTS test_batch(id int, id2 int)');
-      pool.batch('INSERT INTO test_batch VALUES (?,?)', [[1], [2]], (err) => {
+      pool.query('CREATE TABLE IF NOT EXISTS test_batch_callback(id int, id2 int)');
+      pool.batch('INSERT INTO test_batch_callback VALUES (?,?)', [[1], [2]], (err) => {
         if (!err) {
           reject(Error('must have thrown error !'));
         } else {
-          pool.query('DROP TABLE test_batch');
+          pool.query('DROP TABLE test_batch_callback');
           assert.isTrue(err.stack.includes('pool-callback.test.js:'), err.stack);
           pool.end(resolve);
         }
@@ -817,10 +817,10 @@ describe.concurrent('Pool callback', () => {
     let params = { connectionLimit: 1, resetAfterUse: false };
     const pool = createPoolCallback(params);
     await new Promise(function (resolve, reject) {
-      pool.query('DROP TABLE IF EXISTS parse', (err, res) => {
-        pool.query('CREATE TABLE parse(id int, id2 int, id3 int, t varchar(128), id4 int)', (err, res) => {
+      pool.query('DROP TABLE IF EXISTS poolCbParseBatch', (err, res) => {
+        pool.query('CREATE TABLE poolCbParseBatch(id int, id2 int, id3 int, t varchar(128), id4 int)', (err, res) => {
           pool.batch(
-            'INSERT INTO `parse` values (1, ?, 2, ?, 3)',
+            'INSERT INTO `poolCbParseBatch` values (1, ?, 2, ?, 3)',
             [
               [1, 'john'],
               [2, 'jack']
@@ -846,7 +846,7 @@ describe.concurrent('Pool callback', () => {
                   ]);
                 }
 
-                pool.query('select * from `parse`', (err2, res2) => {
+                pool.query('select * from `poolCbParseBatch`', (err2, res2) => {
                   assert.deepEqual(res2, [
                     {
                       id: 1,
@@ -863,7 +863,7 @@ describe.concurrent('Pool callback', () => {
                       id4: 3
                     }
                   ]);
-                  pool.query('DROP TABLE parse');
+                  pool.query('DROP TABLE poolCbParseBatch');
                   pool.end(() => {
                     resolve();
                   });
@@ -883,7 +883,7 @@ describe.concurrent('Pool callback', () => {
       resetAfterUse: false
     });
     await new Promise(function (resolve, reject) {
-      pool.batch('INSERT INTO `parse` values (1, ?, 2, ?, 3)', (err, res) => {
+      pool.batch('INSERT INTO `poolCbParseBatch` values (1, ?, 2, ?, 3)', (err, res) => {
         pool.end();
         if (err) {
           assert.isTrue(err.message.includes('Batch must have values set'));

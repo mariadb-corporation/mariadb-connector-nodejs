@@ -346,11 +346,11 @@ describe.concurrent('basic query', () => {
 
   test('escape validation', async ({ skip }) => {
     if (!utf8Collation) return skip();
-    await shareConn.query('DROP TABLE IF EXISTS tt1');
-    await shareConn.query('CREATE TABLE tt1 (id int, tt varchar(256)) CHARSET utf8mb4');
+    await shareConn.query('DROP TABLE IF EXISTS escapeValidationTt1');
+    await shareConn.query('CREATE TABLE escapeValidationTt1 (id int, tt varchar(256)) CHARSET utf8mb4');
     await shareConn.beginTransaction();
-    await shareConn.query('INSERT INTO tt1 VALUES (?,?)', [1, 'jack\nkमस्']);
-    const res = await shareConn.query('SELECT * FROM tt1');
+    await shareConn.query('INSERT INTO escapeValidationTt1 VALUES (?,?)', [1, 'jack\nkमस्']);
+    const res = await shareConn.query('SELECT * FROM escapeValidationTt1');
     assert.equal(res[0].tt, 'jack\nkमस्');
     shareConn.commit();
   });
@@ -383,11 +383,11 @@ describe.concurrent('basic query', () => {
     fctStr.toSqlString = () => {
       return "bla'bla";
     };
-    await shareConn.query('DROP TABLE IF EXISTS toSqlStringesc');
-    await shareConn.query('CREATE TABLE toSqlStringesc (id int, tt varchar(256)) CHARSET utf8mb4');
+    await shareConn.query('DROP TABLE IF EXISTS toSqlStringEsc2');
+    await shareConn.query('CREATE TABLE toSqlStringEsc2 (id int, tt varchar(256)) CHARSET utf8mb4');
     await shareConn.beginTransaction();
-    await shareConn.query('INSERT INTO toSqlStringesc VALUES (?,?)', [1, fctStr]);
-    const res = await shareConn.query('SELECT * FROM toSqlStringesc');
+    await shareConn.query('INSERT INTO toSqlStringEsc2 VALUES (?,?)', [1, fctStr]);
+    const res = await shareConn.query('SELECT * FROM toSqlStringEsc2');
     assert.equal(res[0].tt, "bla'bla");
     shareConn.commit();
   });
