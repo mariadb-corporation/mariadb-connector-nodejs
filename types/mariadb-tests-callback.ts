@@ -17,10 +17,11 @@ import {
   createPool,
   createConnection,
   StreamCallback
-} from './callback.d.ts';
+} from './callback';
 
 import { createReadStream } from 'node:fs';
 
+// @ts-ignore - no declaration file for test config
 import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(cb: (err: SqlError | null) => void) {

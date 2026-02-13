@@ -23,6 +23,7 @@ import {
 import { Stream } from 'node:stream';
 import { createReadStream } from 'node:fs';
 
+// @ts-ignore - no declaration file for test config
 import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(): Promise<void> {
