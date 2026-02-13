@@ -140,10 +140,7 @@ describe.concurrent('parse', () => {
       bigBuf.write(full.substring(splitAt), buf.end);
       buf.end += full.length - splitAt;
       const res2 = Parse.parseQueries(buf);
-      assert.deepEqual(res2, [
-        "INSERT INTO t VALUES ('some data with ; inside and more ; data')",
-        '\nSELECT 1'
-      ]);
+      assert.deepEqual(res2, ["INSERT INTO t VALUES ('some data with ; inside and more ; data')", '\nSELECT 1']);
     });
   });
 
