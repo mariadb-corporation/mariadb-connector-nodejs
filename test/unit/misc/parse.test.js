@@ -117,6 +117,34 @@ describe.concurrent('parse', () => {
       const res = Parse.parseQueries(buf);
       assert.deepEqual(res, ['select ? # comment ; \n , ?', '\nINSERT 1\n']);
     });
+
+    test('state persistence across buffer splits', () => {
+      // Simulate a string literal split across two buffer reads,
+      // mimicking how connection.js importFile manages the buffer:
+      // unparsed data stays in the buffer and new data is appended.
+      const full = "INSERT INTO t VALUES ('some data with ; inside and more ; data');\nSELECT 1;";
+      const splitAt = 30; // split inside the string literal
+      const bigBuf = Buffer.alloc(full.length + 10);
+      bigBuf.write(full.substring(0, splitAt), 0);
+      const buf = {
+        buffer: bigBuf,
+        offset: 0,
+        end: splitAt
+      };
+      const res1 = Parse.parseQueries(buf);
+      // No complete query yet - we're inside a string
+      assert.deepEqual(res1, []);
+      // buf.offset still 0 (no semicolon found outside string)
+
+      // Append remaining data (simulating next file read)
+      bigBuf.write(full.substring(splitAt), buf.end);
+      buf.end += full.length - splitAt;
+      const res2 = Parse.parseQueries(buf);
+      assert.deepEqual(res2, [
+        "INSERT INTO t VALUES ('some data with ; inside and more ; data')",
+        '\nSELECT 1'
+      ]);
+    });
   });
 
   describe.concurrent('basic placeholder', () => {
