@@ -95,8 +95,8 @@ describe.sequential('debug', () => {
     await conn.batch('INSERT INTO debugVoid VALUES (?)', [[1], [2]]);
     await conn.end();
 
-    //wait 100ms to ensure the stream has been written
-    await new Promise((resolve) => new setTimeout(resolve, 100));
+    //wait to ensure the stream has been written (500ms for Windows CI)
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const serverVersion = conn.serverVersion();
     if (isMaxscale(shareConn)) compress = false;
     const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];

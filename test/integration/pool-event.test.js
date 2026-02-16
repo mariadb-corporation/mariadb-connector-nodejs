@@ -57,14 +57,14 @@ describe.concurrent('Pool event', () => {
     const result = await new Promise((resolve, reject) => {
       pool.on('connection', async (conn) => {
         try {
-          const res = await conn.query('SELECT 1 as val');
+          const res = await conn.query("SELECT '1' as val");
           resolve(res);
         } catch (e) {
           reject(e);
         }
       });
     });
-    assert.deepEqual(result, [{ val: 1 }]);
+    assert.deepEqual(result, [{ val: '1' }]);
     await pool.end();
   }, 5000);
 
@@ -77,8 +77,8 @@ describe.concurrent('Pool event', () => {
     });
     await new Promise((resolve) => setTimeout(resolve, 2000));
     assert.equal(connectionCount, 2);
-    const res = await pool.query('SELECT 1 as val');
-    assert.deepEqual(res, [{ val: 1 }]);
+    const res = await pool.query("SELECT '1' as val");
+    assert.deepEqual(res, [{ val: '1' }]);
     await pool.end();
   }, 5000);
 

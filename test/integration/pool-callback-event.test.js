@@ -64,13 +64,13 @@ describe.concurrent('Pool callback event', () => {
     const pool = createPoolCallback({ connectionLimit: 1, minimumIdle: 1 });
     const result = await new Promise((resolve, reject) => {
       pool.on('connection', (conn) => {
-        conn.query('SELECT 1 as val', (err, res) => {
+        conn.query("SELECT '1' as val", (err, res) => {
           if (err) reject(err);
           else resolve(res);
         });
       });
     });
-    assert.deepEqual(result, [{ val: 1 }]);
+    assert.deepEqual(result, [{ val: '1' }]);
     pool.end();
   }, 5000);
 
@@ -84,10 +84,10 @@ describe.concurrent('Pool callback event', () => {
       });
       setTimeout(() => {
         assert.equal(connectionCount, 2);
-        pool.query('SELECT 1 as val', (err, res) => {
+        pool.query("SELECT '1' as val", (err, res) => {
           if (err) reject(err);
           try {
-            assert.deepEqual(res, [{ val: 1 }]);
+            assert.deepEqual(res, [{ val: '1' }]);
             pool.end();
             resolve();
           } catch (e) {
