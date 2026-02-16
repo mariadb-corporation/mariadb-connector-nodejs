@@ -1,6 +1,22 @@
 # Change Log
 
 
+## [3.5.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.1) (Feb 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.0-rc.0...3.5.1)
+
+## Notable changes
+* CONJS-338 Add asyncDispose support for Connection, PoolConnection and Pool #250
+* CONJS-339 Add default type parameter to Prepare interface and fix executeStream generic #334
+* CONJS-339 Add wildcard for values params on Prepare
+
+## Issues Fixed
+* CONJS-331 Plugin authentication change correction
+* CONJS-335 Deno compatibility: send COM_QUIT synchronously to prevent socket cleanup race condition
+* CONJS-336 Connection attribute _server_host send host, but IP resulting of name resolution
+* CONJS-340 Fix pool connection event to emit wrapped connections and prevent user errors from breaking pool #342
+* CONJS-341 Support charset + collation combination in connection options #337
+
+
 ## [3.5.0-rc.0](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.0-rc.0) (Oct 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.5...3.5.0-rc.0)
 
