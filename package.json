@@ -60,9 +60,19 @@
   },
   "author": "Diego Dupin <diego.dupin@mariadb.com>",
   "license": "LGPL-2.1-or-later",
+  "peerDependencies": {
+    "@types/geojson": ">=7946.0.0",
+    "@types/node": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@types/geojson": {
+      "optional": true
+    },
+    "@types/node": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@types/geojson": "^7946.0.16",
-    "@types/node": "^24.0.13",
     "denque": "^2.1.0",
     "iconv-lite": "^0.6.3",
     "lru-cache": "^10.4.3"
