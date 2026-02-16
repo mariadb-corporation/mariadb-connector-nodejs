@@ -34,6 +34,68 @@ describe.concurrent('Pool event', () => {
     await pool.end();
   });
 
+  test('pool connection event provides promise-wrapped connection', async () => {
+    const pool = base.createPool({ connectionLimit: 1, minimumIdle: 1 });
+    await new Promise((resolve, reject) => {
+      pool.on('connection', (conn) => {
+        try {
+          assert.isTrue(conn !== undefined);
+          assert.equal(typeof conn.query, 'function');
+          assert.equal(typeof conn.execute, 'function');
+          assert.isTrue(conn.threadId > 0);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    await pool.end();
+  }, 5000);
+
+  test('pool connection event query works', async () => {
+    const pool = base.createPool({ connectionLimit: 1, minimumIdle: 1 });
+    const result = await new Promise((resolve, reject) => {
+      pool.on('connection', async (conn) => {
+        try {
+          const res = await conn.query('SELECT 1 as val');
+          resolve(res);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    assert.deepEqual(result, [{ val: 1 }]);
+    await pool.end();
+  }, 5000);
+
+  test('pool connection event error does not break pool', async () => {
+    const pool = base.createPool({ connectionLimit: 2, minimumIdle: 2 });
+    let connectionCount = 0;
+    pool.on('connection', () => {
+      connectionCount++;
+      throw new Error('user error in connection handler');
+    });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    assert.equal(connectionCount, 2);
+    const res = await pool.query('SELECT 1 as val');
+    assert.deepEqual(res, [{ val: 1 }]);
+    await pool.end();
+  }, 5000);
+
+  test('pool connection event no excess connections (issue #342)', async () => {
+    const pool = base.createPool({ connectionLimit: 3, minimumIdle: 3 });
+    let connectionCount = 0;
+    pool.on('connection', (conn) => {
+      connectionCount++;
+      conn.query('SET @k = NULL');
+    });
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    assert.equal(connectionCount, 3);
+    assert.equal(pool.totalConnections(), 3);
+    assert.equal(pool.idleConnections(), 3);
+    await pool.end();
+  }, 5000);
+
   test('pool connection enqueue', async () => {
     const pool = base.createPool({ connectionLimit: 2, acquireTimeout: 20000 });
     let enqueueNumber = 0;
