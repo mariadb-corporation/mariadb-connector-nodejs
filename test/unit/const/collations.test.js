@@ -38,7 +38,6 @@ describe.concurrent('collations', () => {
     assert.equal(collation.maxLength, 4);
   });
 
-
   test('fromCharsetAndName utf8mb4 with UCA1400_AI_CI', () => {
     const collation = Collations.fromCharsetAndName('utf8mb4', 'UCA1400_AI_CI');
     assert.isDefined(collation);
