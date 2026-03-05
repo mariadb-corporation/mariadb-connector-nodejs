@@ -21,9 +21,9 @@ import type {
   SqlImportOptions,
   ConnectionInfo,
   UserConnectionConfig
-} from './share.d.ts';
+} from './share';
 
-export * from './share.d.ts';
+export * from './share';
 
 export const version: string;
 
