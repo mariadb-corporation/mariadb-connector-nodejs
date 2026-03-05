@@ -18,7 +18,7 @@ describe('sql file import', () => {
     maxAllowedSize = Number(row[0].t);
   });
   afterAll(async () => {
-    await shareConn.end();
+    if (shareConn) await shareConn.end();
     shareConn = null;
   });
 
