@@ -1,6 +1,14 @@
 # Change Log
 
 
+## [3.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.2) (Mar 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.1...3.5.2)
+
+## Issues Fixed
+* CONJS-342 Resolved TypeScript compilation errors introduced in mariadb-connector-nodejs v3.5.1
+* CONJS-343 Fixed an issue where batch operations would hang when provided with empty array parameter values
+
+
 ## [3.5.1](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.1) (Feb 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.0-rc.0...3.5.1)
 
