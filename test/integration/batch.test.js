@@ -1575,7 +1575,9 @@ describe.sequential(
         if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) return skip();
 
         const conn = await createConnection({ bulk: true });
-        await conn.query('CREATE TEMPORARY TABLE empty_array_value(id int not null primary key auto_increment, id2 int)');
+        await conn.query(
+          'CREATE TEMPORARY TABLE empty_array_value(id int not null primary key auto_increment, id2 int)'
+        );
         await conn.batch('INSERT INTO `empty_array_value`(id2) values (?)', []);
         const res = await conn.query('select * from `empty_array_value`');
         assert.deepEqual(res, []);
