@@ -10,9 +10,8 @@ import Conf from '../conf.js';
 
 describe.concurrent('stored procedure', () => {
   let shareConn;
-  beforeAll(async ({ skip }) => {
+  beforeAll(async () => {
     shareConn = await createConnection(Conf.baseConfig);
-    if (shareConn.serverVersion().includes('maxScale-6.2.0')) return skip();
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtOutParam');
     await shareConn.query('DROP PROCEDURE IF EXISTS stmtSimple');
     await shareConn.query('DROP PROCEDURE IF EXISTS someProc');
