@@ -23,10 +23,16 @@ describe.concurrent('test socket', () => {
     if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return skip();
 
     const res = await shareConn.query('select @@version_compile_os,@@socket soc, @@named_pipe pipeEnable');
-    if (res[0].pipeEnable === 0) {
+    if (!res[0].pipeEnable || Number(res[0].pipeEnable) === 0) {
       return skip();
     }
-    const conn = await createConnection({ socketPath: '\\\\.\\pipe\\' + res[0].soc });
+    let conn;
+    try {
+      conn = await createConnection({ socketPath: '\\\\.\\pipe\\' + res[0].soc });
+    } catch (err) {
+      if (err.code === 'ENOENT') return skip();
+      throw err;
+    }
     await conn.connect();
     await conn.query('DO 1');
     await conn.end();
