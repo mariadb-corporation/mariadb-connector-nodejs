@@ -335,14 +335,14 @@ describe.concurrent('connection', () => {
 
   test('connection.destroy() when executing', async () => {
     const conn = await createConnection();
-    conn.query('SELECT 1');
-    conn.destroy();
+    conn.query('SELECT 1').catch((err) => {});
+    await conn.destroy();
   }, 10000);
 
   test('connection.close alias', async () => {
     const conn = await createConnection({ keepAliveDelay: 100 });
-    conn.query('SELECT 1');
-    conn.close();
+    conn.query('SELECT 1').catch((err) => {});
+    await conn.close();
   }, 10000);
 
   test('connection.destroy() during query execution', async ({ skip }) => {

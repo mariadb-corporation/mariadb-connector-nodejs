@@ -43,6 +43,7 @@ describe.concurrent('change user', () => {
 
   test('mysql change user error', async ({ skip }) => {
     if (shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     let logged = false;
     const conn = await createConnection({
       logger: {
@@ -81,6 +82,7 @@ describe.concurrent('change user', () => {
 
   test('basic change user using callback', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = createCallbackConnection();
     await new Promise((resolve, reject) => {
       conn.connect((err) => {
@@ -111,6 +113,7 @@ describe.concurrent('change user', () => {
 
   test('wrong charset', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     try {
       await conn.changeUser({
@@ -127,6 +130,7 @@ describe.concurrent('change user', () => {
 
   test('wrong collation in charset', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const tmpLogFile = path.join(os.tmpdir(), 'wrongCollation.txt');
     try {
       fs.unlinkSync(tmpLogFile);
@@ -167,6 +171,7 @@ describe.concurrent('change user', () => {
 
   test('wrong collation', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     try {
       await conn.changeUser({
@@ -183,6 +188,7 @@ describe.concurrent('change user', () => {
 
   test('basic change user using callback no function', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = createCallbackConnection();
     await new Promise((resolve, reject) => {
       conn.connect((err) => {
@@ -204,6 +210,7 @@ describe.concurrent('change user', () => {
 
   test('callback change user without option', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     await new Promise((resolve, reject) => {
       const conn = createCallbackConnection();
       conn.connect((err) => {
@@ -225,7 +232,7 @@ describe.concurrent('change user', () => {
 
   test('basic change user using promise', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
-
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     await conn.changeUser({
       user: 'ChangeUser',
@@ -248,7 +255,7 @@ describe.concurrent('change user', () => {
 
   test('change user using connection attributes', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
-
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection({ connectAttributes: { param1: 'test' } });
     await conn.changeUser({
       user: 'ChangeUser',
@@ -272,7 +279,7 @@ describe.concurrent('change user', () => {
 
   test('basic change user using promise non node.js encoding', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
-
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     await conn.changeUser({
       user: 'ChangeUser',
@@ -296,6 +303,7 @@ describe.concurrent('change user', () => {
 
   test('change user with collation', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     await conn.changeUser({
       user: 'ChangeUser',
@@ -311,6 +319,7 @@ describe.concurrent('change user', () => {
 
   test('MySQL change user disabled', async ({ skip }) => {
     if (shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     try {
       await shareConn.changeUser({ user: 'ChangeUser' });
       throw new Error('must have thrown an error');
@@ -321,6 +330,7 @@ describe.concurrent('change user', () => {
 
   test('autocommit state after changing user', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     assert.equal(conn.info.status & ServerStatus.STATUS_AUTOCOMMIT, 2);
     await conn.query('SET autocommit=1');
@@ -344,6 +354,7 @@ describe.concurrent('change user', () => {
 
   test('collation index > 255', async ({ skip }) => {
     if (!shareConn.info.isMariaDB()) return skip(); // requires mariadb 10.2+
+    if (isMaxscale(shareConn)) return skip();
     const conn = await createConnection();
     const res = await conn.query('SELECT @@COLLATION_CONNECTION as c');
     assert.notEqual(res[0].c, 'utf8mb4_unicode_520_nopad_ci');

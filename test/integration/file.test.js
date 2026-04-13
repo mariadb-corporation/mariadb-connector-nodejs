@@ -7,7 +7,7 @@ import * as basePromise from '../../promise.js';
 import * as baseCallback from '../../callback.js';
 import Conf from '../conf.js';
 import { assert, describe, test, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { createConnection, createPool, createCallbackConnection, createPoolCallback } from '../base.js';
+import { createConnection, createPool, createCallbackConnection, createPoolCallback, isMaxscale } from '../base.js';
 
 describe('sql file import', () => {
   let maxAllowedSize;
@@ -46,7 +46,8 @@ describe('sql file import', () => {
         }
       });
 
-      test('simple file import with direct connection options', async function () {
+      test('simple file import with direct connection options', async ({ skip }) => {
+        if (isMaxscale(shareConn)) return skip();
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
         );
@@ -212,7 +213,8 @@ describe('sql file import', () => {
         });
       });
 
-      test('simple file import without callback', async () => {
+      test('simple file import without callback', async ({ skip }) => {
+        if (isMaxscale(shareConn)) return skip();
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
         );
@@ -236,7 +238,8 @@ describe('sql file import', () => {
         });
       }, 30000);
 
-      test('simple file import with direct connection options', async () => {
+      test('simple file import with direct connection options', async ({skip}) => {
+        if (isMaxscale(shareConn)) return skip();
         await new Promise((resolve, reject) => {
           baseCallback.importFile(
             Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' }),

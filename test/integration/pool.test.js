@@ -580,6 +580,7 @@ describe.concurrent('Pool', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
+        console.log('error: ' + err);
         assert.isTrue(err.message.includes('Error during pool initialization'));
         assert.isNotNull(err.cause);
         assert.isTrue(

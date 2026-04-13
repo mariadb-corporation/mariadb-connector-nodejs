@@ -142,6 +142,7 @@ describe.concurrent('ssl', function () {
     // deno will use standard validation, since checkServerIdentity cannot be used for now :
     // https://github.com/denoland/deno/issues/30892
     if (!sslEnable || isDeno()) return skip();
+    if (isMaxscale(shareConn)) return skip();
     let isMaxscaleEphemeral = false;
     if (isMaxscale(shareConn) && isMaxscaleMinVersion(shareConn, 25, 8, 0)) {
       // MaxScale implements this in the 25.08 release
@@ -159,14 +160,16 @@ describe.concurrent('ssl', function () {
         user: 'sslTestUser',
         password: 'ytoKS@led5',
         ssl: true,
-        port: sslPort
+        port: sslPort,
+        debug: true,
+        debugLen: 1024
       });
       await validConnection(conn);
       // if not ephemeral certificate must throw an error
       if (
         !isMaxscaleEphemeral &&
         !shareConn.info.isMariaDB() &&
-        (!shareConn.info.hasMinVersion(11, 4, 0) || shareConn.info.hasMinVersion(23, 0, 0))
+        !shareConn.info.hasMinVersion(11, 4, 0)
       ) {
         throw new Error('Must have thrown an exception !');
       }

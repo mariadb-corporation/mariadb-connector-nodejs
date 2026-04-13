@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import Conf from '../conf.js';
 import ColumnDef from '../../lib/cmd/column-definition.js';
-import { createConnection, getEnv, utf8Collation } from '../base.js';
+import { createConnection, getEnv, isMaxscale, utf8Collation } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 
 const str = utf8Collation() ? "abcdefghijkflmn'opqrtuvwx🤘💪" : 'abcdefghijkflmn\'opqrtuvwxyz"';
@@ -1429,6 +1429,7 @@ describe.sequential(
 
       test('technical option fullResult', async ({ skip }) => {
         if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) return skip();
+
         await shareConn.query('DROP TABLE IF EXISTS bufLength');
         await shareConn.query('create table bufLength (val varchar(32))');
         await shareConn.query('FLUSH TABLES');
@@ -1455,6 +1456,8 @@ describe.sequential(
         assert.deepEqual(res, { affectedRows: 4, insertId: 0n, warningStatus: 0 });
         await conn.end();
 
+        const supportBulkUnitResults = (shareConn.info.clientCapabilities & Capabilities.BULK_UNIT_RESULTS) > 0n;
+
         const connBulk = await createConnection({ bulk: true });
         res = await connBulk.batch('INSERT INTO bufLength VALUES (?)', [
           ['abc'],
@@ -1462,7 +1465,7 @@ describe.sequential(
           [1],
           [new Date('2001-12-31 23:59:58')]
         ]);
-        if (shareConn.info.hasMinVersion(11, 5, 1) || !shareConn.info.isMariaDB()) {
+        if (supportBulkUnitResults || !shareConn.info.isMariaDB()) {
           assert.deepEqual(res, [
             { affectedRows: 1, insertId: 0n, warningStatus: 0 },
             { affectedRows: 1, insertId: 0n, warningStatus: 0 },

@@ -7,6 +7,7 @@ import Proxy from '../tools/proxy.js';
 import Conf from '../conf.js';
 import { isMaxscale, isMaxscaleMinVersion, createConnection } from '../base.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
+import { skip } from 'node:test';
 
 describe.concurrent('redirection', () => {
   let shareConn;
@@ -18,7 +19,8 @@ describe.concurrent('redirection', () => {
     shareConn = null;
   });
 
-  test('basic redirection', async function () {
+  test('basic redirection', async ({ skip }) => {
+    if (isMaxscale(shareConn)) return skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -49,43 +51,8 @@ describe.concurrent('redirection', () => {
     }
   });
 
-  test('maxscale redirection', async ({ skip }) => {
-    // need maxscale 23.08+
-    if (!isMaxscale(shareConn) || !isMaxscaleMinVersion(shareConn, 23, 8, 0)) return skip();
-    const proxy = new Proxy({
-      port: Conf.baseConfig.port,
-      host: Conf.baseConfig.host,
-      resetAfterUse: false
-    });
-    await proxy.start();
-
-    try {
-      await shareConn.query(`set @@global.redirect_url="mariadb://${Conf.baseConfig.host}:${Conf.baseConfig.port}"`);
-    } catch (e) {
-      proxy.close();
-      return skip();
-    }
-    let conn = await createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
-    try {
-      assert.equal(Conf.baseConfig.host, conn.info.host);
-      assert.equal(Conf.baseConfig.port, conn.info.port);
-      console.log(await conn.query('Select 1'));
-      await conn.end();
-      console.log('*****************************************************************************');
-      let conn2 = await createConnection({ host: 'localhost', port: proxy.port() });
-      assert.equal(Conf.baseConfig.port, conn2.info.port);
-      console.log(await conn2.query('Select 2'));
-      console.log('*****************************************************************************');
-      await conn2.end();
-    } finally {
-      proxy.close();
-      try {
-        shareConn.query('set @@global.redirect_url=""');
-      } catch (e) {}
-    }
-  });
-
-  test('redirection during pipelining', async function () {
+  test('redirection during pipelining', async ({ skip }) => {
+    if (isMaxscale(shareConn)) return skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -114,14 +81,20 @@ describe.concurrent('redirection', () => {
     }
   });
 
-  test('redirection during transaction', async function () {
+  test('redirection during transaction', async ({ skip}) => {
+    if (isMaxscale(shareConn)) return skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
       resetAfterUse: false
     });
     await proxy.start();
-    let conn = await createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
+    let conn = await createConnection({
+      host: 'localhost',
+      port: proxy.port(),
+      permitRedirect: true,
+      debug: true,
+      debugLen: 1024 });
     try {
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;

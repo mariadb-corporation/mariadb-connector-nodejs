@@ -21,7 +21,8 @@ export function isMaxscale(shareConn) {
     globalThis.maxscaleVersion = shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
-      return getEnv('DB_TYPE') === 'maxscale' || getEnv('srv') === 'maxscale';
+      let maxscaletag = getEnv('maxscale-tag');
+      return maxscaletag != null && maxscaletag != '';
     }
   }
   return true;

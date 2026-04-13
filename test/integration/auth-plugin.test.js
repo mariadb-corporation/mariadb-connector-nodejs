@@ -652,6 +652,17 @@ describe.concurrent('authentication plugin', () => {
     } catch (e) {
       strictPasswordValidation = false;
     }
+    if (!strictPasswordValidation) {
+      try {
+        const res = await shareConn.query(
+          "SELECT * FROM information_schema.PLUGINS WHERE PLUGIN_NAME = 'simple_password_check' " +
+            "AND PLUGIN_STATUS = 'ACTIVE'"
+        );
+        if (res.length > 0) strictPasswordValidation = true;
+      } catch (e) {
+        // ignore
+      }
+    }
 
     await shareConn.query('drop user verifParsec' + getHostSuffix()).catch(() => {});
     await shareConn.query(
