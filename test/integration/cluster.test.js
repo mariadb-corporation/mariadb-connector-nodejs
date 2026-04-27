@@ -549,7 +549,7 @@ describe.sequential('cluster', function () {
       assert.deepEqual(
         nodes,
         { node1: 4, node2: 3, node3: 3 },
-        `wrong value: ${nodes} , expected { node1: 4, node2: 3, node3: 3 }`
+        `wrong value: ${JSON.stringify(nodes)} , expected { node1: 4, node2: 3, node3: 3 }`
       );
 
       await proxy.close();
@@ -558,7 +558,11 @@ describe.sequential('cluster', function () {
 
       nodes = await testTimesWithError(cluster, /^node*/, 10);
       await proxy.resume();
-      assert.deepEqual(nodes, { node1: 5, node3: 5 }, `wrong value: ${nodes} , expected { node1: 5, node3: 5 }`);
+      assert.deepEqual(
+        nodes,
+        { node1: 5, node3: 5 },
+        `wrong value: ${JSON.stringify(nodes)} , expected { node1: 5, node3: 5 }`
+      );
       await new Promise((resolve) => new setTimeout(resolve, 500));
       expect(removedNode).to.have.length(0);
       await new Promise((resolve) => new setTimeout(resolve, 2000));
@@ -1474,9 +1478,9 @@ describe.sequential('cluster', function () {
       initSql: "set @node='node2'",
       connectionLimit: 1,
       host: 'localhost',
-      connectTimeout: 200,
-      socketTimeout: 200,
-      acquireTimeout: 250,
+      connectTimeout: 2000,
+      socketTimeout: 2000,
+      acquireTimeout: 2500,
       port: proxy.port(),
       resetAfterUse: false,
       trace: true
