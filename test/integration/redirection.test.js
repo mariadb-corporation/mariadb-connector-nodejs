@@ -81,7 +81,7 @@ describe.concurrent('redirection', () => {
     }
   });
 
-  test('redirection during transaction', async ({ skip}) => {
+  test('redirection during transaction', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
@@ -94,7 +94,8 @@ describe.concurrent('redirection', () => {
       port: proxy.port(),
       permitRedirect: true,
       debug: true,
-      debugLen: 1024 });
+      debugLen: 1024
+    });
     try {
       assert.equal(proxy.port(), conn.info.port);
       let permitRedirection = true;
