@@ -7,7 +7,7 @@ import Conf from '../conf.js';
 import * as basePromise from '../../promise.js';
 import * as baseCallback from '../../callback.js';
 import Proxy from '../tools/proxy.js';
-import { createConnection, isDeno, isMaxscale } from '../base.js';
+import { createConnection, isDeno, isLocalDb, isMaxscale } from '../base.js';
 import { assert, expect, describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 
 describe.sequential('cluster', function () {
@@ -535,8 +535,7 @@ describe.sequential('cluster', function () {
 
     test('reusing node after timeout', async ({ skip }) => {
       // until https://github.com/denoland/deno/issues/30886 for deno
-      if (isDeno()) return skip();
-
+      if (isDeno() || isMaxscale(shareConn)) return skip();
       const cl = await get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
       const proxy = cl.proxy;
@@ -1223,7 +1222,7 @@ describe.sequential('cluster', function () {
 
     test('reusing node after timeout', async ({ skip }) => {
       // until https://github.com/denoland/deno/issues/30886 for deno
-      if (isDeno()) return skip();
+      if (isDeno() || isMaxscale(shareConn)) return skip();
 
       await new Promise((resolve, reject) => {
         get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then((cl) => {
