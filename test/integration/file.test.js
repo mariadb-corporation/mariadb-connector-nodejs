@@ -238,7 +238,7 @@ describe('sql file import', () => {
         });
       }, 30000);
 
-      test('simple file import with direct connection options', async ({skip}) => {
+      test('simple file import with direct connection options', async ({ skip }) => {
         if (isMaxscale(shareConn)) return skip();
         await new Promise((resolve, reject) => {
           baseCallback.importFile(

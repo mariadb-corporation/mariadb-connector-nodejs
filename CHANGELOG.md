@@ -1,6 +1,20 @@
 # Change Log
 
 
+## [3.5.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.3) (May 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.2...3.5.3)
+
+## Notable changes
+* Minimum supported Node.js version is now 20 (was 18; Node 18 went EOL in April 2025)
+
+## Issues Fixed
+* CONJS-344 Restore dual ESM/CJS support after the 3.5 ESM migration (#346):
+  * TypeScript types now compile under `moduleResolution: "Node16" / "NodeNext" / "Bundler"` — fixes TS2846 / TS2834 reported in 3.5.1 and 3.5.2
+  * Ship paired `.d.cts` declarations for the `require` condition
+  * Ship a real CJS bundle in `dist/` so `require('mariadb')` works on Node 20+ without `--experimental-require-module` or `ExperimentalWarning`
+  * Restore the default ESM export, so `import mariadb from 'mariadb'` works again (matches 3.4.x behavior)
+
+
 ## [3.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.2) (Mar 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.1...3.5.2)
 

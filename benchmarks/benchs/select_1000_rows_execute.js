@@ -4,9 +4,9 @@
 export const title = 'select 1000 rows of CHAR(32) - BINARY';
 export const displaySql = 'select * from 1000 rows (int + string(32))';
 export const requireExecute = true;
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   await conn.query('SELECT * FROM 1000rows');
-  deferred.resolve();
+  return;
 };
 export const initFct = function (conn) {
   conn.query('DROP TABLE IF EXISTS 1000rows');

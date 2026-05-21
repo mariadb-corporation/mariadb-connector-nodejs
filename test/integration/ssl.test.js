@@ -166,11 +166,7 @@ describe.concurrent('ssl', function () {
       });
       await validConnection(conn);
       // if not ephemeral certificate must throw an error
-      if (
-        !isMaxscaleEphemeral &&
-        !shareConn.info.isMariaDB() &&
-        !shareConn.info.hasMinVersion(11, 4, 0)
-      ) {
+      if (!isMaxscaleEphemeral && !shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(11, 4, 0)) {
         throw new Error('Must have thrown an exception !');
       }
     } finally {

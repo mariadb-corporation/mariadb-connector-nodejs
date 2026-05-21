@@ -15,7 +15,7 @@
 
 MariaDB and MySQL client, 100% JavaScript, with TypeScript definition, with the Promise API, distributed under the LGPL license version 2.1 or later (LGPL-2.1-or-later)
 
-Since 3.5, this requires node.js 18 or later. 
+Since 3.5.3, this requires Node.js 20 or later.
 
 ## Documentation
 
@@ -76,33 +76,28 @@ For more information, see the [Batch](https://mariadb.com/docs/connectors/mariad
 
 ## Benchmarks
 
-MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including:
+MariaDB provides benchmarks comparing the Connector with other Node.js MariaDB/MySQL clients, including [`mysql`](https://www.npmjs.com/package/mysql) (via [`promise-mysql`](https://www.npmjs.com/package/promise-mysql)) and [`mysql2`](https://www.npmjs.com/package/mysql2).
 
-* [`promise-mysql`](https://www.npmjs.com/package/promise-mysql) version 5.2.0 + [`mysql`](https://www.npmjs.com/package/mysql) version 2.18.1
-* [`mysql2`](https://www.npmjs.com/package/mysql2) version 3.1.0
-
-See the [Benchmarks](./documentation/benchmarks.md) page for multiple results.
+See the [Benchmarks](./documentation/benchmarks.md) page for the full list of results and how to run them.
 
 #### query
 
 ```
 select 100 int
-            mysql :  2,738.7 ops/s ± 1.3% 
-           mysql2 :  2,404.9 ops/s ± 1.3%  (  -12.2% )
-          mariadb :  5,650.8 ops/s ± 1.4%  ( +106.3% )
+          mariadb : 10,266.8 ops/s ± 0.2%  (  +87.6% )
+            mysql :  5,472.4 ops/s ± 0.2%
+           mysql2 :  4,783.5 ops/s ± 0.3%  (  -12.6% )
 ```
-![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=2739&data2=2405&data3=5651)
+![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5472&data2=4784&data3=10267)
 
 #### execute
 
-##  select 100 int - BINARY
-
 ```
 select 100 int - BINARY
-           mysql2 :  2,473.4 ops/s ± 1.3% 
-          mariadb :   10,533 ops/s ± 1.7%  ( +325.9% )
+          mariadb : 10,605.8 ops/s ± 0.2%  ( +124.1% )
+           mysql2 :  4,731.8 ops/s ± 0.3%
 ```
-![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=2473&data2=10533)
+![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=4732&data2=10606)
 
 
 ## Quick Start

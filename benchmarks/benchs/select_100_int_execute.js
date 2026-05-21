@@ -1,9 +1,9 @@
 export const title = 'select 100 int - BINARY';
 export const displaySql = 'select * FROM test100';
 export const requireExecute = true;
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   await conn.query('SELECT * FROM test100');
-  deferred.resolve();
+  return;
 };
 export const initFct = async function (conn) {
   await conn.query('DROP TABLE IF EXISTS test100');

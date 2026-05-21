@@ -1,7 +1,7 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB Corporation Ab
 
-import Benchmark from 'benchmark';
+import { Bench } from 'tinybench';
 import chalk from 'chalk';
 
 //************************************************
@@ -28,7 +28,7 @@ const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMP
 //************************************************
 // bench suite
 //************************************************
-const createBenchSuite = async (bench) => {
+const runBenchSuite = async (bench) => {
   const reportData = [];
   const sources = await loadsources(bench.requiresPool, bench.requireExecute, bench.mariadbOnly);
   if (bench.initFct) {
@@ -42,47 +42,46 @@ const createBenchSuite = async (bench) => {
   );
   console.log('');
 
-  const suite = new Benchmark.Suite('test');
-  suite.add('warmup', {
-    defer: true,
-    fn: bench.benchFct.bind(null, sources.mariadb, 'mariadb'),
-    minSamples: minimumSamples
+  // Warmup phase: run minimumSamples queries against mariadb before the timed run.
+  // This warms the DB caches, the connection state and V8's JIT before any task is timed.
+  // Same purpose as the explicit 'warmup' task we had with benchmark.js — it's not just
+  // for the mariadb numbers, the other drivers benefit from a hot process too.
+  for (let i = 0; i < minimumSamples; i++) {
+    await bench.benchFct(sources.mariadb, 'mariadb');
+  }
+
+  // tinybench: a task runs until BOTH `iterations` and `time` minimums are reached.
+  // We want each task to take a meaningful amount of wall-clock time, not just N iterations.
+  const suite = new Bench({
+    iterations: minimumSamples,
+    time: 2000 // ms — keeps each task running at least 2 s for stable measurements
   });
 
   for (const [type, conn] of Object.entries(sources)) {
-    suite.add({
-      name: type,
-      defer: true,
-      fn: bench.benchFct.bind(null, conn, type),
-      onComplete: conn.end.bind(conn),
-      minSamples: minimumSamples
+    suite.add(type, bench.benchFct.bind(null, conn, type));
+  }
+
+  await suite.run();
+
+  // close connections after the run completes
+  await Promise.all(Object.values(sources).map((conn) => conn.end()));
+
+  for (const task of suite.tasks) {
+    if (!task.result || task.result.error) continue;
+    reportData.push({
+      type: task.name,
+      iteration: task.result.throughput.mean, // ops per second
+      variation: task.result.throughput.rme // relative margin of error (%)
     });
   }
 
-  suite.on('cycle', function (event) {
-    // console.log(chalk.grey('    ' + String(event.target)));
-    const type = event.target.name;
-    const iteration = 1 / event.target.times.period;
-    const variation = event.target.stats.rme;
-    if (type !== 'warmup') {
-      reportData.push({
-        type: type,
-        iteration: iteration,
-        variation: variation
-      });
-    }
-  });
+  displayReport(reportData, bench.title, bench.displaySql);
 
-  suite.on('complete', async function () {
-    displayReport(reportData, bench.title, bench.displaySql);
-    if (bench.end) {
-      const conn = await mariadb.createConnection(config);
-      await bench.end(conn);
-      conn.end();
-    }
-  });
-
-  return suite;
+  if (bench.end) {
+    const conn = await mariadb.createConnection(config);
+    await bench.end(conn);
+    conn.end();
+  }
 };
 
 //************************************************
@@ -132,4 +131,4 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   return sources;
 };
 
-export default createBenchSuite;
+export default runBenchSuite;

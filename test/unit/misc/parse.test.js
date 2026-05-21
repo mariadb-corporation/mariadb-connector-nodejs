@@ -18,6 +18,14 @@ describe.concurrent('parse', () => {
       const res = Parse.splitQuery(Buffer.from('select ? -- comment ? \n , ?', 'utf8'));
       assert.deepEqual(res, [7, 8, 26, 27]);
     });
+    test('-- not a comment without whitespace (2--1 expression)', () => {
+      const res = Parse.splitQuery(Buffer.from('select 2--1, ?', 'utf8'));
+      assert.deepEqual(res, [13, 14]);
+    });
+    test('/* ... */* does not restart comment', () => {
+      const res = Parse.splitQuery(Buffer.from('select /* comment */* from t where id=?', 'utf8'));
+      assert.deepEqual(res, [38, 39]);
+    });
   });
 
   describe.concurrent('split queries', () => {
