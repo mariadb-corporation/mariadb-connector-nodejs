@@ -74,3 +74,13 @@ export function importFile(opts, callback) {
     cb(err);
   }
 }
+
+export default {
+  version,
+  SqlError,
+  defaultOptions,
+  createConnection,
+  createPool,
+  createPoolCluster,
+  importFile
+};

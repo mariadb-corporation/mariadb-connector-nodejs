@@ -71,3 +71,13 @@ export function importFile(opts) {
     return Promise.reject(err);
   }
 }
+
+export default {
+  version,
+  SqlError,
+  defaultOptions,
+  createConnection,
+  createPool,
+  createPoolCluster,
+  importFile
+};
