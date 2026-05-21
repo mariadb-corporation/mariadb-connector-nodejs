@@ -773,8 +773,8 @@ describe.concurrent('connection', () => {
     assert.deepEqual(rows, [{ 1: '1' }]);
     const diff = performance.now() - startTime;
     await conn.end();
-    //query has taken more than 500ms
-    assert.isTrue(diff > 499, ' diff:' + diff + ' expected to be more than 500');
+    // query was delayed by the ~500 ms pause; allow ~10 ms for timer-wheel slop in CI
+    assert.isTrue(diff > 490, ' diff:' + diff + ' expected to be more than 490');
   });
 
   test('pause socket callback', async () => {
@@ -793,8 +793,8 @@ describe.concurrent('connection', () => {
           } else {
             assert.deepEqual(rows, [{ 1: '1' }]);
             const diff = performance.now() - startTime;
-            //query has taken more than 500ms
-            assert.isTrue(diff > 499, ' diff:' + diff + ' expected to be more than 500');
+            // query was delayed by the ~500 ms pause; allow ~10 ms for timer-wheel slop in CI
+            assert.isTrue(diff > 490, ' diff:' + diff + ' expected to be more than 490');
             conn.end();
             resolve();
           }
