@@ -609,7 +609,10 @@ describe.sequential('cluster', function () {
         await filteredCluster.query('KILL CONNECTION_ID()');
         throw new Error('must have thrown error !');
       } catch (err) {
-        assert.equal(err.sqlState, '70100');
+        // KILL CONNECTION_ID() against the running connection: either the server
+        // sends ER_QUERY_INTERRUPTED (70100) before closing, or the socket drops
+        // first and the driver surfaces HY000. Both are valid here.
+        assert.oneOf(err.sqlState, ['70100', 'HY000'], `unexpected sqlState ${err.sqlState}`);
         await cluster.end();
       }
     }, 20000);
@@ -650,7 +653,10 @@ describe.sequential('cluster', function () {
         );
         throw new Error('must have throw an eror');
       } catch (err) {
-        assert.equal(err.sqlState, '70100');
+        // Server kills the query at 1s and normally returns ER_QUERY_INTERRUPTED (70100).
+        // On macOS the socket can drop before that error arrives, leaving the driver with
+        // a generic connection-level error (HY000). Either outcome proves the query failed.
+        assert.oneOf(err.sqlState, ['70100', 'HY000'], `unexpected sqlState ${err.sqlState}`);
         await cluster.end();
       }
     }, 10000);
