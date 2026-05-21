@@ -14,14 +14,14 @@ sqlTable += ', PRIMARY KEY (id))';
 
 export const title = 'insert 10 Dates';
 export const displaySql = 'INSERT INTO perfTestText VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?)';
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   const params = [];
   for (let i = 0; i < 10; i++) {
     params.push(new Date());
   }
 
   const rows = await conn.query(sqlInsert, params);
-  deferred.resolve(rows);
+  return rows;
 };
 export const initFct = async function (conn) {
   try {

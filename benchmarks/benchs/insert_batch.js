@@ -18,7 +18,7 @@ const sqlInsert = 'INSERT INTO perfTestTextBatch(t0) VALUES (?)';
 export const title = "100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)";
 export const displaySql = 'INSERT INTO perfTestTextBatch VALUES (?)';
 const iterations = 100;
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   const params = [randomString(100)];
   if (type !== 'mariadb') {
     //other drivers don't have bulk method
@@ -27,7 +27,7 @@ export const benchFct = async function (conn, type, deferred) {
       queries.push(conn.query(sqlInsert, params));
     }
     const res = await Promise.all(queries);
-    deferred.resolve(res);
+    return res;
   } else {
     //use batch capability
     const totalParams = new Array(iterations);
@@ -35,7 +35,7 @@ export const benchFct = async function (conn, type, deferred) {
       totalParams[i] = params;
     }
     const rows = await conn.batch(sqlInsert, totalParams);
-    deferred.resolve(rows);
+    return rows;
   }
 };
 

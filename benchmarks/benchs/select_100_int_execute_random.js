@@ -5,9 +5,9 @@ export const title = 'select 100 int no cache - BINARY';
 export const displaySql = 'select * FROM test100';
 export const requireExecute = true;
 let i = 0;
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   const res = await conn.execute(`select ${i++} as a, t.* FROM test99 t`);
-  deferred.resolve(res);
+  return res;
 };
 export const initFct = async function (conn) {
   await conn.query('DROP TABLE IF EXISTS test99');

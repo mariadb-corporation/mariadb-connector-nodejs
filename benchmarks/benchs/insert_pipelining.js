@@ -16,14 +16,14 @@ const sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 
 export const title = '3 * insert 100 characters pipelining';
 export const displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
-export const benchFct = async function (conn, type, deferred) {
+export const benchFct = async function (conn, type) {
   const params = [randomString(100)];
   conn.query(sqlInsert, params);
   conn.query(sqlInsert, params);
   const rows = await conn.query(sqlInsert, params);
   // let val = Array.isArray(rows) ? rows[0] : rows;
   // assert.equal(1, val.info ? val.info.affectedRows : val.affectedRows);
-  deferred.resolve(rows);
+  return rows;
 };
 export const initFct = async function (conn) {
   try {
