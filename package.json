@@ -36,7 +36,7 @@
     "build:cjs": "esbuild promise.js --bundle --minify --platform=node --format=cjs --target=node18 --external:denque --external:iconv-lite --external:lru-cache --outfile=dist/promise.cjs && esbuild callback.js --bundle --minify --platform=node --format=cjs --target=node18 --external:denque --external:iconv-lite --external:lru-cache --outfile=dist/callback.cjs",
     "test": "npm run test:types-prettier && npm run test:prettier && npm run test:tsc && npm run test:types && npm run test:lint && npm run test:imports && npm run test:base",
     "test:base": "vitest --no-file-parallelism --isolate --reporter=verbose run",
-    "test:imports": "npm run build && node test/import/cjs.test.cjs && node test/import/esm.test.mjs && npm run test:imports:tsc",
+    "test:imports": "npm run build && node test/import/cjs.cjs && node test/import/esm.mjs && npm run test:imports:tsc",
     "test:imports:tsc": "tsc --noEmit -p test/import/tsc/cjs-node16.tsconfig.json && tsc --noEmit -p test/import/tsc/esm-nodenext.tsconfig.json && tsc --noEmit -p test/import/tsc/bundler.tsconfig.json",
     "test:lint": "eslint \"*.js\" \"{tools,lib,test,benchmarks}/**/*.js\"",
     "test:tsc": "tsc --noEmit -p types/tsconfig.json",
