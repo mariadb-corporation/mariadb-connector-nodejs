@@ -1,7 +1,7 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
-// Type definitions for mariadb
+// Type definitions for mariadb (CommonJS version)
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
 // Definitions by: Diego Dupin <https://github.com/rusher>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -20,10 +20,10 @@ import type {
   SqlImportOptions,
   ConnectionInfo,
   UserConnectionConfig
-} from './share.js';
-import { defaultOptions, SqlError } from './share.js';
+} from './share.cjs';
+import { defaultOptions, SqlError } from './share.cjs';
 
-export * from './share.js';
+export * from './share.cjs';
 
 export const version: string;
 

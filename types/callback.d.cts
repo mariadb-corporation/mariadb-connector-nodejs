@@ -2,13 +2,13 @@
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 /*
- * Callback-based API for mariadb-connector-nodejs
- * This file mirrors the structure of the promise-based API in index.d.ts,
+ * Callback-based API for mariadb-connector-nodejs (CommonJS version)
+ * This file mirrors the structure of the promise-based API in index.d.cts,
  * but all async methods use Node.js-style callbacks as the last argument.
  *
  * Callback signature: (err: SqlError | null, result?: T, meta?: any) => void
  *
- * All types are reused from share.d.ts where possible.
+ * All types are reused from share.d.cts where possible.
  */
 
 import { Readable } from 'node:stream';
@@ -27,9 +27,9 @@ import {
   ConnectionInfo,
   UserConnectionConfig,
   defaultOptions
-} from './share.js';
+} from './share.cjs';
 
-export * from './share.js';
+export * from './share.cjs';
 
 export const version: string;
 

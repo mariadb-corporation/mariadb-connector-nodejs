@@ -80,6 +80,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run ESM/CJS import smoke tests
+        if: ${{ !matrix.deno }}
+        run: npm run test:imports
+
       - name: Run Tests node
         if: ${{ !matrix.deno }}
         run: npm run coverage:test
