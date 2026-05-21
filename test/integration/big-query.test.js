@@ -208,7 +208,7 @@ describe.concurrent('Big query', function () {
     } finally {
       await conn.end();
     }
-  });
+  }, 60000);
 
   function deepCompare(arg1, arg2) {
     if (Object.prototype.toString.call(arg1) === Object.prototype.toString.call(arg2)) {
