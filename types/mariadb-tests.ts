@@ -18,7 +18,9 @@ import {
   createPoolCluster,
   createPool,
   createConnection,
-  StreamCallback
+  StreamCallback,
+  RowsWithMeta,
+  WithMeta
 } from '..';
 import { Stream } from 'node:stream';
 import { createReadStream } from 'node:fs';
@@ -347,6 +349,59 @@ async function metaAsArray(): Promise<void> {
   }
 }
 
+// Demonstrates the `RowsWithMeta<T>` and `WithMeta<T>` helper types added to
+// avoid users having to spell the meta-tuple shape by hand.
+async function metaTypeHelpers(): Promise<void> {
+  type MyRow = { upper: string; lower: string };
+
+  // Default mode — `.meta` attached to the rows array
+  const conn = await createConnection({});
+  const rows = await conn.query<RowsWithMeta<MyRow>>(`SELECT 'upper' as upper, 'lower' as lower`);
+  const firstUpper: string = rows[0].upper;
+  const meta: FieldInfo[] = rows.meta;
+  if (firstUpper !== 'upper' || meta.length === 0) {
+    throw new Error('unexpected');
+  }
+
+  // metaAsArray mode — per-query
+  const tuple = await conn.query<WithMeta<MyRow[]>>({
+    sql: `SELECT 'upper' as upper, 'lower' as lower`,
+    metaAsArray: true
+  });
+  const [tupleRows, tupleMeta]: [MyRow[], FieldInfo[]] = tuple;
+  if (tupleRows[0].upper !== 'upper' || tupleMeta.length === 0) {
+    throw new Error('unexpected');
+  }
+
+  // metaAsArray mode — connection-level setting; same helper works.
+  const conn2 = await createConnection({ metaAsArray: true });
+  const [rows2, meta2] = await conn2.query<WithMeta<MyRow[]>>(`SELECT 'upper' as upper, 'lower' as lower`);
+  if (rows2[0].lower !== 'lower' || meta2.length === 0) {
+    throw new Error('unexpected');
+  }
+
+  // DML — T is UpsertResult, not an array
+  const [upsert, upsertMeta] = await conn.query<WithMeta<UpsertResult>>({
+    sql: `UPDATE t SET v = 1`,
+    metaAsArray: true
+  });
+  const affected: number = upsert.affectedRows;
+  if (affected < 0 || upsertMeta.length < 0) {
+    throw new Error('unexpected');
+  }
+
+  // Legacy pattern (pre-wrapped tuple) must still type-check — `WithMeta`
+  // detects the existing tuple shape and leaves it untouched.
+  const legacy = await conn.query<WithMeta<[MyRow[], FieldInfo[]]>>({
+    sql: `SELECT 'upper' as upper, 'lower' as lower`,
+    metaAsArray: true
+  });
+  const [legacyRows, legacyMeta]: [MyRow[], FieldInfo[]] = legacy;
+  if (legacyRows[0].upper !== 'upper' || legacyMeta.length < 0) {
+    throw new Error('unexpected');
+  }
+}
+
 async function testPool(): Promise<void> {
   let pool;
 
@@ -521,6 +576,7 @@ async function runTests(): Promise<void> {
     await testPoolCluster();
     await testRowsAsArray();
     await metaAsArray();
+    await metaTypeHelpers();
     await testTypedValues();
     await testTypedValuesPool();
 

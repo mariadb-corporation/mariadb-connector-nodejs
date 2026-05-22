@@ -286,6 +286,33 @@ export interface UpsertResult {
   warningStatus: number;
 }
 
+/**
+ * Helper type for the default result shape of `query`/`execute`: a row array
+ * with a non-enumerable `meta: FieldInfo[]` property attached.
+ *
+ * @example
+ *   const rows = await conn.query<RowsWithMeta<MyRow>>('SELECT ...');
+ *   rows.meta; // FieldInfo[]
+ */
+export type RowsWithMeta<T = any> = T[] & { meta: FieldInfo[] };
+
+/**
+ * Helper type for the tuple shape returned when `metaAsArray: true` is set
+ * (either per-query in `QueryOptions` or globally in `ConnectionConfig`).
+ *
+ * If `T` is already a `[any, FieldInfo[]]` tuple it is returned as-is (legacy
+ * pattern where the user pre-wraps the type), otherwise it is wrapped to
+ * `[T, FieldInfo[]]`.
+ *
+ * @example
+ *   // SELECT — T is the row array type
+ *   const [rows, meta] = await conn.query<WithMeta<MyRow[]>>('SELECT ...');
+ *
+ *   // DML — T is UpsertResult
+ *   const [res, meta] = await conn.query<WithMeta<UpsertResult>>('UPDATE ...');
+ */
+export type WithMeta<T> = T extends [any, FieldInfo[]] ? T : [T, FieldInfo[]];
+
 export interface SqlError extends Error {
   /**
    * Either a MySQL server error (e.g. 'ER_ACCESS_DENIED_ERROR'),
