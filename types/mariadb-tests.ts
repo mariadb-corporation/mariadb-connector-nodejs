@@ -363,6 +363,16 @@ async function metaTypeHelpers(): Promise<void> {
     throw new Error('unexpected');
   }
 
+  // Extended FieldInfo surface — extended type name, format helpers, flag helpers.
+  const first: FieldInfo = meta[0];
+  const ext: string | undefined = first.dataTypeName;
+  const isJson: boolean = first.isDataTypeFormatJson();
+  const isSigned: boolean = first.signed();
+  const isSetCol: boolean = first.isSet();
+  if (ext === 'uuid' && (isJson || !isSigned || isSetCol)) {
+    throw new Error('unexpected combination');
+  }
+
   // metaAsArray mode — per-query
   const tuple = await conn.query<WithMeta<MyRow[]>>({
     sql: `SELECT 'upper' as upper, 'lower' as lower`,

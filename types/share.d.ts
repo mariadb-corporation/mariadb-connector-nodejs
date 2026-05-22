@@ -24,12 +24,40 @@ export interface FieldInfo {
   scale: number;
   type: Types;
   flags: Flags;
+
+  /**
+   * MariaDB extended type name when the server provides extended column
+   * metadata (MariaDB 10.5+). Common values include `'uuid'`, `'inet4'`,
+   * `'inet6'`, `'json'`, `'point'`, `'linestring'`, `'polygon'`,
+   * `'multipoint'`, `'multilinestring'`, `'multipolygon'`. Returns
+   * `undefined` against MySQL or when the column has no extended type
+   * info attached.
+   */
+  readonly dataTypeName: string | undefined;
+
   db(): string;
   schema(): string; // Alias for db()
   table(): string;
   orgTable(): string;
   name(): string;
   orgName(): string;
+
+  /**
+   * Returns `true` if the column carries a JSON extended data-type
+   * format. MariaDB stores JSON as LONGTEXT and signals JSON via the
+   * extended metadata format field.
+   */
+  isDataTypeFormatJson(): boolean;
+
+  /**
+   * Returns `true` if the column is signed (numeric types).
+   */
+  signed(): boolean;
+
+  /**
+   * Returns `true` if the column is a SET type.
+   */
+  isSet(): boolean;
 
   // Note that you may only call *one* of these functions
   // when decoding a column via the typeCast callback.
