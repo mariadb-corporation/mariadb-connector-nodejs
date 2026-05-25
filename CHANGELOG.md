@@ -6,6 +6,7 @@
 
 ## Notable changes
 * Minimum supported Node.js version is now 20 (was 18; Node 18 went EOL in April 2025)
+* CONJS-346 Add `RowsWithMeta<T>` and `WithMeta<T>` helper types for typing `query()` / `execute()` result shapes — `RowsWithMeta<T>` for the default rows-array-with-`meta` shape, `WithMeta<T>` for the `metaAsArray: true` tuple form (types-only, no runtime change)
 
 ## Issues Fixed
 * CONJS-344 Restore dual ESM/CJS support after the 3.5 ESM migration (#346):
