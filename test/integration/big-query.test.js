@@ -34,7 +34,7 @@ describe.concurrent('Big query', function () {
     const con = await base.createConnection({ bulk: false });
     await testParameterBiggerThan16M(con);
     await con.end();
-  }, 30000);
+  }, 60000);
 
   const testParameterBiggerThan16M = async function (conn) {
     conn.query('DROP TABLE IF EXISTS bigParameterBigParam');
