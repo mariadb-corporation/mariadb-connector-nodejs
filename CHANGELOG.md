@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.4.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.6) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.5...3.4.6)
+
+## Issues Fixed
+* CONJS-331: Corrected parsec authentication plugin handling
+* Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
+
+
 ## [3.4.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.5) (Jul 2025)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.4...3.4.5)
 
