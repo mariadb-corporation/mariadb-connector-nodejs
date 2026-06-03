@@ -649,15 +649,36 @@ describe('authentication plugin', () => {
       this.skip();
     }
 
+    let strictPasswordValidation;
+    try {
+      const res = await shareConn.query('SELECT @@global.strict_password_validation');
+      strictPasswordValidation = res[0]['@@global.strict_password_validation'] === 1;
+    } catch (e) {
+      strictPasswordValidation = false;
+    }
+    if (!strictPasswordValidation) {
+      try {
+        const res = await shareConn.query(
+          "SELECT * FROM information_schema.PLUGINS WHERE PLUGIN_NAME = 'simple_password_check' " +
+            "AND PLUGIN_STATUS = 'ACTIVE'"
+        );
+        if (res.length > 0) strictPasswordValidation = true;
+      } catch (e) {
+        // ignore
+      }
+    }
+
     await shareConn.query('drop user verifParsec' + getHostSuffix()).catch(() => {});
     await shareConn.query(
       'CREATE USER verifParsec' + getHostSuffix() + " IDENTIFIED VIA parsec USING PASSWORD('MySup8%rPassw@ord')"
     );
     await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + '`.* to verifParsec' + getHostSuffix());
 
-    await shareConn.query('drop user verifParsec2' + getHostSuffix()).catch(() => {});
-    await shareConn.query('CREATE USER verifParsec2' + getHostSuffix() + " IDENTIFIED VIA parsec USING PASSWORD('')");
-    await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + '`.* to verifParsec2' + getHostSuffix());
+    if (!strictPasswordValidation) {
+      await shareConn.query('drop user verifParsec2' + getHostSuffix()).catch(() => {});
+      await shareConn.query('CREATE USER verifParsec2' + getHostSuffix() + " IDENTIFIED VIA parsec USING PASSWORD('')");
+      await shareConn.query('GRANT SELECT on `' + Conf.baseConfig.database + '`.* to verifParsec2' + getHostSuffix());
+    }
 
     let conn = await base.createConnection({
       user: 'verifParsec',
