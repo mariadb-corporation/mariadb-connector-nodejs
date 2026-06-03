@@ -202,7 +202,9 @@ describe('connection', () => {
         });
         conn.query('KILL ' + conn.threadId).catch((err) => {
           assert.isTrue(
-            err.message.includes('Connection was killed') || err.message.includes('Query execution was interrupted')
+            err.message.includes('Connection was killed') ||
+              err.message.includes('Query execution was interrupted') ||
+              err.message.includes('Query was interrupted')
           );
           assert.equal(err.sqlState, '70100');
           assert.isTrue(err.errno === 1927 || err.errno === 1317);
