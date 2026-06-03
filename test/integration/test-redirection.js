@@ -5,11 +5,13 @@
 
 require('../base.js');
 const base = require('../base.js');
+const { isMaxscale } = require('../base');
 const Proxy = require('../tools/proxy');
 const Conf = require('../conf');
 const { assert } = require('chai');
 describe('redirection', () => {
   it('basic redirection', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -30,12 +32,13 @@ describe('redirection', () => {
         assert.equal(Conf.baseConfig.port, conn.info.port);
       }
     } finally {
-      conn.end();
+      if (conn) conn.end();
       proxy.close();
     }
   });
 
   it('redirection during pipelining', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -63,6 +66,7 @@ describe('redirection', () => {
   });
 
   it('redirection during transaction', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
