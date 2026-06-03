@@ -16,6 +16,33 @@
   * Restore the default ESM export, so `import mariadb from 'mariadb'` works again (matches 3.4.x behavior)
 
 
+## [3.4.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.6) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.5...3.4.6)
+
+## Issues Fixed
+* CONJS-331: Corrected parsec authentication plugin handling
+* Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
+
+
+## [3.3.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.3) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.2...3.3.3)
+
+## Issues Fixed
+* Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
+
+
+## [3.2.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.4) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.3...3.2.4)
+
+## Issues Fixed
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+
+
+
 ## [3.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.2) (Mar 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.1...3.5.2)
 
@@ -113,6 +140,8 @@
 * CONJS-303 DMLs are not returning an output while streaming
 
 
+
+
 ## [3.3.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.2) (Sept 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
 
@@ -148,6 +177,7 @@
 * CONJS-282 error when using mysql_clear_test password authentication plugin		
 * CONJS-283 wrong decoding of binary unsigned MEDIUMINT
 * CONJS-285 DECIMAL field wrong decoding with deprecated option 'supportBigNumbers' set
+
 
 ## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.2...3.2.3)
