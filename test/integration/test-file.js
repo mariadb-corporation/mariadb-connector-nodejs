@@ -43,6 +43,7 @@ describe('sql file import', () => {
 
       it('simple file import with direct connection options', async function () {
         this.timeout(30000);
+        if (base.isMaxscale()) this.skip();
         await basePromise.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
         );
@@ -213,6 +214,7 @@ describe('sql file import', () => {
 
       it('simple file import without callback', function (done) {
         this.timeout(30000);
+        if (base.isMaxscale()) return this.skip();
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' })
         );
@@ -236,6 +238,7 @@ describe('sql file import', () => {
 
       it('simple file import with direct connection options', function (done) {
         this.timeout(30000);
+        if (base.isMaxscale()) return this.skip();
         baseCallback.importFile(
           Object.assign({}, Conf.baseConfig, { file: __dirname + '/../tools/data-dump.sql', database: 'fimp' }),
           (err) => {

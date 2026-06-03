@@ -33,6 +33,11 @@ describe('change user', () => {
     await shareConn.query('FLUSH PRIVILEGES');
   });
 
+  beforeEach(function () {
+    // maxscale does not support COM_CHANGE_USER
+    if (isMaxscale()) this.skip();
+  });
+
   after(async () => {
     await shareConn.query('DROP USER ChangeUser' + getHostSuffix()).catch((e) => {});
     await shareConn.query('DROP USER ChangeUser2' + getHostSuffix()).catch((e) => {});

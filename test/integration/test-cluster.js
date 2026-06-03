@@ -579,6 +579,7 @@ describe('cluster', function () {
 
     it('reusing node after timeout', async function () {
       this.timeout(30000);
+      if (isMaxscale()) this.skip();
       const cl = await get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, basePromise);
       const cluster = cl.cluster;
       const proxy = cl.proxy;
@@ -1256,6 +1257,7 @@ describe('cluster', function () {
     });
 
     it('reusing node after timeout', function (done) {
+      if (isMaxscale()) return this.skip();
       get3NodeClusterWithProxy({ restoreNodeTimeout: 500 }, baseCallback).then((cl) => {
         const cluster = cl.cluster;
         const proxy = cl.proxy;

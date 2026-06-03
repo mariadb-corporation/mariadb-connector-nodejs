@@ -16,7 +16,7 @@ concurrency:
 env:
   TEST_DB_HOST: mariadb.example.com
   TEST_DB_PORT: 3306
-  TEST_DB_USER: root
+  TEST_DB_USER: testuser
   TEST_DB_PASSWORD: "heyPassw-!*20oRd"
   TEST_DB_DATABASE: testn
 jobs:
@@ -32,7 +32,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.final-matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: set-matrix
         name: build matrix
         uses: mariadb-corporation/connector-ci-build-matrix@main
@@ -49,13 +49,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.continue-on-error || false }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Test Environment
         id: setup-env
         uses: mariadb-corporation/connector-ci-setup@master
         with:
-          node-version: ${{ matrix.node }}
           db-type: ${{ matrix.db-type }}
           db-tag: ${{ matrix.db-tag }}
           test-db-password: ${{ env.TEST_DB_PASSWORD }}
@@ -65,8 +64,9 @@ jobs:
           registry-user: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_USER || (secrets.DOCKER_PWD != '' && 'mariadbtest' || '') }}
           registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || secrets.DOCKER_PWD }}
           os: ${{ matrix.os }}
+          maxscale-tag: ${{ matrix.maxscale-tag || '' }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
 

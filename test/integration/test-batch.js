@@ -1439,6 +1439,10 @@ describe('batch', function () {
       assert.deepEqual(res, { affectedRows: 4, insertId: 0n, warningStatus: 0 });
       await conn.end();
 
+      // rely on the negotiated capability rather than the server version: under MaxScale the
+      // reported version may indicate 11.5.1+ while BULK_UNIT_RESULTS was not negotiated.
+      const supportBulkUnitResults = (shareConn.info.clientCapabilities & Capabilities.BULK_UNIT_RESULTS) > 0n;
+
       const connBulk = await base.createConnection({ bulk: true });
       res = await connBulk.batch('INSERT INTO bufLength VALUES (?)', [
         ['abc'],
@@ -1446,7 +1450,7 @@ describe('batch', function () {
         [1],
         [new Date('2001-12-31 23:59:58')]
       ]);
-      if (shareConn.info.hasMinVersion(11, 5, 1) || !shareConn.info.isMariaDB()) {
+      if (supportBulkUnitResults || !shareConn.info.isMariaDB()) {
         assert.deepEqual(res, [
           { affectedRows: 1, insertId: 0n, warningStatus: 0 },
           { affectedRows: 1, insertId: 0n, warningStatus: 0 },

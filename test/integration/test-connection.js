@@ -382,7 +382,7 @@ describe('connection', () => {
     base
       .createConnection()
       .then((conn) => {
-        conn.query('SELECT 1');
+        conn.query('SELECT 1').catch(() => {});
         conn.destroy();
         done();
       })

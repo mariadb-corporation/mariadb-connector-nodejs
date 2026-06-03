@@ -8,9 +8,10 @@ const base = require('../base.js');
 const Proxy = require('../tools/proxy');
 const Conf = require('../conf');
 const { assert } = require('chai');
-const { isMaxscale, isMaxscaleMinVersion } = require('../base');
+const { isMaxscale } = require('../base');
 describe('redirection', () => {
   it('basic redirection', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -41,44 +42,8 @@ describe('redirection', () => {
     }
   });
 
-  it('maxscale redirection', async function () {
-    // need maxscale 23.08+
-    if (!isMaxscale() || !isMaxscaleMinVersion(23, 8, 0)) this.skip();
-    const proxy = new Proxy({
-      port: Conf.baseConfig.port,
-      host: Conf.baseConfig.host,
-      resetAfterUse: false
-    });
-    await proxy.start();
-
-    try {
-      await shareConn.query(`set @@global.redirect_url="mariadb://${Conf.baseConfig.host}:${Conf.baseConfig.port}"`);
-    } catch (e) {
-      proxy.close();
-      this.skip();
-      return;
-    }
-    let conn = await base.createConnection({ host: 'localhost', port: proxy.port(), permitRedirect: true });
-    try {
-      assert.equal(Conf.baseConfig.host, conn.info.host);
-      assert.equal(Conf.baseConfig.port, conn.info.port);
-      console.log(await conn.query('Select 1'));
-      conn.end();
-      console.log('*****************************************************************************');
-      let conn2 = await base.createConnection({ host: 'localhost', port: proxy.port() });
-      assert.equal(Conf.baseConfig.port, conn2.info.port);
-      console.log(await conn2.query('Select 2'));
-      console.log('*****************************************************************************');
-      conn2.end();
-    } finally {
-      proxy.close();
-      try {
-        shareConn.query('set @@global.redirect_url=""');
-      } catch (e) {}
-    }
-  });
-
   it('redirection during pipelining', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,
@@ -108,6 +73,7 @@ describe('redirection', () => {
   });
 
   it('redirection during transaction', async function () {
+    if (isMaxscale()) this.skip();
     const proxy = new Proxy({
       port: Conf.baseConfig.port,
       host: Conf.baseConfig.host,

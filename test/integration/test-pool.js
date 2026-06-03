@@ -599,7 +599,6 @@ describe('Pool', () => {
 
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
-        console.log(err.message);
         assert(Date.now() - initTime >= 1980, 'expected > 2s, but was ' + (Date.now() - initTime));
         assert.isTrue(err.message.includes('Error during pool initialization'));
         pool.end();
