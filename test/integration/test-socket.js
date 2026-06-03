@@ -10,15 +10,15 @@ const { isMaxscale, isLocalDb } = require('../base');
 
 describe('test socket', () => {
   it('named pipe', function (done) {
-    if (process.platform !== 'win32') this.skip();
-    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale()) this.skip();
-    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') this.skip();
+    if (process.platform !== 'win32') return this.skip();
+    if (!process.env.LOCAL_SOCKET_AVAILABLE || isMaxscale()) return this.skip();
+    if (Conf.baseConfig.host !== 'localhost' && Conf.baseConfig.host !== 'mariadb.example.com') return this.skip();
     const test = this;
     shareConn
       .query('select @@version_compile_os,@@socket soc, @@named_pipe pipeEnable')
       .then((res) => {
-        if (res[0].pipeEnable === 0) {
-          test.skip();
+        if (Number(res[0].pipeEnable) === 0) {
+          return test.skip();
         }
         base
           .createConnection({ socketPath: '\\\\.\\pipe\\' + res[0].soc })
