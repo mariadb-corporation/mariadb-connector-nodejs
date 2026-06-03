@@ -6,8 +6,7 @@ import { Connection, FieldInfo, ConnectionConfig, PoolConfig, UpsertResult, SqlE
 import { Stream } from 'stream';
 import { createReadStream } from 'fs';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { baseConfig } = require('../test/conf.js');
+import { baseConfig } from '../test/conf.js';
 
 function importSqlFile(): Promise<void> {
   return mariadb.importFile({
