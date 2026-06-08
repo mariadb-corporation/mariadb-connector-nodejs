@@ -58,6 +58,24 @@ describe('debug', () => {
     await shareConn.query('DROP TABLE IF EXISTS debugVoid');
   });
 
+  async function readStableDebugLog() {
+    let data = '';
+    let previous = null;
+    let stableCount = 0;
+    for (let i = 0; i < 200 && stableCount < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      try {
+        data = fs.readFileSync(tmpLogFile, 'utf8');
+      } catch (e) {
+        data = '';
+      }
+      if (data.length > 0 && data === previous) stableCount++;
+      else stableCount = 0;
+      previous = data;
+    }
+    return data;
+  }
+
   it('select request debug', function (done) {
     testQueryDebug(false, done);
   });
@@ -109,13 +127,12 @@ describe('debug', () => {
             return conn.end();
           })
           .then(() => {
-            //wait 100ms to ensure stream has been written
-            setTimeout(() => {
+            setTimeout(async () => {
               const serverVersion = conn.serverVersion();
               if (isMaxscale()) compress = false;
               const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
               const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
-              const data = fs.readFileSync(tmpLogFile, 'utf8');
+              const data = await readStableDebugLog();
               console.log(data);
               assert.isTrue(data.includes('QUERY: SELECT 3'));
               assert.isTrue(data.includes('PREPARE:'));
@@ -181,32 +198,29 @@ describe('debug', () => {
         conn
           .query('SELECT ?', buf)
           .then((rows) => {
-            //wait 100ms to ensure stream has been written
-            setTimeout(() => {
-              conn
-                .end()
-                .then(() => {
-                  const serverVersion = conn.serverVersion();
-                  const data = fs.readFileSync(tmpLogFile, 'utf8');
-                  let range = [8900, 12000 + setNameAddition];
-                  assert(
-                    data.length > range[0] && data.length < range[1],
-                    'wrong data length : ' +
-                      data.length +
-                      ' expected value between ' +
-                      range[0] +
-                      ' and ' +
-                      range[1] +
-                      '.' +
-                      '\n server version : ' +
-                      serverVersion +
-                      '\n data :\n' +
-                      data
-                  );
-                  done();
-                })
-                .catch(done);
-            }, 100);
+            return conn
+              .end()
+              .then(() => readStableDebugLog())
+              .then((data) => {
+                const serverVersion = conn.serverVersion();
+                let range = [8900, 12000 + setNameAddition];
+                assert(
+                  data.length > range[0] && data.length < range[1],
+                  'wrong data length : ' +
+                    data.length +
+                    ' expected value between ' +
+                    range[0] +
+                    ' and ' +
+                    range[1] +
+                    '.' +
+                    '\n server version : ' +
+                    serverVersion +
+                    '\n data :\n' +
+                    data
+                );
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
@@ -275,9 +289,8 @@ describe('debug', () => {
           })
           .then(() => {
             conn.end();
-            //wait 100ms to ensure stream has been written
-            setTimeout(() => {
-              const data = fs.readFileSync(tmpLogFile, 'utf8');
+            setTimeout(async () => {
+              const data = await readStableDebugLog();
               const serverVersion = conn.serverVersion();
               const range = [7500, 11000 + (Conf.baseConfig.ssl ? 800 : 0) + setNameAddition];
               assert(
@@ -322,14 +335,10 @@ describe('debug', () => {
     await conn.ping(1000);
     await conn.end();
 
-    //wait 100ms to ensure stream has been written
-    await new Promise(function (resolve) {
-      setTimeout(resolve, 100);
-    });
+    const data = await readStableDebugLog();
     const serverVersion = conn.serverVersion();
     if (isMaxscale()) compress = false;
     const range = compress ? [60, 180] : [60, 170];
-    const data = fs.readFileSync(tmpLogFile, 'utf8');
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));
 
