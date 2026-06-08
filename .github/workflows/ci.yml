@@ -75,6 +75,7 @@ jobs:
           DB_TYPE: ${{ matrix.db-type }}
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
+          maxscale-tag: ${{ matrix.maxscale-tag || '' }}
 
 
       - name: Download Codecov uploader
