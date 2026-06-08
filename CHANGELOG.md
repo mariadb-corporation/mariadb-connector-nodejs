@@ -9,7 +9,9 @@
 * CONJS-346: Add `RowsWithMeta<T>` and `WithMeta<T>` helper types for typing `query()` / `execute()` result shapes — `RowsWithMeta<T>` for the default rows-array-with-`meta` shape, `WithMeta<T>` for the `metaAsArray: true` tuple form (types-only, no runtime change)
 
 ## Issues Fixed
+* CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 * CONJS-344: Restore dual ESM/CJS support after the 3.5 ESM migration (#346):
   * TypeScript types now compile under `moduleResolution: "Node16" / "NodeNext" / "Bundler"` — fixes TS2846 / TS2834 reported in 3.5.1 and 3.5.2
   * Ship paired `.d.cts` declarations for the `require` condition
@@ -22,7 +24,7 @@
 
 ## Issues Fixed
 * CONJS-331: Corrected parsec authentication plugin handling
-* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
@@ -32,7 +34,7 @@
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.2...3.3.3)
 
 ## Issues Fixed
-* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
@@ -42,7 +44,7 @@
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.3...3.2.4)
 
 ## Issues Fixed
-* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 
 
 

@@ -258,9 +258,24 @@ describe.concurrent('authentication plugin', () => {
       testPort = parseInt(getEnv('TEST_PAM_PORT'));
     }
 
+    // dialog (PAM) transmits the password in clear text, so the driver refuses it over plain TCP
+    try {
+      const conn = await createConnection({
+        user: getEnv('TEST_PAM_USER'),
+        password: getEnv('TEST_PAM_PWD'),
+        port: testPort
+      });
+      await conn.end();
+      throw new Error('must have thrown error');
+    } catch (e) {
+      assert.isTrue(e.message.includes('requires TLS or a local socket'), e.message);
+    }
+
+    // over a secure channel (TLS) the clear-text PAM exchange is permitted
     const conn = await createConnection({
       user: getEnv('TEST_PAM_USER'),
       password: getEnv('TEST_PAM_PWD'),
+      ssl: { rejectUnauthorized: false },
       port: testPort
     });
     await conn.end();
@@ -292,9 +307,11 @@ describe.concurrent('authentication plugin', () => {
       testPort = parseInt(getEnv('TEST_PAM_PORT'));
     }
     //password is unix password "myPwd"
+    // dialog (PAM) requires a secure channel; use TLS (trust mode) so the clear-text exchange is permitted
     const conn = await createConnection({
       user: getEnv('TEST_PAM_USER'),
       password: [getEnv('TEST_PAM_PWD'), getEnv('TEST_PAM_PWD')],
+      ssl: { rejectUnauthorized: false },
       port: testPort
     });
     await conn.end();
