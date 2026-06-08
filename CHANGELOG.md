@@ -7,6 +7,7 @@
 * CONJS-331: Corrected parsec authentication plugin handling
 * Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
