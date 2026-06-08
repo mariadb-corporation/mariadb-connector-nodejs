@@ -9,6 +9,7 @@
 * CONJS-346: Add `RowsWithMeta<T>` and `WithMeta<T>` helper types for typing `query()` / `execute()` result shapes — `RowsWithMeta<T>` for the default rows-array-with-`meta` shape, `WithMeta<T>` for the `metaAsArray: true` tuple form (types-only, no runtime change)
 
 ## Issues Fixed
+* CONJS-354: Reject a server-initiated LOAD DATA LOCAL INFILE request when `permitLocalInfile` is disabled (report by tharavel)
 * CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
 * CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
