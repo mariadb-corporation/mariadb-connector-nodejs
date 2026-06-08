@@ -9,6 +9,7 @@
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
 * CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
+* CONJS-354: Reject a server-initiated LOAD DATA LOCAL INFILE request when `permitLocalInfile` is disabled (report by tharavel)
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
