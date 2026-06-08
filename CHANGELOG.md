@@ -5,6 +5,8 @@
 
 ## Issues Fixed
 * CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
+* CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
 ## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
