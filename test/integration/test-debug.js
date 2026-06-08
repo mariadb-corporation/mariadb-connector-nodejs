@@ -57,6 +57,25 @@ describe('debug', () => {
     await shareConn.query('DROP TABLE IF EXISTS debugVoid');
   });
 
+  async function readStableDebugLog() {
+    const logFile = path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt');
+    let data = '';
+    let previous = null;
+    let stableCount = 0;
+    for (let i = 0; i < 200 && stableCount < 4; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      try {
+        data = fs.readFileSync(logFile, 'utf8');
+      } catch (e) {
+        data = '';
+      }
+      if (data.length > 0 && data === previous) stableCount++;
+      else stableCount = 0;
+      previous = data;
+    }
+    return data;
+  }
+
   it('select request debug', async function () {
     await testQueryDebug(false);
   });
@@ -92,13 +111,11 @@ describe('debug', () => {
     await prepare.execute(['t']).then((res) => prepare.close());
     await conn.batch('INSERT INTO debugVoid VALUES (?)', [[1], [2]]);
     conn.end();
-    //wait 100ms to ensure stream has been written
-    await new Promise((resolve) => new setTimeout(resolve, 100));
+    const data = await readStableDebugLog();
     const serverVersion = conn.serverVersion();
     if (isMaxscale()) compress = false;
     const rangeWithEOF = compress ? [1500, 2000] : [1800, 4250];
     const rangeWithoutEOF = compress ? [1500, 2000] : [2350, 3250];
-    const data = fs.readFileSync(path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt'), 'utf8');
     console.log(data);
     assert.isTrue(data.includes('QUERY: SELECT 3'));
     assert.isTrue(data.includes('PREPARE:'));
@@ -158,32 +175,29 @@ describe('debug', () => {
         conn
           .query('SELECT ?', buf)
           .then((rows) => {
-            //wait 100ms to ensure stream has been written
-            setTimeout(() => {
-              conn
-                .end()
-                .then(() => {
-                  const serverVersion = conn.serverVersion();
-                  const data = fs.readFileSync(path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt'), 'utf8');
-                  let range = [8900, 12000 + setNameAddition];
-                  assert(
-                    data.length > range[0] && data.length < range[1],
-                    'wrong data length : ' +
-                      data.length +
-                      ' expected value between ' +
-                      range[0] +
-                      ' and ' +
-                      range[1] +
-                      '.' +
-                      '\n server version : ' +
-                      serverVersion +
-                      '\n data :\n' +
-                      data
-                  );
-                  done();
-                })
-                .catch(done);
-            }, 100);
+            return conn
+              .end()
+              .then(() => readStableDebugLog())
+              .then((data) => {
+                const serverVersion = conn.serverVersion();
+                let range = [8900, 12000 + setNameAddition];
+                assert(
+                  data.length > range[0] && data.length < range[1],
+                  'wrong data length : ' +
+                    data.length +
+                    ' expected value between ' +
+                    range[0] +
+                    ' and ' +
+                    range[1] +
+                    '.' +
+                    '\n server version : ' +
+                    serverVersion +
+                    '\n data :\n' +
+                    data
+                );
+                done();
+              })
+              .catch(done);
           })
           .catch(done);
       })
@@ -251,28 +265,28 @@ describe('debug', () => {
             );
           })
           .then(() => {
-            conn.end();
-            //wait 100ms to ensure stream has been written
-            setTimeout(() => {
-              const data = fs.readFileSync(path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt'), 'utf8');
-              const serverVersion = conn.serverVersion();
-              const range = [7500, 11000 + (Conf.baseConfig.ssl ? 800 : 0) + setNameAddition];
-              assert(
-                data.length > range[0] && data.length < range[1],
-                'wrong data length : ' +
-                  data.length +
-                  ' expected value between ' +
-                  range[0] +
-                  ' and ' +
-                  range[1] +
-                  '.' +
-                  '\n server version : ' +
-                  serverVersion +
-                  '\n data :\n' +
-                  data
-              );
-              done();
-            }, 500);
+            return conn
+              .end()
+              .then(() => readStableDebugLog())
+              .then((data) => {
+                const serverVersion = conn.serverVersion();
+                const range = [7500, 11000 + (Conf.baseConfig.ssl ? 800 : 0) + setNameAddition];
+                assert(
+                  data.length > range[0] && data.length < range[1],
+                  'wrong data length : ' +
+                    data.length +
+                    ' expected value between ' +
+                    range[0] +
+                    ' and ' +
+                    range[1] +
+                    '.' +
+                    '\n server version : ' +
+                    serverVersion +
+                    '\n data :\n' +
+                    data
+                );
+                done();
+              });
           })
           .catch(done);
       })
@@ -299,14 +313,10 @@ describe('debug', () => {
     await conn.ping(1000);
     await conn.end();
 
-    //wait 100ms to ensure stream has been written
-    await new Promise(function (resolve) {
-      setTimeout(resolve, 100);
-    });
+    const data = await readStableDebugLog();
     const serverVersion = conn.serverVersion();
     if (isMaxscale()) compress = false;
     const range = compress ? [60, 180] : [60, 170];
-    const data = fs.readFileSync(path.join(os.tmpdir(), 'combined' + fileIncrement + '.txt'), 'utf8');
     assert.isTrue(data.includes('PING'));
     assert.isTrue(data.includes('QUIT'));
 
