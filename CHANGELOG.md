@@ -1,19 +1,49 @@
 # Change Log
 
 
-## [3.5.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.3) (May 2026)
+## [3.5.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.3) (Jun1 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.2...3.5.3)
 
 ## Notable changes
 * Minimum supported Node.js version is now 20 (was 18; Node 18 went EOL in April 2025)
-* CONJS-346 Add `RowsWithMeta<T>` and `WithMeta<T>` helper types for typing `query()` / `execute()` result shapes — `RowsWithMeta<T>` for the default rows-array-with-`meta` shape, `WithMeta<T>` for the `metaAsArray: true` tuple form (types-only, no runtime change)
+* CONJS-346: Add `RowsWithMeta<T>` and `WithMeta<T>` helper types for typing `query()` / `execute()` result shapes — `RowsWithMeta<T>` for the default rows-array-with-`meta` shape, `WithMeta<T>` for the `metaAsArray: true` tuple form (types-only, no runtime change)
 
 ## Issues Fixed
-* CONJS-344 Restore dual ESM/CJS support after the 3.5 ESM migration (#346):
+* CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* CONJS-344: Restore dual ESM/CJS support after the 3.5 ESM migration (#346):
   * TypeScript types now compile under `moduleResolution: "Node16" / "NodeNext" / "Bundler"` — fixes TS2846 / TS2834 reported in 3.5.1 and 3.5.2
   * Ship paired `.d.cts` declarations for the `require` condition
   * Ship a real CJS bundle in `dist/` so `require('mariadb')` works on Node 20+ without `--experimental-require-module` or `ExperimentalWarning`
   * Restore the default ESM export, so `import mariadb from 'mariadb'` works again (matches 3.4.x behavior)
+
+
+## [3.4.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.6) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.5...3.4.6)
+
+## Issues Fixed
+* CONJS-331: Corrected parsec authentication plugin handling
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
+
+
+## [3.3.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.3) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.2...3.3.3)
+
+## Issues Fixed
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+* CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
+* CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
+
+
+## [3.2.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.4) (Jun 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.3...3.2.4)
+
+## Issues Fixed
+* CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset
+
 
 
 ## [3.5.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.5.2) (Mar 2026)
