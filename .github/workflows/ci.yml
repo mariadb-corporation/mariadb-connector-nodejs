@@ -82,6 +82,7 @@ jobs:
           DB_VERSION: ${{ matrix.db-tag }}
           TEST_TRACE: 'true'
           LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
+          maxscale-tag: ${{ matrix.maxscale-tag || '' }}
 
       - name: Download Codecov uploader
         shell: bash
