@@ -28,6 +28,8 @@
 * CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
+* CONJS-354: Reject a server-initiated LOAD DATA LOCAL INFILE request when `permitLocalInfile` is disabled (report by tharavel)
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
@@ -38,6 +40,8 @@
 * CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
 * CONJS-349: Fixed cleartext password disclosure to a man-in-the-middle when relying on certificate fingerprint validation (self-signed trust mode)
 * CONJS-351: Use constant-time comparison when validating the server certificate fingerprint token, preventing a timing side-channel that could leak the token to a man-in-the-middle
+* CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
+* CONJS-354: Reject a server-initiated LOAD DATA LOCAL INFILE request when `permitLocalInfile` is disabled (report by tharavel)
 * Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
@@ -46,6 +50,9 @@
 
 ## Issues Fixed
 * CONJS-350: Fixed possible SQL injection in Buffer parameter escaping under big5/gbk/sjis/cp932/gb18030 client charset (report by fg0x0)
+* CONJS-353: PAM (dialog) authentication now requires a secure connection (TLS or a local unix socket), since it transmits the password in clear text (report by fg0x0)
+* CONJS-354: Reject a server-initiated LOAD DATA LOCAL INFILE request when `permitLocalInfile` is disabled (report by tharavel)
+* Refuse sending the password in clear (`mysql_clear_password`) over an unencrypted connection
 
 
 
@@ -146,6 +153,7 @@
 * CONJS-303 DMLs are not returning an output while streaming
 
 
+
 ## [3.3.2](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.2) (Sept 2024)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.1...3.3.2)
 
@@ -181,6 +189,7 @@
 * CONJS-282 error when using mysql_clear_test password authentication plugin		
 * CONJS-283 wrong decoding of binary unsigned MEDIUMINT
 * CONJS-285 DECIMAL field wrong decoding with deprecated option 'supportBigNumbers' set
+
 
 ## [3.2.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.3) (Dec 2023)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.2...3.2.3)
