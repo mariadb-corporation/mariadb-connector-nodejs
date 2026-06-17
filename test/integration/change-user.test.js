@@ -5,7 +5,7 @@
 
 import * as ServerStatus from '../../lib/const/server-status.js';
 import Conf from '../conf.js';
-import { isMaxscale, getHostSuffix, createConnection, createCallbackConnection } from '../base.js';
+import { isMaxscale, getHostSuffix, createConnection, createCallbackConnection, isDeno } from '../base.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -250,6 +250,29 @@ describe.concurrent('change user', () => {
     res = await conn.query('SELECT CURRENT_USER');
     user = res[0]['CURRENT_USER'];
     assert.equal(user, 'ChangeUser2' + getHostSuffix().replaceAll("'", ''));
+    await conn.end();
+  });
+
+  test('basic change user using promise with ssl', async ({ skip }) => {
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0) || isDeno()) return skip();
+    if (isMaxscale(shareConn)) return skip();
+    const conn = await createConnection({ user: 'ChangeUser', password: 'm1P4ssw0@rd', ssl: true });
+    await conn.changeUser({
+      user: 'ChangeUser2',
+      password: 'm1SecondP@rd',
+      connectAttributes: { par1: 'bouh', par2: 'bla' }
+    });
+    let res = await conn.query('SELECT CURRENT_USER');
+    let user = res[0]['CURRENT_USER'];
+    assert.equal(user, 'ChangeUser2' + getHostSuffix().replaceAll("'", ''));
+    await conn.changeUser({
+      user: 'ChangeUser',
+      password: 'm1P4ssw0@rd',
+      connectAttributes: true
+    });
+    res = await conn.query('SELECT CURRENT_USER');
+    user = res[0]['CURRENT_USER'];
+    assert.equal(user, 'ChangeUser' + getHostSuffix().replaceAll("'", ''));
     await conn.end();
   });
 
