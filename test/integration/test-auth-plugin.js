@@ -122,14 +122,17 @@ describe('authentication plugin', () => {
         conn = await base.createConnection({
           user: 'verificationEd25519AuthPlugin',
           password: 'MySup8%rPassw@ord',
-          restrictedAuth: ''
+          restrictedAuth: 'mysql_native_password'
         });
         conn.end();
         throw new Error('must have thrown error');
       } catch (err) {
-        assert.equal(err.text, 'Unsupported authentication plugin client_ed25519. Authorized plugin: ');
+        assert.equal(
+          err.text,
+          'Unsupported authentication plugin client_ed25519. Authorized plugin: mysql_native_password'
+        );
         assert.equal(err.errno, 45047);
-        assert.equal(err.sqlState, '42000');
+        assert.equal(err.sqlState, '08S01');
         assert.equal(err.code, 'ER_NOT_SUPPORTED_AUTH_PLUGIN');
         assert.isTrue(err.fatal);
       }
@@ -718,14 +721,14 @@ describe('authentication plugin', () => {
       conn = await base.createConnection({
         user: 'verifParsec',
         password: 'MySup8%rPassw@ord',
-        restrictedAuth: ''
+        restrictedAuth: 'mysql_native_password'
       });
       conn.end();
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.equal(err.text, 'Unsupported authentication plugin parsec. Authorized plugin: ');
+      assert.equal(err.text, 'Unsupported authentication plugin parsec. Authorized plugin: mysql_native_password');
       assert.equal(err.errno, 45047);
-      assert.equal(err.sqlState, '42000');
+      assert.equal(err.sqlState, '08S01');
       assert.equal(err.code, 'ER_NOT_SUPPORTED_AUTH_PLUGIN');
       assert.isTrue(err.fatal);
     }
