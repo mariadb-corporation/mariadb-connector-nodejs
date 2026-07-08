@@ -1,0 +1,17 @@
+name: "CodeQL config for mariadb-connector-nodejs"
+
+# Focus analysis on the shipped connector code (the code an attacker-controlled
+# server or untrusted input actually reaches). Test fixtures and benchmarks
+# generate high-volume, low-value findings, so they are excluded.
+paths:
+  - lib
+  - promise.js
+  - callback.js
+  - check-node.js
+
+paths-ignore:
+  - test
+  - benchmarks
+  - documentation
+  - dist
+  - types

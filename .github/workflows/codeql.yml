@@ -1,0 +1,55 @@
+---
+name: "CodeQL SAST"
+
+on:
+  push:
+    branches: [main, develop, "maintenance/**"]
+  pull_request:
+    branches: [main, develop, "maintenance/**"]
+  schedule:
+    # Weekly on Sundays at 3 AM UTC (offset from the CI workflow)
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # required to upload results to the code-scanning dashboard
+      security-events: write
+      # only needed for private repos; harmless on public
+      contents: read
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
+          # security-extended adds higher-signal security queries on top of
+          # the default suite. Drop to "security-and-quality" to also flag
+          # maintainability issues, or remove for the default suite only.
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
