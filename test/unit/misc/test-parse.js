@@ -324,5 +324,34 @@ describe('parse', () => {
       assert.isTrue(Parse.validateFileName('LOAD DATA LOCAL INFILE ?', ['C:/Temp/myFile.txt'], 'C:/Temp/myFile.txt'));
       assert.isFalse(Parse.validateFileName('LOAD DATA LOCAL INFILE ?', [], 'C:/Temp/myFile.txt'));
     });
+
+    test('windows backslash escaping still validates', () => {
+      assert.isTrue(
+        Parse.validateFileName("LOAD DATA LOCAL INFILE 'C:\\\\Temp\\\\myFile.txt'", [], 'C:\\Temp\\myFile.txt')
+      );
+    });
+
+    test('every dot is treated literally (not a wildcard)', () => {
+      // server filename with several dots must only match the identical query,
+      // not one where an unescaped '.' acts as a wildcard.
+      assert.isTrue(Parse.validateFileName("LOAD DATA LOCAL INFILE 'a.b.c.txt'", [], 'a.b.c.txt'));
+      assert.isFalse(Parse.validateFileName("LOAD DATA LOCAL INFILE 'aXbXc.txt'", [], 'a.b.c.txt'));
+    });
+
+    test('malicious server filename cannot inject regex syntax', () => {
+      // Unbalanced group previously made `new RegExp` throw (crash / DoS).
+      assert.doesNotThrow(() => Parse.validateFileName("LOAD DATA LOCAL INFILE 'x'", [], 'evil(.txt'));
+      assert.isFalse(Parse.validateFileName("LOAD DATA LOCAL INFILE 'x'", [], 'evil(.txt'));
+
+      // Catastrophic-backtracking pattern previously froze the event loop for
+      // tens of seconds; with metacharacters escaped it returns immediately.
+      const evilName = '(.*)*(.*)*(.*)*x';
+      const sql = "LOAD DATA LOCAL INFILE '" + 'a'.repeat(60) + "'";
+      const start = process.hrtime.bigint();
+      const result = Parse.validateFileName(sql, [], evilName);
+      const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+      assert.isFalse(result);
+      assert.isBelow(elapsedMs, 100);
+    });
   });
 });
