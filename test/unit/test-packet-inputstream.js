@@ -172,6 +172,7 @@ describe('test PacketInputStream data', () => {
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
+    pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
     pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
   }).timeout(300000);
@@ -192,12 +193,39 @@ describe('test PacketInputStream data', () => {
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
       info
     );
+    pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
     pis.onData(buf.slice(1000000, 2000000));
     pis.onData(buf.slice(2000000, 16777215));
     pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215, 17777215)]));
     pis.onData(buf.slice(17777215));
     assert.ok(beenDispatch);
+  }).timeout(300000);
+
+  // CONJS-358: multi-part packet reassembly must be refused before authentication completes,
+  // otherwise a malicious/MitM server can stream endless 0xffffff fragments and exhaust memory.
+  // The refusal fires as soon as a 0xffffff fragment finishes reassembling, so at most one is held.
+  it('rejects a multi-part packet reassembled before authentication', () => {
+    const queue = new Queue();
+    queue.push(new EmptyCmd(() => assert.fail('no packet must be dispatched from a rejected fragment')));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    // multiPacketAllowed defaults to false (handshake phase). Feed one full 0xffffff fragment split
+    // across two data events; nothing is dispatched and the connection is torn down on completion.
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
+    assert.isNull(fatalErr); // fragment still incomplete — no decision yet
+    pis.onData(buf.slice(1000000, 16777215));
+    assert.isNotNull(fatalErr);
+    assert.equal(fatalErr.errno, 45011); // ER_UNEXPECTED_PACKET
+    assert.include(fatalErr.message, 'before authentication');
+    assert.isNull(pis.parts); // buffered fragment released
   }).timeout(300000);
 
   it('packet size with byte > 128', () => {
