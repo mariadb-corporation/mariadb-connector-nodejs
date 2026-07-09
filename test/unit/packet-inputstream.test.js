@@ -173,6 +173,7 @@ describe.concurrent('test PacketInputStream data', () => {
         Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
         info
       );
+      pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
       pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
       pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
     });
@@ -195,6 +196,7 @@ describe.concurrent('test PacketInputStream data', () => {
         Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
         info
       );
+      pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
       pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
       pis.onData(buf.slice(1000000, 2000000));
       pis.onData(buf.slice(2000000, 16777215));
@@ -227,6 +229,55 @@ describe.concurrent('test PacketInputStream data', () => {
       info
     );
     pis.onData(buf);
+  });
+
+  // CONJS-358: multi-part packet reassembly must be refused before authentication completes,
+  // otherwise a malicious/MitM server can stream endless 0xffffff fragments and exhaust memory.
+  // The refusal fires as soon as a 0xffffff fragment finishes reassembling — before the next
+  // fragment can grow the buffer — so at most one fragment is ever held.
+  test('rejects a multi-part packet reassembled before authentication', () => {
+    const queue = new Queue();
+    queue.push(new EmptyCmd(() => assert.fail('no packet must be dispatched from a rejected fragment')));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    // multiPacketAllowed defaults to false (handshake phase). Feed one full 0xffffff fragment
+    // split across two data events; nothing is dispatched and the connection is torn down when the
+    // fragment completes.
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.subarray(0, 1000000)]));
+    assert.isNull(fatalErr); // fragment still incomplete — no decision yet
+    pis.onData(buf.subarray(1000000, 16777215));
+    assert.isNotNull(fatalErr);
+    assert.equal(fatalErr.errno, 45011); // ER_UNEXPECTED_PACKET
+    assert.include(fatalErr.message, 'before authentication');
+    assert.isNull(pis.parts); // buffered fragment released
+  });
+
+  test('permits multi-part reassembly once authentication has completed', () => {
+    const queue = new Queue();
+    let received = null;
+    queue.push(new EmptyCmd((packet) => (received = packet)));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    pis.multiPacketAllowed = true; // post-authentication
+    // a 0xffffff fragment followed by a terminating shorter fragment reassembles normally
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), Buffer.alloc(16777215, 7)]));
+    pis.onData(Buffer.from([2, 0, 0, 1, 8, 8]));
+    assert.isNull(fatalErr);
+    assert.isNotNull(received);
   });
 
   test('collation change', () => {
