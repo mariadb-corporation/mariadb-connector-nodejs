@@ -94,7 +94,9 @@ jobs:
           DB_TYPE: ${{ matrix.db-type }}
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
-          maxscale-tag: ${{ matrix.maxscale-tag || '' }}
+          # npm drops environment variables whose names contain a hyphen, so the
+          # test process must receive this under a hyphen-free name (see test/base.js).
+          MAXSCALE_TAG: ${{ matrix.maxscale-tag || '' }}
 
 
       - name: Download Codecov uploader
