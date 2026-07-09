@@ -5,7 +5,6 @@
 
 const base = require('../base.js');
 const { assert } = require('chai');
-const { isMaxscale } = require('../base');
 
 describe('TypeCast', () => {
   const changeCaseCast = (column, next) => {
@@ -238,10 +237,7 @@ describe('TypeCast', () => {
         }
       },
       {
-        b1:
-          shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2) && !isMaxscale()
-            ? { type: 'Point' }
-            : null
+        b1: shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(10, 5, 2) ? { type: 'Point' } : null
       }
     ];
     let rows = await conn.query('SELECT * from stupidCast');
