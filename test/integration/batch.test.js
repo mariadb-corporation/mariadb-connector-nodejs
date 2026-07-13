@@ -1418,6 +1418,46 @@ describe.sequential(
       }
     });
 
+    test('batch insertId type option (insertIdAsNumber / supportBigNumbers)', async ({ skip }) => {
+      // ensure insertId conversion options are honored for batch as they are for query/execute
+      async function checkInsertIdType(opts, expectedType) {
+        const conn = await createConnection(opts);
+        try {
+          await conn.query('DROP TABLE IF EXISTS batchInsertIdType');
+          await conn.query(
+            'CREATE TABLE batchInsertIdType(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, v INT) CHARSET utf8mb4'
+          );
+          await conn.query('FLUSH TABLES');
+          await conn.beginTransaction();
+
+          // default fullResult: array of OkPacket, insertId read from unit results
+          const full = await conn.batch('INSERT INTO batchInsertIdType(v) values (?)', [[1], [2], [3]]);
+          const fullInsertId =
+            Array.isArray(full) && full[0] && full[0].insertId !== undefined ? full[0].insertId : null;
+          if (fullInsertId !== null) {
+            assert.strictEqual(typeof fullInsertId, expectedType, `fullResult insertId with ${JSON.stringify(opts)}`);
+          }
+
+          // fullResult:false : single aggregated OkPacket
+          const agg = await conn.batch({ sql: 'INSERT INTO batchInsertIdType(v) values (?)', fullResult: false }, [
+            [4],
+            [5],
+            [6]
+          ]);
+          if (agg && agg.insertId !== undefined) {
+            assert.strictEqual(typeof agg.insertId, expectedType, `aggregated insertId with ${JSON.stringify(opts)}`);
+          }
+          await conn.query('DROP TABLE IF EXISTS batchInsertIdType');
+        } finally {
+          await conn.end();
+        }
+      }
+
+      await checkInsertIdType({}, 'bigint');
+      await checkInsertIdType({ insertIdAsNumber: true }, 'number');
+      await checkInsertIdType({ supportBigNumbers: true, bigNumberStrings: true }, 'string');
+    });
+
     describe.sequential('standard question mark using bulk', () => {
       test('batch with one value', async ({ skip }) => {
         if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 6, 0)) return skip();
