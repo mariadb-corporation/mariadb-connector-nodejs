@@ -323,4 +323,33 @@ describe.concurrent('Big query', function () {
       await conn.end();
     }
   }
+
+  // The server does not honour the max packet size advertised in the handshake response: it sends
+  // whatever its own max_allowed_packet permits. A packet larger than the client was told to expect
+  // is therefore refused rather than reassembled, which is what bounds memory against a server
+  // streaming endless fragments.
+  test('refuses a result packet larger than maxAllowedPacket', async () => {
+    const conn = await createConnection({ maxAllowedPacket: 1024 });
+    try {
+      await conn.query("SELECT REPEAT('x', 100000) AS big");
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert.equal(err.errno, 45011); // ER_UNEXPECTED_PACKET
+      assert.isTrue(err.fatal);
+      assert.include(err.message, 'exceeds maxAllowedPacket (1024)');
+    } finally {
+      await conn.end().catch(() => {});
+    }
+  });
+
+  // a result comfortably under maxAllowedPacket must still stream normally
+  test('reassembles a result packet within maxAllowedPacket', async () => {
+    const conn = await createConnection({ maxAllowedPacket: 1024 * 1024 });
+    try {
+      const rows = await conn.query("SELECT REPEAT('x', 500000) AS big");
+      assert.equal(rows[0].big.length, 500000);
+    } finally {
+      await conn.end();
+    }
+  });
 });

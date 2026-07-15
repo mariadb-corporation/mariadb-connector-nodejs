@@ -7,6 +7,7 @@ import * as basePromise from '../../../promise.js';
 import * as baseCallback from '../../../callback.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { getEnv } from '../../base.js';
+import { DEFAULT_MAX_ALLOWED_PACKET } from '../../../lib/config/connection-options.js';
 
 describe.concurrent('test options', () => {
   test('default options', function () {
@@ -30,7 +31,7 @@ describe.concurrent('test options', () => {
       restrictedAuth: undefined,
       allowPublicKeyRetrieval: false,
       forceVersionCheck: false,
-      maxAllowedPacket: undefined,
+      maxAllowedPacket: DEFAULT_MAX_ALLOWED_PACKET,
       permitConnectionWhenExpired: false,
       pipelining: true,
       timezone: '+00:00',

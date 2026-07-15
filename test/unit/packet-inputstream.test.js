@@ -173,7 +173,8 @@ describe.concurrent('test PacketInputStream data', () => {
         Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
         info
       );
-      pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
+      // post-authentication: reassembly is bounded by the connection value
+      pis.maxAllowedPacket = pis.opts.maxAllowedPacket;
       pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 16777215)]));
       pis.onData(Buffer.concat([Buffer.from([0x00, 0x00, 0x40, 0x01]), buf.slice(16777215)]));
     });
@@ -196,7 +197,8 @@ describe.concurrent('test PacketInputStream data', () => {
         Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
         info
       );
-      pis.multiPacketAllowed = true; // post-authentication: multi-part reassembly is permitted
+      // post-authentication: reassembly is bounded by the connection value
+      pis.maxAllowedPacket = pis.opts.maxAllowedPacket;
       pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.slice(0, 1000000)]));
       pis.onData(buf.slice(1000000, 2000000));
       pis.onData(buf.slice(2000000, 16777215));
@@ -233,8 +235,8 @@ describe.concurrent('test PacketInputStream data', () => {
 
   // CONJS-358: multi-part packet reassembly must be refused before authentication completes,
   // otherwise a malicious/MitM server can stream endless 0xffffff fragments and exhaust memory.
-  // The refusal fires as soon as a 0xffffff fragment finishes reassembling — before the next
-  // fragment can grow the buffer — so at most one fragment is ever held.
+  // Before authentication the connection is bounded to 1Mb, so a 0xffffff fragment is refused on its
+  // announced size alone — none of its payload is ever buffered.
   test('rejects a multi-part packet reassembled before authentication', () => {
     const queue = new Queue();
     queue.push(new EmptyCmd(() => assert.fail('no packet must be dispatched from a rejected fragment')));
@@ -247,16 +249,13 @@ describe.concurrent('test PacketInputStream data', () => {
       info,
       (err) => (fatalErr = err)
     );
-    // multiPacketAllowed defaults to false (handshake phase). Feed one full 0xffffff fragment
-    // split across two data events; nothing is dispatched and the connection is torn down when the
-    // fragment completes.
+    // handshake phase: the 0xffffff header announces 16Mb, past the 1Mb bound, so the connection is
+    // torn down on the first data event without dispatching or buffering anything.
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.subarray(0, 1000000)]));
-    assert.isNull(fatalErr); // fragment still incomplete — no decision yet
-    pis.onData(buf.subarray(1000000, 16777215));
     assert.isNotNull(fatalErr);
     assert.equal(fatalErr.errno, 45011); // ER_UNEXPECTED_PACKET
     assert.include(fatalErr.message, 'before authentication');
-    assert.isNull(pis.parts); // buffered fragment released
+    assert.isNull(pis.parts); // nothing buffered
   });
 
   test('permits multi-part reassembly once authentication has completed', () => {
@@ -272,10 +271,74 @@ describe.concurrent('test PacketInputStream data', () => {
       info,
       (err) => (fatalErr = err)
     );
-    pis.multiPacketAllowed = true; // post-authentication
+    // post-authentication: reassembly is bounded by the connection value
+    pis.maxAllowedPacket = pis.opts.maxAllowedPacket;
     // a 0xffffff fragment followed by a terminating shorter fragment reassembles normally
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), Buffer.alloc(16777215, 7)]));
     pis.onData(Buffer.from([2, 0, 0, 1, 8, 8]));
+    assert.isNull(fatalErr);
+    assert.isNotNull(received);
+  });
+
+  test('refuses a packet announcing more than maxAllowedPacket once authenticated', () => {
+    const queue = new Queue();
+    queue.push(new EmptyCmd(() => assert.fail('no packet must be dispatched from a refused packet')));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    pis.maxAllowedPacket = 1000;
+    // header announces 2000 bytes, twice the permitted value: refused before the payload arrives
+    pis.onData(Buffer.from([0xd0, 0x07, 0x00, 0x00]));
+    assert.isNotNull(fatalErr);
+    assert.equal(fatalErr.errno, 45011); // ER_UNEXPECTED_PACKET
+    assert.include(fatalErr.message, 'exceeds maxAllowedPacket');
+    assert.notInclude(fatalErr.message, 'before authentication');
+    assert.isNull(pis.parts);
+  });
+
+  test('refuses multi-part reassembly growing past maxAllowedPacket', () => {
+    const queue = new Queue();
+    queue.push(new EmptyCmd(() => assert.fail('no packet must be dispatched from a refused packet')));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    pis.maxAllowedPacket = 20 * 1024 * 1024; //20Mb: one full fragment fits, two do not
+    pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.subarray(0, 16777215)]));
+    assert.isNull(fatalErr); // 16Mb reassembled so far, still within bounds
+    // a second 0xffffff fragment would take the total to 32Mb: refused
+    pis.onData(Buffer.from([0xff, 0xff, 0xff, 0x01]));
+    assert.isNotNull(fatalErr);
+    assert.include(fatalErr.message, 'exceeds maxAllowedPacket');
+    assert.isNull(pis.parts); // reassembly buffer released
+  });
+
+  test('accepts a packet exactly at maxAllowedPacket', () => {
+    const queue = new Queue();
+    let received = null;
+    queue.push(new EmptyCmd((packet) => (received = packet)));
+    let fatalErr = null;
+    const pis = new PacketInputStream(
+      unexpectedPacket,
+      queue,
+      null,
+      Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+      info,
+      (err) => (fatalErr = err)
+    );
+    pis.maxAllowedPacket = 5; // boundary is inclusive: a 5 byte packet must pass
+    pis.onData(Buffer.from([5, 0, 0, 0, 1, 2, 3, 4, 5]));
     assert.isNull(fatalErr);
     assert.isNotNull(received);
   });

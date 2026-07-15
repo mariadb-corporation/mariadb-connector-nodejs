@@ -124,8 +124,9 @@ describe.concurrent('test compress PacketInputStream data', () => {
     );
     const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
     const pis = new PacketInputStream(unexpectedPacket, queue, null, opts, info);
-    // compression is only ever negotiated after authentication, so multi-part reassembly is permitted
-    pis.multiPacketAllowed = true;
+    // compression is only ever negotiated after authentication, so reassembly is bounded by the
+    // connection value rather than the handshake one
+    pis.maxAllowedPacket = opts.maxAllowedPacket;
 
     return new CompressionInputStream(pis, queue, opts, info);
   }

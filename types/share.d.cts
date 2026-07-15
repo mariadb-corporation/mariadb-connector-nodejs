@@ -780,7 +780,15 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
 
   /**
    * permit indicating server global variable max_allowed_packet value to ensure efficient batching.
-   * default is 4Mb. see batch documentation
+   * see batch documentation
+   *
+   * This value is advertised to the server in the handshake response, and bounds packet reassembly:
+   * a server announcing a larger packet than this has exceeded what the client was told to expect,
+   * and the connection is refused rather than growing the reassembly buffer. Set it to the server's
+   * real max_allowed_packet; a lower value will reject legitimate results.
+   *
+   * When unset, defaults to a quarter of the memory available to the process (the cgroup limit when
+   * containerised, physical memory otherwise), bounded to [16Mb, 1Gb].
    */
   maxAllowedPacket?: number;
 
