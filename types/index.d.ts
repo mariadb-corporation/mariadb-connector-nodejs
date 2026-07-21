@@ -20,7 +20,19 @@ export function createPoolCluster(config?: PoolClusterConfig): PoolCluster;
 export function importFile(config: ImportFileConfig): Promise<void>;
 export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
 
-export type TypeCastResult = boolean | number | string | symbol | null | Date | geojson.Geometry | Buffer;
+export type TypeCastResult =
+  | boolean
+  | number
+  | bigint
+  | string
+  | symbol
+  | null
+  | Date
+  | geojson.Geometry
+  | Buffer
+  | string[] // SET columns
+  | Record<string, any> // JSON columns
+  | any[];
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
 
@@ -1053,13 +1065,26 @@ export interface FieldInfo {
 
   // Note that you may only call *one* of these functions
   // when decoding a column via the typeCast callback.
-  // Calling additional functions will give you incorrect results.
+  // Each call advances the packet cursor, so calling additional
+  // functions will give you incorrect results.
+  //
+  // Except for `string()` and `buffer()`, which decode any column type,
+  // call the accessor matching the column's own type: with prepared
+  // statements the server sends each type in its native binary form, so
+  // e.g. `int()` on a BIGINT column reads the wrong number of bytes.
   string(): string | null;
   buffer(): Buffer | null;
+  /** Also decodes DOUBLE columns. */
   float(): number | null;
+  tiny(): number | null;
+  short(): number | null;
   int(): number | null;
-  long(): number | null;
-  decimal(): number | null;
-  date(): Date | null;
+  /** BIGINT columns, returned as a `bigint`. */
+  long(): bigint | null;
+  /** DECIMAL columns, returned as a string to preserve precision. */
+  decimal(): string | null;
+  /** Returns a string instead of a `Date` when the `dateStrings` option is enabled. */
+  date(): Date | string | null;
+  datetime(): Date | null;
   geometry(): geojson.Geometry | null;
 }
