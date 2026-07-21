@@ -175,6 +175,114 @@ describe.concurrent('TypeCast', () => {
     await conn.end();
   }, 5000);
 
+  const ALL_TYPES_DDL =
+    'ti TINYINT, uti TINYINT UNSIGNED, si SMALLINT, usi SMALLINT UNSIGNED, ' +
+    'mi MEDIUMINT, umi MEDIUMINT UNSIGNED, i INT, ui INT UNSIGNED, ' +
+    'bi BIGINT, ubi BIGINT UNSIGNED, yr YEAR, fl FLOAT, dbl DOUBLE, ' +
+    'de DECIMAL(10,2), dt DATE, dtt DATETIME, tm TIME, vc VARCHAR(20)';
+  const ALL_TYPES_VALUES =
+    '(-128, 255, -32768, 65535, -8388608, 16777215, -2147483648, 4294967295, ' +
+    '-9223372036854775808, 18446744073709551615, 2024, 1.5, 1234.5678, 12.34, ' +
+    "'2020-02-29', '2020-02-29 12:13:14', '10:20:30', 'hello'), " +
+    '(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null)';
+
+  // The binary protocol only length-encodes variable-length values, so string()/buffer() must
+  // decode each fixed-width type natively. Getting this wrong also desynchronizes the packet
+  // cursor, corrupting every subsequent column of the row - hence asserting on a wide row.
+  test('string cast of every type is identical in text and binary protocol', async function () {
+    const conn = await base.createConnection({ typeCast: (column, next) => column.string() });
+    await conn.query('DROP TABLE IF EXISTS castAllTypes');
+    await conn.query(`CREATE TABLE castAllTypes(${ALL_TYPES_DDL})`);
+    await conn.beginTransaction();
+    await conn.query(`INSERT INTO castAllTypes VALUES ${ALL_TYPES_VALUES}`);
+
+    const expected = [
+      {
+        ti: '-128',
+        uti: '255',
+        si: '-32768',
+        usi: '65535',
+        mi: '-8388608',
+        umi: '16777215',
+        i: '-2147483648',
+        ui: '4294967295',
+        bi: '-9223372036854775808',
+        ubi: '18446744073709551615',
+        yr: '2024',
+        fl: '1.5',
+        dbl: '1234.5678',
+        de: '12.34',
+        dt: '2020-02-29',
+        dtt: '2020-02-29 12:13:14',
+        tm: '10:20:30',
+        vc: 'hello'
+      },
+      {
+        ti: null,
+        uti: null,
+        si: null,
+        usi: null,
+        mi: null,
+        umi: null,
+        i: null,
+        ui: null,
+        bi: null,
+        ubi: null,
+        yr: null,
+        fl: null,
+        dbl: null,
+        de: null,
+        dt: null,
+        dtt: null,
+        tm: null,
+        vc: null
+      }
+    ];
+
+    assert.deepEqual(await conn.query('SELECT * from castAllTypes'), expected);
+    assert.deepEqual(await conn.execute('SELECT * from castAllTypes'), expected);
+    await conn.end();
+  }, 5000);
+
+  test('buffer cast of every type is identical in text and binary protocol', async function () {
+    const conn = await base.createConnection({
+      typeCast: (column, next) => {
+        const buf = column.buffer();
+        return buf == null ? null : buf.toString('latin1');
+      }
+    });
+    await conn.query('DROP TABLE IF EXISTS castAllTypesBuf');
+    await conn.query(`CREATE TABLE castAllTypesBuf(${ALL_TYPES_DDL})`);
+    await conn.beginTransaction();
+    await conn.query(`INSERT INTO castAllTypesBuf VALUES ${ALL_TYPES_VALUES}`);
+
+    const textRows = await conn.query('SELECT * from castAllTypesBuf');
+    const binaryRows = await conn.execute('SELECT * from castAllTypesBuf');
+    assert.deepEqual(binaryRows, textRows);
+    assert.equal(textRows[0].i, '-2147483648');
+    assert.equal(textRows[0].ubi, '18446744073709551615');
+    await conn.end();
+  }, 5000);
+
+  test('numeric accessors honour column signedness', async function () {
+    const numCast = (column, next) => {
+      if (column.type === 'INT') return column.int();
+      if (column.type === 'BIGINT') return column.long();
+      if (column.type === 'DOUBLE') return column.float();
+      return next();
+    };
+    const conn = await base.createConnection({ typeCast: numCast });
+    await conn.query('DROP TABLE IF EXISTS castUnsigned');
+    await conn.query('CREATE TABLE castUnsigned(i INT UNSIGNED, bi BIGINT UNSIGNED, dbl DOUBLE)');
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO castUnsigned VALUES (4294967295, 18446744073709551615, 1234.5678)');
+
+    const expected = [{ i: 4294967295, bi: 18446744073709551615n, dbl: 1234.5678 }];
+    assert.deepEqual(await conn.query('SELECT * from castUnsigned'), expected);
+    assert.deepEqual(await conn.execute('SELECT * from castUnsigned'), expected);
+    await conn.end();
+  }, 5000);
+
   test('date cast', async function () {
     const longCast = (column, next) => {
       if (column.type === 'TIMESTAMP' || column.type === 'DATETIME') {
