@@ -1,7 +1,8 @@
+// AUTO-GENERATED from the matching .d.ts by tools/generate-cts.js — do not edit.
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
-// Type definitions for mariadb (CommonJS version)
+// Type definitions for mariadb
 // Project: https://github.com/mariadb-corporation/mariadb-connector-nodejs
 // Definitions by: Diego Dupin <https://github.com/rusher>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped

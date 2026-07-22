@@ -8,6 +8,7 @@ import * as FieldType from '../../lib/const/field-type.js';
 import Conf from '../conf.js';
 import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, utf8Collation } from '../base.js';
+import { Types, TypeNumbers } from '../../promise.js';
 
 describe.concurrent('metadata', () => {
   let shareConn;
@@ -55,6 +56,36 @@ describe.concurrent('metadata', () => {
     const rows = await shareConn.query(`SELECT ${name} as ${alias} FROM metadatatable2`);
     assert.equal(rows.meta[0].name(), alias);
     assert.equal(rows.meta[0].orgName(), name);
+  });
+
+  test('Types / TypeNumbers exported for runtime use (CONJS-364)', async function () {
+    // #355 exported the wrong shape (an index->name array), so these were undefined at runtime.
+    // They must be keyed by name and equal the values the driver actually returns.
+    assert.equal(Types.DECIMAL, 'DECIMAL');
+    assert.equal(Types.INT, 'INT');
+    assert.equal(Types.VAR_STRING, 'VAR_STRING');
+    assert.equal(Types.GEOMETRY, 'GEOMETRY');
+    assert.equal(TypeNumbers.INT, 3);
+    assert.equal(TypeNumbers.BIGINT, 8);
+    assert.equal(TypeNumbers.GEOMETRY, 255);
+
+    await shareConn.query('DROP TABLE IF EXISTS typeConstTable');
+    await shareConn.query('CREATE TABLE typeConstTable (i INT, b BIGINT, v VARCHAR(10))');
+    await shareConn.query('FLUSH TABLES');
+    const rows = await shareConn.query('SELECT i, b, v FROM typeConstTable');
+
+    // field.type (string) matches the Types constant of the same name
+    assert.equal(rows.meta[0].type, Types.INT);
+    assert.equal(rows.meta[1].type, Types.BIGINT);
+    assert.equal(rows.meta[2].type, Types.VAR_STRING);
+
+    // field.columnType (number) matches the TypeNumbers constant
+    assert.equal(rows.meta[0].columnType, TypeNumbers.INT);
+    assert.equal(rows.meta[1].columnType, TypeNumbers.BIGINT);
+    assert.equal(rows.meta[2].columnType, TypeNumbers.VAR_STRING);
+
+    // the two views agree: TypeNumbers[field.type] === field.columnType
+    assert.equal(TypeNumbers[rows.meta[0].type], rows.meta[0].columnType);
   });
 });
 

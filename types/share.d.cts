@@ -1,9 +1,22 @@
+// AUTO-GENERATED from the matching .d.ts by tools/generate-cts.js — do not edit.
 import { Geometry } from 'geojson';
 import { Buffer } from 'node:buffer';
 import { Duplex, Readable } from 'node:stream';
 import { SecureContextOptions } from 'node:tls';
 
-export type TypeCastResult = boolean | number | string | symbol | null | Date | Geometry | Buffer;
+export type TypeCastResult =
+  | boolean
+  | number
+  | bigint
+  | string
+  | symbol
+  | null
+  | Date
+  | Geometry
+  | Buffer
+  | string[] // SET columns
+  | Record<string, any> // JSON columns
+  | any[];
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
 export function StreamCallback(err?: Error, stream?: Duplex): void;
@@ -61,14 +74,27 @@ export interface FieldInfo {
 
   // Note that you may only call *one* of these functions
   // when decoding a column via the typeCast callback.
-  // Calling additional functions will give you incorrect results.
+  // Each call advances the packet cursor, so calling additional
+  // functions will give you incorrect results.
+  //
+  // Except for `string()` and `buffer()`, which decode any column type,
+  // call the accessor matching the column's own type: with prepared
+  // statements the server sends each type in its native binary form, so
+  // e.g. `int()` on a BIGINT column reads the wrong number of bytes.
   string(): string | null;
   buffer(): Buffer | null;
+  /** Also decodes DOUBLE columns. */
   float(): number | null;
+  tiny(): number | null;
+  short(): number | null;
   int(): number | null;
-  long(): number | null;
-  decimal(): number | null;
-  date(): Date | null;
+  /** BIGINT columns, returned as a `bigint`. */
+  long(): bigint | null;
+  /** DECIMAL columns, returned as a string to preserve precision. */
+  decimal(): string | null;
+  /** Returns a string instead of a `Date` when the `dateStrings` option is enabled. */
+  date(): Date | string | null;
+  datetime(): Date | null;
   geometry(): Geometry | null;
 }
 
@@ -402,7 +428,7 @@ export enum TypeNumbers {
   DECIMAL = 0,
   TINY = 1,
   SHORT = 2,
-  LONG = 3,
+  INT = 3,
   FLOAT = 4,
   DOUBLE = 5,
   NULL = 6,
@@ -419,7 +445,7 @@ export enum TypeNumbers {
   TIMESTAMP2 = 17,
   DATETIME2 = 18,
   TIME2 = 19,
-  JSON = 245, //only for MySQ,
+  JSON = 245, // only for MySQL
   NEWDECIMAL = 246,
   ENUM = 247,
   SET = 248,
@@ -469,7 +495,7 @@ export enum Types {
   DECIMAL = 'DECIMAL',
   TINY = 'TINY',
   SHORT = 'SHORT',
-  LONG = 'LONG',
+  INT = 'INT',
   FLOAT = 'FLOAT',
   DOUBLE = 'DOUBLE',
   NULL = 'NULL',

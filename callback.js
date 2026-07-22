@@ -13,10 +13,10 @@ import ClusterOptions from './lib/config/cluster-options.js';
 import Connection from './lib/connection.js';
 import * as SqlError from './lib/misc/errors.js';
 import packageJson from './package.json' with { type: 'json' };
-import { TYPES } from './lib/const/field-type.js';
+import { Types, TypeNumbers } from './lib/const/field-type.js';
 
 export const version = packageJson.version;
-export { SqlError, TYPES as Types };
+export { SqlError, Types, TypeNumbers };
 
 export function defaultOptions(opts) {
   const connOpts = new ConnOptions(opts);

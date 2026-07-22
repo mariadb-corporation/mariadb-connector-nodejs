@@ -1,14 +1,15 @@
+// AUTO-GENERATED from the matching .d.ts by tools/generate-cts.js — do not edit.
 //  SPDX-License-Identifier: LGPL-2.1-or-later
 //  Copyright (c) 2015-2025 MariaDB Corporation Ab
 
 /*
- * Callback-based API for mariadb-connector-nodejs (CommonJS version)
- * This file mirrors the structure of the promise-based API in index.d.cts,
+ * Callback-based API for mariadb-connector-nodejs
+ * This file mirrors the structure of the promise-based API in index.d.ts,
  * but all async methods use Node.js-style callbacks as the last argument.
  *
  * Callback signature: (err: SqlError | null, result?: T, meta?: any) => void
  *
- * All types are reused from share.d.cts where possible.
+ * All types are reused from share.d.ts where possible.
  */
 
 import { Readable } from 'node:stream';
