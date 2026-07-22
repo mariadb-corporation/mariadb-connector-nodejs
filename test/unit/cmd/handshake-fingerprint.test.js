@@ -16,9 +16,13 @@ import Handshake from '../../../lib/cmd/handshake/auth/handshake.js';
 const openInfo = (over = {}) => ({ useFingerprintValidation: true, selfSignedCertificate: true, ...over });
 const cert = (fingerprint256) => ({ fingerprint256 });
 
-describe.concurrent('Handshake.computeTlsFingerprint (fingerprint gating)', () => {
+describe.concurrent('Handshake.computeTlsFingerprint (fingerprint gating + issue #354)', () => {
   test('gate open + real cert -> colon-stripped, lower-cased fingerprint', () => {
     assert.equal(Handshake.computeTlsFingerprint(openInfo(), cert('AB:CD:EF:01')), 'abcdef01');
+  });
+
+  test('empty cert object {} -> null, no throw (issue #354)', () => {
+    assert.equal(Handshake.computeTlsFingerprint(openInfo(), {}), null);
   });
 
   test('null cert -> null', () => {
