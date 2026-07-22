@@ -139,9 +139,7 @@ describe.concurrent('ssl', function () {
   });
 
   test('signed certificate error with ephemeral', async ({ skip }) => {
-    // deno will use standard validation, since checkServerIdentity cannot be used for now :
-    // https://github.com/denoland/deno/issues/30892
-    if (!sslEnable || isDeno()) return skip();
+    if (!sslEnable) return skip();
     if (isMaxscale(shareConn)) return skip();
     let isMaxscaleEphemeral = false;
     if (isMaxscale(shareConn) && isMaxscaleMinVersion(shareConn, 25, 8, 0)) {
@@ -225,7 +223,7 @@ describe.concurrent('ssl', function () {
 
     // test will work either because a server certificate chain is trusted (not don in tests)
     // or using mariadb ephemeral certificate validation
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0) || isDeno()) return skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) return skip();
     if (!Conf.baseConfig.password) return skip();
     const conn = await createConnection({
       user: 'sslTestUser',
@@ -243,7 +241,7 @@ describe.concurrent('ssl', function () {
 
     // test will work either because a server certificate chain is trusted (not done in tests)
     // or using mariadb ephemeral certificate validation
-    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0) || isDeno()) return skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) return skip();
     if (!Conf.baseConfig.password) return skip();
 
     const conn = await createConnection({
