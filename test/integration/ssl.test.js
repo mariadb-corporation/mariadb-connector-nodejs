@@ -194,8 +194,13 @@ describe.concurrent('ssl', function () {
       await createConnection({ ssl: true, port: sslPort });
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.equal(err.code, 'ER_SELF_SIGNED');
-      assert.equal(err.errno, 45056);
+      // servers taking part in the self-signed certificate validation are rejected by the
+      // connector (ER_SELF_SIGNED); the others are rejected earlier, at TLS level
+      if (err.code === 'ER_SELF_SIGNED') {
+        assert.equal(err.errno, 45056);
+      } else {
+        assert.equal(err.code, 'SELF_SIGNED_CERT_IN_CHAIN');
+      }
     }
   });
 
@@ -212,8 +217,13 @@ describe.concurrent('ssl', function () {
       await createConnection({ ssl: true, port: sslPort });
       throw new Error('must have thrown error');
     } catch (err) {
-      assert.equal(err.code, 'ER_SELF_SIGNED');
-      assert.equal(err.errno, 45056);
+      // servers taking part in the self-signed certificate validation are rejected by the
+      // connector (ER_SELF_SIGNED); the others are rejected earlier, at TLS level
+      if (err.code === 'ER_SELF_SIGNED') {
+        assert.equal(err.errno, 45056);
+      } else {
+        assert.equal(err.code, 'SELF_SIGNED_CERT_IN_CHAIN');
+      }
     }
   });
 
