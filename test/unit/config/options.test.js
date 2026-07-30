@@ -32,6 +32,7 @@ describe.concurrent('test options', () => {
       allowPublicKeyRetrieval: false,
       forceVersionCheck: false,
       maxAllowedPacket: DEFAULT_MAX_ALLOWED_PACKET,
+      maxAllowedColumns: 65535,
       permitConnectionWhenExpired: false,
       pipelining: true,
       timezone: '+00:00',

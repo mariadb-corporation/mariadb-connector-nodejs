@@ -57,6 +57,32 @@ describe.sequential('connection option', () => {
     await conn.end();
   });
 
+  test('maxAllowedColumns', async () => {
+    // the column count is server-announced: bounding it protects the client from a malicious or MitM
+    // server declaring an enormous count to exhaust memory (CONJS-366)
+    let conn = await createConnection({ maxAllowedColumns: 2 });
+    const res = await conn.query('SELECT 1 as a, 2 as b');
+    assert.deepEqual(res[0], { a: 1, b: 2 });
+    await conn.end();
+
+    for (const exec of [(c) => c.query('SELECT 1 as a, 2 as b, 3 as c'), (c) => c.execute('SELECT 1, 2, 3')]) {
+      conn = await createConnection({ maxAllowedColumns: 2 });
+      try {
+        await exec(conn);
+        throw new Error('must have thrown error');
+      } catch (err) {
+        assert.equal(err.errno, 45065);
+        assert.equal(err.code, 'ER_MAX_ALLOWED_COLUMNS');
+        assert.equal(err.sqlState, '08S01');
+        assert.isTrue(err.message.includes('exceeding maxAllowedColumns (2)'));
+        // the metadata is refused, so the stream cannot be resynchronized: connection is closed
+        assert.isTrue(err.fatal);
+        assert.isFalse(conn.isValid());
+      }
+      await conn.end();
+    }
+  });
+
   test('automatic timezone', async ({ skip }) => {
     if (getEnv('local') === undefined || getEnv('local') === '0') return skip();
     const conn = await createConnection({ timezone: 'auto' });

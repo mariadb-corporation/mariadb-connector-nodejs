@@ -818,6 +818,18 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   maxAllowedPacket?: number;
 
   /**
+   * Maximum number of columns a server-announced result-set or prepare metadata may declare.
+   *
+   * The column count is read from the wire before any metadata is allocated for it, so a malicious or
+   * MitM server announcing an enormous count could otherwise exhaust client memory. A count above this
+   * limit rejects the command instead. 65535 matches the cap the wire format already imposes on
+   * prepare column/parameter counts, while server tables are limited to 4096 columns (1017 for InnoDB).
+   *
+   * (Default: 65535)
+   */
+  maxAllowedColumns?: number;
+
+  /**
    * permit enabling socket keeping alive, setting delay. 0 means aren't enabled.
    * Keep in mind that this doesn't reset server
    * [@@wait_timeout](https://mariadb.com/kb/en/library/server-system-variables/#wait_timeout)

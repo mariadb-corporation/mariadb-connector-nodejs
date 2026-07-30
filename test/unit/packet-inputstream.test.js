@@ -18,6 +18,9 @@ describe.concurrent('test PacketInputStream data', () => {
   let bigSize = 20 * 1024 * 1024 - 1;
   let buf;
   const info = new ConnectionInformation({});
+  // the reader reports an unrecoverable packet through the connection information, which Connection
+  // wires to its own fatalError: the connection is closed rather than left with a broken stream
+  const infoWithFatalError = (onFatalError) => new ConnectionInformation({}, null, onFatalError);
   const unexpectedPacket = (packet) => {
     throw new Error('unexpected packet');
   };
@@ -246,8 +249,7 @@ describe.concurrent('test PacketInputStream data', () => {
       queue,
       null,
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
-      info,
-      (err) => (fatalErr = err)
+      infoWithFatalError((err) => (fatalErr = err))
     );
     // handshake phase: the 0xffffff header announces 16Mb, past the 1Mb bound, so the connection is
     // torn down on the first data event without dispatching or buffering anything.
@@ -268,8 +270,7 @@ describe.concurrent('test PacketInputStream data', () => {
       queue,
       null,
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
-      info,
-      (err) => (fatalErr = err)
+      infoWithFatalError((err) => (fatalErr = err))
     );
     // post-authentication: reassembly is bounded by the connection value
     pis.maxAllowedPacket = pis.opts.maxAllowedPacket;
@@ -289,8 +290,7 @@ describe.concurrent('test PacketInputStream data', () => {
       queue,
       null,
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
-      info,
-      (err) => (fatalErr = err)
+      infoWithFatalError((err) => (fatalErr = err))
     );
     pis.maxAllowedPacket = 1000;
     // header announces 2000 bytes, twice the permitted value: refused before the payload arrives
@@ -311,8 +311,7 @@ describe.concurrent('test PacketInputStream data', () => {
       queue,
       null,
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
-      info,
-      (err) => (fatalErr = err)
+      infoWithFatalError((err) => (fatalErr = err))
     );
     pis.maxAllowedPacket = 20 * 1024 * 1024; //20Mb: one full fragment fits, two do not
     pis.onData(Buffer.concat([Buffer.from([0xff, 0xff, 0xff, 0x00]), buf.subarray(0, 16777215)]));
@@ -334,8 +333,7 @@ describe.concurrent('test PacketInputStream data', () => {
       queue,
       null,
       Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
-      info,
-      (err) => (fatalErr = err)
+      infoWithFatalError((err) => (fatalErr = err))
     );
     pis.maxAllowedPacket = 5; // boundary is inclusive: a 5 byte packet must pass
     pis.onData(Buffer.from([5, 0, 0, 0, 1, 2, 3, 4, 5]));
