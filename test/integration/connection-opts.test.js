@@ -61,7 +61,9 @@ describe.sequential('connection option', () => {
     // the column count is server-announced: bounding it protects the client from a malicious or MitM
     // server declaring an enormous count to exhaust memory (CONJS-366)
     let conn = await createConnection({ maxAllowedColumns: 2 });
-    const res = await conn.query('SELECT 1 as a, 2 as b');
+    // MySQL types integer literals as BIGINT (decoded as BigInt), MariaDB as INT: normalize so the
+    // assertion holds on both
+    const res = await conn.query({ sql: 'SELECT 1 as a, 2 as b', bigIntAsNumber: true });
     assert.deepEqual(res[0], { a: 1, b: 2 });
     await conn.end();
 
