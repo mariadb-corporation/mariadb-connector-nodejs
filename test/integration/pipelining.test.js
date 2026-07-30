@@ -36,6 +36,28 @@ describe.concurrent('pipelining', () => {
     });
   });
 
+  // CONJS-361: without pipelining a command is only sent once both queues are empty, so a finished
+  // command left in the receive queue stalls the connection for good. A prepare response ends on a
+  // column definition packet, which the reader dispatches through its fast-path.
+  test('prepare then execute chain no pipelining', async () => {
+    const conn = await createConnection({ pipelining: false });
+    try {
+      const prepare = await conn.prepare('SELECT ? as a');
+      // this execute is the one that used to never reach the wire
+      assert.deepEqual((await prepare.execute([1]))[0].a, 1);
+      await prepare.close();
+
+      // and the connection must remain usable afterwards, cached prepare included
+      const cached = await conn.prepare('SELECT ? as a');
+      assert.deepEqual((await cached.execute([2]))[0].a, 2);
+      await cached.close();
+      assert.deepEqual((await conn.query('SELECT 3 as b'))[0].b, 3);
+      assert.deepEqual((await conn.execute('SELECT ? as c', [4]))[0].c, 4);
+    } finally {
+      await conn.end();
+    }
+  }, 10000);
+
   test('pipelining without waiting for connect', async () => {
     const conn = createCallbackConnection({ pipelining: true });
     await new Promise((resolve, reject) => {
