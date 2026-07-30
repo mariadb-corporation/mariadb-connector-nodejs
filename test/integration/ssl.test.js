@@ -264,6 +264,45 @@ describe.concurrent('ssl', function () {
     await conn.end();
   });
 
+  // Fingerprint validation of a self-signed (ephemeral) certificate asks the plugin for the
+  // server-side password hash, so it exercises a code path the plain ed25519 handshake never
+  // reaches. CONJS-356: Ed25519PasswordAuth#hash() threw `ReferenceError: seed is not defined`.
+  test('self signed certificate forcing with ed25519 password', async ({ skip }) => {
+    if (isMaxscale(shareConn)) return skip();
+    if (!sslEnable) return skip();
+    if (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0)) return skip();
+
+    const res = await shareConn.query('SELECT @@strict_password_validation as a');
+    if (res[0].a === 1 && !shareConn.info.hasMinVersion(10, 4, 0)) return skip();
+
+    try {
+      await shareConn.query("INSTALL SONAME 'auth_ed25519'").catch(() => {});
+      await shareConn.query('DROP USER IF EXISTS sslEd25519User' + getHostSuffix());
+      await shareConn.query(
+        'CREATE USER sslEd25519User' + getHostSuffix() + " IDENTIFIED VIA ed25519 USING PASSWORD('MySup8%rPassw@ord')"
+      );
+      await shareConn.query('GRANT SELECT ON *.* TO sslEd25519User' + getHostSuffix());
+    } catch (e) {
+      // ed25519 plugin not available on this server
+      return skip();
+    }
+
+    try {
+      for (const ssl of [{ rejectUnauthorized: true }, true]) {
+        const conn = await createConnection({
+          user: 'sslEd25519User',
+          password: 'MySup8%rPassw@ord',
+          ssl: ssl,
+          port: sslPort
+        });
+        await validConnection(conn);
+        await conn.end();
+      }
+    } finally {
+      await shareConn.query('DROP USER IF EXISTS sslEd25519User' + getHostSuffix()).catch(() => {});
+    }
+  });
+
   test('ensure connection use SSL ', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();
     if (!sslEnable) return skip();
