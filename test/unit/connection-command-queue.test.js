@@ -53,6 +53,36 @@ describe.concurrent('command queue without pipelining (CONJS-361)', () => {
     assert.equal(conn.receiveQueue.peekFront(), cmd);
   });
 
+  // a command is only given its onPacketReceive when it starts, so a command queued behind a big
+  // send has none at all. Discarding it would lose its response for good: only a command that ended,
+  // which sets onPacketReceive to null, may be dropped.
+  test('a command queued but not started yet is never discarded', () => {
+    const conn = newConn();
+    const notStarted = new FakeCmd(true);
+    notStarted.onPacketReceive = undefined; // as built by Query/Execute before start()
+    conn.receiveQueue.push(notStarted);
+
+    assert.equal(conn.activeReceiveCmd(), notStarted, 'a command not started yet is still pending');
+    assert.equal(conn.receiveQueue.length, 1, 'it must stay queued');
+
+    const cmd = new FakeCmd(true);
+    conn.addCommandEnable(cmd, true);
+    assert.isFalse(cmd.started, 'nothing may be sent while it waits to start');
+  });
+
+  test('an ended command queued ahead of a not started one is dropped, the other kept', () => {
+    const conn = newConn();
+    const ended = new FakeCmd(false); // onPacketReceive === null
+    const notStarted = new FakeCmd(true);
+    notStarted.onPacketReceive = undefined;
+    conn.receiveQueue.push(ended);
+    conn.receiveQueue.push(notStarted);
+
+    assert.equal(conn.activeReceiveCmd(), notStarted);
+    assert.equal(conn.receiveQueue.length, 1);
+    assert.equal(conn.receiveQueue.peekFront(), notStarted);
+  });
+
   test('waits while a command is still receiving packets', () => {
     const conn = newConn();
     const active = new FakeCmd(true);
