@@ -41,6 +41,25 @@ describe.concurrent('change user', () => {
     shareConn = null;
   });
 
+  // CONJS-361: changeUser installs the non-pipelined addCommand, which only sends while no command
+  // is receiving. A prepare response ends on a column definition packet, i.e. on the last packet of
+  // its network chunk, and the reader only drops a finished command when reading the packet that
+  // follows: the finished prepare was taken for a running command and COM_CHANGE_USER was never
+  // sent - with the default pipelining too.
+  test('change user after a prepare', async ({ skip }) => {
+    if (!shareConn.info.isMariaDB()) return skip();
+    if (isMaxscale(shareConn)) return skip();
+    const conn = await createConnection();
+    try {
+      // no query in between: an executed statement ends on an EOF packet, which clears the queue
+      await conn.prepare('SELECT ? as a');
+      await conn.changeUser({ user: 'ChangeUser', password: 'm1P4ssw0@rd' });
+      assert.equal((await conn.query('SELECT 2 as b'))[0].b, 2);
+    } finally {
+      await conn.end();
+    }
+  }, 10000);
+
   test('mysql change user error', async ({ skip }) => {
     if (shareConn.info.isMariaDB()) return skip();
     if (isMaxscale(shareConn)) return skip();
