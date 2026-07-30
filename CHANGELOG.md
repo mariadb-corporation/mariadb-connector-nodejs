@@ -1,5 +1,19 @@
 # Change Log
 
+## [3.3.4](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.4) (Jul 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.3...3.3.4)
+
+## Notable changes
+* CONJS-357: Add JavaScript SAST (CodeQL + eslint-plugin-security) to CI
+
+## Issues Fixed
+* CONJS-358: Refuse multi-part packet (> 16MB) reassembly before authentication completes, a rogue server being otherwise able to exhaust client memory before any credential is even validated
+* CONJS-363: typeCast accessors returned corrupted values with prepared statements
+* CONJS-367: Uninitialized process memory leaked to server via malformed GeoJSON Polygon parameter (report by fg0x0)
+* CONJS-368: Fixed SQL injection in text protocol when session uses NO_BACKSLASH_ESCAPES (report by fg0x0)
+* CONJS-369: Fixed SQL injection through object keys in SET expansion when using `permitSetMultiParamEntries` (report by fg0x0)
+* Escape the server-supplied filename before building the LOCAL INFILE validation regular expression
+
 ## [3.3.3](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.3.3) (Jun 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.3.2...3.3.3)
 
