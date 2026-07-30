@@ -40,7 +40,7 @@ describe.concurrent('pipelining', () => {
   // command left in the receive queue stalls the connection for good. A prepare response ends on a
   // column definition packet, which the reader dispatches through its fast-path.
   test('prepare then execute chain no pipelining', async () => {
-    const conn = await createConnection({ pipelining: false });
+    const conn = await createConnection({ pipelining: false, bigIntAsNumber: true });
     try {
       const prepare = await conn.prepare('SELECT ? as a');
       // this execute is the one that used to never reach the wire
