@@ -33,6 +33,10 @@ function check(label, mod) {
   // so consumers that did `const mariadb = require('mariadb').default` keep working.
   assert.ok(mod.default, `${label}: default export is missing`);
   assert.strictEqual(typeof mod.default.createPool, 'function', `${label}: default.createPool is not a function`);
+
+  assert.strictEqual(typeof mod.SqlError, 'function', `${label}: SqlError is not a constructor`);
+  assert.ok(!(new Error('x') instanceof mod.SqlError), `${label}: plain Error must not be instanceof SqlError`);
+  assert.ok(new mod.SqlError('x') instanceof mod.SqlError, `${label}: SqlError instance fails instanceof SqlError`);
 }
 
 check("require('mariadb')", require('mariadb'));

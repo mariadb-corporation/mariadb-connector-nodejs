@@ -11,7 +11,7 @@ import Cluster from './lib/cluster.js';
 import ConnOptions from './lib/config/connection-options.js';
 import PoolOptions from './lib/config/pool-options.js';
 import ClusterOptions from './lib/config/cluster-options.js';
-import * as SqlError from './lib/misc/errors.js';
+import SqlError from './lib/misc/errors.js';
 import packageJson from './package.json' with { type: 'json' };
 import { Types, TypeNumbers } from './lib/const/field-type.js';
 
