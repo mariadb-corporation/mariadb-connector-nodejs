@@ -110,13 +110,13 @@ describe.concurrent('connection', () => {
     });
     await new Promise((resolve, reject) => {
       conn.connect((err) => {
-        if (!err) reject(new Error('must have throw an error!'));
+        if (!err) return reject(new Error('must have throw an error!'));
         assert.isTrue(err.message.includes('close forced'));
         resolve();
       });
-      setTimeout(() => {
-        conn.__tests.getSocket().destroy(new Error('close forced'));
-      }, 0);
+      // destroyed in the same tick: the socket exists as soon as the connection is created, while a
+      // timer would race the handshake - deno completes it in ~7ms, before a setTimeout(0) callback
+      conn.__tests.getSocket().destroy(new Error('close forced'));
     });
   });
 
@@ -124,13 +124,12 @@ describe.concurrent('connection', () => {
     const conn = createCallbackConnection({ connectTimeout: 100 });
     await new Promise((resolve, reject) => {
       conn.connect((err) => {
-        if (!err) reject(new Error('must have throw an error!'));
+        if (!err) return reject(new Error('must have throw an error!'));
         assert.isTrue(err.message.includes('Connection timeout: failed to create socket after'));
         resolve();
       });
-      setTimeout(() => {
-        conn.__tests.getSocket().destroy();
-      }, 0);
+      // same tick, for the same reason as above
+      conn.__tests.getSocket().destroy();
     });
   });
 

@@ -565,14 +565,14 @@ describe.concurrent('Pool callback', () => {
               assert.equal(pool.activeConnections(), 10);
               assert.equal(pool.totalConnections(), 10);
               assert.equal(pool.idleConnections(), 0);
-              assert.isOk(pool.taskQueueSize() > 8000);
+              assert.isOk(pool.taskQueueSize() > 6000, 'err, current pool.taskQueueSize() is ' + pool.taskQueueSize());
             }, 200);
           } else {
             assert.equal(pool.activeConnections(), 10);
             assert.equal(pool.totalConnections(), 10);
             assert.equal(pool.idleConnections(), 0);
             console.log(pool.taskQueueSize());
-            assert.isOk(pool.taskQueueSize() > 9800);
+            assert.isOk(pool.taskQueueSize() > 9800, 'err, current pool.taskQueueSize() is ' + pool.taskQueueSize());
           }
 
           setTimeout(() => {

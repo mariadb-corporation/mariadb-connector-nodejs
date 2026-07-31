@@ -8,7 +8,7 @@ import { execFile } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import Conf from '../conf.js';
-import { createCallbackConnection } from '../base.js';
+import { createCallbackConnection, isDeno } from '../base.js';
 
 // CONJS-329: the callback API bridges promises to node-style callbacks. When the callback is invoked
 // from a then() handler, an exception it throws rejects that promise and is handed to the chain's
@@ -22,6 +22,10 @@ const MARKER = 'BOOM_FROM_CALLBACK';
 /**
  * Run a snippet in its own process, so an exception escaping a callback can terminate it.
  * `body` runs with `conn` connected, and must throw {@link MARKER} from a driver callback.
+ *
+ * Node only: the child is spawned through `process.execPath` with node's own CLI flags, which deno -
+ * where that path is the deno binary - rejects. The behaviour under test is the shape of the promise
+ * chain the callback is invoked from, so it does not depend on the runtime.
  */
 const runChild = (body) =>
   new Promise((resolve) => {
@@ -52,39 +56,63 @@ describe.concurrent('callback exception propagation (CONJS-329)', () => {
   // `err` is only ever a database error: a callback re-entered with its own exception prints this
   const guard = `if (err) { console.log('REPORTED_AS_DB_ERROR ' + err.message); process.exit(5); }`;
 
-  test('conn.query callback', async () => {
-    assertPropagated(await runChild(`conn.query('SELECT 1', (err) => { ${guard} throw new Error('${MARKER}'); });`));
-  }, 60000);
+  test.skipIf(isDeno())(
+    'conn.query callback',
+    async () => {
+      assertPropagated(await runChild(`conn.query('SELECT 1', (err) => { ${guard} throw new Error('${MARKER}'); });`));
+    },
+    60000
+  );
 
-  test('conn.prepare callback', async () => {
-    assertPropagated(
-      await runChild(`conn.prepare('SELECT ? as a', (err) => { ${guard} throw new Error('${MARKER}'); });`)
-    );
-  }, 60000);
+  test.skipIf(isDeno())(
+    'conn.prepare callback',
+    async () => {
+      assertPropagated(
+        await runChild(`conn.prepare('SELECT ? as a', (err) => { ${guard} throw new Error('${MARKER}'); });`)
+      );
+    },
+    60000
+  );
 
-  test('prepare.execute callback', async () => {
-    assertPropagated(
-      await runChild(`
+  test.skipIf(isDeno())(
+    'prepare.execute callback',
+    async () => {
+      assertPropagated(
+        await runChild(`
         conn.prepare('SELECT ? as a', (err, stmt) => {
           ${guard}
           stmt.execute([1], (err) => { ${guard} throw new Error('${MARKER}'); });
         });`)
-    );
-  }, 60000);
+      );
+    },
+    60000
+  );
 
-  test('conn.execute callback', async () => {
-    assertPropagated(
-      await runChild(`conn.execute('SELECT ? as a', [1], (err) => { ${guard} throw new Error('${MARKER}'); });`)
-    );
-  }, 60000);
+  test.skipIf(isDeno())(
+    'conn.execute callback',
+    async () => {
+      assertPropagated(
+        await runChild(`conn.execute('SELECT ? as a', [1], (err) => { ${guard} throw new Error('${MARKER}'); });`)
+      );
+    },
+    60000
+  );
 
-  test('conn.ping callback', async () => {
-    assertPropagated(await runChild(`conn.ping((err) => { ${guard} throw new Error('${MARKER}'); });`));
-  }, 60000);
+  test.skipIf(isDeno())(
+    'conn.ping callback',
+    async () => {
+      assertPropagated(await runChild(`conn.ping((err) => { ${guard} throw new Error('${MARKER}'); });`));
+    },
+    60000
+  );
 
-  test('conn.end callback', async () => {
-    assertPropagated(await runChild(`conn.end((err) => { ${guard} throw new Error('${MARKER}'); });`));
-  }, 60000);
+  test.skipIf(isDeno())(
+    'conn.end callback',
+    async () => {
+      assertPropagated(await runChild(`conn.end((err) => { ${guard} throw new Error('${MARKER}'); });`));
+    },
+    60000
+  );
 
   // the other half of the contract: a real error still reaches the callback, once
   test('database errors are still delivered exactly once', async () => {
