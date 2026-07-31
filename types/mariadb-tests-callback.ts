@@ -51,7 +51,7 @@ function createConn(option?: ConnectionConfig): Connection {
       query: (msg: string) => console.log(msg),
       error: (err: Error) => console.log(err)
     },
-    stream: (callback: typeof StreamCallback) => {
+    stream: (callback: StreamCallback) => {
       console.log('test');
       callback(undefined, undefined);
     },

@@ -19,7 +19,7 @@ export type TypeCastResult =
   | any[];
 export type TypeCastNextFunction = () => TypeCastResult;
 export type TypeCastFunction = (field: FieldInfo, next: TypeCastNextFunction) => TypeCastResult;
-export function StreamCallback(err?: Error, stream?: Duplex): void;
+export type StreamCallback = (err?: Error, stream?: Duplex) => void;
 
 export interface LoggerConfig {
   network?: (msg: string) => void;
@@ -879,7 +879,7 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
    * @param err error is any error occurs during stream creation
    * @param stream if wanting to set a special stream (Standard socket will be created if not set)
    */
-  stream?: (callback: typeof StreamCallback) => void;
+  stream?: (callback: StreamCallback) => void;
 
   /**
    * make result-set metadata property enumerable.
