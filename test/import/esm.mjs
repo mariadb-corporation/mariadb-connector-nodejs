@@ -9,7 +9,7 @@
 import assert from 'node:assert';
 import mariadb, { createPool, createConnection, version, SqlError } from 'mariadb';
 import * as mariadbNs from 'mariadb';
-import mariadbCb, { createPool as createPoolCb } from 'mariadb/callback';
+import mariadbCb, { createPool as createPoolCb, SqlError as SqlErrorCb } from 'mariadb/callback';
 
 const expectedNamed = [
   'SqlError',
@@ -31,6 +31,9 @@ assert.strictEqual(typeof createPool, 'function', 'named createPool is not a fun
 assert.strictEqual(typeof createConnection, 'function', 'named createConnection is not a function');
 assert.strictEqual(typeof version, 'string', 'named version is not a string');
 assert.ok(SqlError, 'named SqlError missing');
+assert.strictEqual(typeof SqlError, 'function', 'named SqlError is not a constructor');
+assert.ok(!(new Error('x') instanceof SqlError), 'plain Error must not be instanceof SqlError');
+assert.ok(new SqlError('x') instanceof SqlError, 'SqlError instance fails instanceof SqlError');
 
 // namespace import
 for (const key of expectedNamed) {
@@ -41,5 +44,8 @@ for (const key of expectedNamed) {
 assert.ok(mariadbCb, '/callback default export missing');
 assert.strictEqual(typeof mariadbCb.createPool, 'function', '/callback default.createPool is not a function');
 assert.strictEqual(typeof createPoolCb, 'function', '/callback named createPool is not a function');
+assert.strictEqual(typeof SqlErrorCb, 'function', '/callback named SqlError is not a constructor');
+assert.ok(new SqlErrorCb('x') instanceof SqlErrorCb, '/callback SqlError instance fails instanceof SqlError');
+assert.strictEqual(typeof mariadbCb.SqlError, 'function', '/callback default.SqlError is not a constructor');
 
 console.log('ESM import smoke test: OK');
