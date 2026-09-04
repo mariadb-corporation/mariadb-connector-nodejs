@@ -341,6 +341,64 @@ describe.concurrent('test PacketInputStream data', () => {
     assert.isNotNull(received);
   });
 
+  // a command is only given its onPacketReceive when it starts, so a command queued behind a
+  // big send has none at all. currentCmd() discarding it would lose its response for good: only
+  // a command that ended, which sets onPacketReceive to null, may be dropped. Same bug and fix as
+  // Connection.activeReceiveCmd() in 1d9ae05, which this stream does not share code with.
+  describe.concurrent('currentCmd (mirrors 1d9ae05)', () => {
+    const newStream = () =>
+      new PacketInputStream(
+        unexpectedPacket,
+        new Queue(),
+        null,
+        Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+        info
+      );
+
+    test('a command queued but not started yet is never discarded', () => {
+      const pis = newStream();
+      const notStarted = { onPacketReceive: undefined }; // as built by Query/Execute before start()
+      pis.receiveQueue.push(notStarted);
+
+      assert.equal(pis.currentCmd(), notStarted, 'a command not started yet is still pending');
+      assert.equal(pis.receiveQueue.length, 1, 'it must stay queued');
+    });
+
+    test('an ended command queued ahead of a not started one is dropped, the other kept', () => {
+      const pis = newStream();
+      const ended = { onPacketReceive: null };
+      const notStarted = { onPacketReceive: undefined };
+      pis.receiveQueue.push(ended);
+      pis.receiveQueue.push(notStarted);
+
+      assert.equal(pis.currentCmd(), notStarted);
+      assert.equal(pis.receiveQueue.length, 1);
+      assert.equal(pis.receiveQueue.peek(), notStarted);
+    });
+
+    // currentCmd() now keeps a not-started command in the queue instead of discarding it, so
+    // receivePacketBasic/Debug must not blindly call its (nonexistent) onPacketReceive if a
+    // packet arrives while it is still the only thing queued: nothing was ever sent for it, so
+    // no packet can legitimately be meant for it either.
+    test('a packet arriving for a not-started command is reported unexpected, not dispatched', () => {
+      const queue = new Queue();
+      const notStarted = { onPacketReceive: undefined };
+      queue.push(notStarted);
+      let reported = null;
+      const pis = new PacketInputStream(
+        (packet) => (reported = packet),
+        queue,
+        null,
+        Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig)),
+        info
+      );
+
+      assert.doesNotThrow(() => pis.onData(Buffer.from([5, 0, 0, 0, 1, 2, 3, 4, 5])));
+      assert.isNotNull(reported, 'unexpectedPacket must be called');
+      assert.equal(queue.length, 1, 'the not-started command must remain queued');
+    });
+  });
+
   test('collation change', () => {
     const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
     const queue = new Queue();
