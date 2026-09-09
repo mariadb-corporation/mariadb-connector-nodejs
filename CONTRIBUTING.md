@@ -73,9 +73,10 @@ In order to do that, go to [Travis CI](https://app.travis-ci.com/github/), conne
 To ensure coverage of new code is well tested, you can run coverage tests.
 
 ```
-npm install nyc -g 
-nyc npm test
+npm run coverage:test
 ```
+
+This runs the test suite with vitest's V8 coverage provider and writes an lcov report to `coverage/lcov.info`.
 
 results will be :
 

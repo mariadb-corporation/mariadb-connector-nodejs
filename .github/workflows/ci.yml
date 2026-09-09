@@ -110,7 +110,8 @@ jobs:
 
       - name: Run Tests node
         if: ${{ !matrix.deno }}
-        run: npm run coverage:test
+        # coverage/lcov.info (vitest v8 coverage) + coverage/junit.xml (test results) for Codecov
+        run: npm run coverage:test -- --reporter=junit --outputFile.junit=coverage/junit.xml
         env:
           LOCAL_DB: ${{ steps.setup-env.outputs.database-type }}
           DB_TYPE: ${{ matrix.db-type }}
@@ -132,41 +133,21 @@ jobs:
           TEST_TRACE: 'true'
           LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
 
-      - name: Download Codecov uploader
-        if: ${{ !matrix.deno }}
-        shell: bash
-        run: |
-          case "$RUNNER_OS" in
-            Windows)
-              powershell -Command Invoke-WebRequest -Uri https://uploader.codecov.io/latest/windows/codecov.exe -Outfile codecov.exe
-              choco install -y --force nodejs-lts
-              # force refresh path
-              export PATH=$(cmd.exe //c "refreshenv > nul & C:\Progra~1\Git\bin\bash -c 'echo \$PATH' ")
-              ;;
-            Linux)
-              curl -Os https://uploader.codecov.io/latest/linux/codecov
-              chmod +x codecov
-              ls -lrt
-              ;;
-            macOS)
-              curl -Os https://uploader.codecov.io/latest/macos/codecov
-              chmod +x codecov
-              ls -lrt
-              ;;
-          esac
+      - name: Upload coverage to Codecov
+        if: ${{ !matrix.deno && !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          disable_search: true
+          name: ${{ matrix.name }}
 
-      - name: Generate Coverage Report
-        shell: bash
-        if: ${{ !matrix.deno }}
-        run: |
-          npm run coverage:create
-          case "$RUNNER_OS" in
-            Windows)
-              ./codecov.exe --disable=gcov --token=${{ secrets.CODECOV_TOKEN }}
-              ;;
-            Linux|macOS)
-              ./codecov --disable=gcov --token=${{ secrets.CODECOV_TOKEN }}
-              ;;
-          esac
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload test results to Codecov
+        if: ${{ !matrix.deno && !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: ./coverage/junit.xml
+          disable_search: true
+          name: ${{ matrix.name }}
