@@ -32,7 +32,11 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install -g npm@11 && npm install
+        # npm 10 (bundled with Node 20/22) crashes with "Cannot read properties
+        # of null (reading 'edgesOut')" on the vitest 4 peer set since vitest 5
+        # was published. Run the install through npm 11 via npx: no global
+        # install, so it also works where node lives under /usr/local.
+        run: npx -y npm@11 install
       - name: Lint (eslint + eslint-plugin-security)
         run: npm run test:lint
       - name: Type checks
@@ -98,7 +102,7 @@ jobs:
 
       - name: Install dependencies
         # see lint job: npm 10 crashes on the vitest 4 peer set
-        run: npm install -g npm@11 && npm install
+        run: npx -y npm@11 install
 
       - name: Run ESM/CJS import smoke tests
         if: ${{ !matrix.deno }}
