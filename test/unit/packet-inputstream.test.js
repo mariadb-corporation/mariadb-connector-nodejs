@@ -164,7 +164,7 @@ describe.concurrent('test PacketInputStream data', () => {
       const queue = new Queue();
       queue.push(
         new EmptyCmd((packet) => {
-          assert.deepEqual(buf, packet.buf);
+          assert.isTrue(buf.equals(packet.buf));
           resolve();
         })
       );
@@ -188,7 +188,7 @@ describe.concurrent('test PacketInputStream data', () => {
       const queue = new Queue();
       queue.push(
         new EmptyCmd((packet) => {
-          assert.deepEqual(buf, packet.buf);
+          assert.isTrue(buf.equals(packet.buf));
           resolve();
         })
       );

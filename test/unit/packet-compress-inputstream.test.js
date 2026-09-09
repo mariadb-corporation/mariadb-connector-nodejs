@@ -118,7 +118,7 @@ describe.concurrent('test compress PacketInputStream data', () => {
     const queue = new Queue();
     queue.push(
       new EmptyCmd((packet) => {
-        assert.deepEqual(expectedBuf, packet.buf.subarray(packet.pos, packet.end));
+        assert.isTrue(expectedBuf.equals(packet.buf.subarray(packet.pos, packet.end)));
         resolve();
       })
     );
