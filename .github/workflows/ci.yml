@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm install -g npm@11 && npm install
       - name: Lint (eslint + eslint-plugin-security)
         run: npm run test:lint
       - name: Type checks
@@ -97,7 +97,8 @@ jobs:
           deno-version: ${{ matrix.deno }}
 
       - name: Install dependencies
-        run: npm install
+        # see lint job: npm 10 crashes on the vitest 4 peer set
+        run: npm install -g npm@11 && npm install
 
       - name: Run ESM/CJS import smoke tests
         if: ${{ !matrix.deno }}
