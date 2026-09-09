@@ -185,8 +185,11 @@ describe.concurrent('mapping', () => {
     await shareConn.beginTransaction();
     await shareConn.query('INSERT INTO nullMappingTable values ()');
     if (shareConn.info.isMariaDB() || shareConn.info.hasMinVersion(5, 6)) {
-      //MySQL 5.6 delete YEAR(2) type
-      if (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)) {
+      // YEAR(2) type was removed in MySQL 5.6 and in MariaDB 13.0
+      const noYear2 = shareConn.info.isMariaDB()
+        ? shareConn.info.hasMinVersion(13, 0, 0)
+        : shareConn.info.hasMinVersion(5, 6, 0);
+      if (noYear2) {
         initValue[23] = 2018;
         nullValue[23] = 1999;
         initValue2[23] = 2018;
@@ -217,9 +220,7 @@ describe.concurrent('mapping', () => {
           "t21 TIMESTAMP(0) null default  '2001-01-01 00:00:00'," +
           't22 TIMESTAMP  null, ' +
           "t23 TIME(6) default '22:11:00.560001'," +
-          (!shareConn.info.isMariaDB() && shareConn.info.hasMinVersion(5, 6)
-            ? 't24 YEAR(4) default 99,'
-            : 't24 YEAR(2) default 99,') +
+          (noYear2 ? 't24 YEAR(4) default 99,' : 't24 YEAR(2) default 99,') +
           't25 YEAR(4) default 2011,' +
           "t26 CHAR(1) default '0'," +
           "t27 CHAR(1) binary default '0'," +
