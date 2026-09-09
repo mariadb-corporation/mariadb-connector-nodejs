@@ -463,7 +463,7 @@ describe.sequential('cluster', function () {
       await proxy.start();
       const connOption1 = Object.assign({}, Conf.baseConfig, {
         connectionLimit: 1,
-        host: 'wrong host',
+        host: '192.0.2.1',
         connectTimeout: 200,
         socketTimeout: 200,
         acquireTimeout: 250,
