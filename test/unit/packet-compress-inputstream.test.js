@@ -131,3 +131,35 @@ describe.concurrent('test compress PacketInputStream data', () => {
     return new CompressionInputStream(pis, queue, opts, info);
   }
 });
+
+// a command is only given its onPacketReceive when it starts, so a command queued behind a big
+// send has none at all. currentCmd() discarding it would lose its response for good: only a
+// command that ended, which sets onPacketReceive to null, may be dropped. Same bug and fix as
+// Connection.activeReceiveCmd() in 1d9ae05, which this stream does not share code with.
+describe.concurrent('CompressionInputStream#currentCmd (mirrors 1d9ae05)', () => {
+  const info = new ConnectionInformation({});
+  const opts = Object.assign(new EventEmitter(), new ConnOptions(Conf.baseConfig));
+
+  const newStream = () => new CompressionInputStream(null, new Queue(), opts, info);
+
+  test('a command queued but not started yet is never discarded', () => {
+    const cis = newStream();
+    const notStarted = { onPacketReceive: undefined }; // as built by Query/Execute before start()
+    cis.receiveQueue.push(notStarted);
+
+    assert.equal(cis.currentCmd(), notStarted, 'a command not started yet is still pending');
+    assert.equal(cis.receiveQueue.length, 1, 'it must stay queued');
+  });
+
+  test('an ended command queued ahead of a not started one is dropped, the other kept', () => {
+    const cis = newStream();
+    const ended = { onPacketReceive: null };
+    const notStarted = { onPacketReceive: undefined };
+    cis.receiveQueue.push(ended);
+    cis.receiveQueue.push(notStarted);
+
+    assert.equal(cis.currentCmd(), notStarted);
+    assert.equal(cis.receiveQueue.length, 1);
+    assert.equal(cis.receiveQueue.peek(), notStarted);
+  });
+});
