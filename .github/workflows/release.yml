@@ -8,30 +8,23 @@ name: Release
 # release.yml, environment npm). Provenance (SLSA build attestation, signed by
 # Sigstore) is generated automatically and shown on the npm package page.
 #
-# Default mode is `stage`: the version is uploaded but not public. A maintainer
-# reviews it and makes it live with 2FA:
+# The version is staged on npm (uploaded but not public) and a draft GitHub
+# release is created. A maintainer reviews and makes both live with 2FA:
 #
 #   npm stage list mariadb
 #   npm stage view <stage-id>
 #   npm stage approve <stage-id>      (or: npm stage reject <stage-id>)
+#   gh release edit <version> --draft=false   (publish the GitHub release created as draft)
 #
-# `publish` mode goes live directly and requires "Allow npm publish" on the
-# trusted publisher. Both modes need a git tag equal to package.json's version
-# on the released commit (e.g. `3.5.5`).
+# The workflow only stages; going live always requires a maintainer with 2FA.
+# It needs a git tag equal to package.json's version on the released commit
+# (e.g. `3.5.5`), pushed or selected as the ref of a manual run.
 
 on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
-    inputs:
-      mode:
-        description: 'stage: upload for a maintainer to approve with `npm stage approve`. publish: go live directly.'
-        type: choice
-        options:
-          - stage
-          - publish
-        default: stage
 
 permissions:
   contents: read
@@ -50,6 +43,7 @@ jobs:
     permissions:
       contents: write # attach the tarball to the GitHub release
       id-token: write # OIDC token for npm trusted publishing and Sigstore provenance
+      attestations: write # signed SBOM attestation
     steps:
       - uses: actions/checkout@v6
         with:
@@ -95,6 +89,21 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           sha512sum "$tarball"
 
+      - name: Generate SBOM
+        # CONJS-373: CycloneDX 1.6 JSON of the packed tarball, sbom/mariadb-<version>.cdx.json,
+        # validated (1.6 schema, purls, SPDX licenses, package-lock.json cross-check,
+        # tarball hash). Attached to the GitHub release below.
+        run: npm run sbom -- --artifact "${{ steps.pack.outputs.tarball }}"
+
+      - name: Attest SBOM
+        # Sigstore-signed attestation binding the SBOM to the tarball digest (CISA 2026
+        # "SBOM Author Signature"), stored on GitHub; verify with:
+        #   gh attestation verify <tarball> --repo mariadb-corporation/mariadb-connector-nodejs
+        uses: actions/attest-sbom@v4
+        with:
+          subject-path: ${{ steps.pack.outputs.tarball }}
+          sbom-path: sbom/mariadb-${{ steps.version.outputs.version }}.cdx.json
+
       - name: Choose the npm dist-tag
         id: dist-tag
         # a release older than the current `latest` (maintenance branch) must
@@ -109,37 +118,44 @@ jobs:
           echo "current latest: $latest, dist-tag: $tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to npm (${{ inputs.mode || 'stage' }})
-        # publishes the packed tarball as is; --ignore-scripts because build and
-        # checks already ran above, --provenance fails loudly if OIDC is missing
+      - name: Stage on npm
+        # stages the packed tarball as is (not public until `npm stage approve`);
+        # --ignore-scripts because build and checks already ran above,
+        # --provenance fails loudly if the OIDC identity is missing
         env:
-          MODE: ${{ inputs.mode || 'stage' }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
           DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
         run: |
-          if [ "$MODE" = "publish" ]; then
-            npm publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
-          else
-            npm stage publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
-            echo "::notice::staged: run 'npm stage list mariadb' then 'npm stage approve <stage-id>' to make it public"
-          fi
+          npm stage publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
+          echo "::notice::staged: run 'npm stage list mariadb' then 'npm stage approve <stage-id>' to make it public"
 
-      - name: Upload the tarball as a workflow artifact
+      - name: Upload the tarball and SBOM as workflow artifacts
         uses: actions/upload-artifact@v7
         with:
           name: release-${{ steps.version.outputs.version }}
-          path: ${{ steps.pack.outputs.tarball }}
+          path: |
+            ${{ steps.pack.outputs.tarball }}
+            sbom/*.cdx.json
           if-no-files-found: error
 
-      - name: Attach the tarball to the GitHub release
-        # uploads to the release of this tag, creating it as a draft if missing
+      - name: Create the GitHub draft release
+        # The maintainer who runs `npm stage approve` then publishes it
+        # (gh release edit <version> --draft=false, or the "Publish release"
+        # button). Release notes are the CHANGELOG.md section of the version. If a
+        # release for the tag already exists, only the tarball and SBOM are
+        # (re)attached.
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
         run: |
+          sbom="sbom/mariadb-$VERSION.cdx.json"
           if gh release view "$VERSION" >/dev/null 2>&1; then
-            gh release upload "$VERSION" "$TARBALL" --clobber
-          else
-            gh release create "$VERSION" "$TARBALL" --draft --title "MariaDB Connector/Node.js $VERSION" --notes "See CHANGELOG.md"
+            gh release upload "$VERSION" "$TARBALL" "$sbom" --clobber
+            exit 0
           fi
+          notes=$(awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {f=1} f && /^## \[/ && $0 !~ "^## \\[" v "\\]" {exit} f' CHANGELOG.md)
+          [ -n "$notes" ] || notes="See CHANGELOG.md"
+          gh release create "$VERSION" "$TARBALL" "$sbom" --draft \
+            --title "MariaDB Connector/Node.js $VERSION" --notes "$notes"
+          echo "::notice::draft GitHub release $VERSION created: publish it once the npm version is approved"

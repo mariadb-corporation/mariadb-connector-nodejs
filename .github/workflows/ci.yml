@@ -42,6 +42,33 @@ jobs:
       - name: Type checks
         run: npm run test:tsc && npm run test:types
 
+  # CycloneDX 1.6 SBOM of the published package (CONJS-373): generated from
+  # the installed production dependency tree, validated (1.6 schema, purls,
+  # SPDX licenses, package-lock.json cross-check) and kept as a workflow
+  # artifact. A validation finding fails the build.
+  sbom:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install dependencies
+        # see lint job: npm 10 crashes on the vitest 4 peer set
+        run: npx -y npm@11 install
+      - name: Generate SBOM
+        run: npm run sbom
+      - name: Validate SBOM
+        run: npm run sbom:validate
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom
+          path: sbom/*.cdx.json
+          if-no-files-found: error
+
   setup:
     needs: lint
     runs-on: ubuntu-latest
