@@ -1,0 +1,145 @@
+---
+name: Release
+
+# Publishes the package to npm through npm "trusted publishing" (OIDC): no npm
+# token anywhere. npmjs.com must list this workflow file as a trusted publisher
+# of the `mariadb` package (package settings > Trusted Publisher: organization
+# mariadb-corporation, repository mariadb-connector-nodejs, workflow
+# release.yml, environment npm). Provenance (SLSA build attestation, signed by
+# Sigstore) is generated automatically and shown on the npm package page.
+#
+# Default mode is `stage`: the version is uploaded but not public. A maintainer
+# reviews it and makes it live with 2FA:
+#
+#   npm stage list mariadb
+#   npm stage view <stage-id>
+#   npm stage approve <stage-id>      (or: npm stage reject <stage-id>)
+#
+# `publish` mode goes live directly and requires "Allow npm publish" on the
+# trusted publisher. Both modes need a git tag equal to package.json's version
+# on the released commit (e.g. `3.5.5`).
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'stage: upload for a maintainer to approve with `npm stage approve`. publish: go live directly.'
+        type: choice
+        options:
+          - stage
+          - publish
+        default: stage
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # GitHub environment (created on first use): add required reviewers under
+    # Settings > Environments > npm to gate every release behind an approval.
+    environment: npm
+    permissions:
+      contents: write # attach the tarball to the GitHub release
+      id-token: write # OIDC token for npm trusted publishing and Sigstore provenance
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm
+        # trusted publishing needs npm >= 11.5.1; node 22 bundles npm 10
+        run: |
+          npm install -g npm@11
+          npm --version
+
+      - name: Check that the released commit is tagged with the package version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if ! git tag --points-at HEAD | grep -qx "$version"; then
+            echo "::error::package.json version is $version but HEAD carries no tag '$version'"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        # npm ci once package-lock.json is committed (reproducible tree)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Static checks
+        run: npm run test:lint && npm run test:tsc && npm run test:types && npm run test:cts
+
+      - name: Build and import smoke tests
+        # database tests run in the CI workflow, which the tag push also triggers
+        run: npm run test:imports
+
+      - name: Pack
+        id: pack
+        run: |
+          tarball=$(npm pack --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          sha512sum "$tarball"
+
+      - name: Choose the npm dist-tag
+        id: dist-tag
+        # a release older than the current `latest` (maintenance branch) must
+        # not move `latest`: it is tagged maintenance-<major>.<minor> instead
+        run: |
+          latest=$(npm view mariadb version)
+          tag=$(node -e '
+            const [a, b] = process.argv.slice(1).map((v) => v.split(".").map(Number));
+            const newer = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] >= b[2];
+            console.log(newer ? "latest" : `maintenance-${a[0]}.${a[1]}`);
+          ' "${{ steps.version.outputs.version }}" "$latest")
+          echo "current latest: $latest, dist-tag: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm (${{ inputs.mode || 'stage' }})
+        # publishes the packed tarball as is; --ignore-scripts because build and
+        # checks already ran above, --provenance fails loudly if OIDC is missing
+        env:
+          MODE: ${{ inputs.mode || 'stage' }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: |
+          if [ "$MODE" = "publish" ]; then
+            npm publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
+          else
+            npm stage publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
+            echo "::notice::staged: run 'npm stage list mariadb' then 'npm stage approve <stage-id>' to make it public"
+          fi
+
+      - name: Upload the tarball as a workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ steps.version.outputs.version }}
+          path: ${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+
+      - name: Attach the tarball to the GitHub release
+        # uploads to the release of this tag, creating it as a draft if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" "$TARBALL" --clobber
+          else
+            gh release create "$VERSION" "$TARBALL" --draft --title "MariaDB Connector/Node.js $VERSION" --notes "See CHANGELOG.md"
+          fi
