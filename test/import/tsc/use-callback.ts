@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2026 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 import mariadbCb, { createPool, PoolConfig } from 'mariadb/callback';
 

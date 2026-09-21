@@ -1,6 +1,6 @@
 // AUTO-GENERATED from the matching .d.ts by tools/generate-cts.js — do not edit.
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2025 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 /*
  * Callback-based API for mariadb-connector-nodejs
