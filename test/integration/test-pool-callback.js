@@ -347,28 +347,41 @@ describe('Pool callback', () => {
       assert.equal(pool.escape("a'\nb\tc\rd\\e%_\u001a"), "'a\\'\\nb\\tc\\rd\\\\e%_\\Z'");
       const arr = ["let'g'o😊", false, null, fctStr];
       assert.equal(pool.escape(arr), "'let\\'g\\'o😊',false,NULL,'bla\\'bla'");
-      assert.equal(pool2.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
 
       assert.equal(pool.escapeId('good_$one'), '`good_$one`');
       assert.equal(pool.escape(''), "''");
       assert.equal(pool.escapeId('f:a'), '`f:a`');
       assert.equal(pool.escapeId('`f:a`'), '```f:a```');
       assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
-      pool.end();
-      pool2.end();
-      done();
+      // pool2 must have a connection to know the session escaping mode
+      pool2.query('DO 1', (err) => {
+        if (err) return done(err);
+        assert.equal(pool2.escape(arr), "('let\\'g\\'o😊',false,NULL,'bla\\'bla')");
+        pool.end();
+        pool2.end();
+        done();
+      });
     });
   });
 
-  it('pool escape on init', function () {
+  it('pool escape on init', function (done) {
     const pool = base.createPoolCallback({ connectionLimit: 1 });
-    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
-    assert.equal(pool.escape(new Date('1999-01-31 12:13:14.65')), "'1999-01-31 12:13:14.650'");
-    assert.equal(pool.escapeId('good_$one'), '`good_$one`');
-    assert.equal(pool.escapeId('f:a'), '`f:a`');
-    assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
-
-    pool.end();
+    // escaping needs the session state of a connection
+    try {
+      pool.escape(new Date('1999-01-31 12:13:14.000'));
+      throw new Error('must have thrown an error');
+    } catch (err) {
+      assert.equal(err.code, 'ER_ESCAPE_NO_CONNECTION');
+    }
+    pool.query('DO 1', (err) => {
+      if (err) return done(err);
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.000')), "'1999-01-31 12:13:14'");
+      assert.equal(pool.escape(new Date('1999-01-31 12:13:14.65')), "'1999-01-31 12:13:14.650'");
+      assert.equal(pool.escapeId('good_$one'), '`good_$one`');
+      assert.equal(pool.escapeId('f:a'), '`f:a`');
+      assert.equal(pool.escapeId('good_`è`one'), '`good_``è``one`');
+      pool.end(done);
+    });
   });
 
   it('pool query after close', function (done) {
