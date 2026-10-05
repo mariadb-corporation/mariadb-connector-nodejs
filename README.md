@@ -84,20 +84,20 @@ See the [Benchmarks](./documentation/benchmarks.md) page for the full list of re
 
 ```
 select 100 int
-          mariadb : 10,266.8 ops/s ± 0.2%  (  +87.6% )
-            mysql :  5,472.4 ops/s ± 0.2%
-           mysql2 :  4,783.5 ops/s ± 0.3%  (  -12.6% )
+          mariadb : 14,248.8 ops/s ± 0.1%  ( +171.2% )
+            mysql :  5,254.1 ops/s ± 0.2%
+           mysql2 : 10,296.4 ops/s ± 0.2%  (    +96% )
 ```
-![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5472&data2=4784&data3=10267)
+![select 100 int benchmark results](https://quickchart.io/chart/render/zm-ef74089a-be91-49f1-b5a0-5b9ac5752435?data1=5254&data2=10296&data3=14249)
 
 #### execute
 
 ```
 select 100 int - BINARY
-          mariadb : 10,605.8 ops/s ± 0.2%  ( +124.1% )
-           mysql2 :  4,731.8 ops/s ± 0.3%
+          mariadb : 14,135.1 ops/s ± 0.1%  (    +30% )
+           mysql2 : 10,873.1 ops/s ± 0.2%
 ```
-![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=4732&data2=10606)
+![select 100 int - BINARY benchmark results](https://quickchart.io/chart/render/zm-36b213f4-8efe-4943-8f94-82edf94fce83?data1=10873&data2=14135)
 
 
 ## Quick Start

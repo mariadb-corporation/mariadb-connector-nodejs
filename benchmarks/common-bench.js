@@ -24,6 +24,9 @@ import { displayReport } from './log-utility.js';
 const config = Object.assign({}, conf.baseConfig);
 let configWithCharset = null;
 const minimumSamples = process.env.PERF_SAMPLES ? parseInt(process.env.PERF_SAMPLES) : 200;
+// rows are returned as arrays, the fastest result format, for the drivers that support it
+// as a connection option (mariadb and mysql2, not mysql)
+const rowFormat = { rowsAsArray: true };
 
 //************************************************
 // bench suite
@@ -89,7 +92,7 @@ const runBenchSuite = async (bench) => {
 //************************************************
 const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   const sources = {};
-  const mariadbConn = await mariadb.createConnection(Object.assign({}, config));
+  const mariadbConn = await mariadb.createConnection(Object.assign({}, config, rowFormat));
   if (!configWithCharset && mariadbConn.info.collation) {
     const collation = mariadbConn.info.collation.name;
     configWithCharset = Object.assign({}, conf.baseConfig, { charset: collation });
@@ -104,30 +107,18 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
       }
     }
     if (mysql2 && !mariadbOnly) {
-      sources['mysql2'] = await mysql2.createConnection(Object.assign({}, configWithCharset));
+      sources['mysql2'] = await mysql2.createConnection(Object.assign({}, configWithCharset, rowFormat));
     }
   } else {
     await mariadbConn.end();
-    sources['mariadb'] = await mariadb.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
+    sources['mariadb'] = await mariadb.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset, rowFormat));
     if (!mariadbOnly && mysql) {
       sources['mysql'] = await mysql.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
     }
     if (!mariadbOnly && mysql2) {
-      sources['mysql2'] = await mysql2.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset));
+      sources['mysql2'] = await mysql2.createPool(Object.assign({ connectionLimit: 1 }, configWithCharset, rowFormat));
     }
   }
-
-  if (!mariadbOnly && mysql2) {
-    // specific to mysql2:
-    // mysql2 use a metadata client parser, filling it like it would be in normal use
-    const mysql2Source = sources['mysql2'];
-    const wait = [];
-    for (let i = 0; i < 15000; i++) {
-      wait.push(mysql2Source.query("SELECT 1, 'b', ?", [i]));
-    }
-    await Promise.all(wait);
-  }
-
   return sources;
 };
 
