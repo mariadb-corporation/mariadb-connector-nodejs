@@ -7,12 +7,18 @@ import { assert, describe, test } from 'vitest';
 import EventEmitter from 'node:events';
 import PacketOutputStream from '../../../lib/io/packet-output-stream.js';
 import Collations from '../../../lib/const/collations.js';
-import { getMbRecognizer } from '../../../lib/misc/charset-mb.js';
+import Iconv from 'iconv-lite';
+import ConnOptions from '../../../lib/config/connection-options.js';
+import ConnectionInformation from '../../../lib/misc/connection-information.js';
+import * as Utils from '../../../lib/misc/utils.js';
+import { getMbRecognizer, escapeMb } from '../../../lib/misc/charset-mb.js';
 
 // Escaping under big5 / gbk / sjis / cp932 / gb18030, checked against the SERVER's definition
 // of the charsets (strings/ctype-*.c), not the connector's recognizer: a lead byte the
 // connector takes for a head but the server reads alone (big5 0xFA-0xFE, CONJS-379) lets an
 // inserted 0x5C be eaten as an escape and a bare quote end the literal.
+// Also for strings (CONJS-380): the encoder (iconv-lite's big5 is Big5-HKSCS) produces sequences
+// the server reads as single bytes, so the escape must be applied to the encoded bytes.
 
 const QUOTE = 0x27;
 const SLASH = 0x5c;
@@ -109,7 +115,55 @@ describe('multibyte charset escaping against the server lexer', () => {
       }
       assert.deepEqual(bad, [], `${charset}: injecting lead bytes`);
     });
+
+    test(`${charset}: every encodable character followed by a quote stays inside the literal (string)`, () => {
+      const out = makeOut(charset);
+      const opts = new ConnOptions({});
+      const info = new ConnectionInformation(opts);
+      info.status = 0;
+      info.collation = Collations.fromCharset(charset);
+      const bad = [];
+      const badEscape = [];
+      for (let cp = 0x80; cp < 0x10000; cp++) {
+        if (cp >= 0xd800 && cp <= 0xdfff) continue;
+        const ch = String.fromCharCode(cp);
+        const enc = Iconv.encode(ch, charset);
+        // not encodable: iconv replaces by '?'
+        if (enc.length === 1 && enc[0] === 0x3f) continue;
+        const str = ch + "' OR 1=1 -- ";
+        // parameter of a text-protocol query: quotes included
+        const wire = wireOf(out, () => out.writeStringEscapeQuote(str));
+        if (serverFindsBareQuote(wire.subarray(1, wire.length - 1), charset)) bad.push(cp.toString(16));
+        out.pos = 4;
+        // escape(): the application sends the returned string, encoded with the session charset
+        const escaped = Iconv.encode(Utils.escape(opts, info, str), charset);
+        if (serverFindsBareQuote(escaped.subarray(1, escaped.length - 1), charset)) badEscape.push(cp.toString(16));
+      }
+      assert.deepEqual(bad, [], `${charset}: injecting code points in query parameter`);
+      assert.deepEqual(badEscape, [], `${charset}: injecting code points in escape()`);
+    });
+
+    test(`${charset}: escape() gives the same bytes as the parameter escaping`, () => {
+      const out = makeOut(charset);
+      const opts = new ConnOptions({});
+      const info = new ConnectionInformation(opts);
+      info.status = 0;
+      info.collation = Collations.fromCharset(charset);
+      for (const str of ["a'b", 'a\\b', "\u56ed'x", '\u4e00"\\\u0000z', "\u011a'", "日本語の'テスト\\", 'plain']) {
+        const wire = wireOf(out, () => out.writeStringEscapeQuote(str));
+        out.pos = 4;
+        assert.equal(Utils.escape(opts, info, str), Iconv.decode(wire, charset), JSON.stringify(str));
+      }
+    });
   }
+
+  test('escapeMb(): valid multibyte character verbatim, lone head and specials escaped', () => {
+    const mb = getMbRecognizer('big5');
+    assert.deepEqual([...escapeMb(mb, Buffer.from([0xa1, 0x5c, QUOTE]))], [0xa1, 0x5c, SLASH, QUOTE]);
+    assert.deepEqual([...escapeMb(mb, Buffer.from([0xfa, 0x5c, QUOTE]))], [0xfa, SLASH, SLASH, SLASH, QUOTE]);
+    assert.deepEqual([...escapeMb(mb, Buffer.from([0xa1]))], [SLASH, 0xa1]);
+    assert.deepEqual([...escapeMb(mb, Buffer.from('ab'))], [0x61, 0x62]);
+  });
 
   test('big5: lead bytes 0xFA-0xFE are single bytes, as for the server', () => {
     const mb = getMbRecognizer('big5');

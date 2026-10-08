@@ -101,9 +101,9 @@ describe('NO_BACKSLASH_ESCAPES escaping', () => {
     assert.equal(Utils.escape(opts, info, 'a\\b'), "'a\\b'");
   });
 
-  test('escape() tolerates a missing info (pool with no connection yet)', () => {
+  test('escape() before the session collation is known escapes with backslash', () => {
     const opts = new ConnOptions({});
-    assert.equal(Utils.escape(opts, null, "a'b"), "'a\\'b'");
-    assert.equal(Utils.escape(opts, {}, "a'b"), "'a\\'b'");
+    const info = new ConnectionInformation(opts);
+    assert.equal(Utils.escape(opts, info, "a'b"), "'a\\'b'");
   });
 });

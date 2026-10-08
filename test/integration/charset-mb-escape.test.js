@@ -7,7 +7,8 @@ import { assert, describe, test, beforeAll, afterAll } from 'vitest';
 import { createConnection, isMaxscale } from '../base.js';
 import Conf from '../conf.js';
 
-// Under big5, a Buffer with lead byte 0xFA-0xFE (not a head for the server, CONJS-379) could end
+// Under big5, a Buffer with lead byte 0xFA-0xFE (not a head for the server, CONJS-379) or a
+// string with a character iconv-lite encodes as Big5-HKSCS (U+56ED -> FB 5C, CONJS-380) could end
 // the string literal: a statement naming only mbEscapeUsers must never return a mbEscapeVault row.
 describe('multibyte charset escaping', () => {
   let shareConn;
@@ -42,6 +43,28 @@ describe('multibyte charset escaping', () => {
       // valid big5 characters are not altered
       const rows = await conn.query('SELECT ? AS v', [Buffer.from([0xa4, 0x40, 0x27, 0xf9, 0x5c])]);
       assert.deepEqual([...rows[0].v], [0xa4, 0x40, 0x27, 0xf9, 0x5c]);
+    } finally {
+      await conn.end();
+    }
+  });
+
+  test('big5: string parameter and escape() stay inside the literal', async ({ skip }) => {
+    if (isMaxscale(shareConn)) return skip();
+    const conn = await createConnection({ charset: 'big5' });
+    try {
+      const sql = 'SELECT id, name FROM mbEscapeUsers WHERE avatar = ?';
+      for (const ch of ['\u56ed', '\u6a9d', '\u011a', '\u4e00']) {
+        assert.deepEqual(await conn.query(sql, [ch + INJECTION]), [], `string ${ch}`);
+        assert.deepEqual(
+          await conn.query('SELECT id, name FROM mbEscapeUsers WHERE avatar = ' + conn.escape(ch + INJECTION)),
+          [],
+          `escape(${ch})`
+        );
+      }
+      // values are not altered
+      const rows = await conn.query('SELECT ? AS v, ? AS w', ["\u4e00'x\\y", conn.escape("\u4e00'z")]);
+      assert.equal(rows[0].v, "\u4e00'x\\y");
+      assert.equal(rows[0].w, "'\u4e00\\'z'");
     } finally {
       await conn.end();
     }
