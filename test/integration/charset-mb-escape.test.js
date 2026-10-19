@@ -84,8 +84,8 @@ describe('multibyte charset escaping', () => {
       assert.include(err.message, "Unknown character set: 'gb18030'");
       return;
     }
-    assert.isFalse(shareConn.info.isMariaDB(), 'gb18030 must be refused on MariaDB');
     try {
+      assert.isFalse(shareConn.info.isMariaDB(), 'gb18030 must be refused on MariaDB');
       // MySQL supports it: the session must really use it
       const rows = await conn.query('SELECT @@character_set_client AS cs');
       assert.equal(rows[0].cs, 'gb18030');
