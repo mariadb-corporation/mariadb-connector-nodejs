@@ -152,7 +152,13 @@ describe('multibyte charset escaping against the server lexer', () => {
       for (const str of ["a'b", 'a\\b', "\u56ed'x", '\u4e00"\\\u0000z', "\u011a'", "日本語の'テスト\\", 'plain']) {
         const wire = wireOf(out, () => out.writeStringEscapeQuote(str));
         out.pos = 4;
-        assert.equal(Utils.escape(opts, info, str), Iconv.decode(wire, charset), JSON.stringify(str));
+        // escape() still backslashes the double quote, which the writer no longer does: the one
+        // accepted difference, a double quote needing no escaping inside a single-quoted literal
+        assert.equal(
+          Utils.escape(opts, info, str).replace(/\\"/g, '"'),
+          Iconv.decode(wire, charset),
+          JSON.stringify(str)
+        );
       }
     });
   }
