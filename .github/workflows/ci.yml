@@ -3,6 +3,7 @@ name: Run CI Tests
 
 on:
   push:
+    branches-ignore: ['dependabot/**']
   pull_request:
   workflow_dispatch:
   schedule:
@@ -94,6 +95,8 @@ jobs:
     needs: setup
     timeout-minutes: 50
     strategy:
+      # one failing entry must not cancel the others
+      fail-fast: false
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     runs-on: ${{ matrix.os }}
