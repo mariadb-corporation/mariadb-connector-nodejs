@@ -31,6 +31,9 @@ Each task runs at least `PERF_SAMPLES` iterations (default `200`) and at least
 2 seconds of wall clock, after a warmup phase of `PERF_SAMPLES` queries against
 the mariadb connection.
 
+Each benchmark runs in its own process, so that the heap left by one benchmark
+does not slow the following ones.
+
 ```sh
 PERF_SAMPLES=500 npm run benchmark
 ```
@@ -59,96 +62,96 @@ Packages compared:
 ```
 ##  do 1
 do 1
-          mariadb : 60,756.9 ops/s ± 0.1%  ( +136.2% )
-            mysql : 25,720.6 ops/s ± 0.1%
-           mysql2 : 32,115.8 ops/s ± 0.1%  (  +24.9% )
+          mariadb :   58,302 ops/s ± 0.1%  ( +137.2% )
+            mysql : 24,575.8 ops/s ± 0.1%
+           mysql2 : 34,534.9 ops/s ± 0.1%  (  +40.5% )
 
 ##  do 1000 parameter
 do 1000 parameter
-          mariadb :  6,200.9 ops/s ± 0.2%  (  +30.3% )
-            mysql :  4,760.8 ops/s ± 0.3%
-           mysql2 :  5,315.8 ops/s ± 0.2%  (  +11.7% )
+          mariadb :  6,025.5 ops/s ± 0.2%  (  +35.3% )
+            mysql :    4,455 ops/s ± 0.2%
+           mysql2 :  5,619.9 ops/s ± 0.2%  (  +26.1% )
 
-##  do <random number> with pool
+##  do random number with pool
 do <random number> with pool
-          mariadb : 55,308.7 ops/s ± 0.1%  ( +122.7% )
-            mysql :   24,836 ops/s ± 0.1%
-           mysql2 : 30,847.7 ops/s ± 0.1%  (  +24.2% )
+          mariadb : 48,896.6 ops/s ± 0.1%  ( +273.7% )
+            mysql : 13,085.4 ops/s ± 0.1%
+           mysql2 : 27,855.6 ops/s ± 0.1%  ( +112.9% )
 
 ##  insert 10 VARCHAR(100)
 insert 10 VARCHAR(100)
-          mariadb : 12,542.2 ops/s ± 0.2%  (  +48.9% )
-            mysql :  8,421.7 ops/s ± 0.2%
-           mysql2 :  9,097.1 ops/s ± 0.3%  (     +8% )
+          mariadb : 20,274.2 ops/s ± 0.1%  (  +54.5% )
+            mysql : 13,120.6 ops/s ± 0.2%
+           mysql2 : 15,818.7 ops/s ± 0.2%  (  +20.6% )
 
 ##  100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)
 100 * insert CHAR(100) using batch (for mariadb) or loop for other driver (batch doesn't exist)
-          mariadb :  8,672.8 ops/s ± 0.2%  ( +3,282.9% )
-            mysql :    256.4 ops/s ± 0.9%
-           mysql2 :      295 ops/s ± 0.9%  (    +15% )
+          mariadb :  8,824.7 ops/s ± 0.2%  ( +3,332.9% )
+            mysql :    257.1 ops/s ± 0.8%
+           mysql2 :    313.4 ops/s ± 0.4%  (  +21.9% )
 
 ##  insert 10 Dates
 insert 10 Dates
-          mariadb : 23,649.3 ops/s ± 0.2%  (    +57% )
-            mysql : 15,067.5 ops/s ± 0.1%
-           mysql2 : 17,724.9 ops/s ± 0.1%  (  +17.6% )
+          mariadb : 22,591.2 ops/s ± 0.2%  (  +59.6% )
+            mysql : 14,150.4 ops/s ± 0.2%
+           mysql2 : 17,496.1 ops/s ± 0.2%  (  +23.6% )
 
 ##  3 * insert 100 characters pipelining
 3 * insert 100 characters pipelining
-          mariadb : 19,743.2 ops/s ± 0.1%  ( +140.3% )
-            mysql :  8,215.6 ops/s ± 0.2%
-           mysql2 :  9,425.7 ops/s ± 0.2%  (  +14.7% )
+          mariadb : 21,514.5 ops/s ± 0.1%  ( +160.4% )
+            mysql :  8,263.5 ops/s ± 0.2%
+           mysql2 : 10,362.8 ops/s ± 0.2%  (  +25.4% )
 
 ##  select 1000 rows of CHAR(32)
 select 1000 rows of CHAR(32)
-          mariadb :  3,923.7 ops/s ± 0.2%  ( +126.1% )
-            mysql :  1,735.1 ops/s ± 0.3%
-           mysql2 :  3,751.6 ops/s ± 0.4%  ( +116.2% )
+          mariadb :  4,525.7 ops/s ± 0.3%  ( +181.7% )
+            mysql :  1,606.5 ops/s ± 0.3%
+           mysql2 :  4,092.4 ops/s ± 0.2%  ( +154.7% )
 
 ##  select 1000 rows of CHAR(32) - BINARY
 select 1000 rows of CHAR(32) - BINARY
-          mariadb :    3,947 ops/s ± 0.2%  (   +6.2% )
-           mysql2 :    3,716 ops/s ± 0.4%
+          mariadb :    4,553 ops/s ± 0.3%  (  +13.2% )
+           mysql2 :  4,020.6 ops/s ± 0.3%
 
 ##  select 100 int
 select 100 int
-          mariadb : 14,248.8 ops/s ± 0.1%  ( +171.2% )
-            mysql :  5,254.1 ops/s ± 0.2%
-           mysql2 : 10,296.4 ops/s ± 0.2%  (    +96% )
+          mariadb : 13,654.2 ops/s ± 0.2%  (   +167% )
+            mysql :  5,113.2 ops/s ± 0.2%
+           mysql2 : 10,090.6 ops/s ± 0.2%  (  +97.3% )
 
 ##  select 100 int - BINARY
 select 100 int - BINARY
-          mariadb : 14,135.1 ops/s ± 0.1%  (    +30% )
-           mysql2 : 10,873.1 ops/s ± 0.2%
+          mariadb : 17,182.1 ops/s ± 0.2%  (  +43.5% )
+           mysql2 : 11,969.7 ops/s ± 0.1%
 
 ##  select 100 int no cache - BINARY
 select 100 int no cache - BINARY
-          mariadb : 10,135.5 ops/s ± 0.2%  (  +73.8% )
-           mysql2 :  5,830.4 ops/s ± 0.3%
+          mariadb : 10,011.9 ops/s ± 0.2%  (  +64.2% )
+           mysql2 :  6,096.9 ops/s ± 0.3%
 
 ##  select 1 int + char(32)
 select 1 int + char(32)
-          mariadb : 40,696.4 ops/s ± 0.1%  (  +99.3% )
-            mysql :   20,418 ops/s ± 0.1%
-           mysql2 : 25,628.6 ops/s ± 0.1%  (  +25.5% )
+          mariadb : 40,407.8 ops/s ± 0.1%  ( +132.3% )
+            mysql : 17,393.4 ops/s ± 0.2%
+           mysql2 : 26,185.3 ops/s ± 0.1%  (  +50.5% )
 
 ##  select 1 int + char(32) with pool
 select 1 int + char(32) with pool
-          mariadb :   40,364 ops/s ± 0.1%  ( +101.1% )
-            mysql : 20,076.4 ops/s ± 0.1%
-           mysql2 : 26,625.3 ops/s ± 0.1%  (  +32.6% )
+          mariadb : 35,591.9 ops/s ± 0.1%  ( +232.9% )
+            mysql : 10,692.5 ops/s ± 0.2%
+           mysql2 : 23,806.7 ops/s ± 0.1%  ( +122.6% )
 
 ##  select 1 random int + char(32)
 select 1 random int + char(32)
-          mariadb : 38,222.1 ops/s ± 0.1%  ( +102.7% )
-            mysql : 18,860.9 ops/s ± 0.1%
-           mysql2 : 14,374.9 ops/s ± 0.1%  (  -23.8% )
+          mariadb : 37,846.6 ops/s ± 0.1%  ( +124.4% )
+            mysql : 16,863.7 ops/s ± 0.2%
+           mysql2 : 14,090.4 ops/s ± 0.2%  (  -16.4% )
 
 ##  select now()
 select now()
-          mariadb : 39,714.2 ops/s ± 0.1%  (  +99.1% )
-            mysql :   19,945 ops/s ± 0.1%
-           mysql2 : 25,032.3 ops/s ± 0.1%  (  +25.5% )
+          mariadb : 40,536.1 ops/s ± 0.1%  ( +133.9% )
+            mysql : 17,327.1 ops/s ± 0.2%
+           mysql2 : 24,812.7 ops/s ± 0.1%  (  +43.2% )
 ```
 
 The percentage on each non-baseline line is computed against `mysql` (or against
