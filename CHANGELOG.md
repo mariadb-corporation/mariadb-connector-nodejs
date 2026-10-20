@@ -4,21 +4,21 @@
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.5.4...3.5.5)
 
 ## Notable changes
-* CONJS-373: Generate, validate and sign a CycloneDX 1.6 SBOM at release
-* CONJS-375: Publish to npm from GitHub Actions with trusted publishing and provenance
-* CONJS-377: Faster query parsing and text protocol decoding of date and ASCII values
-* CONJS-382: String parameters with nothing to escape are written by the native UTF-8 encoder, 3x faster at 128 characters and 10x and more from 512
-* CONJS-383: Binary protocol rows no longer allocate a Buffer view per row for the NULL bitmap, 40% faster on a 1000-row result set
+* CONJS-373: Each release ships a signed CycloneDX 1.6 software bill of materials, listing the package's dependencies for supply-chain audits
+* CONJS-377: Faster queries: client-side parsing of the query and decoding of DATE, DATETIME and ASCII values in text protocol results take less time
+* CONJS-382: Faster text protocol queries with large string parameters: a string with nothing to escape is encoded natively, 3x faster at 128 characters and 10x and more from 512
+* CONJS-383: Faster execute() on large result sets: binary protocol rows no longer allocate a buffer per row, 40% faster on a 1000-row result set
 
 ## Issues Fixed
-* CONJS-371: caching_sha2_password authentication refused on changeUser() after a self-signed TLS handshake (report by fg0x0)
-* CONJS-378: Pool.escape() escaped with backslashes under NO_BACKSLASH_ESCAPES when every connection of the pool was in use (report by buxuwa)
-* CONJS-379: Fixed SQL injection in Buffer parameter escaping under big5 client charset: lead bytes 0xFA-0xFE are single bytes for the server (report by fg0x0)
-* CONJS-380: Fixed SQL injection in string parameter and escape() escaping under big5, gbk, sjis and cp932 client charsets, the escape being applied before encoding (report by fg0x0)
-* CONJS-381: A configured collation is always set with SET NAMES, so that a charset the server does not support (gb18030 on MariaDB) is refused instead of silently ignored (report by fg0x0)
-* SqlError lost its constructor shape through a namespace import, breaking `instanceof` (#356 thanks to GiHoon1123)
+* CONJS-371: changeUser() failed with ER_SELF_SIGNED_SHA256 for a caching_sha2_password user after a self-signed TLS handshake, although the connection was already authenticated (report by fg0x0)
+* CONJS-378: Pool.escape() returned a backslash-escaped value under NO_BACKSLASH_ESCAPES when every connection of the pool was in use, leaving the value injectable (report by buxuwa)
+* CONJS-379: SQL injection through a Buffer parameter under the big5 client charset: the five lead bytes 0xFA-0xFE, single bytes for the server, were not escaped (report by fg0x0)
+* CONJS-380: SQL injection through a string parameter or escape() under the big5, gbk, sjis and cp932 client charsets, ordinary characters encoding to sequences the server reads as single bytes (report by fg0x0)
+* CONJS-381: A connection configured with a charset the server does not support, such as gb18030 on MariaDB, silently stayed on utf8mb4 while parameters were escaped for the requested charset; the connection is now refused by the server (report by fg0x0)
+* SqlError lost its constructor shape through a namespace import, so `err instanceof SqlError` was false (#356 thanks to GiHoon1123)
+* CONJS-386: A query issued while the connection was still sending a previous command, such as a large insert or a streamed parameter, could be silently dropped and its promise never settled, including when the connection failed (#358 thanks to GiHoon1123)
 * Type definitions: StreamCallback was declared as a value it never exports
-* CONJS-385: Type definitions: options bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay were not declared, logger did not accept a function nor logParam, logPackets was declared although never read, and ConnectionInfo exposed the internal collation
+* CONJS-385: Type definitions: TypeScript users can now pass bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay, a function or logParam for logger, without a cast; the unused logPackets option and the internal ConnectionInfo.collation are no longer declared
 
 ## [3.4.8](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.8) (Oct 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.7...3.4.8)
