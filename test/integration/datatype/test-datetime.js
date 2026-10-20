@@ -51,10 +51,10 @@ describe('datetime', () => {
       this.skip();
 
     let res = await shareConn.query('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01 UTC')]);
-    assert.deepEqual(res[0].tt, 946684800);
+    assert.deepEqual(res[0].tt, 946684800n);
 
     res = await shareConn.execute('SELECT UNIX_TIMESTAMP(?) tt', [new Date('2000-01-01 UTC')]);
-    assert.deepEqual(res[0].tt, 946684800);
+    assert.deepEqual(res[0].tt, 946684800n);
   });
 
   it('date text', async function () {
