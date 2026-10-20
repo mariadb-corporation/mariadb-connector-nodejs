@@ -100,7 +100,9 @@ jobs:
           DB_TYPE: ${{ matrix.db-type }}
           TEST_DB_SERVER_CERT: ${{ matrix.db-type == 'container' && './.github/workflows/certs/ca_server.crt' || '' }}
           DB_VERSION: ${{ matrix.db-tag }}
-          LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type }}
+          # the unix socket tests only run against a database installed on the runner itself,
+          # not in a container (test/base.js reads a non-empty value as "socket available")
+          LOCAL_SOCKET_AVAILABLE: ${{ steps.setup-env.outputs.database-type == 'local' && 'true' || '' }}
           # npm drops environment variables whose names contain a hyphen, so the
           # test process must receive this under a hyphen-free name (see test/base.js).
           MAXSCALE_TAG: ${{ matrix.maxscale-tag || '' }}
