@@ -213,7 +213,7 @@ describe.concurrent('authentication plugin', () => {
     const userInfo = os.userInfo();
     const unixUser = userInfo.username;
     console.log(unixUser);
-    if (!unixUser || unixUser === 'root' || unixUser !== '') {
+    if (!unixUser || unixUser === 'root') {
       skip();
       return;
     }
