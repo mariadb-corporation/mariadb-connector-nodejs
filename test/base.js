@@ -48,7 +48,8 @@ module.exports.isMaxscale = function isMaxscale() {
     const maxscaleVersion = global.shareConn.info.maxscaleVersion;
     if (!maxscaleVersion) {
       // maxscale before 23.08
-      const maxscaletag = process.env['maxscale-tag'];
+      // set by the CI under a hyphen-free name: npm drops hyphenated environment variables
+      const maxscaletag = process.env.MAXSCALE_TAG;
       return maxscaletag != null && maxscaletag != '';
     }
   }
