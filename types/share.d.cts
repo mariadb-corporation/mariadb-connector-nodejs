@@ -26,6 +26,10 @@ export interface LoggerConfig {
   query?: (msg: string) => void;
   error?: (err: Error) => void;
   warning?: (msg: string) => void;
+  /**
+   * Log the parameter values with the queries, overriding the connection option
+   */
+  logParam?: boolean;
 }
 
 export function defaultOptions(connectionUri?: string | ConnectionConfig): any;
@@ -261,11 +265,6 @@ export interface ConnectionInfo {
    * Server version information
    */
   serverVersion: ServerVersion;
-
-  /**
-   * connection collation
-   */
-  collation: null;
 
   /**
    * Server capabilities
@@ -594,6 +593,12 @@ export interface QueryConfig {
   bulk?: boolean;
 
   /**
+   * batch() returns the result of every statement rather than an aggregated result.
+   * (Default: true)
+   */
+  fullResult?: boolean;
+
+  /**
    * Sends queries one by one without waiting on the results of the previous entry.
    * (Default: true)
    */
@@ -623,6 +628,18 @@ export interface QueryConfig {
    * indicate if JSON fields for MariaDB server 10.5.2+ result in JSON format (or String if disabled)
    */
   autoJsonMap?: boolean;
+
+  /**
+   * Return JSON columns as strings rather than parsed objects, disabling autoJsonMap.
+   * (Default: false)
+   */
+  jsonStrings?: boolean;
+
+  /**
+   * Return BIT(1) columns as booleans.
+   * (Default: true)
+   */
+  bitOneIsBoolean?: boolean;
 
   /**
    * Indicate if an array is included in parentheses. This option permits compatibility with the connector version < 2.5
@@ -672,7 +689,10 @@ export interface QueryConfig {
   /**
    * Configure logger
    */
-  logger?: LoggerConfig;
+  /**
+   * A single function receives every channel: the network, query and warning messages, and the errors
+   */
+  logger?: LoggerConfig | ((msg: string | Error) => void);
 
   /**
    * Permit to defined function calling for LOAD LOCAL command, for extra verification like path restriction.
@@ -774,14 +794,6 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   compress?: boolean;
 
   /**
-   * Debug option: permit saving last exchanged packet.
-   * Error messages will display those last exchanged packet.
-   *
-   * (Default: false)
-   */
-  logPackets?: boolean;
-
-  /**
    * Force server version check by explicitly using SELECT VERSION(), not relying on server initial packet.
    * (Default: false)
    */
@@ -841,6 +853,16 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
   keepAliveDelay?: number;
 
   /**
+   * mysql2 compatibility: with enableKeepAlive, keepAliveInitialDelay is used as keepAliveDelay.
+   */
+  enableKeepAlive?: boolean;
+
+  /**
+   * mysql2 compatibility: keep-alive delay in ms, used when enableKeepAlive is set.
+   */
+  keepAliveInitialDelay?: number;
+
+  /**
    * Indicate path/content to MySQL server RSA public key.
    * use requires Node.js v11.6+
    */
@@ -858,6 +880,29 @@ export interface ConnectionConfig extends UserConnectionConfig, Omit<QueryConfig
    * default: false
    */
   allowPublicKeyRetrieval?: boolean;
+
+  /**
+   * Authentication plugins the connection may use, as a comma-separated string or a list.
+   * (Default: all plugins)
+   */
+  restrictedAuth?: string | string[];
+
+  /**
+   * Permit a connection whose password has expired, so that it can be changed.
+   * (Default: false)
+   */
+  permitConnectionWhenExpired?: boolean;
+
+  /**
+   * Follow a redirection requested by the server (MaxScale, server redirect_url).
+   * (Default: true when the connection uses TLS with certificate validation, false otherwise)
+   */
+  permitRedirect?: boolean;
+
+  /**
+   * mysql compatibility: collation identifier, used when neither charset nor collation is set.
+   */
+  charsetNumber?: number;
 
   /**
    * force returning insertId as Number in place of BigInt

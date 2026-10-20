@@ -265,6 +265,20 @@ async function testMisc(): Promise<void> {
   await createConnection({ multipleStatements: true });
   await createConnection({ bigNumberStrings: true, supportBigNumbers: true });
   await createConnection({ decimalAsNumber: true, bigIntAsNumber: true, checkNumberRange: true });
+  await createConnection({
+    bitOneIsBoolean: false,
+    jsonStrings: true,
+    permitConnectionWhenExpired: true,
+    restrictedAuth: ['mysql_native_password', 'client_ed25519'],
+    permitRedirect: false,
+    charsetNumber: 224,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+    logger: (msg: string | Error) => console.log(String(msg))
+  });
+  await createConnection({ restrictedAuth: 'mysql_native_password,client_ed25519' });
+  const batchConn = await createConnection({});
+  await batchConn.batch({ sql: 'INSERT INTO t VALUES (?)', fullResult: false }, [[1], [2]]);
 
   await createConnection({ debug: true });
   await createConnection({ dateStrings: true });
