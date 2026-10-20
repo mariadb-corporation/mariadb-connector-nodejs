@@ -583,10 +583,14 @@ describe('cluster', function () {
         new setTimeout(resolve, 500);
       });
       expect(removedNode).to.have.length(0);
-      await new Promise((resolve, reject) => {
-        new setTimeout(resolve, 2000);
-      });
-      let node2s = await testTimesWithError(cluster, /^node*/, 10);
+      // node2 is back once its node is restored (restoreNodeTimeout) and its pool has reconnected
+      // through the proxy, which takes longer on a slow runner: poll rather than wait a fixed time
+      let node2s;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        node2s = await testTimesWithError(cluster, /^node*/, 10);
+        if (node2s['node2']) break;
+      }
       await cluster.end();
       await proxy.close();
       expect([3, 4]).to.contain.members([node2s['node1']]);
