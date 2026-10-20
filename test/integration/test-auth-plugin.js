@@ -202,16 +202,17 @@ describe('authentication plugin', () => {
     shareConn
       .query('select @@version_compile_os,@@socket soc')
       .then((res) => {
-        const unixUser = process.env.USER;
+        const unixUser = os.userInfo().username;
         if (!unixUser || unixUser === 'root') this.skip();
         console.log('unixUser:' + unixUser);
         shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch((err) => {});
         shareConn.query('DROP USER IF EXISTS ' + unixUser);
+        // the connection comes through the socket, from localhost, whatever the configured host
         shareConn
-          .query("CREATE USER '" + unixUser + "'@'" + Conf.baseConfig.host + "' IDENTIFIED VIA unix_socket")
+          .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
           .catch((err) => {});
         shareConn
-          .query("GRANT SELECT on *.* to '" + unixUser + "'@'" + Conf.baseConfig.host + "'")
+          .query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix())
           .then(() => {
             base
               .createConnection({ user: null, socketPath: res[0].soc })
