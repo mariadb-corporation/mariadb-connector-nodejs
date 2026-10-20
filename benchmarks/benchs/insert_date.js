@@ -37,6 +37,6 @@ export const initFct = async function (conn) {
     ]);
   }
 };
-export const onComplete = async function (conn) {
+export const end = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestText');
 };
