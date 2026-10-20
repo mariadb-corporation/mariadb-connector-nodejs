@@ -205,17 +205,26 @@ describe('authentication plugin', () => {
         const unixUser = os.userInfo().username;
         if (!unixUser || unixUser === 'root') this.skip();
         console.log('unixUser:' + unixUser);
-        shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch((err) => {});
-        shareConn.query('DROP USER IF EXISTS ' + unixUser);
-        // the connection comes through the socket, from localhost, whatever the configured host
         shareConn
-          .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
-          .catch((err) => {});
-        shareConn
-          .query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix())
+          .query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'")
+          .catch((err) => {})
+          .then(() =>
+            shareConn.query("SELECT PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME='unix_socket'")
+          )
+          .then((plugins) => {
+            // the plugin is not available on every build (macOS)
+            if (plugins.length === 0 || plugins[0].PLUGIN_STATUS !== 'ACTIVE') this.skip();
+            return shareConn.query("DROP USER IF EXISTS '" + unixUser + "'" + getHostSuffix());
+          })
+          // the connection comes through the socket, from localhost, whatever the configured host
+          .then(() =>
+            shareConn.query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
+          )
+          .then(() => shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix()))
           .then(() => {
+            // the user must be sent: the connector only defaults it to the USERNAME variable, set on Windows
             base
-              .createConnection({ user: null, socketPath: res[0].soc })
+              .createConnection({ user: unixUser, password: null, socketPath: res[0].soc })
               .then((conn) => {
                 return conn.end();
               })
