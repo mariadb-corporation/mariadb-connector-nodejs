@@ -4,6 +4,9 @@
 'use strict';
 
 import runBenchSuite from './common-bench.js';
-import * as bench from './benchs/do_1_pool.js';
+
+// usage: node benchmarks/benchmark-one.js [benchmark file in benchs/], default do_1_pool.js
+const file = process.argv[2] || 'do_1_pool.js';
+const bench = await import(`./benchs/${file}`);
 
 await runBenchSuite(bench);

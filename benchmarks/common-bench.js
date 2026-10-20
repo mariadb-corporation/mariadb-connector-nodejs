@@ -96,7 +96,6 @@ const loadsources = async (requiresPool, requireExecute, mariadbOnly) => {
   if (!configWithCharset && mariadbConn.info.collation) {
     const collation = mariadbConn.info.collation.name;
     configWithCharset = Object.assign({}, conf.baseConfig, { charset: collation });
-    console.log(configWithCharset);
   }
 
   if (requiresPool == undefined || requiresPool === false) {
