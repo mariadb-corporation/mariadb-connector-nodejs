@@ -1,5 +1,14 @@
 # Change Log
 
+## [3.2.6](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.6) (Oct 2026)
+[Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.5...3.2.6)
+
+## Issues Fixed
+* CONJS-378: Pool.escape() escaped with backslashes under NO_BACKSLASH_ESCAPES when every connection of the pool was in use (report by buxuwa)
+* CONJS-379: Fixed SQL injection in Buffer parameter escaping under big5 client charset: lead bytes 0xFA-0xFE are single bytes for the server (report by fg0x0)
+* CONJS-380: Fixed SQL injection in string parameter and escape() escaping under big5, gbk, sjis and cp932 client charsets, the escape being applied before encoding (report by fg0x0)
+* CONJS-381: A configured collation is always set with SET NAMES, so that a charset the server does not support (gb18030 on MariaDB) is refused instead of silently ignored (report by fg0x0)
+
 ## [3.2.5](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.2.5) (Jul 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.2.4...3.2.5)
 
