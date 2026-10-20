@@ -226,12 +226,20 @@ describe.concurrent('authentication plugin', () => {
     }
 
     await shareConn.query("INSTALL PLUGIN unix_socket SONAME 'auth_socket'").catch(() => {});
-    await shareConn.query('DROP USER IF EXISTS ' + unixUser);
-    await shareConn
-      .query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket')
-      .catch(() => {});
+    // the plugin is not available on every build (macOS)
+    const plugins = await shareConn.query(
+      "SELECT PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME='unix_socket'"
+    );
+    if (plugins.length === 0 || plugins[0].PLUGIN_STATUS !== 'ACTIVE') {
+      skip();
+      return;
+    }
+    // the connection comes through the socket, from localhost, whatever the configured host
+    await shareConn.query("DROP USER IF EXISTS '" + unixUser + "'" + getHostSuffix());
+    await shareConn.query("CREATE USER '" + unixUser + "'" + getHostSuffix() + ' IDENTIFIED VIA unix_socket');
     await shareConn.query("GRANT SELECT on *.* to '" + unixUser + "'" + getHostSuffix());
-    const conn = await createConnection({ user: null, socketPath: socketPath });
+    // the user must be sent: the connector only defaults it to the USERNAME variable, set on Windows
+    const conn = await createConnection({ user: unixUser, password: null, socketPath: socketPath });
     await conn.end();
   });
 
