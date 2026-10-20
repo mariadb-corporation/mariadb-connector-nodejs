@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2026 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 // Type-only smoke test: exercise the public type surface in the shapes that
 // broke under TS Node16 / NodeNext / Bundler in issue #346.

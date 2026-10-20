@@ -2,7 +2,7 @@ export const title = 'select 100 int - BINARY';
 export const displaySql = 'select * FROM test100';
 export const requireExecute = true;
 export const benchFct = async function (conn, type) {
-  await conn.query('SELECT * FROM test100');
+  await conn.execute('SELECT * FROM test100');
   return;
 };
 export const initFct = async function (conn) {

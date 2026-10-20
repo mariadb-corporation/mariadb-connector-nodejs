@@ -72,7 +72,7 @@ INSERT INTO `post` VALUES
 UNLOCK TABLES;
 
 --  // SPDX-License-Identifier: LGPL-2.1-or-later
---  // Copyright (c) 2015-2024 MariaDB Corporation Ab
+--  // Copyright (c) 2015-2026 MariaDB plc
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

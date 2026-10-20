@@ -1,15 +1,6 @@
-const basechars = '123456789abcdefghijklmnop\\Z';
-const chars = basechars.split('');
-chars.push('😎');
-chars.push('🌶');
-chars.push('🎤');
-chars.push('🥂');
+import { randomStrings } from '../random-strings.js';
 
-function randomString(length) {
-  let result = '';
-  for (let i = length; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
-  return result;
-}
+const nextString = randomStrings(1000, 100);
 
 let sqlTable = 'CREATE TABLE perfTestTextPipe (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 text' + ', PRIMARY KEY (id))';
 const sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
@@ -17,7 +8,7 @@ const sqlInsert = 'INSERT INTO perfTestTextPipe(t0) VALUES (?)';
 export const title = '3 * insert 100 characters pipelining';
 export const displaySql = 'INSERT INTO perfTestTextPipe VALUES (?) (into BLACKHOLE ENGINE)';
 export const benchFct = async function (conn, type) {
-  const params = [randomString(100)];
+  const params = [nextString()];
   conn.query(sqlInsert, params);
   conn.query(sqlInsert, params);
   const rows = await conn.query(sqlInsert, params);
@@ -39,6 +30,6 @@ export const initFct = async function (conn) {
     ]);
   }
 };
-export const onComplete = async function (conn) {
+export const end = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestTextPipe');
 };

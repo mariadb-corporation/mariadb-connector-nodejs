@@ -11,6 +11,7 @@ Discussions of the issue will take place on the JIRA ticket.
 Rather than downloading the source code for the Connector directly from GitHub or cloning this repository, instead fork the project onto your own account.  
 Then send pull requests from your fork.
 
+
 ### Testing
 
 Before submitting a pull request to the project, run local and continuous integration testing.  

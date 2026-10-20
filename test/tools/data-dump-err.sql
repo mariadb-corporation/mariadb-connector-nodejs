@@ -75,7 +75,7 @@ INSERT INTO `category` VALUES
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 
 --  // SPDX-License-Identifier: LGPL-2.1-or-later
---  // Copyright (c) 2015-2024 MariaDB Corporation Ab
+--  // Copyright (c) 2015-2026 MariaDB plc
 
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

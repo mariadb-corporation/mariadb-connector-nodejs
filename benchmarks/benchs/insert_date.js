@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 let sqlTable = 'CREATE TABLE perfTestText (id MEDIUMINT NOT NULL AUTO_INCREMENT,t0 DATETIME(6)';
 let sqlParam = '';
@@ -37,6 +37,6 @@ export const initFct = async function (conn) {
     ]);
   }
 };
-export const onComplete = async function (conn) {
+export const end = async function (conn) {
   await conn.query('TRUNCATE TABLE perfTestText');
 };

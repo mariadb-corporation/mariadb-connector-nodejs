@@ -36,9 +36,9 @@ directories or re-run `npm install` to restore the locked state.
 
 ## Tuning
 
-| Env var        | Default | Meaning                                                         |
-| -------------- | ------- | --------------------------------------------------------------- |
-| `PERF_SAMPLES` | `200`   | Minimum iterations per task **and** size of the warmup phase.   |
+| Env var        | Default | Meaning                                                       |
+| -------------- | ------- | ------------------------------------------------------------- |
+| `PERF_SAMPLES` | `200`   | Minimum iterations per task **and** size of the warmup phase. |
 
 Each benchmark task also runs for at least 2 seconds regardless of iteration count
 (set in [`common-bench.js`](common-bench.js)), so very fast queries still get a
@@ -69,24 +69,27 @@ sample run across all benchmarks.
 ## Running a single benchmark
 
 ```sh
-node benchmarks/benchmark-one.js
+node benchmarks/benchmark-one.js select_1000_rows.js
 ```
 
-Edit the `import * as bench from './benchs/<name>.js'` line at the top of
-[`benchmark-one.js`](benchmark-one.js) to pick which one to run.
+The argument is a file of [`benchs/`](benchs) (default `do_1_pool.js`). `npm run benchmark`
+runs every file this way, each in its own process: the drivers share the process, and the heap
+left by a benchmark slowed the following ones by up to a quarter, for every driver.
 
 ## Writing a new benchmark
 
 Each file in [`benchs/`](benchs) is a tiny ES module exporting:
 
-- `title` *(string)* — printed as the section header in the output.
-- `displaySql` *(string)* — SQL pattern shown in the report.
-- `benchFct(conn, type)` *(async function)* — the workload. `conn` is a connection
+- `title` _(string)_ — printed as the section header in the output.
+- `displaySql` _(string)_ — SQL pattern shown in the report.
+- `benchFct(conn, type)` _(async function)_ — the workload. `conn` is a connection
   or pool; `type` is the driver name (`'mariadb'`, `'mysql'`, `'mysql2'`) so the
   function can branch when the drivers' APIs diverge (e.g. batch inserts).
-- `initFct(conn)` *(optional async)* — setup before the run, e.g. `CREATE TABLE`.
-- `end(conn)` *(optional async)* — teardown after the run.
-- `requiresPool` *(boolean, optional)* — set to `true` to receive a pool instead of
+- `initFct(conn)` _(optional async)_ — setup before the run, e.g. `CREATE TABLE`.
+- `end(conn)` _(optional async)_ — teardown after the run.
+- `requiresPool` _(boolean, optional)_ — set to `true` to receive a pool instead of
   a single connection.
-- `mariadbOnly` *(boolean, optional)* — skip the `mysql`/`mysql2` comparison for
+- `requireExecute` _(boolean, optional)_ — set to `true` when the workload uses the
+  binary protocol (`conn.execute()`); `mysql` has no such method and is skipped.
+- `mariadbOnly` _(boolean, optional)_ — skip the `mysql`/`mysql2` comparison for
   this benchmark (use when the workload depends on a MariaDB-specific feature).

@@ -1,11 +1,11 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2024 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 export const title = 'select 1000 rows of CHAR(32) - BINARY';
 export const displaySql = 'select * from 1000 rows (int + string(32))';
 export const requireExecute = true;
 export const benchFct = async function (conn, type) {
-  await conn.query('SELECT * FROM 1000rows');
+  await conn.execute('SELECT * FROM 1000rows');
   return;
 };
 export const initFct = function (conn) {

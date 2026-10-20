@@ -1,5 +1,5 @@
 //  SPDX-License-Identifier: LGPL-2.1-or-later
-//  Copyright (c) 2015-2026 MariaDB Corporation Ab
+//  Copyright (c) 2015-2026 MariaDB plc
 
 // Smoke test: the package must be require()-able from CommonJS code
 // (regression coverage for https://github.com/mariadb-corporation/mariadb-connector-nodejs/issues/346).
