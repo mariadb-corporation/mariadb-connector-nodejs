@@ -835,11 +835,18 @@ describe.concurrent('connection', () => {
           assert.equal(err.code, 'ER_CON_COUNT_ERROR');
 
           // now that all connections are in use, destroy a query without creating a killing new connection
-          conns[0].query(
+          const running = conns[0].query(
             'select c1.* from information_schema.columns as c1, information_schema.tables, ' +
               'information_schema.tables as t2'
           );
           conns[0].destroy();
+          // the kill connection cannot be created: the query must still be rejected
+          try {
+            await running;
+            throw new Error('must have thrown error !');
+          } catch (e) {
+            assert.equal(e.code, 'ER_CMD_NOT_EXECUTED_DESTROYED');
+          }
           await new Promise(function (resolve, reject) {
             setTimeout(async function () {
               await Promise.allSettled(
