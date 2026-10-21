@@ -21,7 +21,7 @@
 * SqlError lost its constructor shape through a namespace import, so `err instanceof SqlError` was false (#356 thanks to GiHoon1123)
 * CONJS-386: A query issued while the connection was still sending a previous command, such as a large insert or a streamed parameter, could be silently dropped and its promise never settled, including when the connection failed (#358 thanks to GiHoon1123)
 * Type definitions: StreamCallback was declared as a value it never exports
-* CONJS-385: Type definitions: TypeScript users can now pass bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay, a function or logParam for logger, without a cast; the unused logPackets option and the internal ConnectionInfo.collation are no longer declared; the pool's `error` event and SqlError.cause are declared, and the pool's `enqueue` event, never emitted, is not
+* CONJS-385: Type definitions: TypeScript users can now pass bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay, a function or logParam for logger, without a cast; the unused logPackets option and the internal ConnectionInfo.collation are no longer declared; the pool's `error` event and SqlError.cause are declared
 
 ## [3.4.8](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.8) (Oct 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.7...3.4.8)
