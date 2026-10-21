@@ -17,6 +17,7 @@
 * CONJS-380: SQL injection through a string parameter or escape() under the big5, gbk, sjis and cp932 client charsets, ordinary characters encoding to sequences the server reads as single bytes (report by fg0x0)
 * CONJS-381: A connection configured with a charset the server does not support, such as gb18030 on MariaDB, silently stayed on utf8mb4 while parameters were escaped for the requested charset; the connection is now refused by the server (report by fg0x0)
 * CONJS-388: The `meta` property of a result could not be deleted, which made every Sequelize raw query fail with "Cannot delete property 'meta'" (#234)
+* CONJS-389: connection.destroy() did not kill the running query on a TLS connection with certificate validation: the kill connection, opened on the server IP, failed hostname verification; the query promise also never settled when that connection could not be opened (#304)
 * SqlError lost its constructor shape through a namespace import, so `err instanceof SqlError` was false (#356 thanks to GiHoon1123)
 * CONJS-386: A query issued while the connection was still sending a previous command, such as a large insert or a streamed parameter, could be silently dropped and its promise never settled, including when the connection failed (#358 thanks to GiHoon1123)
 * Type definitions: StreamCallback was declared as a value it never exports
