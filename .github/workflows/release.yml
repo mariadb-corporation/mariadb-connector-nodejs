@@ -1,0 +1,141 @@
+---
+name: Release
+
+# Publishes the package to npm through npm "trusted publishing" (OIDC): no npm
+# token anywhere. npmjs.com must list this workflow file as a trusted publisher
+# of the `mariadb` package (package settings > Trusted Publisher: organization
+# mariadb-corporation, repository mariadb-connector-nodejs, workflow
+# release.yml, environment npm). Provenance (SLSA build attestation, signed by
+# Sigstore) is generated automatically and shown on the npm package page.
+#
+# The version is staged on npm (uploaded but not public) and a draft GitHub
+# release is created. A maintainer reviews and makes both live with 2FA:
+#
+#   npm stage list mariadb
+#   npm stage view <stage-id>
+#   npm stage approve <stage-id>      (or: npm stage reject <stage-id>)
+#   gh release edit <version> --draft=false   (publish the GitHub release created as draft)
+#
+# The workflow only stages; going live always requires a maintainer with 2FA.
+# It is started by hand from the Actions tab once the release tag is pushed,
+# selecting that tag as the ref: it needs a git tag equal to package.json's
+# version on the released commit (e.g. `3.4.8`).
+#
+# Maintenance branch variant: no build step (the package is plain CommonJS) and
+# no SBOM, which only the current series ships (CONJS-373).
+
+on:
+  # manual only: Actions > Release > "Run workflow", choosing the release tag as the ref
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # GitHub environment (created on first use): add required reviewers under
+    # Settings > Environments > npm to gate every release behind an approval.
+    environment: npm
+    permissions:
+      contents: write # attach the tarball to the GitHub release
+      id-token: write # OIDC token for npm trusted publishing and Sigstore provenance
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm
+        # trusted publishing needs npm >= 11.5.1; node 22 bundles npm 10
+        run: |
+          npm install -g npm@11
+          npm --version
+
+      - name: Check that the released commit is tagged with the package version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if ! git tag --points-at HEAD | grep -qx "$version"; then
+            echo "::error::package.json version is $version but HEAD carries no tag '$version'"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Static checks
+        # database tests run in the CI workflow, which the tag push also triggers
+        run: |
+          npx prettier --check "*.js" "{tools,lib,test,benchmarks}/**/*.js" "types/*.ts"
+          npm run test:lint
+          npm run test:types
+
+      - name: Pack
+        id: pack
+        run: |
+          tarball=$(npm pack --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          sha512sum "$tarball"
+
+      - name: Choose the npm dist-tag
+        id: dist-tag
+        # a release older than the current `latest` (maintenance branch) must
+        # not move `latest`: it is tagged maintenance-<major>.<minor> instead
+        run: |
+          latest=$(npm view mariadb version)
+          tag=$(node -e '
+            const [a, b] = process.argv.slice(1).map((v) => v.split(".").map(Number));
+            const newer = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] >= b[2];
+            console.log(newer ? "latest" : `maintenance-${a[0]}.${a[1]}`);
+          ' "${{ steps.version.outputs.version }}" "$latest")
+          echo "current latest: $latest, dist-tag: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Stage on npm
+        # stages the packed tarball as is (not public until `npm stage approve`);
+        # --ignore-scripts because the checks already ran above,
+        # --provenance fails loudly if the OIDC identity is missing
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: |
+          npm stage publish "$TARBALL" --tag "$DIST_TAG" --provenance --ignore-scripts
+          echo "::notice::staged: run 'npm stage list mariadb' then 'npm stage approve <stage-id>' to make it public"
+
+      - name: Upload the tarball as workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ steps.version.outputs.version }}
+          path: ${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+
+      - name: Create the GitHub draft release
+        # The maintainer who runs `npm stage approve` then publishes it
+        # (gh release edit <version> --draft=false, or the "Publish release"
+        # button). Release notes are the CHANGELOG.md section of the version. If a
+        # release for the tag already exists, only the tarball is (re)attached.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" "$TARBALL" --clobber
+            exit 0
+          fi
+          notes=$(awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {f=1} f && /^## \[/ && $0 !~ "^## \\[" v "\\]" {exit} f' CHANGELOG.md)
+          [ -n "$notes" ] || notes="See CHANGELOG.md"
+          gh release create "$VERSION" "$TARBALL" --draft \
+            --title "MariaDB Connector/Node.js $VERSION" --notes "$notes"
+          echo "::notice::draft GitHub release $VERSION created: publish it once the npm version is approved"
