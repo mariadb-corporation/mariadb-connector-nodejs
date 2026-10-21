@@ -278,7 +278,7 @@ export interface Pool {
 
   on(ev: 'acquire', callback: (conn: Connection) => void): Pool;
   on(ev: 'connection', callback: (conn: Connection) => void): Pool;
-  on(ev: 'enqueue', callback: () => void): Pool;
+  on(ev: 'error', callback: (err: SqlError) => void): Pool;
   on(ev: 'release', callback: (conn: Connection) => void): Pool;
 }
 

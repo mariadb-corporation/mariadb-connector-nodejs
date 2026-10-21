@@ -591,6 +591,7 @@ describe.concurrent('Pool', () => {
     await new Promise(function (resolver, rejecter) {
       pool.on('error', (err) => {
         console.log('error: ' + err);
+        assert.instanceOf(err, basePromise.SqlError);
         assert.isTrue(err.message.includes('Error during pool initialization'));
         assert.isNotNull(err.cause);
         assert.isTrue(
@@ -632,6 +633,59 @@ describe.concurrent('Pool', () => {
       });
     });
   }, 10000);
+
+  test('pool error is logged when no error listener is registered', async () => {
+    const logged = [];
+    const pool = basePromise.createPool({
+      host: '127.0.0.1',
+      port: 1,
+      user: 'nobody',
+      connectionLimit: 1,
+      connectTimeout: 300,
+      initializationTimeout: 500,
+      acquireTimeout: 800,
+      logger: { error: (err) => logged.push(err) }
+    });
+    try {
+      await pool.query('SELECT 1');
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+    } finally {
+      await pool.end();
+    }
+    const poolErrors = logged.filter((err) => err.code === 'ER_POOL_NOT_INITIALIZED');
+    assert.isAtLeast(poolErrors.length, 1, 'the pool error must reach the logger');
+    assert.instanceOf(poolErrors[0], basePromise.SqlError);
+    assert.equal(poolErrors[0].cause.code, 'ECONNREFUSED');
+  });
+
+  test('pool error is emitted, not logged, when an error listener is registered', async () => {
+    const logged = [];
+    const emitted = [];
+    const pool = basePromise.createPool({
+      host: '127.0.0.1',
+      port: 1,
+      user: 'nobody',
+      connectionLimit: 1,
+      connectTimeout: 300,
+      initializationTimeout: 500,
+      acquireTimeout: 800,
+      logger: { error: (err) => logged.push(err) }
+    });
+    pool.on('error', (err) => emitted.push(err));
+    try {
+      await pool.query('SELECT 1');
+      throw new Error('must have thrown error');
+    } catch (err) {
+      assert.equal(err.code, 'ER_GET_CONNECTION_TIMEOUT');
+    } finally {
+      await pool.end();
+    }
+    assert.isAtLeast(emitted.length, 1);
+    assert.equal(emitted[0].code, 'ER_POOL_NOT_INITIALIZED');
+    assert.equal(logged.filter((err) => err.code === 'ER_POOL_NOT_INITIALIZED').length, 0, 'not logged when emitted');
+  });
 
   test('pool with wrong authentication connection', async ({ skip }) => {
     if (isMaxscale(shareConn)) return skip();

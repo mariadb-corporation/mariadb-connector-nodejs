@@ -396,6 +396,12 @@ export interface SqlError extends Error {
   errno: number;
 
   /**
+   * The underlying error, when this error wraps another one: the connection error behind a pool
+   * error, the socket error behind a connection error
+   */
+  cause?: unknown;
+
+  /**
    * The SQL state
    */
   sqlState?: string | null;

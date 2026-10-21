@@ -45,8 +45,6 @@ export function createConnection(opts) {
 export function createPool(opts) {
   const options = new PoolOptions(opts);
   const pool = new PoolPromise(options);
-  // adding a default error handler to avoid exiting application on connection error.
-  pool.on('error', (err) => {});
   return pool;
 }
 

@@ -10,6 +10,7 @@
 * CONJS-383: Faster execute() on large result sets: binary protocol rows no longer allocate a buffer per row, 40% faster on a 1000-row result set
 
 ## Issues Fixed
+* A pool that fails to create a connection now reports it through the logger when the application registers no `error` listener; the failure used to be silently dropped by a default listener (#180)
 * CONJS-371: changeUser() failed with ER_SELF_SIGNED_SHA256 for a caching_sha2_password user after a self-signed TLS handshake, although the connection was already authenticated (report by fg0x0)
 * CONJS-378: Pool.escape() returned a backslash-escaped value under NO_BACKSLASH_ESCAPES when every connection of the pool was in use, leaving the value injectable (report by buxuwa)
 * CONJS-379: SQL injection through a Buffer parameter under the big5 client charset: the five lead bytes 0xFA-0xFE, single bytes for the server, were not escaped (report by fg0x0)
@@ -18,7 +19,7 @@
 * SqlError lost its constructor shape through a namespace import, so `err instanceof SqlError` was false (#356 thanks to GiHoon1123)
 * CONJS-386: A query issued while the connection was still sending a previous command, such as a large insert or a streamed parameter, could be silently dropped and its promise never settled, including when the connection failed (#358 thanks to GiHoon1123)
 * Type definitions: StreamCallback was declared as a value it never exports
-* CONJS-385: Type definitions: TypeScript users can now pass bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay, a function or logParam for logger, without a cast; the unused logPackets option and the internal ConnectionInfo.collation are no longer declared
+* CONJS-385: Type definitions: TypeScript users can now pass bitOneIsBoolean, jsonStrings, fullResult, restrictedAuth, permitConnectionWhenExpired, permitRedirect, charsetNumber, enableKeepAlive and keepAliveInitialDelay, a function or logParam for logger, without a cast; the unused logPackets option and the internal ConnectionInfo.collation are no longer declared; the pool's `error` event and SqlError.cause are declared, and the pool's `enqueue` event, never emitted, is not
 
 ## [3.4.8](https://github.com/mariadb-corporation/mariadb-connector-nodejs/tree/3.4.8) (Oct 2026)
 [Full Changelog](https://github.com/mariadb-corporation/mariadb-connector-nodejs/compare/3.4.7...3.4.8)

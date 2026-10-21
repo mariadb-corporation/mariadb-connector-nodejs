@@ -265,11 +265,11 @@ function testPool(next: (err?: Error) => void) {
       pool.on('acquire', displayConn).on('acquire', displayConn);
       pool.on('connection', displayConn).on('connection', displayConn);
       pool
-        .on('enqueue', () => {
-          console.log('enqueue');
+        .on('error', (err: SqlError) => {
+          console.log(err.code, err.errno, err.sqlState, err.cause);
         })
-        .on('enqueue', () => {
-          console.log('enqueue');
+        .on('error', (err: SqlError) => {
+          console.log(err.message);
         });
       pool.on('release', displayConn).on('release', displayConn);
       pool.query('SELECT 1 + 1 AS solution', (err: SqlError | null, rows?: any[]) => {
