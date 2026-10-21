@@ -5,6 +5,7 @@
 
 import fs from 'node:fs';
 import tls from 'node:tls';
+import net from 'node:net';
 import crypto from 'node:crypto';
 
 import Conf from '../conf.js';
@@ -567,6 +568,47 @@ describe.concurrent('ssl', function () {
     if (!isDeno() && success && (!shareConn.info.isMariaDB() || !shareConn.info.hasMinVersion(11, 4, 0))) {
       throw new Error('Must have thrown an exception, since server identity must not have been verified !');
     }
+  });
+
+  test('destroy() kills a running query with certificate validation', async ({ skip }) => {
+    // destroy() opens a side connection on the socket IP to issue a KILL: this connection must not
+    // fail hostname verification, even though it uses the IP instead of the configured host
+    if (!sslEnable) return skip();
+    if (!ca) return skip();
+    if (isDeno() || isMaxscale(shareConn)) return skip();
+    if (!shareConn.info.isMariaDB() && !shareConn.info.hasMinVersion(5, 7, 10)) return skip();
+    if (net.isIP(Conf.baseConfig.host)) return skip();
+
+    const conn = await createConnection({
+      ssl: {
+        ca: ca,
+        checkServerIdentity: (servername) =>
+          servername === Conf.baseConfig.host || servername === 'localhost'
+            ? undefined
+            : new Error(`unexpected host ${servername}`)
+      },
+      port: sslPort
+    });
+    const threadId = conn.threadId;
+    const running = conn.query('SELECT SLEEP(5)');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    conn.destroy();
+    try {
+      await running;
+      throw new Error('must have thrown error !');
+    } catch (err) {
+      assert.equal(err.code, 'ER_CMD_NOT_EXECUTED_DESTROYED');
+    }
+
+    let stillRunning = true;
+    for (let i = 0; i < 20 && stillRunning; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const rows = await shareConn.query('SELECT COUNT(*) as c FROM information_schema.PROCESSLIST WHERE ID = ?', [
+        threadId
+      ]);
+      stillRunning = rows[0].c > 0;
+    }
+    assert.isFalse(stillRunning, 'query must have been killed by destroy()');
   });
 
   test('CA name verification error', async ({ skip }) => {
