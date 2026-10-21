@@ -17,13 +17,12 @@ name: Release
 #   gh release edit <version> --draft=false   (publish the GitHub release created as draft)
 #
 # The workflow only stages; going live always requires a maintainer with 2FA.
-# It needs a git tag equal to package.json's version on the released commit
-# (e.g. `3.5.5`), pushed or selected as the ref of a manual run.
+# It is started by hand from the Actions tab once the release tag is pushed,
+# selecting that tag as the ref: it needs a git tag equal to package.json's
+# version on the released commit (e.g. `3.5.5`).
 
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+  # manual only: Actions > Release > "Run workflow", choosing the release tag as the ref
   workflow_dispatch:
 
 permissions:
@@ -79,7 +78,7 @@ jobs:
         run: npm run test:lint && npm run test:tsc && npm run test:types && npm run test:cts
 
       - name: Build and import smoke tests
-        # database tests run in the CI workflow, which the tag push also triggers
+        # database tests run in the CI workflow, triggered by the tag push
         run: npm run test:imports
 
       - name: Pack
