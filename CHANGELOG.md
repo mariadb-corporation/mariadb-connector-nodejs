@@ -12,7 +12,7 @@
 ## Issues Fixed
 * A pool that fails to create a connection now reports it through the logger when the application registers no `error` listener; the failure used to be silently dropped by a default listener (#180)
 * CONJS-371: changeUser() failed with ER_SELF_SIGNED_SHA256 for a caching_sha2_password user after a self-signed TLS handshake, although the connection was already authenticated (report by fg0x0)
-* CONJS-378: Pool.escape() returned a backslash-escaped value under NO_BACKSLASH_ESCAPES when every connection of the pool was in use, leaving the value injectable (report by buxuwa)
+* CONJS-378: Pool.escape() returned a backslash-escaped value under NO_BACKSLASH_ESCAPES when every connection of the pool was in use, leaving the value injectable (report by buxuwa and Kaya Emre Arikan)
 * CONJS-379: SQL injection through a Buffer parameter under the big5 client charset: the five lead bytes 0xFA-0xFE, single bytes for the server, were not escaped (report by fg0x0)
 * CONJS-380: SQL injection through a string parameter or escape() under the big5, gbk, sjis and cp932 client charsets, ordinary characters encoding to sequences the server reads as single bytes (report by fg0x0)
 * CONJS-381: A connection configured with a charset the server does not support, such as gb18030 on MariaDB, silently stayed on utf8mb4 while parameters were escaped for the requested charset; the connection is now refused by the server (report by fg0x0)
