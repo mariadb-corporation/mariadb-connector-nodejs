@@ -84,6 +84,7 @@ jobs:
           registry-password: ${{ matrix.db-type == 'enterprise' && secrets.ENTERPRISE_TOKEN || secrets.DOCKER_TOKEN }}
           os: ${{ matrix.os }}
           maxscale-tag: ${{ matrix.maxscale-tag || ''}}
+          maxscale-license-key: ${{ secrets.MAXSCALE_LICENSE_KEY }}
 
       - uses: actions/setup-node@v6
         with:
