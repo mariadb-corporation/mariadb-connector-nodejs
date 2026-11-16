@@ -170,4 +170,68 @@ describe.concurrent('buffer', () => {
     assert.deepEqual(rows, [{ val: Buffer.from('') }, { val: Buffer.from('hello') }, { val: null }]);
     shareConn.commit();
   });
+
+  // a Uint8Array that is not a Buffer (TextEncoder, crypto.getRandomValues, fetch body) is bound as its bytes
+  const u8 = new Uint8Array([0, 39, 92, 255]);
+  // a view on part of a larger ArrayBuffer: only the viewed bytes are bound
+  const u8View = new Uint8Array([9, 9, 0, 39, 92, 255, 9]).subarray(2, 6);
+  const u8Hex = '00275CFF';
+
+  test('query plain Uint8Array', async function () {
+    let rows = await shareConn.query('SELECT HEX(?) t, HEX(?) t2', [u8, u8View]);
+    assert.deepEqual(rows, [{ t: u8Hex, t2: u8Hex }]);
+    await shareConn.query('DROP TABLE IF EXISTS u8Query');
+    await shareConn.query('CREATE TABLE u8Query (id int, val blob)');
+    await shareConn.query('INSERT INTO u8Query VALUES (?, ?), (?, ?)', [1, u8, 2, u8View]);
+    rows = await shareConn.query('SELECT * FROM u8Query ORDER BY id');
+    assert.deepEqual(rows, [
+      { id: 1, val: Buffer.from(u8) },
+      { id: 2, val: Buffer.from(u8) }
+    ]);
+  });
+
+  test('execute plain Uint8Array', async function () {
+    let rows = await shareConn.execute('SELECT HEX(?) t, HEX(?) t2', [u8, u8View]);
+    assert.deepEqual(rows, [{ t: u8Hex, t2: u8Hex }]);
+    await shareConn.query('DROP TABLE IF EXISTS u8Execute');
+    await shareConn.query('CREATE TABLE u8Execute (id int, val longblob)');
+    await shareConn.execute('INSERT INTO u8Execute VALUES (?, ?)', [1, u8]);
+    await shareConn.execute('INSERT INTO u8Execute VALUES (?, ?)', [2, u8View]);
+    // 16K and more is sent as long data
+    const big = new Uint8Array(20000).map((_, i) => i % 256);
+    const bigView = new Uint8Array(20010).map((_, i) => (i + 251) % 256).subarray(5, 20005);
+    await shareConn.execute('INSERT INTO u8Execute VALUES (?, ?)', [3, big]);
+    await shareConn.execute('INSERT INTO u8Execute VALUES (?, ?)', [4, bigView]);
+    rows = await shareConn.execute('SELECT * FROM u8Execute ORDER BY id');
+    assert.deepEqual(rows, [
+      { id: 1, val: Buffer.from(u8) },
+      { id: 2, val: Buffer.from(u8) },
+      { id: 3, val: Buffer.from(big) },
+      { id: 4, val: Buffer.from(big) }
+    ]);
+  });
+
+  test('batch plain Uint8Array', async function () {
+    await shareConn.query('DROP TABLE IF EXISTS u8Batch');
+    await shareConn.query('CREATE TABLE u8Batch (id int, val blob)');
+    await shareConn.batch('INSERT INTO u8Batch VALUES (?, ?)', [
+      [1, u8],
+      [2, u8View],
+      [3, Buffer.from(u8)]
+    ]);
+    const rows = await shareConn.query('SELECT * FROM u8Batch ORDER BY id');
+    assert.deepEqual(rows, [
+      { id: 1, val: Buffer.from(u8) },
+      { id: 2, val: Buffer.from(u8) },
+      { id: 3, val: Buffer.from(u8) }
+    ]);
+  });
+
+  test('escape plain Uint8Array', async function () {
+    const bytes = new globalThis.TextEncoder().encode("..let's r\0cks\\..").subarray(2, 14);
+    assert.equal(shareConn.escape(bytes), "_binary'let\\'s r\\0cks\\\\'");
+    assert.equal(shareConn.escape(bytes), shareConn.escape(Buffer.from(bytes)));
+    const rows = await shareConn.query('SELECT ' + shareConn.escape(bytes) + ' t');
+    assert.deepEqual(rows, [{ t: Buffer.from(bytes) }]);
+  });
 });
