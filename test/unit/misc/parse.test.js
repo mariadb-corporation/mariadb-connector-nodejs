@@ -26,6 +26,12 @@ describe.concurrent('parse', () => {
       const res = Parse.splitQuery(Buffer.from('select /* comment */* from t where id=?', 'utf8'));
       assert.deepEqual(res, [38, 39]);
     });
+    test('NO_BACKSLASH_ESCAPES: a backslash does not escape the closing quote', () => {
+      const sql = Buffer.from("select 'C:\\' as a, '?' as b, ? as c", 'utf8');
+      assert.deepEqual(Parse.splitQuery(sql, true), [29, 30]);
+      // with backslash escapes, the first literal runs on to the next quote
+      assert.deepEqual(Parse.splitQuery(sql, false), [20, 21, 29, 30]);
+    });
   });
 
   describe.concurrent('split queries', () => {
@@ -175,6 +181,19 @@ describe.concurrent('parse', () => {
       assert.deepEqual(res, {
         paramPositions: [7, 11, 32, 33],
         values: [1, 2]
+      });
+    });
+
+    test('NO_BACKSLASH_ESCAPES: named placeholder after a literal ending with a backslash', () => {
+      const sql = "select 'C:\\' as a, ':id1' as b, :id2 as c";
+      assert.deepEqual(Parse.searchPlaceholder(sql, true), {
+        placeHolderIndex: ['id2'],
+        sql: "select 'C:\\' as a, ':id1' as b, ? as c"
+      });
+      const res = Parse.splitQueryPlaceholder(Buffer.from(sql, 'utf8'), null, { id1: 1, id2: 2 }, () => sql, true);
+      assert.deepEqual(res, {
+        paramPositions: [32, 36],
+        values: [2]
       });
     });
 
